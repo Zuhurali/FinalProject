@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="~/fav.svg">
+    <title>@ViewData["Title"] - AutoVault Car Dealer</title>
+    <meta name="description" content="Your trusted source for expert automotive services and quality cars. Find your perfect vehicle with our extensive inventory and professional service.">
+    
+    <!-- Autovault CSS -->
+    <link rel="stylesheet" href="~/assets/css/plugins/plugins.css">
+    <link rel="stylesheet" href="~/assets/css/plugins/magnifying-popup.css">
+    <link rel="stylesheet" href="~/assets/css/vendor/bootstrap.min.css">
+    <link rel="stylesheet" href="~/assets/fonts/rt-icon.css">
+    <link rel="stylesheet" href="~/assets/css/style.css">
+</head>
+<body>
+    <div class="loader-wrapper">
+        <div class="loader"></div>
+        <div class="loader-section section-left"></div>
+        <div class="loader-section section-right"></div>
+    </div>
+    
+    <div class="search-input-area">
+        <div class="container">
+            <div class="search-input-inner">
+                <div class="input-div">
+                    <input class="search-input autocomplete" type="text" placeholder="Search by keyword or #">
+                    <button><i class="far fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+        <div id="close" class="search-close-icon"><i class="far fa-times"></i></div>
+    </div>
+    
+    <div id="anywhere-home"></div>
+    
+    <!-- progress area start -->
+    <div class="progress-wrap">
+        <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
+            <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" style="transition: stroke-dashoffset 10ms linear 0s; stroke-dasharray: 307.919, 307.919; stroke-dashoffset: 307.919;"></path>
+        </svg>
+    </div>
+    <!-- progress area end -->
+    
+    <div class="rts-wrapper">
+        <div class="rts-wrapper-inner">
+            <!-- header area start -->
+            <header class="header-one header--sticky">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="header-wrapper-1">
+                            <div class="logo-area-start">
+                                <a asp-controller="Home" asp-action="Index" class="logo">
+                                    <img src="~/assets/images/logo/logo.svg" alt="AutoVault Logo">
+                                </a>
+                            </div>
+                            <div class="header-right d-block">
+                                <div class="top">
+                                    <div class="left d-flex align-items-center">
+                                        <div class="map-area">
+                                            <div class="icon">
+                                                <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M15.9688 12.1562L15.2188 15.3125C15.125 15.7812 14.75 16.0938 14.2812 16.0938C6.40625 16.0625 0 9.65625 0 1.78125C0 1.3125 0.28125 0.9375 0.75 0.84375L3.90625 0.09375C4.34375 0 4.8125 0.25 5 0.65625L6.46875 4.0625C6.625 4.46875 6.53125 4.9375 6.1875 5.1875L4.5 6.5625C5.5625 8.71875 7.3125 10.4688 9.5 11.5312L10.875 9.84375C11.125 9.53125 11.5938 9.40625 12 9.5625L15.4062 11.0312C15.8125 11.25 16.0625 11.7188 15.9688 12.1562Z" fill="#FF3600" />
+                                                </svg>
+                                            </div>
+                                            <div class="text">
+                                                <p>Call Us Now</p>
+                                                <a href="tel:12505550199">+1 (250) 555-0199</a>
+                                            </div>
+                                        </div>
+                                        <div class="map-area">
+                                            <div class="icon">
+                                                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M14.5 0C15.3125 0 16 0.6875 16 1.5C16 2 15.75 2.4375 15.375 2.71875L8.59375 7.8125C8.21875 8.09375 7.75 8.09375 7.375 7.8125L0.59375 2.71875C0.21875 2.4375 0 2 0 1.5C0 0.6875 0.65625 0 1.5 0H14.5ZM6.78125 8.625C7.5 9.15625 8.46875 9.15625 9.1875 8.625L16 3.5V10C16 11.125 15.0938 12 14 12H2C0.875 12 0 11.125 0 10V3.5L6.78125 8.625Z" fill="#FF3600" />
+                                                </svg>
+                                            </div>
+                                            <div class="text">
+                                                <p>Send US Email</p>
+                                                <a href="mailto:info@autovault.com">info@autovault.com</a>
+                                            </div>
+                                        </div>
+                                        <div class="map-area">
+                                            <div class="icon">
+                                                <svg width="12" height="17" viewBox="0 0 12 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M5.25 15.625C3.625 13.5938 0 8.75 0 6C0 2.6875 2.65625 0 6 0C9.3125 0 12 2.6875 12 6C12 8.75 8.34375 13.5938 6.71875 15.625C6.34375 16.0938 5.625 16.0938 5.25 15.625ZM6 8C7.09375 8 8 7.125 8 6C8 4.90625 7.09375 4 6 4C4.875 4 4 4.90625 4 6C4 7.125 4.875 8 6 8Z" fill="#FF3600" />
+                                                </svg>
+                                            </div>
+                                            <div class="text">
+                                                <p>Our Location</p>
+                                                <a href="#">Toronto, ON, Canada</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="right">
+                                        <div class="social-area-transparent">
+                                            <ul class="d-flex align-items-center">
+                                                <li><p>Follow Us On:</p></li>
+                                                <li><a href="#"><i class="fab fa-facebook-f"></i></a></li>
+                                                <li><a href="#"><i class="fab fa-twitter"></i></a></li>
+                                                <li><a href="#"><i class="fab fa-instagram"></i></a></li>
+                                                <li><a href="#"><i class="fab fa-youtube"></i></a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bottom d-flex align-items-center justify-content-between">
+                                    <div class="nav-area">
+                                        <ul class="">
+                                            <li class="main-nav">
+                                                <a class="main-menu" asp-controller="Home" asp-action="Index">Home</a>
+                                            </li>
+                                            <li class="main-nav">
+                                                <a class="main-menu" href="#">About Us</a>
+                                            </li>
+                                            <li class="main-nav">
+                                                <a class="main-menu" href="#">Cars</a>
+                                            </li>
+                                            <li class="main-nav">
+                                                <a class="main-menu" href="#">Services</a>
+                                            </li>
+                                            <li class="main-nav">
+                                                <a class="main-menu" href="#">Contact</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="bottom-right">
+                                        <div class="button-area">
+                                            <a href="#" class="rts-btn btn-border radius-small icon">
+                                                Sign In
+                                                <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect width="19" height="19" fill="url(#pattern0_2295_364)" />
+                                                    <defs>
+                                                        <pattern id="pattern0_2295_364" patternContentUnits="objectBoundingBox" width="1" height="1">
+                                                            <use href="#image0_2295_364" transform="scale(0.0111111)" />
+                                                        </pattern>
+                                                        <image id="image0_2295_364" width="90" height="90" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAYAAAA4qEECAAAACXBIWXMAAAsTAAALEwEAmpwYAAACVklEQVR4nO2dQXLTQBREexWOgIEtq2zxDBQXoFhwEQhsHW4AF0tgEeASZE8lVVirpmQEpArwxl/5PaN+Vb2V5r8ajyTrewwYY4wxxhhjzFLgQ9xhwRsWfGDFNSvYSK6nMZ/wGEdQhk/wgAVfBKTxwHwea4HwTO5BMqd8kpzZu+UiXw6D8wpqsOKjgBiGpuAcarDgqkPRV1AjXUqdJ1AjWwgtuu1AjWwhtOi2AzWyhdCi2w7UyBZCi247UCNbCC267UCNbCG06LYDNbKF0KLbDtQILG5gwYYFqykbVmwteiKsuILNX8de43mWbHQsevXP4xc8Y8F3i55ZdJZsdCz6dO95bnkZgRqBxW1HmSqyoUZwgQPXeLH3fLe0jECNGYocFGRDjZkKHbJlQ40ZZ9WQKRtqzPnxZaJsLEw0s2THCTrGEQzes+JSYkAHEn3rFzewindSAwpgfOhRFH3ZnejHuKsnuuCr1IAC4FPc1xPd49JR8VbzYjjKPnBmQwSqXgyjiCqMvd7eRdGjZC5M9OBH8Bv0KJkLET1kS16C6EFBcu+it36VtYc5+zpu4pezcaJX/z2H2w3cQNNFXwfdEvaH4CbHUz7CvV1+frfsJsdfZImgRfcRqJEthBbddqBGthBadNuBGtlCaNFtB2pkC6FFtx2okS2EFt12oEa2EFp024Ea2UK4GNF9bgL7DWpM27azs5xBDRa8FhDD0KzxEpJbz49742fLqUEpuJDcev73nyn0ILvgYvzVAJSZGttPxvWtqQtk2Y31bFwuZGeyMcYYY4wxxmAGfgAEuwTcQtFEYgAAAABJRU5ErkJggg==" />
+                                                    </defs>
+                                                </svg>
+                                            </a>
+                                            <a href="#" class="rts-btn btn-primary radius-small icon">
+                                                Add Car
+                                                <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect width="16" height="16.3902" fill="url(#pattern0_2295_360)" />
+                                                    <defs>
+                                                        <pattern id="pattern0_2295_360" patternContentUnits="objectBoundingBox" width="1" height="1">
+                                                            <use href="#image0_2295_360" transform="matrix(0.0111111 0 0 0.0108466 0 0.0119048)" />
+                                                        </pattern>
+                                                        <image id="image0_2295_360" width="90" height="90" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAYAAAA4qEECAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEDElEQVR4nO3cS4wNWRzH8UOiZ8IkhkksEBI9HiuJxKtJhIQlVhYGsROJJmQ0FjRiQeK1IfHYj47VxEhHxmyEjHgOsZJ4LLBgROL96PCVE/9Odzr31K2qe+vUOeX/STq94Fb9zq9vbp2qOnWNUUoppZRSSimllFKpAROBTuAf4DHwnvK9lyznJduvJlbAZOAs8IXw2Yx/AZNMTIB24CPx+QCsMzEADhO/AyZkQAfV8bsJETAV+ER19ADTTGiAiwmh3wGHgJnA8ACy/gzMko85m83lggkJMCMh7ANgggmUndoBDxPyzzChAE44Qr4CxpnAAeOB144xnDQhAFqA546QnSYSwC7HGF4AP4QQcKkjoD0w/mIiAYxImPsvDSFglyPcGRMZvp0d1tJVdrBhwBtHuOUmMsBvjrG8BX4qM9iKIIM19sZxHRRXmLLIRaNa/jCRAk45xnS2rEAjEw4ei02kgCUJZ4qjygi0NmE61GIiBQxJmK6uLSPQBUeY4yZyuE/A/J6SA6OBz44w803kgAUJNwjG+wyy2RHkCTDYRA4YLGOppcNnkBuOEH+aigDOOMZ40+e9QJenwNA689TJwDw5OdgE7AWOybSqG7gE3AHuA4/k4Nr7Y4/8vXoG/Nsjec0d2Ua3bPOY7GOjPYmSfdsMwxJyDgWeJYxzSmEFp7j40usasBJYDeyRwV6TMkJjM121837JulqyX6/zut0+ir7rqYSQ3QMGFVny9LJHGJDpZcwvv0cniyj4x4TLod+zU7abZt5B+bvsEQXsnD1tb0bRdnqkkh1ttOSFdXag+k7NFzRSdL35pOpzNW/Jc/ttRKXTlqfogyk3rvrsz1P0v6Rj7w/uAFplhtIqi7uTlloNZO/UbLGXXzMHTb6UuzXj8uFGx3IpT9D/Uwab7Xh9W4aAW5tRriOHLRtPY3mWJ2D/K2UuO+psY2fKQY7OHDDbOxtPY+nJEzCN1hQLCGMpuiljyRMwjcSbsHbNWgAfHdt8jiVPwGa8C+wTWWl8lM/SMg+GTRlLnqBpdDZ4kyAkTRlLUUW/c03SgTkZp3hla8pYiiq6N+BOOVi0yO9dgTy4mVXDYymyaNWPFu2JFu2JFu2JFu2JFu2JFu2JFu2JFu2JFu2JFl2hou2640XAMmAVsEa+KGU7sA84Yp9vkaVlp2X98nn5+gm7rOG2rG++L9828GLAT60HR9/U+H8P+23ntmz7ouyrW/bdJVmOSLbtknWNZF8mY5kXXNGmotCi/dCiK1S065noWl6aiqLoHoArGXZw2VQURfcAbMiwg3ZTURTdg9xev5Vi4//F/Ox3ED0AY+vsxG58jKk4fPQgf9H19vNHDgyvZQFke5XfyQNpD0oppZRSSimllFJKKWUa8RUyWTLDvAIcywAAAABJRU5ErkJggg==" />
+                                                    </defs>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                        <div class="menu-btn" id="menu-btn">
+                                            <svg width="55" height="55" viewBox="0 0 55 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect width="55" height="55" rx="15" fill="#FF3600" />
+                                                <rect x="18" y="33" width="10" height="2" fill="#ffffff" />
+                                                <rect x="18" y="26" width="20" height="2" fill="#ffffff" />
+                                                <rect x="18" y="19" width="10" height="2" fill="#ffffff" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <!-- header area end -->
+            
+            <!-- Main content -->
+            @RenderBody()
+
+            <!-- Footer area start -->
+            <div class="rts-footer-area footer-bg-1" id="rts-footer">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="footer-wrapper-style-between">
+                                <div class="single-wized logo-area">
+                                    <a asp-controller="Home" asp-action="Index" class="logo">
+                                        <img src="~/assets/images/logo/footer-logo.svg" width="99" alt="AutoVault">
+                                    </a>
+                                    <p class="desc">Your trusted partner for quality vehicles and exceptional service. Find your perfect car with confidence at AutoVault.</p>
+                                    <div class="social-area-transparent">
+                                        <ul class="wrapper">
+                                            <li><a href="#"><i class="fab fa-facebook-f"></i></a></li>
+                                            <li><a href="#"><i class="fab fa-twitter"></i></a></li>
+                                            <li><a href="#"><i class="fab fa-instagram"></i></a></li>
+                                            <li><a href="#"><i class="fab fa-youtube"></i></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="single-wized">
+                                    <div class="wized-title">
+                                        <h5 class="title">Quick Links</h5>
+                                    </div>
+                                    <div class="wized-body">
+                                        <ul class="menu-nav">
+                                            <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                                            <li><a href="#">About Us</a></li>
+                                            <li><a href="#">Cars</a></li>
+                                            <li><a href="#">Services</a></li>
+                                            <li><a href="#">Contact</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="single-wized">
+                                    <div class="wized-title">
+                                        <h5 class="title">Contact Info</h5>
+                                    </div>
+                                    <div class="wized-body">
+                                        <div class="contact-inner">
+                                            <div class="single-contact">
+                                                <i class="rt-icon-phone"></i>
+                                                <div class="content">
+                                                    <span>Call Us 24/7</span>
+                                                    <a class="number" href="tel:12505550199">+1 (250) 555-0199</a>
+                                                </div>
+                                            </div>
+                                            <div class="single-contact">
+                                                <i class="rt-icon-mail"></i>
+                                                <div class="content">
+                                                    <span>Make a Quote</span>
+                                                    <a class="number" href="mailto:info@autovault.com">info@autovault.com</a>
+                                                </div>
+                                            </div>
+                                            <div class="single-contact">
+                                                <i class="rt-icon-location"></i>
+                                                <div class="content">
+                                                    <span>Location</span>
+                                                    <a class="number" href="#">Toronto, ON, Canada</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="copyright-area">
+                    <div class="container">
+                        <div class="copyright-area-inner d-flex align-items-center justify-content-between">
+                            <p>Copyright © @DateTime.Now.Year AutoVault. All rights reserved.</p>
+                            <div class="menu">
+                                <ul>
+                                    <li><a href="#">Terms & Conditions</a></li>
+                                    <li><a href="#">Privacy Policy</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer area end -->
+
+            <!-- sidebar menu area -->
+            <div id="side-bar" class="side-bar header-two">
+                <button class="close-icon-menu"><i class="far fa-times"></i></button>
+                <div class="mobile-menu"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript files -->
+    <script src="~/assets/js/plugins/jquery.js"></script>
+    <script src="~/assets/js/plugins/jquery-ui.js"></script>
+    <script src="~/assets/js/vendor/waw.js"></script>
+    <script src="~/assets/js/plugins/counter-up.js"></script>
+    <script src="~/assets/js/plugins/contact-form.js"></script>
+    <script src="~/assets/js/plugins/swiper.js"></script>
+    <script src="~/assets/js/plugins/metismenu.js"></script>
+    <script src="~/assets/js/vendor/jarallax.js"></script>
+    <script src="~/assets/js/plugins/smooth-scroll.js"></script>
+    <script src="~/assets/js/plugins/magnifying-popup.js"></script>
+    <script src="~/assets/js/vendor/bootstrap.min.js"></script>
+    <script src="~/assets/js/vendor/waypoint.js"></script>
+    <script src="~/assets/js/main.js"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

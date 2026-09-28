@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="FinalProject.MVC/FinalProject.MVC.csproj" />
+  <Project Path="FinalProject/FinalProject.csproj" />
+</Solution>
