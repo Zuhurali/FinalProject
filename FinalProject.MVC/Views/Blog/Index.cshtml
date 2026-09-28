@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Blog - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Blog</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Blog</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-blog-area rts-section-gap">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="blog-wrapper">
+                    <div class="image-area">
+                        <a asp-controller="Blog" asp-action="Details" asp-route-id="1"><img src="~/assets/images/blog/01.webp" alt=""></a>
+                    </div>
+                    <div class="blog-content-area">
+                        <div class="blog-meta">
+                            <a href="#" class="date">March 26, 2024</a>
+                            <a href="#" class="tag">Car Tips</a>
+                        </div>
+                        <h5 class="title"><a asp-controller="Blog" asp-action="Details" asp-route-id="1">Review the Latest Car Models And Compare Them With Similar Car Vehicles</a></h5>
+                        <p class="desc">Discover comprehensive reviews and comparisons of the newest car models in the market.</p>
+                        <a asp-controller="Blog" asp-action="Details" asp-route-id="1" class="rts-btn">Read More</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="blog-wrapper">
+                    <div class="image-area">
+                        <a asp-controller="Blog" asp-action="Details" asp-route-id="2"><img src="~/assets/images/blog/02.webp" alt=""></a>
+                    </div>
+                    <div class="blog-content-area">
+                        <div class="blog-meta">
+                            <a href="#" class="date">March 26, 2024</a>
+                            <a href="#" class="tag">Electric Cars</a>
+                        </div>
+                        <h5 class="title"><a asp-controller="Blog" asp-action="Details" asp-route-id="2">Focus on the rapidly growing market for electric vehicles and green cars</a></h5>
+                        <p class="desc">Explore the future of automotive technology with electric and eco-friendly vehicles.</p>
+                        <a asp-controller="Blog" asp-action="Details" asp-route-id="2" class="rts-btn">Read More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Sign In - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Sign In</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="contact-form">
+                    <h3 class="text-center mb-4">Sign In to Your Account</h3>
+                    <form>
+                        <div class="form__control mb-3">
+                            <input type="email" class="input-form" placeholder="Email Address" required>
+                        </div>
+                        <div class="form__control mb-3">
+                            <input type="password" class="input-form" placeholder="Password" required>
+                        </div>
+                        <div class="form__control">
+                            <button type="submit" class="submit__btn w-100">Sign In</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>Don't have an account? <a href="#">Create Account</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

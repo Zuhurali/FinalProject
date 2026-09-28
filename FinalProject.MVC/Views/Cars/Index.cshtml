@@ -1,0 +1,304 @@
+@{
+    ViewData["Title"] = "Cars - AutoVault";
+}
+
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Cars</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Cars</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- rts breadcrumb area end -->
+
+<div class="rts-select-area inner">
+    <div class="container">
+        <div class="select-inner">
+            <div class="select-area-down wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
+                <form action="#" method="get" accept-charset="utf-8">
+                    <select name="my_select" class="mySelect">
+                        <option value="2" selected>Car Make</option>
+                        <option value="10">Mazda</option>
+                        <option value="1">Citroen</option>
+                        <option value="13">Honda</option>
+                        <option value="14">Mitsubishi</option>
+                        <option value="15">Peugeot</option>
+                    </select>
+                </form>
+                <form class="select-2" action="#" method="get" accept-charset="utf-8">
+                    <select name="my_select2" class="my_select2">
+                        <option value="2" selected>Car Model</option>
+                        <option value="10">155</option>
+                        <option value="1">151</option>
+                        <option value="13">150</option>
+                        <option value="14">152</option>
+                        <option value="15">156</option>
+                    </select>
+                </form>
+                <form class="select-2" action="#" method="get" accept-charset="utf-8">
+                    <select name="my_select2" class="my_select2">
+                        <option value="2" selected>Price</option>
+                        <option value="10">22,000$</option>
+                        <option value="1">27,000$</option>
+                        <option value="13">30,000$</option>
+                        <option value="14">32,000$</option>
+                        <option value="15">38,000$</option>
+                    </select>
+                </form>
+                <button type="submit" class="rts-btn radius-small icon btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10.69 10.69L13 13M12.3333 6.68575C12.3333 9.826 9.796 12.3715 6.667 12.3715C3.53725 12.3715 1 9.826 1 6.6865C1 3.54475 3.53725 1 6.66625 1C9.796 1 12.3333 3.5455 12.3333 6.68575Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Search
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="rts-portfolio-area inner rts-section-gapNew">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="project-wrapper2">
+                    <div class="image-area">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/04.webp" alt=""></a>
+                        <span class="tag">Stocks</span>
+                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                        <a href="~/assets/images/portfolio/04.webp" class="gallery-image">
+                            <img src="~/assets/images/icon/image.svg" alt="">
+                            7
+                        </a>
+                    </div>
+                    <span class="price">$14,000</span>
+                    <div class="content-area">
+                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Thunderbolt Car</a></h6>
+                        <ul class="feature-area">
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                100 Miles
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                Petrol
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                Automatic
+                            </li>
+                        </ul>
+                        <div class="button-area">
+                            <p class="">$400/mo</p>
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-small">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="project-wrapper2">
+                    <div class="image-area">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="2"><img src="~/assets/images/portfolio/05.webp" alt=""></a>
+                        <span class="tag">New</span>
+                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                        <a href="~/assets/images/portfolio/05.webp" class="gallery-image">
+                            <img src="~/assets/images/icon/image.svg" alt="">
+                            5
+                        </a>
+                    </div>
+                    <span class="price">$18,500</span>
+                    <div class="content-area">
+                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="2">Mercedes-Benz E-Class</a></h6>
+                        <ul class="feature-area">
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                120 Miles
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                Petrol
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                Automatic
+                            </li>
+                        </ul>
+                        <div class="button-area">
+                            <p class="">$500/mo</p>
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="2" class="rts-btn btn-primary radius-small">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="project-wrapper2">
+                    <div class="image-area">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="3"><img src="~/assets/images/portfolio/06.webp" alt=""></a>
+                        <span class="tag">Trending</span>
+                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                        <a href="~/assets/images/portfolio/06.webp" class="gallery-image">
+                            <img src="~/assets/images/icon/image.svg" alt="">
+                            5
+                        </a>
+                    </div>
+                    <span class="price">$22,000</span>
+                    <div class="content-area">
+                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="3">Ford Mustang Convertible</a></h6>
+                        <ul class="feature-area">
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                85 Miles
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                Petrol
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                Automatic
+                            </li>
+                        </ul>
+                        <div class="button-area">
+                            <p class="">$650/mo</p>
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="3" class="rts-btn btn-primary radius-small">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="project-wrapper2">
+                    <div class="image-area">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="4"><img src="~/assets/images/portfolio/07.webp" alt=""></a>
+                        <span class="tag">Featured</span>
+                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                        <a href="~/assets/images/portfolio/07.webp" class="gallery-image">
+                            <img src="~/assets/images/icon/image.svg" alt="">
+                            8
+                        </a>
+                    </div>
+                    <span class="price">$16,800</span>
+                    <div class="content-area">
+                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="4">BMW X5 SUV</a></h6>
+                        <ul class="feature-area">
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                95 Miles
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                Hybrid
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                Automatic
+                            </li>
+                        </ul>
+                        <div class="button-area">
+                            <p class="">$450/mo</p>
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="4" class="rts-btn btn-primary radius-small">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="project-wrapper2">
+                    <div class="image-area">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="5"><img src="~/assets/images/portfolio/08.webp" alt=""></a>
+                        <span class="tag">Used</span>
+                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                        <a href="~/assets/images/portfolio/08.webp" class="gallery-image">
+                            <img src="~/assets/images/icon/image.svg" alt="">
+                            6
+                        </a>
+                    </div>
+                    <span class="price">$12,500</span>
+                    <div class="content-area">
+                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="5">Toyota Camry Sedan</a></h6>
+                        <ul class="feature-area">
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                110 Miles
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                Petrol
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                Automatic
+                            </li>
+                        </ul>
+                        <div class="button-area">
+                            <p class="">$350/mo</p>
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="5" class="rts-btn btn-primary radius-small">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="project-wrapper2">
+                    <div class="image-area">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="6"><img src="~/assets/images/portfolio/09.webp" alt=""></a>
+                        <span class="tag">Electric</span>
+                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                        <a href="~/assets/images/portfolio/09.webp" class="gallery-image">
+                            <img src="~/assets/images/icon/image.svg" alt="">
+                            4
+                        </a>
+                    </div>
+                    <span class="price">$28,000</span>
+                    <div class="content-area">
+                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="6">Tesla Model 3</a></h6>
+                        <ul class="feature-area">
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                150 Miles
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                Electric
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                Automatic
+                            </li>
+                        </ul>
+                        <div class="button-area">
+                            <p class="">$750/mo</p>
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="6" class="rts-btn btn-primary radius-small">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="pagination-area">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item">
+                                <a class="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

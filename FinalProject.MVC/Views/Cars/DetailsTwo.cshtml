@@ -1,0 +1,8 @@
+@{
+    ViewData["Title"] = "Car Details Two - AutoVault";
+}
+
+<!-- This view redirects to the main Details for now -->
+<script>
+    window.location.href = '@Url.Action("Details", "Cars", new { id = ViewData["CarId"] ?? 1 })';
+</script>

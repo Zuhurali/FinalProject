@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Add Car - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Add Your Car</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Add Car</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="contact-form">
+            <h3 class="text-center mb-4">List Your Vehicle</h3>
+            <form>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form__control mb-3">
+                            <input type="text" class="input-form" placeholder="Make" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form__control mb-3">
+                            <input type="text" class="input-form" placeholder="Model" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form__control mb-3">
+                            <input type="number" class="input-form" placeholder="Year" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form__control mb-3">
+                            <input type="number" class="input-form" placeholder="Price" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form__control mb-3">
+                    <textarea class="input-form" rows="5" placeholder="Description" required></textarea>
+                </div>
+                <div class="form__control">
+                    <button type="submit" class="submit__btn w-100">Submit Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,193 @@
+@{
+    ViewData["Title"] = "Car Details - AutoVault";
+    var carId = ViewData["CarId"] ?? 1;
+}
+
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Car Details</h1>
+            <ul class="feature-area">
+                <li>
+                    <img src="~/assets/images/portfolio/feature-icon/05.svg" alt="">
+                    100 Miles
+                </li>
+                <li>
+                    <img src="~/assets/images/portfolio/feature-icon/06.svg" alt="">
+                    Petrol
+                </li>
+                <li>
+                    <img src="~/assets/images/portfolio/feature-icon/07.svg" alt="">
+                    Automatic
+                </li>
+                <li>
+                    <img src="~/assets/images/portfolio/feature-icon/08.svg" alt="">
+                    5 Person
+                </li>
+            </ul>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-controller="Cars" asp-action="Index">Cars</a>
+                <a href="#" class="current">Car Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- rts breadcrumb area end -->
+
+<div class="rts-portfolio-area inner rts-section-gapNew">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="portfolio-details-area">
+                    <div class="portfolio-slider-area vertical details mb--40">
+                        <div class="swiper rts-heroSlider2">
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide">
+                                    <div class="image"><img src="~/assets/images/portfolio/30.webp" alt=""></div>
+                                </div>
+                                <div class="swiper-slide">
+                                    <div class="image"><img src="~/assets/images/portfolio/31.webp" alt=""></div>
+                                </div>
+                                <div class="swiper-slide">
+                                    <div class="image"><img src="~/assets/images/portfolio/32.webp" alt=""></div>
+                                </div>
+                                <div class="swiper-slide">
+                                    <div class="image"><img src="~/assets/images/portfolio/33.webp" alt=""></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pagination-area mt_md--30 mt_sm--30">
+                            <div class="swiper SlideThumb2">
+                                <div class="swiper-wrapper">
+                                    <div class="swiper-slide">
+                                        <div class="single-thumb">
+                                            <div class="thumbnail">
+                                                <img src="~/assets/images/portfolio/30.webp" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="swiper-slide">
+                                        <div class="single-thumb">
+                                            <div class="thumbnail">
+                                                <img src="~/assets/images/portfolio/31.webp" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="swiper-slide">
+                                        <div class="single-thumb">
+                                            <div class="thumbnail">
+                                                <img src="~/assets/images/portfolio/32.webp" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="swiper-slide">
+                                        <div class="single-thumb">
+                                            <div class="thumbnail">
+                                                <img src="~/assets/images/portfolio/33.webp" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="portfolio-information-details">
+                        <h3 class="title">Vehicle Information</h3>
+                        <p class="desc">
+                            This premium vehicle offers exceptional performance, comfort, and reliability. 
+                            With advanced safety features and cutting-edge technology, it provides an 
+                            unparalleled driving experience.
+                        </p>
+                        
+                        <div class="row mt--30">
+                            <div class="col-lg-6">
+                                <ul class="information-list">
+                                    <li>
+                                        <span>Make:</span>
+                                        <span>Mercedes-Benz</span>
+                                    </li>
+                                    <li>
+                                        <span>Model:</span>
+                                        <span>E-Class</span>
+                                    </li>
+                                    <li>
+                                        <span>Year:</span>
+                                        <span>2023</span>
+                                    </li>
+                                    <li>
+                                        <span>Mileage:</span>
+                                        <span>15,000 miles</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-6">
+                                <ul class="information-list">
+                                    <li>
+                                        <span>Engine:</span>
+                                        <span>2.0L Turbo</span>
+                                    </li>
+                                    <li>
+                                        <span>Transmission:</span>
+                                        <span>Automatic</span>
+                                    </li>
+                                    <li>
+                                        <span>Fuel Type:</span>
+                                        <span>Gasoline</span>
+                                    </li>
+                                    <li>
+                                        <span>Color:</span>
+                                        <span>Metallic Silver</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="sidebar-area">
+                    <div class="single-sidebar-area pricing">
+                        <h4 class="title">Pricing Information</h4>
+                        <div class="price-area">
+                            <h3 class="price">$24,500</h3>
+                            <p class="monthly">$450/month</p>
+                        </div>
+                        <div class="button-area">
+                            <a href="#" class="rts-btn btn-primary">Contact Dealer</a>
+                            <a href="#" class="rts-btn btn-border">Schedule Test Drive</a>
+                        </div>
+                    </div>
+                    
+                    <div class="single-sidebar-area contact-info">
+                        <h4 class="title">Contact Information</h4>
+                        <div class="contact-item">
+                            <i class="rt-icon-phone"></i>
+                            <div class="content">
+                                <span>Call Us</span>
+                                <a href="tel:+12505550199">+1 (250) 555-0199</a>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="rt-icon-mail"></i>
+                            <div class="content">
+                                <span>Email Us</span>
+                                <a href="mailto:info@autovault.com">info@autovault.com</a>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="rt-icon-location"></i>
+                            <div class="content">
+                                <span>Visit Us</span>
+                                <p>Toronto, ON, Canada</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
