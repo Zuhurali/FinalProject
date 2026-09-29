@@ -12,6 +12,9 @@ namespace FinalProject.MVC.Models
         public double Rating { get; set; }
         public string Description { get; set; } = string.Empty;
         public bool InStock { get; set; } = true;
+        public string Color { get; set; } = string.Empty;
+        public string Fuel { get; set; } = string.Empty;
+        public string SearchKeywords { get; set; } = string.Empty; // For search functionality
     }
 
     public class ShopFilterRequest
@@ -20,6 +23,12 @@ namespace FinalProject.MVC.Models
         public string? CarModel { get; set; }
         public string? PriceRange { get; set; }
         public string? SortBy { get; set; }
+        public string? SearchText { get; set; }
+        public string? Category { get; set; }
+        public decimal? MinPrice { get; set; }
+        public decimal? MaxPrice { get; set; }
+        public List<string>? SelectedMakes { get; set; }
+        public List<string>? SelectedModels { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 6;
     }

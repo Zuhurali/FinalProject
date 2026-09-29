@@ -9,30 +9,425 @@ namespace FinalProject.MVC.Controllers
 
         public ShopController()
         {
-            // Initialize with original Autovault shop products (first 6 are exact matches)
+            // Brand-specific automotive products with realistic relationships
             _allProducts = new List<ShopProduct>
             {
-                // Original Autovault products - EXACT matches from shop.html
-                new ShopProduct { Id = 1, Name = "Car Parts Gears and Equipment", Price = 400, Category = "Gears", CarMake = "Mazda", CarModel = "155", ImagePath = "~/assets/images/portfolio/11.webp", Rating = 4.5, Description = "High-quality car gears and equipment" },
-                new ShopProduct { Id = 2, Name = "Power Steering Pump", Price = 599, Category = "Steering", CarMake = "Honda", CarModel = "150", ImagePath = "~/assets/images/portfolio/12.webp", Rating = 4.5, Description = "Professional power steering pump" },
-                new ShopProduct { Id = 3, Name = "High-Performance Tires", Price = 399, Category = "Tires", CarMake = "Citroen", CarModel = "151", ImagePath = "~/assets/images/portfolio/13.webp", Rating = 4.5, Description = "Premium high-performance tires" },
-                new ShopProduct { Id = 4, Name = "Micrometer with check ring", Price = 790, Category = "Tools", CarMake = "Mitsubishi", CarModel = "152", ImagePath = "~/assets/images/portfolio/14.webp", Rating = 4.5, Description = "Precision measurement tool" },
-                new ShopProduct { Id = 5, Name = "Car Parts Mufflers And Pipes", Price = 270, Category = "Exhaust", CarMake = "Peugeot", CarModel = "156", ImagePath = "~/assets/images/portfolio/15.webp", Rating = 4.5, Description = "Quality mufflers and exhaust pipes" },
-                new ShopProduct { Id = 6, Name = "Car Gears Machine part", Price = 699, Category = "Gears", CarMake = "Mazda", CarModel = "155", ImagePath = "~/assets/images/portfolio/16.webp", Rating = 4.5, Description = "Machine parts and gears" },
-                
-                // Additional automotive products using other portfolio images
-                new ShopProduct { Id = 7, Name = "Brake Disc Premium Set", Price = 320, Category = "Brakes", CarMake = "Honda", CarModel = "150", ImagePath = "~/assets/images/portfolio/17.webp", Rating = 4.8, Description = "Premium brake disc set" },
-                new ShopProduct { Id = 8, Name = "Engine Oil Filter Kit", Price = 89, Category = "Filters", CarMake = "Citroen", CarModel = "151", ImagePath = "~/assets/images/portfolio/18.webp", Rating = 4.3, Description = "Complete oil filter kit" },
-                new ShopProduct { Id = 9, Name = "Suspension Springs Heavy-Duty", Price = 450, Category = "Suspension", CarMake = "Mitsubishi", CarModel = "152", ImagePath = "~/assets/images/portfolio/19.webp", Rating = 4.6, Description = "Heavy-duty suspension springs" },
-                new ShopProduct { Id = 10, Name = "LED Headlight Assembly", Price = 280, Category = "Lighting", CarMake = "Peugeot", CarModel = "156", ImagePath = "~/assets/images/portfolio/01.webp", Rating = 4.4, Description = "Complete LED headlight assembly" },
-                new ShopProduct { Id = 11, Name = "Transmission Fluid Premium", Price = 165, Category = "Fluids", CarMake = "Mazda", CarModel = "155", ImagePath = "~/assets/images/portfolio/02.webp", Rating = 4.2, Description = "High-grade transmission fluid" },
-                new ShopProduct { Id = 12, Name = "Performance Air Filter", Price = 145, Category = "Filters", CarMake = "Honda", CarModel = "150", ImagePath = "~/assets/images/portfolio/03.webp", Rating = 4.1, Description = "Performance air filter element" },
-                new ShopProduct { Id = 13, Name = "Spark Plug Set Premium", Price = 220, Category = "Engine", CarMake = "Citroen", CarModel = "151", ImagePath = "~/assets/images/portfolio/04.webp", Rating = 4.7, Description = "Premium spark plug set" },
-                new ShopProduct { Id = 14, Name = "Radiator Assembly Complete", Price = 580, Category = "Cooling", CarMake = "Mitsubishi", CarModel = "152", ImagePath = "~/assets/images/portfolio/05.webp", Rating = 4.5, Description = "Complete radiator assembly" },
-                new ShopProduct { Id = 15, Name = "Fuel Pump Module Electric", Price = 720, Category = "Fuel", CarMake = "Peugeot", CarModel = "156", ImagePath = "~/assets/images/portfolio/06.webp", Rating = 4.6, Description = "Electric fuel pump module" },
-                new ShopProduct { Id = 16, Name = "Brake Pads Ceramic Set", Price = 195, Category = "Brakes", CarMake = "Mazda", CarModel = "155", ImagePath = "~/assets/images/portfolio/07.webp", Rating = 4.3, Description = "Ceramic brake pads set" },
-                new ShopProduct { Id = 17, Name = "Steering Wheel Premium", Price = 340, Category = "Steering", CarMake = "Honda", CarModel = "150", ImagePath = "~/assets/images/portfolio/08.webp", Rating = 4.4, Description = "Premium steering wheel" },
-                new ShopProduct { Id = 18, Name = "Tire Pressure Monitoring", Price = 125, Category = "Tires", CarMake = "Citroen", CarModel = "151", ImagePath = "~/assets/images/portfolio/09.webp", Rating = 4.2, Description = "Tire pressure monitoring system" }
+                // Mercedes-Benz Products (5 items)
+                new ShopProduct 
+                { 
+                    Id = 1, 
+                    Name = "Mercedes-Benz Premium Brake Disc Set", 
+                    Price = 450, 
+                    Category = "Brakes", 
+                    CarMake = "Mercedes-Benz", 
+                    CarModel = "C-Class", 
+                    ImagePath = "~/assets/images/portfolio/11.webp", 
+                    Rating = 4.8, 
+                    Description = "OEM-grade brake disc set for Mercedes-Benz C-Class",
+                    SearchKeywords = "brake disc mercedes c-class stopping",
+                    Color = "Silver",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 2, 
+                    Name = "Mercedes-Benz High-Flow Air Filter", 
+                    Price = 85, 
+                    Category = "Filters", 
+                    CarMake = "Mercedes-Benz", 
+                    CarModel = "E-Class", 
+                    ImagePath = "~/assets/images/portfolio/12.webp", 
+                    Rating = 4.6, 
+                    Description = "Performance air filter for Mercedes-Benz E-Class",
+                    SearchKeywords = "air filter mercedes e-class performance",
+                    Color = "White",
+                    Fuel = "Diesel"
+                },
+                new ShopProduct 
+                { 
+                    Id = 3, 
+                    Name = "Mercedes-Benz Synthetic Oil Filter", 
+                    Price = 120, 
+                    Category = "Filters", 
+                    CarMake = "Mercedes-Benz", 
+                    CarModel = "S-Class", 
+                    ImagePath = "~/assets/images/portfolio/13.webp", 
+                    Rating = 4.9, 
+                    Description = "Premium synthetic oil filter for Mercedes-Benz S-Class",
+                    SearchKeywords = "oil filter mercedes s-class synthetic",
+                    Color = "Black",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 4, 
+                    Name = "Mercedes-Benz Sport Suspension Kit", 
+                    Price = 680, 
+                    Category = "Suspension", 
+                    CarMake = "Mercedes-Benz", 
+                    CarModel = "C-Class", 
+                    ImagePath = "~/assets/images/portfolio/14.webp", 
+                    Rating = 4.7, 
+                    Description = "Performance suspension upgrade for Mercedes-Benz",
+                    SearchKeywords = "suspension mercedes c-class sport handling",
+                    Color = "Silver",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 5, 
+                    Name = "Mercedes-Benz LED Headlight Assembly", 
+                    Price = 520, 
+                    Category = "Lighting", 
+                    CarMake = "Mercedes-Benz", 
+                    CarModel = "E-Class", 
+                    ImagePath = "~/assets/images/portfolio/15.webp", 
+                    Rating = 4.8, 
+                    Description = "LED headlight assembly for Mercedes-Benz E-Class",
+                    SearchKeywords = "headlight mercedes e-class led lighting",
+                    Color = "Chrome",
+                    Fuel = "Diesel"
+                },
+
+                // BMW Products (5 items)
+                new ShopProduct 
+                { 
+                    Id = 6, 
+                    Name = "BMW Performance Brake Disc", 
+                    Price = 480, 
+                    Category = "Brakes", 
+                    CarMake = "BMW", 
+                    CarModel = "3 Series", 
+                    ImagePath = "~/assets/images/portfolio/16.webp", 
+                    Rating = 4.8, 
+                    Description = "High-performance brake disc for BMW 3 Series",
+                    SearchKeywords = "brake disc bmw 3-series stopping performance",
+                    Color = "Silver",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 7, 
+                    Name = "BMW M Performance Air Filter", 
+                    Price = 95, 
+                    Category = "Filters", 
+                    CarMake = "BMW", 
+                    CarModel = "5 Series", 
+                    ImagePath = "~/assets/images/portfolio/17.webp", 
+                    Rating = 4.7, 
+                    Description = "M Performance air filter for BMW 5 Series",
+                    SearchKeywords = "air filter bmw 5-series m performance",
+                    Color = "Blue",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 8, 
+                    Name = "BMW Premium Oil Filter Kit", 
+                    Price = 110, 
+                    Category = "Filters", 
+                    CarMake = "BMW", 
+                    CarModel = "X5", 
+                    ImagePath = "~/assets/images/portfolio/18.webp", 
+                    Rating = 4.6, 
+                    Description = "OEM oil filter kit for BMW X5",
+                    SearchKeywords = "oil filter bmw x5 maintenance",
+                    Color = "Black",
+                    Fuel = "Diesel"
+                },
+                new ShopProduct 
+                { 
+                    Id = 9, 
+                    Name = "BMW Adaptive Suspension Module", 
+                    Price = 720, 
+                    Category = "Suspension", 
+                    CarMake = "BMW", 
+                    CarModel = "5 Series", 
+                    ImagePath = "~/assets/images/portfolio/19.webp", 
+                    Rating = 4.9, 
+                    Description = "Adaptive suspension system for BMW 5 Series",
+                    SearchKeywords = "suspension bmw 5-series adaptive comfort",
+                    Color = "Silver",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 10, 
+                    Name = "BMW Xenon Headlight Set", 
+                    Price = 580, 
+                    Category = "Lighting", 
+                    CarMake = "BMW", 
+                    CarModel = "3 Series", 
+                    ImagePath = "~/assets/images/portfolio/01.webp", 
+                    Rating = 4.8, 
+                    Description = "Xenon headlight upgrade for BMW 3 Series",
+                    SearchKeywords = "headlight bmw 3-series xenon lighting",
+                    Color = "White",
+                    Fuel = "Gasoline"
+                },
+
+                // Honda Products (5 items)
+                new ShopProduct 
+                { 
+                    Id = 11, 
+                    Name = "Honda Ceramic Brake Pads", 
+                    Price = 180, 
+                    Category = "Brakes", 
+                    CarMake = "Honda", 
+                    CarModel = "Civic", 
+                    ImagePath = "~/assets/images/portfolio/02.webp", 
+                    Rating = 4.5, 
+                    Description = "Ceramic brake pads for Honda Civic",
+                    SearchKeywords = "brake pads honda civic ceramic stopping",
+                    Color = "Gray",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 12, 
+                    Name = "Honda High-Efficiency Air Filter", 
+                    Price = 45, 
+                    Category = "Filters", 
+                    CarMake = "Honda", 
+                    CarModel = "Accord", 
+                    ImagePath = "~/assets/images/portfolio/03.webp", 
+                    Rating = 4.4, 
+                    Description = "High-efficiency air filter for Honda Accord",
+                    SearchKeywords = "air filter honda accord efficiency",
+                    Color = "White",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 13, 
+                    Name = "Honda Genuine Oil Filter", 
+                    Price = 35, 
+                    Category = "Filters", 
+                    CarMake = "Honda", 
+                    CarModel = "CR-V", 
+                    ImagePath = "~/assets/images/portfolio/04.webp", 
+                    Rating = 4.6, 
+                    Description = "Genuine Honda oil filter for CR-V",
+                    SearchKeywords = "oil filter honda cr-v genuine maintenance",
+                    Color = "Black",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 14, 
+                    Name = "Honda Sport Suspension Kit", 
+                    Price = 320, 
+                    Category = "Suspension", 
+                    CarMake = "Honda", 
+                    CarModel = "Civic", 
+                    ImagePath = "~/assets/images/portfolio/05.webp", 
+                    Rating = 4.5, 
+                    Description = "Sport suspension lowering kit for Honda Civic",
+                    SearchKeywords = "suspension honda civic sport lowering",
+                    Color = "Red",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 15, 
+                    Name = "Honda LED Headlight Conversion", 
+                    Price = 280, 
+                    Category = "Lighting", 
+                    CarMake = "Honda", 
+                    CarModel = "Accord", 
+                    ImagePath = "~/assets/images/portfolio/06.webp", 
+                    Rating = 4.7, 
+                    Description = "LED headlight conversion kit for Honda Accord",
+                    SearchKeywords = "headlight honda accord led conversion",
+                    Color = "White",
+                    Fuel = "Gasoline"
+                },
+
+                // Volkswagen Products (5 items)
+                new ShopProduct 
+                { 
+                    Id = 16, 
+                    Name = "Volkswagen Brake System Complete", 
+                    Price = 380, 
+                    Category = "Brakes", 
+                    CarMake = "Volkswagen", 
+                    CarModel = "Golf", 
+                    ImagePath = "~/assets/images/portfolio/07.webp", 
+                    Rating = 4.6, 
+                    Description = "Complete brake system for Volkswagen Golf",
+                    SearchKeywords = "brake system volkswagen golf complete",
+                    Color = "Silver",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 17, 
+                    Name = "Volkswagen Performance Air Filter", 
+                    Price = 65, 
+                    Category = "Filters", 
+                    CarMake = "Volkswagen", 
+                    CarModel = "Passat", 
+                    ImagePath = "~/assets/images/portfolio/08.webp", 
+                    Rating = 4.5, 
+                    Description = "Performance air filter for Volkswagen Passat",
+                    SearchKeywords = "air filter volkswagen passat performance",
+                    Color = "Blue",
+                    Fuel = "Diesel"
+                },
+                new ShopProduct 
+                { 
+                    Id = 18, 
+                    Name = "Volkswagen Premium Oil Filter", 
+                    Price = 55, 
+                    Category = "Filters", 
+                    CarMake = "Volkswagen", 
+                    CarModel = "Tiguan", 
+                    ImagePath = "~/assets/images/portfolio/09.webp", 
+                    Rating = 4.4, 
+                    Description = "Premium oil filter for Volkswagen Tiguan",
+                    SearchKeywords = "oil filter volkswagen tiguan premium",
+                    Color = "Black",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 19, 
+                    Name = "Volkswagen Comfort Suspension", 
+                    Price = 450, 
+                    Category = "Suspension", 
+                    CarMake = "Volkswagen", 
+                    CarModel = "Golf", 
+                    ImagePath = "~/assets/images/portfolio/11.webp", 
+                    Rating = 4.6, 
+                    Description = "Comfort suspension upgrade for Volkswagen Golf",
+                    SearchKeywords = "suspension volkswagen golf comfort upgrade",
+                    Color = "Gray",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 20, 
+                    Name = "Volkswagen Bi-Xenon Headlights", 
+                    Price = 340, 
+                    Category = "Lighting", 
+                    CarMake = "Volkswagen", 
+                    CarModel = "Passat", 
+                    ImagePath = "~/assets/images/portfolio/12.webp", 
+                    Rating = 4.7, 
+                    Description = "Bi-Xenon headlights for Volkswagen Passat",
+                    SearchKeywords = "headlight volkswagen passat xenon bi-xenon",
+                    Color = "Chrome",
+                    Fuel = "Diesel"
+                },
+
+                // Mitsubishi Products (4 items)
+                new ShopProduct 
+                { 
+                    Id = 21, 
+                    Name = "Mitsubishi Heavy-Duty Brake Disc", 
+                    Price = 220, 
+                    Category = "Brakes", 
+                    CarMake = "Mitsubishi", 
+                    CarModel = "Outlander", 
+                    ImagePath = "~/assets/images/portfolio/13.webp", 
+                    Rating = 4.5, 
+                    Description = "Heavy-duty brake disc for Mitsubishi Outlander",
+                    SearchKeywords = "brake disc mitsubishi outlander heavy-duty",
+                    Color = "Silver",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 22, 
+                    Name = "Mitsubishi Long-Life Air Filter", 
+                    Price = 55, 
+                    Category = "Filters", 
+                    CarMake = "Mitsubishi", 
+                    CarModel = "Lancer", 
+                    ImagePath = "~/assets/images/portfolio/14.webp", 
+                    Rating = 4.4, 
+                    Description = "Long-life air filter for Mitsubishi Lancer",
+                    SearchKeywords = "air filter mitsubishi lancer long-life",
+                    Color = "White",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 23, 
+                    Name = "Mitsubishi Genuine Oil Filter", 
+                    Price = 42, 
+                    Category = "Filters", 
+                    CarMake = "Mitsubishi", 
+                    CarModel = "Pajero", 
+                    ImagePath = "~/assets/images/portfolio/15.webp", 
+                    Rating = 4.6, 
+                    Description = "Genuine oil filter for Mitsubishi Pajero",
+                    SearchKeywords = "oil filter mitsubishi pajero genuine",
+                    Color = "Black",
+                    Fuel = "Diesel"
+                },
+                new ShopProduct 
+                { 
+                    Id = 24, 
+                    Name = "Mitsubishi Off-Road Suspension", 
+                    Price = 380, 
+                    Category = "Suspension", 
+                    CarMake = "Mitsubishi", 
+                    CarModel = "Outlander", 
+                    ImagePath = "~/assets/images/portfolio/16.webp", 
+                    Rating = 4.7, 
+                    Description = "Off-road suspension kit for Mitsubishi Outlander",
+                    SearchKeywords = "suspension mitsubishi outlander off-road",
+                    Color = "Black",
+                    Fuel = "Gasoline"
+                },
+
+                // Lamborghini Products (3 items)
+                new ShopProduct 
+                { 
+                    Id = 25, 
+                    Name = "Lamborghini Carbon Ceramic Brakes", 
+                    Price = 2500, 
+                    Category = "Brakes", 
+                    CarMake = "Lamborghini", 
+                    CarModel = "Huracán", 
+                    ImagePath = "~/assets/images/portfolio/17.webp", 
+                    Rating = 5.0, 
+                    Description = "Carbon ceramic brake system for Lamborghini Huracán",
+                    SearchKeywords = "brake carbon ceramic lamborghini huracan performance",
+                    Color = "Black",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 26, 
+                    Name = "Lamborghini Racing Air Filter", 
+                    Price = 350, 
+                    Category = "Filters", 
+                    CarMake = "Lamborghini", 
+                    CarModel = "Aventador", 
+                    ImagePath = "~/assets/images/portfolio/18.webp", 
+                    Rating = 5.0, 
+                    Description = "Racing-grade air filter for Lamborghini Aventador",
+                    SearchKeywords = "air filter lamborghini aventador racing performance",
+                    Color = "Yellow",
+                    Fuel = "Gasoline"
+                },
+                new ShopProduct 
+                { 
+                    Id = 27, 
+                    Name = "Lamborghini Premium Oil Filter", 
+                    Price = 280, 
+                    Category = "Filters", 
+                    CarMake = "Lamborghini", 
+                    CarModel = "Huracán", 
+                    ImagePath = "~/assets/images/portfolio/19.webp", 
+                    Rating = 5.0, 
+                    Description = "Premium oil filter for Lamborghini Huracán",
+                    SearchKeywords = "oil filter lamborghini huracan premium",
+                    Color = "Gold",
+                    Fuel = "Gasoline"
+                }
             };
         }
 
@@ -63,17 +458,48 @@ namespace FinalProject.MVC.Controllers
         {
             var filteredProducts = _allProducts.AsQueryable();
 
-            // Apply filters
+            // Apply search text filter (name, description, keywords)
+            if (!string.IsNullOrEmpty(request.SearchText))
+            {
+                var searchLower = request.SearchText.ToLower();
+                filteredProducts = filteredProducts.Where(p => 
+                    p.Name.ToLower().Contains(searchLower) || 
+                    p.Description.ToLower().Contains(searchLower) ||
+                    (p.SearchKeywords != null && p.SearchKeywords.ToLower().Contains(searchLower))
+                );
+            }
+
+            // Apply category filter
+            if (!string.IsNullOrEmpty(request.Category))
+            {
+                filteredProducts = filteredProducts.Where(p => p.Category == request.Category);
+            }
+
+            // Apply car make filter (single select - backwards compatibility)
             if (!string.IsNullOrEmpty(request.CarMake) && request.CarMake != "Car Make")
             {
                 filteredProducts = filteredProducts.Where(p => p.CarMake == request.CarMake);
             }
 
+            // Apply selected makes filter (multi-select from ShopTwo)
+            if (request.SelectedMakes != null && request.SelectedMakes.Any())
+            {
+                filteredProducts = filteredProducts.Where(p => request.SelectedMakes.Contains(p.CarMake));
+            }
+
+            // Apply car model filter (single select - backwards compatibility)
             if (!string.IsNullOrEmpty(request.CarModel) && request.CarModel != "Car Model")
             {
                 filteredProducts = filteredProducts.Where(p => p.CarModel == request.CarModel);
             }
 
+            // Apply selected models filter (multi-select from ShopTwo)
+            if (request.SelectedModels != null && request.SelectedModels.Any())
+            {
+                filteredProducts = filteredProducts.Where(p => request.SelectedModels.Contains(p.CarModel));
+            }
+
+            // Apply price range filter (dropdown - backwards compatibility)
             if (!string.IsNullOrEmpty(request.PriceRange) && request.PriceRange != "Price")
             {
                 switch (request.PriceRange)
@@ -94,6 +520,17 @@ namespace FinalProject.MVC.Controllers
                         // No filter applied
                         break;
                 }
+            }
+
+            // Apply min/max price filter (slider from ShopTwo)
+            if (request.MinPrice.HasValue)
+            {
+                filteredProducts = filteredProducts.Where(p => p.Price >= request.MinPrice.Value);
+            }
+
+            if (request.MaxPrice.HasValue)
+            {
+                filteredProducts = filteredProducts.Where(p => p.Price <= request.MaxPrice.Value);
             }
 
             // Apply sorting
@@ -173,7 +610,21 @@ namespace FinalProject.MVC.Controllers
         public IActionResult ShopTwo()
         {
             ViewData["Title"] = "Shop Two - AutoVault";
-            return View();
+            
+            // Use the same products from the main shop
+            var products = _allProducts.Take(12).ToList(); // Show 12 products initially
+            
+            var response = new ShopFilterResponse
+            {
+                Products = products,
+                TotalProducts = _allProducts.Count,
+                CurrentPage = 1,
+                TotalPages = (int)Math.Ceiling(_allProducts.Count / 12.0),
+                HasMorePages = _allProducts.Count > 12,
+                ResultsText = $"Showing 1-{Math.Min(12, _allProducts.Count)} of {_allProducts.Count} results"
+            };
+            
+            return View(response);
         }
 
         public IActionResult ShopThree()
