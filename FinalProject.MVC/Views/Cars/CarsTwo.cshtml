@@ -2,7 +2,247 @@
     ViewData["Title"] = "Cars Two - AutoVault";
 }
 
-<!-- This view redirects to the main Cars Index for now -->
-<script>
-    window.location.href = '@Url.Action("Index", "Cars")';
-</script>
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Cars</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Cars</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- rts breadcrumb area end -->
+
+<div class="rts-portfolio-area inner rts-section-gapNew">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="sticky-top">
+                    <div class="left-side-bar">
+                        <div class="search-area side-box">
+                            <h2>Cars Search</h2>
+                            <form action="#">
+                                <div class="input-wrapper">
+                                    <input type="text" placeholder="Search Vehicles" required>
+                                    <button type="submit"><i class="fa-regular fa-magnifying-glass"></i></button>
+                                </div>
+                            </form>
+                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
+                        </div>
+                        <div class="car-make side-box">
+                            <h2>Car Make</h2>
+                            <ul class="checkbox-list">
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" checked />
+                                        <span>Mercedes-Benz</span>
+                                    </label>
+                                    <span>(130)</span>
+                                </li>
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" />
+                                        <span>Volkswagen</span>
+                                    </label>
+                                    <span>(80)</span>
+                                </li>
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" />
+                                        <span>Mitsubishi</span>
+                                    </label>
+                                    <span>(199)</span>
+                                </li>
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" />
+                                        <span>Honda</span>
+                                    </label>
+                                    <span>(70)</span>
+                                </li>
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" />
+                                        <span>Lamborghini</span>
+                                    </label>
+                                    <span>(160)</span>
+                                </li>
+                            </ul>
+                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
+                        </div>
+                        <div class="car-make side-box">
+                            <h2>Price Range</h2>
+                            <div class="range-slider">
+                                <div class="slider">
+                                    <div class="progress"></div>
+                                </div>
+                                <div class="range-input">
+                                    <input type="range" class="range-min" min="0" max="10000" value="2500">
+                                    <input type="range" class="range-max" min="0" max="10000" value="7500">
+                                </div>
+                                <div class="price-input">
+                                    <span id="minPrice">$2500</span>
+                                    <span> - </span>
+                                    <span id="maxPrice">$5000</span>
+                                </div>
+                            </div>
+                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
+                        </div>
+                        <div class="car-make side-box">
+                            <h2>Car Seats</h2>
+                            <ul class="checkbox-list">
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" checked />
+                                        <span>2 seats</span>
+                                    </label>
+                                    <span>(30)</span>
+                                </li>
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" />
+                                        <span>4 seats</span>
+                                    </label>
+                                    <span>(179)</span>
+                                </li>
+                                <li class="checkbox-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" />
+                                        <span>5 seats</span>
+                                    </label>
+                                    <span>(40)</span>
+                                </li>
+                            </ul>
+                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
+                        </div>
+                        <div class="tag-area side-box">
+                            <h2>Fuel</h2>
+                            <ul>
+                                <li>Gasoline</li>
+                                <li>Diesel</li>
+                                <li>Plug-in Hybrid</li>
+                                <li>Hybrid</li>
+                                <li>Electric</li>
+                            </ul>
+                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="right-side-porfolio">
+                    <div class="row g-5">
+                        <div class="col-lg-6">
+                            <div class="project-wrapper2">
+                                <div class="image-area">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/04.webp" alt=""></a>
+                                    <span class="tag">Stocks</span>
+                                    <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                    <a href="~/assets/images/portfolio/04.webp" class="gallery-image">
+                                        <img src="~/assets/images/icon/image.svg" alt="">
+                                        7
+                                    </a>
+                                </div>
+                                <span class="price">14,000$</span>
+                                <div class="content-area">
+                                    <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Thunderbolt Car</a></h6>
+                                    <ul class="feature-area">
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                            100 Miles
+                                        </li>
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                            Petrol
+                                        </li>
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                            Automatic
+                                        </li>
+                                    </ul>
+                                    <div class="button-area">
+                                        <p class="">$400</p>
+                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-small">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="project-wrapper2">
+                                <div class="image-area">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="2"><img src="~/assets/images/portfolio/05.webp" alt=""></a>
+                                    <span class="tag">New</span>
+                                    <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                    <a href="~/assets/images/portfolio/05.webp" class="gallery-image">
+                                        <img src="~/assets/images/icon/image.svg" alt="">
+                                        5
+                                    </a>
+                                </div>
+                                <span class="price">14,000$</span>
+                                <div class="content-area">
+                                    <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="2">Mercedes-Benz E-Class</a></h6>
+                                    <ul class="feature-area">
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                            100 Miles
+                                        </li>
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                            Petrol
+                                        </li>
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                            Automatic
+                                        </li>
+                                    </ul>
+                                    <div class="button-area">
+                                        <p class="">$400</p>
+                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="2" class="rts-btn btn-primary radius-small">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="project-wrapper2">
+                                <div class="image-area">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="3"><img src="~/assets/images/portfolio/06.webp" alt=""></a>
+                                    <span class="tag">Trending</span>
+                                    <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                    <a href="~/assets/images/portfolio/06.webp" class="gallery-image">
+                                        <img src="~/assets/images/icon/image.svg" alt="">
+                                        5
+                                    </a>
+                                </div>
+                                <span class="price">14,000$</span>
+                                <div class="content-area">
+                                    <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="3">Ford Mustang Convertible</a></h6>
+                                    <ul class="feature-area">
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                            100 Miles
+                                        </li>
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                            Petrol
+                                        </li>
+                                        <li>
+                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                            Automatic
+                                        </li>
+                                    </ul>
+                                    <div class="button-area">
+                                        <p class="">$400</p>
+                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="3" class="rts-btn btn-primary radius-small">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

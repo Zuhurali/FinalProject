@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Car Dealer - AutoVault";
+}
+
+<!-- Content based on car-dealer.html -->
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Car Dealers</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Dealers</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="section-title-area text-center">
+            <h2 class="section-title">Our Trusted <span>Dealers</span></h2>
+        </div>
+        <div class="row g-5 mt--30">
+            <div class="col-lg-4">
+                <div class="dealer-wrapper">
+                    <div class="image-area">
+                        <img src="~/assets/images/team/01.webp" alt="">
+                    </div>
+                    <div class="content">
+                        <h5><a asp-controller="Dealer" asp-action="Details" asp-route-id="1">AutoVault Central</a></h5>
+                        <p>Downtown Location</p>
+                        <p class="location">123 Main Street, Toronto</p>
+                        <a asp-controller="Dealer" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

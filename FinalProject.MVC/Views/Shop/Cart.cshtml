@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Cart - AutoVault";
+}
+
+<!-- Content based on cart.html -->
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Shopping Cart</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-controller="Shop" asp-action="Index">Shop</a>
+                <a href="#" class="current">Cart</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="cart-area">
+            <h3>Your Shopping Cart</h3>
+            <div class="cart-table">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="cart-product">
+                                    <img src="~/assets/images/shop/01.webp" alt="" width="80">
+                                    <span>Premium Car Part</span>
+                                </div>
+                            </td>
+                            <td>$89.99</td>
+                            <td>
+                                <input type="number" value="1" min="1" class="form-control" style="width: 80px;">
+                            </td>
+                            <td>$89.99</td>
+                            <td>
+                                <button class="btn btn-danger">Remove</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="cart-summary">
+                <h4>Cart Total: $89.99</h4>
+                <a asp-controller="Shop" asp-action="Checkout" class="rts-btn btn-primary">Proceed to Checkout</a>
+            </div>
+        </div>
+    </div>
+</section>

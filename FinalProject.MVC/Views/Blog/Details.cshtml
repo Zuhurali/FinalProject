@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Blog Details - AutoVault";
+}
+
+<!-- Content based on blog-details.html -->
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Blog Details</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-controller="Blog" asp-action="Index">Blog</a>
+                <a href="#" class="current">Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="blog-details-area">
+                    <div class="image-area">
+                        <img src="~/assets/images/blog/01.webp" alt="" class="img-fluid">
+                    </div>
+                    <div class="content-area">
+                        <div class="blog-meta">
+                            <span class="date">March 26, 2024</span>
+                            <span class="author">By Admin</span>
+                            <span class="category">Automotive</span>
+                        </div>
+                        <h2>Review the Latest Car Models And Compare Them With Similar Car Vehicles</h2>
+                        <p>
+                            In the ever-evolving automotive industry, staying updated with the latest car models and their features 
+                            is crucial for making informed purchasing decisions. This comprehensive review explores the newest 
+                            vehicles in the market and provides detailed comparisons.
+                        </p>
+                        <p>
+                            From fuel efficiency to advanced safety features, modern vehicles offer unprecedented value and 
+                            technology integration. Whether you're looking for a family sedan or a performance sports car, 
+                            understanding the key differences between similar models can help you choose the perfect vehicle.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="blog-sidebar">
+                    <div class="sidebar-widget">
+                        <h4>Recent Posts</h4>
+                        <ul class="recent-posts">
+                            <li><a href="#">Electric Vehicle Trends for 2024</a></li>
+                            <li><a href="#">Best Maintenance Practices</a></li>
+                            <li><a href="#">Hybrid vs Electric Vehicles</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

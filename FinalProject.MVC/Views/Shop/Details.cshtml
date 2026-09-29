@@ -1,0 +1,53 @@
+@{
+    ViewData["Title"] = "Shop Details - AutoVault";
+}
+
+<!-- Content based on shop-details.html -->
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Product Details</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-controller="Shop" asp-action="Index">Shop</a>
+                <a href="#" class="current">Product Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-6">
+                <div class="product-images">
+                    <div class="main-image">
+                        <img src="~/assets/images/shop/01.webp" alt="" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="product-details">
+                    <h3>Premium Car Accessories</h3>
+                    <div class="price">
+                        <span class="current-price">$89.99</span>
+                    </div>
+                    <p class="description">
+                        High-quality automotive accessories designed for performance and durability. 
+                        Perfect for enhancing your vehicle's functionality and appearance.
+                    </p>
+                    <div class="product-options">
+                        <div class="quantity">
+                            <label>Quantity:</label>
+                            <input type="number" value="1" min="1" class="form-control" style="width: 100px;">
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary">Add to Cart</a>
+                        <a href="#" class="rts-btn btn-border">Add to Wishlist</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

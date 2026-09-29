@@ -7,4 +7,3 @@ namespace FinalProject.MVC.Models
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 }
-//

@@ -1,0 +1,36 @@
+namespace FinalProject.MVC.Models
+{
+    public class ShopProduct
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public string CarMake { get; set; } = string.Empty;
+        public string CarModel { get; set; } = string.Empty;
+        public string ImagePath { get; set; } = string.Empty;
+        public double Rating { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public bool InStock { get; set; } = true;
+    }
+
+    public class ShopFilterRequest
+    {
+        public string? CarMake { get; set; }
+        public string? CarModel { get; set; }
+        public string? PriceRange { get; set; }
+        public string? SortBy { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 6;
+    }
+
+    public class ShopFilterResponse
+    {
+        public List<ShopProduct> Products { get; set; } = new List<ShopProduct>();
+        public int TotalProducts { get; set; }
+        public int CurrentPage { get; set; }
+        public int TotalPages { get; set; }
+        public bool HasMorePages { get; set; }
+        public string ResultsText { get; set; } = string.Empty;
+    }
+}

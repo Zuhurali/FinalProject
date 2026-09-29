@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Sold Car - AutoVault";
+}
+
+<!-- Content based on sold-car.html -->
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Sold Cars</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Sold Cars</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="section-title-area text-center">
+            <h2 class="section-title">Successfully <span>Sold</span> Vehicles</h2>
+            <p>View our recently sold vehicles and their success stories</p>
+        </div>
+        <div class="row g-5 mt--30">
+            <div class="col-lg-4">
+                <div class="sold-car-wrapper">
+                    <div class="image-area">
+                        <img src="~/assets/images/portfolio/04.webp" alt="">
+                        <span class="sold-badge">SOLD</span>
+                    </div>
+                    <div class="content">
+                        <h5>Mercedes-Benz E-Class</h5>
+                        <p class="price">Sold for $28,500</p>
+                        <p class="sold-date">Sold on March 15, 2024</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

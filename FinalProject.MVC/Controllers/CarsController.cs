@@ -41,5 +41,11 @@ namespace FinalProject.MVC.Controllers
             ViewData["CarId"] = id ?? 1;
             return View();
         }
+
+        public IActionResult SoldCar()
+        {
+            ViewData["Title"] = "Sold Car - AutoVault";
+            return View();
+        }
     }
 }
