@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Register - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Create Account</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Register</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="contact-form">
+                    <h3 class="text-center mb-4">Create Your Account</h3>
+                    
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @TempData["Error"]
+                        </div>
+                    }
+                    
+                    <form asp-controller="Account" asp-action="Register" method="post">
+                        <div class="form__control mb-3">
+                            <input type="text" name="firstName" class="input-form" placeholder="First Name (Optional)">
+                        </div>
+                        <div class="form__control mb-3">
+                            <input type="text" name="lastName" class="input-form" placeholder="Last Name (Optional)">
+                        </div>
+                        <div class="form__control mb-3">
+                            <input type="email" name="email" class="input-form" placeholder="Email Address" required>
+                        </div>
+                        <div class="form__control mb-3">
+                            <input type="password" name="password" class="input-form" placeholder="Password (min 6 characters)" required>
+                        </div>
+                        <div class="form__control mb-3">
+                            <input type="password" name="confirmPassword" class="input-form" placeholder="Confirm Password" required>
+                        </div>
+                        <div class="form__control">
+                            <button type="submit" class="submit__btn w-100">Create Account</button>
+                        </div>
+                        @Html.AntiForgeryToken()
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a asp-controller="Account" asp-action="SignIn">Sign In</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

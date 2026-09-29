@@ -95,7 +95,7 @@
                             </h6>
                             <div class="button-area">
                                 <p class="">$@product.Price</p>
-                                <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
+                                <a href="#" class="rts-btn btn-primary radius-big icon add-to-cart-btn" data-product-id="@product.Id">
                                     Add To Cart
                                     <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <g clip-path="url(#clip0_1201_1501)">
@@ -257,7 +257,7 @@
                             </h6>
                             <div class="button-area">
                                 <p class="">$${product.price}</p>
-                                <a href="/Shop/Cart" class="rts-btn btn-primary radius-big icon">
+                                <a href="#" class="rts-btn btn-primary radius-big icon add-to-cart-btn" data-product-id="${product.id}">
                                     Add To Cart
                                     <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <g clip-path="url(#clip0_1201_1501)">
@@ -319,6 +319,46 @@
             resetFilters();
         });
         */
+
+        // Add To Cart functionality
+        $(document).on('click', '.add-to-cart-btn', function(e) {
+            e.preventDefault();
+            
+            const productId = $(this).data('product-id');
+            const button = $(this);
+            const originalText = button.html();
+            
+            // Disable button and show loading state
+            button.prop('disabled', true).html('Adding...');
+            
+            $.ajax({
+                url: '@Url.Action("AddToCart", "Shop")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ productId: productId, quantity: 1 }),
+                success: function(response) {
+                    if (response.success) {
+                        // Show success feedback
+                        button.html('✓ Added!');
+                        setTimeout(function() {
+                            button.html(originalText).prop('disabled', false);
+                        }, 1500);
+                        
+                        // Optional: Show notification
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success('Product added to cart!');
+                        }
+                    } else {
+                        button.html(originalText).prop('disabled', false);
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    button.html(originalText).prop('disabled', false);
+                    alert('Failed to add product to cart. Please try again.');
+                }
+            });
+        });
     });
 </script>
 }

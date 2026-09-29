@@ -20,19 +20,35 @@
             <div class="col-lg-6">
                 <div class="contact-form">
                     <h3 class="text-center mb-4">Sign In to Your Account</h3>
-                    <form>
+                    
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @TempData["Error"]
+                        </div>
+                    }
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @TempData["Success"]
+                        </div>
+                    }
+                    
+                    <form asp-controller="Account" asp-action="SignIn" method="post">
+                        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
                         <div class="form__control mb-3">
-                            <input type="email" class="input-form" placeholder="Email Address" required>
+                            <input type="email" name="email" class="input-form" placeholder="Email Address" required>
                         </div>
                         <div class="form__control mb-3">
-                            <input type="password" class="input-form" placeholder="Password" required>
+                            <input type="password" name="password" class="input-form" placeholder="Password" required>
                         </div>
                         <div class="form__control">
                             <button type="submit" class="submit__btn w-100">Sign In</button>
                         </div>
+                        @Html.AntiForgeryToken()
                     </form>
                     <div class="text-center mt-3">
-                        <p>Don't have an account? <a href="#">Create Account</a></p>
+                        <p>Don't have an account? <a asp-controller="Account" asp-action="Register">Create Account</a></p>
                     </div>
                 </div>
             </div>
