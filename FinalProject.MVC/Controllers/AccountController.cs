@@ -113,7 +113,8 @@ namespace FinalProject.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignOut()
+        [ActionName("SignOut")]
+        public async Task<IActionResult> SignOutUser()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");

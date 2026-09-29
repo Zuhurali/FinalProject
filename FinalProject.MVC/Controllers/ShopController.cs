@@ -654,8 +654,22 @@ namespace FinalProject.MVC.Controllers
         public IActionResult Details(int? id)
         {
             ViewData["Title"] = "Shop Details - AutoVault";
-            ViewData["ProductId"] = id ?? 1;
-            return View();
+
+            if (id == null)
+            {
+                TempData["Error"] = "Product not found.";
+                return RedirectToAction("Index");
+            }
+
+            var product = _allProducts.FirstOrDefault(p => p.Id == id.Value);
+
+            if (product == null)
+            {
+                TempData["Error"] = "Product not found.";
+                return RedirectToAction("Index");
+            }
+
+            return View(product);
         }
 
         public IActionResult Cart()

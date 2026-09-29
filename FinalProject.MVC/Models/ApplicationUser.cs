@@ -9,7 +9,8 @@ namespace FinalProject.MVC.Models
         public string? LastName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation property
+        // Navigation properties
         public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }
 }

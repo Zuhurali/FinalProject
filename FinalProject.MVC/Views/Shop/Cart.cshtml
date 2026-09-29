@@ -25,6 +25,14 @@
                 <div class="woocommerce">
                     <div class="woocommerce-notices-wrapper"></div>
                     
+                    @if (TempData["CheckoutError"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            @TempData["CheckoutError"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
                     @if (Model.IsEmpty)
                     {
                         <!-- Empty Cart Message -->
@@ -144,7 +152,7 @@
                                                 </tbody>
                                             </table>
                                             <div class="ms-proceed-to-checkout wc-proceed-to-checkout">
-                                                <a asp-controller="Shop" asp-action="Checkout" class="rts-btn btn-primary"> Proceed to checkout</a>
+                                                <a asp-controller="Checkout" asp-action="Index" class="rts-btn btn-primary">Proceed to checkout</a>
                                             </div>
                                         </div>
                                     </div>

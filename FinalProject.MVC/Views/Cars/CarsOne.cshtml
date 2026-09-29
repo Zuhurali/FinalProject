@@ -1,5 +1,11 @@
+@model List<FinalProject.MVC.Models.Car>
 @{
     ViewData["Title"] = "Cars One - AutoVault";
+    var makes = ViewBag.Makes as List<string> ?? new List<string>();
+    var models = ViewBag.Models as List<string> ?? new List<string>();
+    var selectedMake = ViewBag.SelectedMake as string;
+    var selectedModel = ViewBag.SelectedModel as string;
+    var selectedPriceRange = ViewBag.SelectedPriceRange as string;
 }
 
 <!-- rts breadcrumb area start -->
@@ -20,37 +26,35 @@
     <div class="container">
         <div class="select-inner">
             <div class="select-area-down wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
-                <form action="#" method="get" accept-charset="utf-8">
-                    <select name="my_select" class="mySelect">
-                        <option value="2" selected>Car Make</option>
-                        <option value="10">Mazda</option>
-                        <option value="1">Citroen</option>
-                        <option value="13">Honda</option>
-                        <option value="14">Mitsubishi</option>
-                        <option value="15">Peugeot</option>
+                <form id="carFilterForm">
+                    <select name="make" id="carMakeSelect" class="mySelect">
+                        <option value="">All Makes</option>
+                        @foreach (var make in makes)
+                        {
+                            <option value="@make" selected="@(make == selectedMake)">@make</option>
+                        }
                     </select>
                 </form>
-                <form class="select-2" action="#" method="get" accept-charset="utf-8">
-                    <select name="my_select2" class="my_select2">
-                        <option value="2" selected>Car Model</option>
-                        <option value="10">155</option>
-                        <option value="1">151</option>
-                        <option value="13">150</option>
-                        <option value="14">152</option>
-                        <option value="15">156</option>
+                <form class="select-2">
+                    <select name="model" id="carModelSelect" class="my_select2">
+                        <option value="">All Models</option>
+                        @foreach (var carModel in models)
+                        {
+                            <option value="@carModel" selected="@(carModel == selectedModel)">@carModel</option>
+                        }
                     </select>
                 </form>
-                <form class="select-2" action="#" method="get" accept-charset="utf-8">
-                    <select name="my_select2" class="my_select2">
-                        <option value="2" selected>Price</option>
-                        <option value="10">22,000$</option>
-                        <option value="1">27,000$</option>
-                        <option value="13">30,000$</option>
-                        <option value="14">32,000$</option>
-                        <option value="15">38,000$</option>
+                <form class="select-2">
+                    <select name="priceRange" id="priceRangeSelect" class="my_select2">
+                        <option value="">All Prices</option>
+                        <option value="0-25000" selected="@(selectedPriceRange == "0-25000")">$0 - $25,000</option>
+                        <option value="25000-35000" selected="@(selectedPriceRange == "25000-35000")">$25,000 - $35,000</option>
+                        <option value="35000-50000" selected="@(selectedPriceRange == "35000-50000")">$35,000 - $50,000</option>
+                        <option value="50000-70000" selected="@(selectedPriceRange == "50000-70000")">$50,000 - $70,000</option>
+                        <option value="70000+" selected="@(selectedPriceRange == "70000+")">$70,000+</option>
                     </select>
                 </form>
-                <button type="submit" class="rts-btn radius-small icon btn-primary">
+                <button type="button" id="searchBtn" class="rts-btn radius-small icon btn-primary">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10.69 10.69L13 13M12.3333 6.68575C12.3333 9.826 9.796 12.3715 6.667 12.3715C3.53725 12.3715 1 9.826 1 6.6865C1 3.54475 3.53725 1 6.66625 1C9.796 1 12.3333 3.5455 12.3333 6.68575Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
@@ -63,112 +67,196 @@
 
 <div class="rts-portfolio-area inner rts-section-gapNew">
     <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-4">
-                <div class="project-wrapper2">
-                    <div class="image-area">
-                        <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/04.webp" alt=""></a>
-                        <span class="tag">Stocks</span>
-                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                        <a href="~/assets/images/portfolio/04.webp" class="gallery-image">
-                            <img src="~/assets/images/icon/image.svg" alt="">
-                            7
-                        </a>
-                    </div>
-                    <span class="price">14,000$</span>
-                    <div class="content-area">
-                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Thunderbolt Car</a></h6>
-                        <ul class="feature-area">
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                100 Miles
-                            </li>
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                Petrol
-                            </li>
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                Automatic
-                            </li>
-                        </ul>
-                        <div class="button-area">
-                            <p class="">$400</p>
-                            <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-small">View Details</a>
+        <div id="carsContainer" class="row g-5">
+            @if (Model.Any())
+            {
+                @foreach (var car in Model)
+                {
+                    <div class="col-lg-4">
+                        <div class="project-wrapper2">
+                            <div class="image-area">
+                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
+                                    <img src="@car.ImagePath" alt="@car.Name">
+                                </a>
+                                <span class="tag">@car.Badge</span>
+                                <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                <a href="@car.ImagePath" class="gallery-image">
+                                    <img src="~/assets/images/icon/image.svg" alt="">
+                                    @car.ImageCount
+                                </a>
+                            </div>
+                            <span class="price">$@car.Price.ToString("N0")</span>
+                            <div class="content-area">
+                                <h6 class="title">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a>
+                                </h6>
+                                <ul class="feature-area">
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                        @car.Mileage.ToString("N0") Miles
+                                    </li>
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                        @car.Fuel
+                                    </li>
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                        @car.Transmission
+                                    </li>
+                                </ul>
+                                <div class="button-area">
+                                    <p class="">$@car.MonthlyPayment/mo</p>
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="project-wrapper2">
-                    <div class="image-area">
-                        <a asp-controller="Cars" asp-action="Details" asp-route-id="2"><img src="~/assets/images/portfolio/05.webp" alt=""></a>
-                        <span class="tag">New</span>
-                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                        <a href="~/assets/images/portfolio/05.webp" class="gallery-image">
-                            <img src="~/assets/images/icon/image.svg" alt="">
-                            5
-                        </a>
-                    </div>
-                    <span class="price">14,000$</span>
-                    <div class="content-area">
-                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="2">Mercedes-Benz E-Class</a></h6>
-                        <ul class="feature-area">
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                100 Miles
-                            </li>
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                Petrol
-                            </li>
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                Automatic
-                            </li>
-                        </ul>
-                        <div class="button-area">
-                            <p class="">$400</p>
-                            <a asp-controller="Cars" asp-action="Details" asp-route-id="2" class="rts-btn btn-primary radius-small">View Details</a>
-                        </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="no-results" style="text-align: center; padding: 80px 20px;">
+                        <svg width="120" height="120" viewBox="0 0 120 120" style="opacity: 0.3; margin-bottom: 30px;">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#FF3600" stroke-width="2"/>
+                            <path d="M 40 50 Q 60 30 80 50" fill="none" stroke="#FF3600" stroke-width="2"/>
+                            <circle cx="45" cy="50" r="5" fill="#FF3600"/>
+                            <circle cx="75" cy="50" r="5" fill="#FF3600"/>
+                            <path d="M 40 75 Q 60 85 80 75" fill="none" stroke="#FF3600" stroke-width="2"/>
+                        </svg>
+                        <h3 style="font-size: 28px; margin-bottom: 15px; color: var(--color-heading-1);">No cars found</h3>
+                        <p style="font-size: 16px; color: var(--color-body); margin-bottom: 30px;">No cars match your selected filters. Try adjusting your search criteria.</p>
+                        <button type="button" id="resetFilters" class="rts-btn btn-primary">Reset Filters</button>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="project-wrapper2">
-                    <div class="image-area">
-                        <a asp-controller="Cars" asp-action="Details" asp-route-id="3"><img src="~/assets/images/portfolio/06.webp" alt=""></a>
-                        <span class="tag">Trending</span>
-                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                        <a href="~/assets/images/portfolio/06.webp" class="gallery-image">
-                            <img src="~/assets/images/icon/image.svg" alt="">
-                            5
-                        </a>
-                    </div>
-                    <span class="price">14,000$</span>
-                    <div class="content-area">
-                        <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="3">Ford Mustang Convertible</a></h6>
-                        <ul class="feature-area">
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                100 Miles
-                            </li>
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                Petrol
-                            </li>
-                            <li>
-                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                Automatic
-                            </li>
-                        </ul>
-                        <div class="button-area">
-                            <p class="">$400</p>
-                            <a asp-controller="Cars" asp-action="Details" asp-route-id="3" class="rts-btn btn-primary radius-small">View Details</a>
-                        </div>
-                    </div>
-                </div>
+            }
+        </div>
+        <div id="loadingIndicator" style="display: none; text-align: center; padding: 40px;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    $(document).ready(function() {
+        // Search button click
+        $('#searchBtn').on('click', function() {
+            filterCars();
+        });
+
+        // Reset filters
+        $('#resetFilters, #resetFiltersTop').on('click', function() {
+            $('#carMakeSelect').val('').trigger('change');
+            $('#carModelSelect').val('').trigger('change');
+            $('#priceRangeSelect').val('').trigger('change');
+            filterCars();
+        });
+
+        // Filter cars via AJAX
+        function filterCars() {
+            const make = $('#carMakeSelect').val();
+            const model = $('#carModelSelect').val();
+            const priceRange = $('#priceRangeSelect').val();
+
+            // Show loading indicator
+            $('#loadingIndicator').show();
+            $('#carsContainer').css('opacity', '0.5');
+
+            $.ajax({
+                url: '@Url.Action("FilterCars", "Cars")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    make: make || null,
+                    model: model || null,
+                    priceRange: priceRange || null
+                }),
+                success: function(response) {
+                    updateCarsList(response.cars);
+                    $('#loadingIndicator').hide();
+                    $('#carsContainer').css('opacity', '1');
+                },
+                error: function() {
+                    alert('Error filtering cars. Please try again.');
+                    $('#loadingIndicator').hide();
+                    $('#carsContainer').css('opacity', '1');
+                }
+            });
+        }
+
+        // Update cars list dynamically
+        function updateCarsList(cars) {
+            const container = $('#carsContainer');
+            container.empty();
+
+            if (cars.length === 0) {
+                container.html(`
+                    <div class="col-12">
+                        <div class="no-results" style="text-align: center; padding: 80px 20px;">
+                            <svg width="120" height="120" viewBox="0 0 120 120" style="opacity: 0.3; margin-bottom: 30px;">
+                                <circle cx="60" cy="60" r="50" fill="none" stroke="#FF3600" stroke-width="2"/>
+                                <path d="M 40 50 Q 60 30 80 50" fill="none" stroke="#FF3600" stroke-width="2"/>
+                                <circle cx="45" cy="50" r="5" fill="#FF3600"/>
+                                <circle cx="75" cy="50" r="5" fill="#FF3600"/>
+                                <path d="M 40 75 Q 60 85 80 75" fill="none" stroke="#FF3600" stroke-width="2"/>
+                            </svg>
+                            <h3 style="font-size: 28px; margin-bottom: 15px; color: var(--color-heading-1);">No cars found</h3>
+                            <p style="font-size: 16px; color: var(--color-body); margin-bottom: 30px;">No cars match your selected filters. Try adjusting your search criteria.</p>
+                            <button type="button" id="resetFilters" class="rts-btn btn-primary">Reset Filters</button>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            cars.forEach(function(car) {
+                const carCard = `
+                    <div class="col-lg-4">
+                        <div class="project-wrapper2">
+                            <div class="image-area">
+                                <a href="/Cars/Details/${car.id}">
+                                    <img src="${car.imagePath}" alt="${car.name}">
+                                </a>
+                                <span class="tag">${car.badge}</span>
+                                <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                <a href="${car.imagePath}" class="gallery-image">
+                                    <img src="/assets/images/icon/image.svg" alt="">
+                                    ${car.imageCount}
+                                </a>
+                            </div>
+                            <span class="price">$${car.price.toLocaleString()}</span>
+                            <div class="content-area">
+                                <h6 class="title">
+                                    <a href="/Cars/Details/${car.id}">${car.name}</a>
+                                </h6>
+                                <ul class="feature-area">
+                                    <li>
+                                        <img src="/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                        ${car.mileage.toLocaleString()} Miles
+                                    </li>
+                                    <li>
+                                        <img src="/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                        ${car.fuel}
+                                    </li>
+                                    <li>
+                                        <img src="/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                        ${car.transmission}
+                                    </li>
+                                </ul>
+                                <div class="button-area">
+                                    <p class="">$${car.monthlyPayment}/mo</p>
+                                    <a href="/Cars/Details/${car.id}" class="rts-btn btn-primary radius-small">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.append(carCard);
+            });
+        }
+    });
+</script>
+}

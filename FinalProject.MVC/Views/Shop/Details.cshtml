@@ -1,8 +1,9 @@
+@model FinalProject.MVC.Models.ShopProduct
 @{
-    ViewData["Title"] = "Shop Details - AutoVault";
+    ViewData["Title"] = $"{Model.Name} - AutoVault";
 }
 
-<!-- Content based on shop-details.html -->
+<!-- Breadcrumb area start -->
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
@@ -10,44 +11,498 @@
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
                 <a asp-controller="Shop" asp-action="Index">Shop</a>
-                <a href="#" class="current">Product Details</a>
+                <a href="#" class="current">@Model.Name</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb area end -->
+
+<div class="rts-portfolio-area shop-single inner rts-section-gapTop">
+    <div class="container">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="portfolio-slider-area2 mb--40">
+                    <!-- Main Product Image -->
+                    <div class="main-product-image">
+                        <div class="image">
+                            <img src="@Url.Content(Model.ImagePath)" alt="@Model.Name" id="mainImage" class="img-fluid" style="width: 100%; height: auto; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="ms-single-product__content">
+                    <p class="sub-title">
+                        <a asp-controller="Home" asp-action="Index">Home</a> / 
+                        <a asp-controller="Shop" asp-action="Index">@Model.Category</a>
+                    </p>
+                    <h3 class="ms-single-product_title">@Model.Name</h3>
+                    
+                    <div class="woocommerce-product-details__short-description">
+                        <p>@Model.Description</p>
+                    </div>
+                    
+                    <!-- Rating -->
+                    <div class="ms-woocommerce-product-rating woocommerce-product-rating">
+                        <ul class="ms-rating-icon">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Floor(Model.Rating))
+                                {
+                                    <li><i class="fa-sharp fa-solid fa-star"></i></li>
+                                }
+                                else if (i <= Model.Rating)
+                                {
+                                    <li><i class="fa-solid fa-star-half-stroke"></i></li>
+                                }
+                                else
+                                {
+                                    <li><i class="fa-light fa-star"></i></li>
+                                }
+                            }
+                        </ul>
+                        <a href="#reviews" class="woocommerce-review-link" rel="nofollow">(@Model.Rating.ToString("0.0") Rating)</a>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div class="pricing-section">
+                        <div class="unit-price">
+                            <span class="label">Unit Price:</span>
+                            <span class="price-value">$@Model.Price.ToString("0.00")</span>
+                        </div>
+                        <div class="woocommerce-Price-amount amount">
+                            <span class="label">Total Price:</span>
+                            <bdi>
+                                <span class="woocommerce-Price-currencySymbol">$</span>
+                                <span id="totalPrice">@Model.Price.ToString("0.00")</span>
+                            </bdi>
+                        </div>
+                    </div>
+                    <input type="hidden" id="unitPrice" value="@Model.Price" />
+                    
+                    <!-- Stock Status -->
+                    @if (Model.InStock)
+                    {
+                        <p class="stock in-stock" style="color: #28a745; font-weight: 600;">
+                            <i class="fa-solid fa-circle-check"></i> In Stock
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="stock out-of-stock" style="color: #dc3545; font-weight: 600;">
+                            <i class="fa-solid fa-circle-xmark"></i> Out of Stock
+                        </p>
+                    }
+                    
+                    <!-- Quantity and Add to Cart -->
+                    <div class="quantity-area">
+                        <div class="cart-edit">
+                            <div class="quantity-edit">
+                                <button class="button decrement" type="button"><i class="fal fa-minus minus"></i></button>
+                                <input type="text" class="input" id="quantity" value="1" min="1">
+                                <button class="button increment" type="button"><i class="fa-sharp fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        @if (Model.InStock)
+                        {
+                            <button type="button" class="rts-btn btn-primary radius-small" id="addToCartBtn" data-product-id="@Model.Id">
+                                Add to cart
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="rts-btn btn-primary radius-small" disabled>
+                                Out of Stock
+                            </button>
+                        }
+                    </div>
+                    
+                    <!-- Product Meta -->
+                    <div class="product_meta">
+                        <ul>
+                            <li class="posted_in">Category: <span>@Model.Category</span></li>
+                            <li class="sku_wrapper">Brand: <span>@Model.CarMake</span></li>
+                            @if (!string.IsNullOrEmpty(Model.CarModel))
+                            {
+                                <li class="sku_wrapper">Model: <span>@Model.CarModel</span></li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Color))
+                            {
+                                <li class="sku_wrapper">Color: <span>@Model.Color</span></li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Fuel))
+                            {
+                                <li class="sku_wrapper">Fuel Type: <span>@Model.Fuel</span></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs Section -->
+            <div class="col-md-12 tab-area">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Description</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Specifications</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab" aria-controls="messages" aria-selected="false">Reviews</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+                        <p>@Model.Description</p>
+                        <br>
+                        <p>
+                            Welcome to your trusted destination for quality automotive parts and accessories. 
+                            We pride ourselves on offering an extensive inventory of products from top brands, 
+                            tailored to fit every vehicle and budget. Whether you're looking for replacement parts 
+                            or performance upgrades, our friendly and knowledgeable team is here to help you find 
+                            exactly what you need.
+                        </p>
+                        <br>
+                        <p>
+                            At AutoVault, we understand that your vehicle is an important investment. That's why we 
+                            only stock high-quality products that meet or exceed OEM specifications. From brake pads 
+                            to air filters, suspension components to lighting systems, we have everything you need 
+                            to keep your vehicle running smoothly and safely.
+                        </p>
+                    </div>
+                    <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                        <div class="ms-section-title">
+                            <h3 class="ms-heading-title">Product Specifications</h3>
+                            <ul>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Product Name:</strong> @Model.Name</li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Category:</strong> @Model.Category</li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Brand:</strong> @Model.CarMake</li>
+                                @if (!string.IsNullOrEmpty(Model.CarModel))
+                                {
+                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Compatible Model:</strong> @Model.CarModel</li>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Color))
+                                {
+                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Color:</strong> @Model.Color</li>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Fuel))
+                                {
+                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Fuel Type Compatibility:</strong> @Model.Fuel</li>
+                                }
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Price:</strong> $@Model.Price.ToString("0.00")</li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Availability:</strong> @(Model.InStock ? "In Stock" : "Out of Stock")</li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Rating:</strong> @Model.Rating.ToString("0.0") / 5.0</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
+                        <div id="reviews" class="woocommerce-Reviews">
+                            <div class="reveiw">
+                                <h2>Customer Reviews</h2>
+                                <div class="reveiw-box mb--30">
+                                    <div class="author">
+                                        <div class="image"><img src="~/assets/images/testimonials/author-01.svg" alt=""></div>
+                                        <div class="content">
+                                            <h6>John Mitchell</h6>
+                                            <p>2 Weeks Ago</p>
+                                        </div>
+                                    </div>
+                                    <p>Excellent product! Exactly what I needed for my @Model.CarMake. The quality is outstanding and installation was straightforward. Highly recommend this product to anyone looking for reliable automotive parts.</p>
+                                    <ul class="star-rating">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <li><i class="fa-sharp fa-solid fa-star"></i></li>
+                                        }
+                                    </ul>
+                                </div>
+                                <div class="reveiw-box">
+                                    <div class="author">
+                                        <div class="image"><img src="~/assets/images/testimonials/author-02.svg" alt=""></div>
+                                        <div class="content">
+                                            <h6>Sarah Anderson</h6>
+                                            <p>1 Month Ago</p>
+                                        </div>
+                                    </div>
+                                    <p>Great value for money. The product arrived quickly and was exactly as described. Very satisfied with my purchase and the overall shopping experience at AutoVault.</p>
+                                    <ul class="star-rating">
+                                        @for (int i = 1; i <= 4; i++)
+                                        {
+                                            <li><i class="fa-sharp fa-solid fa-star"></i></li>
+                                        }
+                                        <li><i class="fa-light fa-star"></i></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="reveiw-form">
+                                <h2 class="mb--30">Add a Review</h2>
+                                <form action="#" method="post">
+                                    <div class="single-wrapper">
+                                        <input type="text" name="name" placeholder="Your Name" required>
+                                        <input type="email" name="email" placeholder="Your Email" required>
+                                    </div>
+                                    <textarea name="review" placeholder="Write your review here..." required></textarea>
+                                    <button type="submit" class="rts-btn btn-primary">Submit Review</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<section class="rts-section-gap">
-    <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-6">
-                <div class="product-images">
-                    <div class="main-image">
-                        <img src="~/assets/images/shop/01.webp" alt="" class="img-fluid">
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="product-details">
-                    <h3>Premium Car Accessories</h3>
-                    <div class="price">
-                        <span class="current-price">$89.99</span>
-                    </div>
-                    <p class="description">
-                        High-quality automotive accessories designed for performance and durability. 
-                        Perfect for enhancing your vehicle's functionality and appearance.
-                    </p>
-                    <div class="product-options">
-                        <div class="quantity">
-                            <label>Quantity:</label>
-                            <input type="number" value="1" min="1" class="form-control" style="width: 100px;">
-                        </div>
-                    </div>
-                    <div class="product-actions">
-                        <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary">Add to Cart</a>
-                        <a href="#" class="rts-btn btn-border">Add to Wishlist</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+@section Scripts {
+<style>
+    .quantity-edit {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        width: fit-content;
+    }
+    
+    .quantity-edit .button {
+        background: #f5f5f5;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .quantity-edit .button:hover {
+        background: #e0e0e0;
+    }
+    
+    /* Override global style.css rule that sets width: 10px */
+    .ms-single-product__content .quantity-area .cart-edit .quantity-edit .input {
+        border: none;
+        text-align: center;
+        width: 70px !important;
+        min-width: 70px;
+        max-width: 70px;
+        padding: 10px 5px !important;
+        font-size: 16px;
+        font-weight: 600;
+        box-sizing: border-box;
+    }
+    
+    .cart-edit {
+        display: inline-block;
+        margin-right: 15px;
+    }
+    
+    .quantity-area {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .product_meta {
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .product_meta ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .product_meta ul li {
+        padding: 8px 0;
+        font-size: 15px;
+        color: #666;
+    }
+    
+    .product_meta ul li span {
+        color: #333;
+        font-weight: 600;
+        margin-left: 5px;
+    }
+    
+    .main-product-image {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .main-product-image img {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .pricing-section {
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #FF4500;
+    }
+    
+    .pricing-section .unit-price {
+        margin-bottom: 10px;
+        font-size: 15px;
+        color: #666;
+    }
+    
+    .pricing-section .unit-price .label {
+        font-weight: 500;
+    }
+    
+    .pricing-section .unit-price .price-value {
+        font-weight: 600;
+        color: #333;
+        margin-left: 8px;
+    }
+    
+    .pricing-section .woocommerce-Price-amount {
+        font-size: 28px;
+        font-weight: 700;
+        color: #FF4500;
+    }
+    
+    .pricing-section .woocommerce-Price-amount .label {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        display: block;
+        margin-bottom: 5px;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        const unitPrice = parseFloat($('#unitPrice').val());
+        
+        // Function to update total price
+        function updateTotalPrice() {
+            const quantity = parseInt($('#quantity').val()) || 1;
+            const totalPrice = (unitPrice * quantity).toFixed(2);
+            $('#totalPrice').text(totalPrice);
+        }
+        
+        // Quantity increment
+        $('.increment').on('click', function() {
+            const input = $(this).siblings('.input');
+            let value = parseInt(input.val()) || 1;
+            input.val(value + 1);
+            updateTotalPrice();
+        });
+        
+        // Quantity decrement
+        $('.decrement').on('click', function() {
+            const input = $(this).siblings('.input');
+            let value = parseInt(input.val()) || 1;
+            if (value > 1) {
+                input.val(value - 1);
+                updateTotalPrice();
+            }
+        });
+        
+        // Manual quantity input change
+        $('#quantity').on('input', function() {
+            let value = parseInt($(this).val());
+            if (!isNaN(value) && value >= 1) {
+                updateTotalPrice();
+            }
+        });
+        
+        // Add to Cart
+        $('#addToCartBtn').on('click', function() {
+            const productId = $(this).data('product-id');
+            const quantity = parseInt($('#quantity').val()) || 1;
+            const button = $(this);
+            const originalText = button.html();
+            
+            // Validate quantity
+            if (quantity < 1) {
+                alert('Please select a valid quantity (minimum 1).');
+                $('#quantity').val(1);
+                updateTotalPrice();
+                return;
+            }
+            
+            // Disable button
+            button.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
+            
+            $.ajax({
+                url: '@Url.Action("AddToCart", "Shop")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 
+                    productId: productId, 
+                    quantity: quantity 
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        button.html('<i class="fa fa-check"></i> Added to Cart!');
+                        
+                        // Show success alert
+                        const alert = $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            '<i class="fa fa-check-circle"></i> ' + quantity + ' item(s) added to cart successfully! ' +
+                            '<a href="@Url.Action("Cart", "Shop")" class="alert-link">View Cart</a>' +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                            '</div>');
+                        $('.container').first().prepend(alert);
+                        
+                        // Scroll to top
+                        $('html, body').animate({ scrollTop: 0 }, 'slow');
+                        
+                        // Reset button after 3 seconds
+                        setTimeout(function() {
+                            button.html(originalText).prop('disabled', false);
+                        }, 3000);
+                    } else {
+                        button.html(originalText).prop('disabled', false);
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    button.html(originalText).prop('disabled', false);
+                    alert('Failed to add product to cart. Please try again.');
+                }
+            });
+        });
+        
+        // Prevent non-numeric input in quantity field
+        $('#quantity').on('keypress', function(e) {
+            if (e.which < 48 || e.which > 57) {
+                e.preventDefault();
+            }
+        });
+        
+        // Validate quantity on blur
+        $('#quantity').on('blur', function() {
+            let value = parseInt($(this).val());
+            if (isNaN(value) || value < 1) {
+                $(this).val(1);
+                updateTotalPrice();
+            }
+        });
+    });
+</script>
+}

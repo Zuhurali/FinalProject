@@ -1,0 +1,244 @@
+@model FinalProject.MVC.Models.CartViewModel
+@{
+    ViewData["Title"] = "Checkout - AutoVault";
+}
+
+<!-- Breadcrumb area start -->
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Checkout</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Checkout</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Breadcrumb area end -->
+
+<main class="ms-main rts-section-gap">
+    <div class="ms-page-content">
+        <article class="page checkout-area type-page">
+            <div class="ms-sp--header container">
+                <h2 class="title">Checkout</h2>
+            </div>
+            <div class="ms-default-page container entry-content">
+                <div class="woocommerce">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @TempData["Error"]
+                        </div>
+                    }
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @TempData["Success"]
+                        </div>
+                    }
+
+                    <!-- Coupon Toggle -->
+                    @if (string.IsNullOrEmpty(Model.CouponCode))
+                    {
+                        <div class="coupon-toggle">
+                            <div id="accordion" class="accordion">
+                                <div class="card">
+                                    <div class="card-header" id="headingOne">
+                                        <div class="card-title">
+                                            <span><i class="fa fa-window-maximize"></i> Have a coupon?</span>
+                                            <button class="accordion-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">Click here to enter your code</button>
+                                        </div>
+                                    </div>
+                                    <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-bs-parent="#accordion">
+                                        <div class="card-body">
+                                            <p>If you have a coupon code, please apply it in your <a asp-controller="Shop" asp-action="Cart">cart page</a> before proceeding to checkout.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success">
+                            <i class="fa fa-check-circle"></i> Coupon <strong>@Model.CouponCode</strong> applied! You're saving $@Model.DiscountAmount.ToString("0.00")
+                        </div>
+                    }
+
+                    <div class="woocommerce-notices-wrapper"></div>
+                    <form asp-controller="Checkout" asp-action="PlaceOrder" method="post" class="checkout woocommerce-checkout ms-woocommerce-checkout">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="full-grid">
+                                    <div class="billing-fields">
+                                        <div class="checkout-title">
+                                            <h3>Billing details</h3>
+                                        </div>
+                                        <div class="form-content-box">
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>First Name *</label>
+                                                        <input id="firstName" name="firstName" class="form-control-mod" type="text" required value="@ViewBag.UserFirstName">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Last Name *</label>
+                                                        <input id="lastName" name="lastName" class="form-control-mod" type="text" required value="@ViewBag.UserLastName">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Company name (optional)</label>
+                                                        <input id="companyName" name="companyName" class="form-control-mod" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>District *</label>
+                                                        <input id="district" name="district" class="form-control-mod" type="text" required placeholder="Enter your district">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Street address *</label>
+                                                        <input id="streetAddress" name="streetAddress" class="form-control-mod" type="text" required placeholder="House number and street name">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Town / City *</label>
+                                                        <input id="city" name="city" class="form-control-mod" type="text" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Postcode / ZIP (optional)</label>
+                                                        <input id="postCode" name="postCode" class="form-control-mod" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Phone *</label>
+                                                        <input id="phoneNumber" name="phoneNumber" class="form-control-mod" type="tel" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Email address *</label>
+                                                        <input id="email" name="email" class="form-control-mod" type="email" required value="@ViewBag.UserEmail">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="billing-fields">
+                                        <div class="checkout-title">
+                                            <h3>Additional information</h3>
+                                        </div>
+                                        <div class="form-content-box">
+                                            <div class="row">
+                                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label>Order notes (optional)</label>
+                                                        <textarea name="orderNotes" placeholder="Notes about your order, e.g. special notes for delivery."></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pl-lg-5 col-md-4">
+                                <h3 id="order_review_heading">Your order</h3>
+                                <div id="order_review" class="woocommerce-checkout-review-order">
+                                    <table class="ms-checkout-review-order-table shop_table woocommerce-checkout-review-order-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="product-name">Product</th>
+                                                <th class="product-total">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model.Items)
+                                            {
+                                                <tr class="cart_item">
+                                                    <td class="product-name">
+                                                        @item.ProductName <strong class="product-quantity">×&nbsp;@item.Quantity</strong>
+                                                    </td>
+                                                    <td class="product-total">
+                                                        <span class="woocommerce-Price-amount amount">
+                                                            <bdi><span class="woocommerce-Price-currencySymbol">$</span>@item.Subtotal.ToString("0.00")</bdi>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="cart-subtotal">
+                                                <th>Subtotal</th>
+                                                <td>
+                                                    <span class="woocommerce-Price-amount amount">
+                                                        <bdi><span class="woocommerce-Price-currencySymbol">$</span>@Model.Subtotal.ToString("0.00")</bdi>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            @if (Model.DiscountAmount > 0)
+                                            {
+                                                <tr class="cart-discount">
+                                                    <th>Discount (@Model.CouponCode)</th>
+                                                    <td>
+                                                        <span class="woocommerce-Price-amount amount" style="color: #28a745;">
+                                                            <bdi>-<span class="woocommerce-Price-currencySymbol">$</span>@Model.DiscountAmount.ToString("0.00")</bdi>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            <tr class="order-total">
+                                                <th>Total</th>
+                                                <td>
+                                                    <strong>
+                                                        <span class="woocommerce-Price-amount amount">
+                                                            <bdi><span class="woocommerce-Price-currencySymbol">$</span>@Model.Total.ToString("0.00")</bdi>
+                                                        </span>
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+
+                                    <div class="woocommerce-terms-and-conditions-wrapper">
+                                        <div class="woocommerce-privacy-policy-text">
+                                            <p>Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row place-order">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="rts-btn btn-primary w-100 radius-small" name="woocommerce_checkout_place_order" id="place_order" value="Place order" data-value="Place order">
+                                            Place order
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </article>
+    </div>
+</main>
