@@ -16,9 +16,20 @@ namespace FinalProject.MVC.Controllers
             _signInManager = signInManager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Account - AutoVault";
+
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var name = $"{user.FirstName} {user.LastName}".Trim();
+                    ViewData["AccountName"] = string.IsNullOrWhiteSpace(name) ? user.Email : name;
+                }
+            }
+
             return View();
         }
 
@@ -32,24 +43,39 @@ namespace FinalProject.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignIn(string email, string password, string? returnUrl = null)
+        public async Task<IActionResult> SignIn(string email, string password, bool rememberMe = true, string? returnUrl = null, bool fromAccount = false)
         {
             ViewData["Title"] = "Sign In - AutoVault";
+
+            IActionResult InvalidLogin()
+            {
+                if (fromAccount)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return View();
+            }
             
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 TempData["Error"] = "Please enter both email and password.";
-                return View();
+                return InvalidLogin();
             }
 
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                TempData["Error"] = "Invalid email or password.";
-                return View();
+                user = await _userManager.FindByNameAsync(email);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: true, lockoutOnFailure: false);
+            if (user == null)
+            {
+                TempData["Error"] = "Invalid email or password.";
+                return InvalidLogin();
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(user, password, rememberMe, lockoutOnFailure: false);
             
             if (result.Succeeded)
             {
@@ -61,7 +87,7 @@ namespace FinalProject.MVC.Controllers
             }
             
             TempData["Error"] = "Invalid email or password.";
-            return View();
+            return InvalidLogin();
         }
 
         [HttpGet]
@@ -73,20 +99,30 @@ namespace FinalProject.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string email, string password, string confirmPassword, string? firstName = null, string? lastName = null)
+        public async Task<IActionResult> Register(string email, string password, string confirmPassword, string? firstName = null, string? lastName = null, bool fromAccount = false)
         {
             ViewData["Title"] = "Register - AutoVault";
+
+            IActionResult InvalidRegistration()
+            {
+                if (fromAccount)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return View();
+            }
             
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 TempData["Error"] = "Email and password are required.";
-                return View();
+                return InvalidRegistration();
             }
 
             if (password != confirmPassword)
             {
                 TempData["Error"] = "Passwords do not match.";
-                return View();
+                return InvalidRegistration();
             }
 
             var user = new ApplicationUser
@@ -108,7 +144,7 @@ namespace FinalProject.MVC.Controllers
             }
 
             TempData["Error"] = string.Join(", ", result.Errors.Select(e => e.Description));
-            return View();
+            return InvalidRegistration();
         }
 
         [HttpPost]

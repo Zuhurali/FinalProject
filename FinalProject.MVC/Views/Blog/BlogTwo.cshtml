@@ -1,12 +1,22 @@
+@using FinalProject.MVC.Models
 @{
     ViewData["Title"] = "Blog Two - AutoVault";
+    var cars = ViewBag.Cars as IEnumerable<Car> ?? Enumerable.Empty<Car>();
+
+    var posts = new[]
+    {
+        new { Id = 1, Image = "01.webp", Meta = "Dealership events", Title = "Seasonal Car Care Tips to Keep Your Vehicle Running Smoothly", AuthorImage = "author-01.svg" },
+        new { Id = 2, Image = "02.webp", Meta = "March 26, 2024", Title = "How Regular Maintenance Can Save You Thousands in Repairs", AuthorImage = "author-02.svg" },
+        new { Id = 3, Image = "02.webp", Meta = "Car detailing tips", Title = "Top 5 Reasons to Buy a Certified Pre-Owned Vehicle", AuthorImage = "author-02.svg" },
+        new { Id = 4, Image = "06.webp", Meta = "Upcoming releases", Title = "What to Expect During Your Next Test Drive", AuthorImage = "author-02.svg" }
+    };
 }
 
-<!-- Content based on blog-2.html -->
-<div class="rts-breadcrumb-area service jarallax">
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Blog Two</h1>
+            <h1 class="title">Blog</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
                 <a href="#" class="current">Blog</a>
@@ -14,37 +24,226 @@
         </div>
     </div>
 </div>
+<!-- rts breadcrumb area end -->
 
-<section class="rts-blog-area rts-section-gap">
+<div class="rts-blog-area inner blog-2 rts-section-gapTop">
     <div class="container">
         <div class="row g-5">
             <div class="col-lg-8">
-                <div class="blog-wrapper">
-                    <div class="image-area">
-                        <a asp-controller="Blog" asp-action="Details" asp-route-id="1"><img src="~/assets/images/blog/01.webp" alt=""></a>
-                    </div>
-                    <div class="blog-content-area">
-                        <div class="blog-meta">
-                            <a href="#" class="date">March 26, 2024</a>
-                            <a href="#" class="tag">Automotive</a>
+                <div class="left">
+                    <div class="row g-5" id="blogTwoGrid">
+                        @foreach (var post in posts)
+                        {
+                            <div class="col-lg-12 blog-two-post">
+                                <div class="blog-wrapper">
+                                    <div class="image-area">
+                                        <a asp-controller="Blog" asp-action="Details" asp-route-id="@post.Id"><img src="~/assets/images/blog/@post.Image" alt=""></a>
+                                    </div>
+                                    <div class="content">
+                                        <p class="blog-meta">@post.Meta</p>
+                                        <h5><a asp-controller="Blog" asp-action="Details" asp-route-id="@post.Id">@post.Title</a></h5>
+                                        <div class="author-date">
+                                            <div class="person">
+                                                <img src="~/assets/images/blog/@post.AuthorImage" alt="">
+                                                Jack Alexander
+                                            </div>
+                                            <div class="date">March 26, 2024</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @foreach (var car in cars)
+                        {
+                            <div class="col-lg-12 blog-two-car d-none"
+                                 data-make="@car.Make"
+                                 data-search="@($"{car.Make} {car.Model} {car.Name} {car.Year} {car.Fuel} {car.Transmission}".ToLowerInvariant())">
+                                <div class="blog-wrapper">
+                                    <div class="image-area">
+                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"><img src="@Url.Content(car.ImagePath)" alt="@car.Name"></a>
+                                    </div>
+                                    <div class="content">
+                                        <p class="blog-meta">@car.Make</p>
+                                        <h5><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Model</a></h5>
+                                        <div class="author-date">
+                                            <div class="person">@car.Year · @car.Fuel · @car.Transmission</div>
+                                            <div class="date">$@car.Price.ToString("N0") · @car.Mileage.ToString("N0") Miles</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        <div class="col-lg-12 d-none" id="blogTwoEmpty">
+                            <div class="blog-wrapper">
+                                <div class="content">
+                                    <h5>No cars match this filter.</h5>
+                                </div>
+                            </div>
                         </div>
-                        <h4 class="title"><a asp-controller="Blog" asp-action="Details" asp-route-id="1">Latest Trends in Electric Vehicles</a></h4>
-                        <p class="desc">Explore the cutting-edge developments in electric vehicle technology and what the future holds for sustainable transportation.</p>
-                        <a asp-controller="Blog" asp-action="Details" asp-route-id="1" class="rts-btn">Read More</a>
                     </div>
                 </div>
+                <a href="#" id="blogTwoLoadMore" class="rts-btn load-more-btn btn-border">Load More</a>
             </div>
             <div class="col-lg-4">
-                <div class="blog-sidebar">
-                    <div class="sidebar-widget">
-                        <h4>Recent Posts</h4>
-                        <ul class="recent-posts">
-                            <li><a asp-controller="Blog" asp-action="Details" asp-route-id="2">Car Maintenance Tips</a></li>
-                            <li><a asp-controller="Blog" asp-action="Details" asp-route-id="3">Best Cars for 2024</a></li>
-                        </ul>
+                <div class="sticky-top">
+                    <div class="right-side-bar">
+                        <div class="search-area side-box">
+                            <h2>Cars Search</h2>
+                            <form id="blogTwoSearch" action="#">
+                                <div class="input-wrapper">
+                                    <input type="text" placeholder="Search Vehicles" required>
+                                    <button type="submit"><i class="fa-regular fa-magnifying-glass"></i></button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="car-make side-box">
+                            <h2>Car Categories</h2>
+                            <ul class="checkbox-list">
+                                @foreach (dynamic brand in ViewBag.BrandCounts)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="brand-filter" value="@brand.Make">
+                                            <span>@brand.Make</span>
+                                        </label>
+                                        <span>(@brand.Count)</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="recent-post side-box">
+                            <h2>Recent Post</h2>
+                            <ul class="blog-list">
+                                <li>
+                                    <div class="image-area">
+                                        <a asp-controller="Blog" asp-action="Details" asp-route-id="1">
+                                            <img src="~/assets/images/blog/sm-01.webp" width="100" alt="">
+                                        </a>
+                                    </div>
+                                    <div class="content">
+                                        <h6><a asp-controller="Blog" asp-action="Details" asp-route-id="1">10 Tips for First-Time Car What You Need to Know</a></h6>
+                                        <p class="blog-meta">May 26, 2024</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="image-area">
+                                        <a asp-controller="Blog" asp-action="Details" asp-route-id="2">
+                                            <img src="~/assets/images/blog/sm-02.webp" width="100" alt="">
+                                        </a>
+                                    </div>
+                                    <div class="content">
+                                        <h6><a asp-controller="Blog" asp-action="Details" asp-route-id="2">Top 5 Reasons to Buy a for Pre-Owned Vehicle</a></h6>
+                                        <p class="blog-meta">May 26, 2024</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="image-area">
+                                        <a asp-controller="Blog" asp-action="Details" asp-route-id="3">
+                                            <img src="~/assets/images/blog/sm-03.webp" width="100" alt="">
+                                        </a>
+                                    </div>
+                                    <div class="content">
+                                        <h6><a asp-controller="Blog" asp-action="Details" asp-route-id="3">How to Choose the Perfect Car for Your Lifestyle</a></h6>
+                                        <p class="blog-meta">May 26, 2024</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="tag-area side-box">
+                            <h2>Fuel</h2>
+                            <ul>
+                                <li>Gasoline</li>
+                                <li>Diesel</li>
+                                <li>Plug-in Hybrid</li>
+                                <li>Hybrid</li>
+                                <li>Electric</li>
+                            </ul>
+                        </div>
+                        <div class="ad-area">
+                            <img src="~/assets/images/blog/ad.webp" alt="">
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
+
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="call-to:+16544521505">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    +1-654-452-1505
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var posts = document.querySelectorAll(".blog-two-post");
+            var cars = document.querySelectorAll(".blog-two-car");
+            var empty = document.getElementById("blogTwoEmpty");
+            var loadMore = document.getElementById("blogTwoLoadMore");
+            var searchForm = document.getElementById("blogTwoSearch");
+            var searchInput = searchForm.querySelector("input");
+
+            function selectedBrands() {
+                return Array.prototype.map.call(document.querySelectorAll(".brand-filter:checked"), function (box) {
+                    return box.value.toLowerCase();
+                });
+            }
+
+            function applyFilter() {
+                var brands = selectedBrands();
+                var query = searchInput.value.trim().toLowerCase();
+                var filtering = brands.length > 0 || query.length > 0;
+                var shown = 0;
+
+                Array.prototype.forEach.call(posts, function (post) {
+                    post.classList.toggle("d-none", filtering);
+                });
+
+                Array.prototype.forEach.call(cars, function (card) {
+                    var make = card.getAttribute("data-make").toLowerCase();
+                    var text = card.getAttribute("data-search");
+                    var brandMatch = brands.length === 0 || brands.indexOf(make) !== -1;
+                    var queryMatch = query.length === 0 || text.indexOf(query) !== -1;
+                    var visible = filtering && brandMatch && queryMatch;
+                    card.classList.toggle("d-none", !visible);
+                    if (visible) {
+                        shown += 1;
+                    }
+                });
+
+                empty.classList.toggle("d-none", !filtering || shown > 0);
+                if (loadMore) {
+                    loadMore.style.display = filtering ? "none" : "";
+                }
+            }
+
+            Array.prototype.forEach.call(document.querySelectorAll(".brand-filter"), function (box) {
+                box.addEventListener("change", applyFilter);
+            });
+
+            searchForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                applyFilter();
+            });
+
+            if (loadMore) {
+                loadMore.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    loadMore.style.display = "none";
+                });
+            }
+        })();
+    </script>
+}

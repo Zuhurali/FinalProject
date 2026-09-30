@@ -1,12 +1,15 @@
 @{
     ViewData["Title"] = "Account - AutoVault";
+    ViewData["BodyClass"] = "account-page-body";
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+    var accountName = ViewData["AccountName"] as string;
 }
 
-<!-- Content based on account.html -->
+<!-- rts breadcrumb area start -->
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">My Account</h1>
+            <h1 class="title">@(isSignedIn ? "My Account" : "Account")</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
                 <a href="#" class="current">Account</a>
@@ -14,50 +17,111 @@
         </div>
     </div>
 </div>
+<!-- rts breadcrumb area end -->
 
-<section class="rts-section-gap">
+<div class="rts-contact-page-form-area rts-section-gapNew rts-section-gap account">
     <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-3">
-                <div class="account-sidebar">
-                    <h4>Account Menu</h4>
-                    <ul class="account-menu">
-                        <li><a href="#" class="active">Dashboard</a></li>
-                        <li><a href="#">My Listings</a></li>
-                        <li><a href="#">Favorites</a></li>
-                        <li><a href="#">Messages</a></li>
-                        <li><a href="#">Profile Settings</a></li>
-                        <li><a asp-controller="Account" asp-action="SignIn">Sign Out</a></li>
-                    </ul>
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success" role="alert">@TempData["Success"]</div>
+        }
+
+        @if (!isSignedIn)
+        {
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="mian-wrapper-form">
+                        <div class="title-mid-wrapper-home-two" data-sal="slide-up" data-sal-delay="150" data-sal-duration="800">
+                            <h3 class="title">Login</h3>
+                        </div>
+                        <form asp-controller="Account" asp-action="SignIn" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="fromAccount" value="true">
+                            <input type="hidden" name="rememberMe" value="false">
+                            <input type="email" name="email" placeholder="Email Address or Username" required>
+                            <input type="password" name="password" placeholder="Password" required>
+                            <div class="checkbox">
+                                <input type="checkbox" name="rememberMe" value="true" id="rememberMe">
+                                <label for="rememberMe">Remember me</label>
+                            </div>
+                            <button type="submit" class="rts-btn btn-primary radius-small">Log In</button>
+                            <div class="forgot-password">
+                                <a href="#">Forgot Your Password?</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="mian-wrapper-form">
+                        <div class="title-mid-wrapper-home-two" data-sal="slide-up" data-sal-delay="150" data-sal-duration="800">
+                            <h3 class="title">Registration</h3>
+                        </div>
+                        <form asp-controller="Account" asp-action="Register" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="fromAccount" value="true">
+                            <input type="text" name="firstName" placeholder="Your Name" required>
+                            <input type="email" name="email" placeholder="Email Address" required>
+                            <input type="password" name="password" placeholder="New Password" required>
+                            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+                            <button type="submit" class="rts-btn btn-primary radius-small">Register</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-9">
-                <div class="account-content">
-                    <h3>Account Dashboard</h3>
-                    <div class="account-stats">
-                        <div class="row g-4">
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="mian-wrapper-form">
+                        <div class="title-mid-wrapper-home-two">
+                            <h3 class="title">Account Menu</h3>
+                        </div>
+                        <ul class="account-menu">
+                            <li><a asp-controller="Account" asp-action="Index">Dashboard</a></li>
+                            <li><a href="#">My Listings</a></li>
+                            <li><a href="#">Favorites</a></li>
+                            <li><a href="#">Messages</a></li>
+                            <li><a href="#">Profile Settings</a></li>
+                            <li>
+                                <a href="#" id="accountSignOut">Sign Out</a>
+                                <form id="accountSignOutForm" asp-controller="Account" asp-action="SignOut" method="post" hidden>
+                                    @Html.AntiForgeryToken()
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="mian-wrapper-form">
+                        <div class="title-mid-wrapper-home-two">
+                            <h3 class="title">Account Dashboard</h3>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(accountName))
+                        {
+                            <p>@accountName</p>
+                        }
+                        <div class="row text-center">
                             <div class="col-md-4">
-                                <div class="stat-box">
-                                    <h4>3</h4>
-                                    <p>Active Listings</p>
-                                </div>
+                                <h3 class="title">3</h3>
+                                <p>Active Listings</p>
                             </div>
                             <div class="col-md-4">
-                                <div class="stat-box">
-                                    <h4>12</h4>
-                                    <p>Favorites</p>
-                                </div>
+                                <h3 class="title">12</h3>
+                                <p>Favorites</p>
                             </div>
                             <div class="col-md-4">
-                                <div class="stat-box">
-                                    <h4>5</h4>
-                                    <p>Messages</p>
-                                </div>
+                                <h3 class="title">5</h3>
+                                <p>Messages</p>
                             </div>
                         </div>
-                    </div>
-                    <div class="recent-activity">
-                        <h4>Recent Activity</h4>
+                        <div class="title-mid-wrapper-home-two">
+                            <h3 class="title">Recent Activity</h3>
+                        </div>
                         <ul>
                             <li>You added a new listing for "BMW X5 SUV"</li>
                             <li>Someone favorited your "Mercedes E-Class" listing</li>
@@ -66,6 +130,23 @@
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
-</section>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var signOutLink = document.getElementById("accountSignOut");
+            var signOutForm = document.getElementById("accountSignOutForm");
+            if (!signOutLink || !signOutForm) {
+                return;
+            }
+
+            signOutLink.addEventListener("click", function (event) {
+                event.preventDefault();
+                signOutForm.submit();
+            });
+        })();
+    </script>
+}
