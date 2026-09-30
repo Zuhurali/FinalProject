@@ -1,39 +1,89 @@
+@model IReadOnlyList<FinalProject.MVC.Models.Dealer>
 @{
-    ViewData["Title"] = "Car Dealer - AutoVault";
+    ViewData["Title"] = "Dealer List - AutoVault";
+    var total = Model.Count;
 }
 
-<!-- Content based on car-dealer.html -->
-<div class="rts-breadcrumb-area service jarallax">
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio-3 jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Car Dealers</h1>
+            <h1 class="title">Dealer List</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Dealers</a>
+                <a href="#" class="current">Dealer</a>
             </div>
         </div>
     </div>
 </div>
+<!-- rts breadcrumb area end -->
 
-<section class="rts-section-gap">
+<div class="rts-shop-area inner rts-section-gapTop">
     <div class="container">
-        <div class="section-title-area text-center">
-            <h2 class="section-title">Our Trusted <span>Dealers</span></h2>
-        </div>
-        <div class="row g-5 mt--30">
-            <div class="col-lg-4">
-                <div class="dealer-wrapper">
-                    <div class="image-area">
-                        <img src="~/assets/images/team/01.webp" alt="">
-                    </div>
-                    <div class="content">
-                        <h5><a asp-controller="Dealer" asp-action="Details" asp-route-id="1">AutoVault Central</a></h5>
-                        <p>Downtown Location</p>
-                        <p class="location">123 Main Street, Toronto</p>
-                        <a asp-controller="Dealer" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary">View Details</a>
-                    </div>
-                </div>
+        <div class="shop-filter-area">
+            <p>Showing 1-@total of @total results</p>
+            <div class="select-area">
+                <form class="select-2" id="dealerSortForm" action="#" method="get" accept-charset="utf-8">
+                    <select name="my_select2" class="my_select2">
+                        <option value="2" selected>Sort By Latest</option>
+                        <option value="10">Top</option>
+                        <option value="1">Price low to high</option>
+                        <option value="13">Price high to low</option>
+                        <option value="14">Best Matching</option>
+                    </select>
+                </form>
             </div>
         </div>
+        <div class="row g-5">
+            @foreach (var dealer in Model)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <div class="dealer-wrapper">
+                        <div class="image-area">
+                            <a asp-controller="Dealer" asp-action="Details" asp-route-id="@dealer.Id">
+                                <img src="@Url.Content(dealer.CardImage)" alt="@dealer.Name">
+                            </a>
+                        </div>
+                        <div class="content-area">
+                            <h6 class="title "><a asp-controller="Dealer" asp-action="Details" asp-route-id="@dealer.Id">@dealer.Name</a></h6>
+                            <p>@dealer.Summary</p>
+                            <div class="button-area">
+                                <a asp-controller="Dealer" asp-action="Details" asp-route-id="@dealer.Id" class="rts-btn btn-primary radius-small">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <a href="#" class="rts-btn load-more-btn btn-border" id="dealerLoadMore">Load More</a>
     </div>
-</section>
+</div>
+
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="call-to:+16544521505">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    +1-654-452-1505
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("dealerLoadMore")?.addEventListener("click", function (event) {
+            event.preventDefault();
+        });
+        document.getElementById("dealerSortForm")?.addEventListener("submit", function (event) {
+            event.preventDefault();
+        });
+    </script>
+}

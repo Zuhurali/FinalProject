@@ -1,0 +1,81 @@
+@model FinalProject.MVC.Models.TeamMember
+
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio-3 jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">@Model.Name</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-controller="Team" asp-action="Index">Team</a>
+                <a href="#" class="current">@Model.Name</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- rts breadcrumb area end -->
+
+<section class="rts-portfolio-area inner rts-section-gap">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-5">
+                <div class="team-wrapper">
+                    <div class="image-area">
+                        <img class="w-100" src="@Url.Content(Model.ImagePath)" alt="@Model.Name">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="portfolio-details-area">
+                    <div class="section-title-area2 mb--30">
+                        <p class="sub-title">@Model.Position</p>
+                        <h2 class="section-title">@Model.Name</h2>
+                    </div>
+                    <h2 class="mb--30">Biography</h2>
+                    <p class="mb--40">@Model.Biography</p>
+                    <h2 class="mb--30">Profile</h2>
+                    <ul class="feature-list2 mb--40">
+                        <li>
+                            <i class="fa-regular fa-circle-check"></i>
+                            <div class="text">
+                                <p>Experience</p>
+                                <p>@Model.Experience</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-regular fa-circle-check"></i>
+                            <div class="text">
+                                <p>Department</p>
+                                <p>@Model.Department</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-regular fa-circle-check"></i>
+                            <div class="text">
+                                <p>Phone</p>
+                                <p><a href="call-to:@Model.Phone">@Model.Phone</a></p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fa-regular fa-circle-check"></i>
+                            <div class="text">
+                                <p>Email</p>
+                                <p><a href="mail-to:@Model.Email">@Model.Email</a></p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="share-link mb--40">
+                        <h2>Social</h2>
+                        <ul>
+                            <li><a href="#" aria-label="Facebook"><img src="~/assets/images/icon/f-3.svg" alt=""></a></li>
+                            <li><a href="#" aria-label="X"><img src="~/assets/images/icon/x-3.svg" alt=""></a></li>
+                            <li><a href="#" aria-label="Instagram"><img src="~/assets/images/icon/insta-3.svg" alt=""></a></li>
+                            <li><a href="#" aria-label="LinkedIn"><img src="~/assets/images/icon/in-3.svg" alt=""></a></li>
+                        </ul>
+                    </div>
+                    <a class="rts-btn radius-small btn-primary" asp-controller="Team" asp-action="Index">Back to Team</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

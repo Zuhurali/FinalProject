@@ -1,3 +1,5 @@
+using FinalProject.MVC.Data;
+using FinalProject.MVC.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject.MVC.Controllers
@@ -6,15 +8,32 @@ namespace FinalProject.MVC.Controllers
     {
         public IActionResult Index()
         {
-            ViewData["Title"] = "Car Dealer - AutoVault";
-            return View();
+            ViewData["Title"] = "Dealer List - AutoVault";
+            return View(DealerCatalog.All);
         }
 
-        public IActionResult Details(int? id)
+        public IActionResult Details(int id)
         {
-            ViewData["Title"] = "Dealer Details - AutoVault";
-            ViewData["DealerId"] = id ?? 1;
-            return View();
+            var dealer = DealerCatalog.Find(id);
+            if (dealer == null)
+            {
+                return NotFound();
+            }
+
+            var cars = CarCatalog.Create();
+            var start = ((id - 1) * 2) % cars.Count;
+            var related = new List<Car>
+            {
+                cars[start],
+                cars[(start + 1) % cars.Count]
+            };
+
+            ViewData["Title"] = $"{dealer.Name} - AutoVault";
+            return View(new DealerDetailsViewModel
+            {
+                Dealer = dealer,
+                RelatedCars = related
+            });
         }
     }
 }
