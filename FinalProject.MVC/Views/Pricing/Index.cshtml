@@ -1,8 +1,26 @@
 @{
     ViewData["Title"] = "Pricing - AutoVault";
+
+    var vehicleTypes = new[]
+    {
+        new { Id = "hatchback", Name = "Hatchback", Icon = "car-01.svg" },
+        new { Id = "minivan", Name = "Minivan", Icon = "car-02.svg" },
+        new { Id = "regular", Name = "Regular Size Car", Icon = "car-03.svg" },
+        new { Id = "sedans", Name = "Sedans", Icon = "car-04.svg" },
+        new { Id = "convertible", Name = "Convertible", Icon = "car-05.svg" },
+        new { Id = "sports", Name = "Sports Car", Icon = "car-06.svg" }
+    };
+
+    var repairPlans = new[]
+    {
+        new { Name = "Basic Repair", Price = "$19.00", CssClass = "pricing-wrapper2 mb--40" },
+        new { Name = "Premium Repair", Price = "$59.00", CssClass = "pricing-wrapper2 mid mb--40" },
+        new { Name = "Deluxe Repair", Price = "$29.00", CssClass = "pricing-wrapper2" }
+    };
 }
 
-<div class="rts-breadcrumb-area service jarallax">
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio-3 jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
             <h1 class="title">Pricing</h1>
@@ -13,58 +31,153 @@
         </div>
     </div>
 </div>
+<!-- rts breadcrumb area end -->
 
-<section class="rts-section-gap">
+<!-- Pricing Start -->
+<section class="rts-pricing-area rts-section-gap">
     <div class="container">
-        <div class="section-title-area text-center">
-            <p class="sub-title">Our Pricing</p>
-            <h2 class="section-title">Choose Your Perfect <span>Plan</span></h2>
+        <div class="section-top">
+            <div class="section-title-area2">
+                <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Pricing</p>
+                <h2 class="section-title wow move-right">Choose the Perfect <span>Plan</span></h2>
+            </div>
+            <div class="tab-area mt--80">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    @for (var i = 0; i < vehicleTypes.Length; i++)
+                    {
+                        var vehicle = vehicleTypes[i];
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(i == 0 ? "active" : null)"
+                                    id="@(vehicle.Id)-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#@vehicle.Id"
+                                    type="button"
+                                    role="tab"
+                                    aria-controls="@vehicle.Id"
+                                    aria-selected="@(i == 0 ? "true" : "false")">
+                                <img src="~/assets/images/icon/@vehicle.Icon" alt="">@vehicle.Name
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
         </div>
-        <div class="row g-5 mt--30">
-            <div class="col-lg-4">
-                <div class="pricing-wrapper">
-                    <h3 class="plan-name">Basic</h3>
-                    <div class="price-area">
-                        <h2 class="price">$99<span>/month</span></h2>
+        <div class="tab-content mt--80" id="myTabContent">
+            @for (var i = 0; i < vehicleTypes.Length; i++)
+            {
+                var vehicle = vehicleTypes[i];
+                <div class="tab-pane fade @(i == 0 ? "show active" : null)"
+                     id="@vehicle.Id"
+                     role="tabpanel"
+                     aria-labelledby="@(vehicle.Id)-tab">
+                    <div class="row g-5 align-items-center">
+                        <div class="col-lg-12">
+                            @foreach (var plan in repairPlans)
+                            {
+                                <div class="@plan.CssClass">
+                                    <div class="pricing-top">
+                                        <p class="sub-title">@plan.Name</p>
+                                        <div class="price">@plan.Price/ <span>month</span></div>
+                                    </div>
+                                    <ul class="pricing-list">
+                                        <li><i class="fa-sharp fa-solid fa-circle-check"></i> Oil Change</li>
+                                        <li><i class="fa-sharp fa-solid fa-circle-check"></i> Tire Rotation</li>
+                                        <li><i class="fa-sharp fa-solid fa-circle-check"></i> Brake Pad Replacement</li>
+                                        <li><i class="fa-sharp fa-solid fa-circle-check"></i> Transmission Repair</li>
+                                    </ul>
+                                    <div class="button-area">
+                                        <a asp-controller="Pricing" asp-action="Index" class="rts-btn radius-small btn-border pricing-btn">Choose Plan</a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     </div>
-                    <ul class="features">
-                        <li>Up to 5 car listings</li>
-                        <li>Basic support</li>
-                        <li>Standard features</li>
-                    </ul>
-                    <a href="#" class="rts-btn btn-border">Choose Plan</a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+<!-- Pricing End -->
+
+<!-- Counter Area Start -->
+<section class="rts-counter-area jarallax">
+    <div class="container">
+        <div class="counter-inner">
+            <div class="inner wow zoomIn" data-wow-delay=".2s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-01.svg" width="74" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">320</span><span>M</span></h3>
+                    <p class="desc">Cars For Sale</p>
                 </div>
             </div>
-            <div class="col-lg-4">
-                <div class="pricing-wrapper featured">
-                    <h3 class="plan-name">Premium</h3>
-                    <div class="price-area">
-                        <h2 class="price">$199<span>/month</span></h2>
-                    </div>
-                    <ul class="features">
-                        <li>Up to 20 car listings</li>
-                        <li>Priority support</li>
-                        <li>Advanced features</li>
-                        <li>Featured listings</li>
-                    </ul>
-                    <a href="#" class="rts-btn btn-primary">Choose Plan</a>
+            <div class="inner wow zoomIn" data-wow-delay=".4s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-02.svg" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">5500</span><span>+</span></h3>
+                    <p class="desc">Dealer Review</p>
                 </div>
             </div>
-            <div class="col-lg-4">
-                <div class="pricing-wrapper">
-                    <h3 class="plan-name">Enterprise</h3>
-                    <div class="price-area">
-                        <h2 class="price">$399<span>/month</span></h2>
-                    </div>
-                    <ul class="features">
-                        <li>Unlimited listings</li>
-                        <li>24/7 support</li>
-                        <li>All features</li>
-                        <li>Custom branding</li>
-                    </ul>
-                    <a href="#" class="rts-btn btn-border">Choose Plan</a>
+            <div class="inner wow zoomIn" data-wow-delay=".6s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-03.svg" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">300</span><span>M</span></h3>
+                    <p class="desc">Verified User</p>
+                </div>
+            </div>
+            <div class="inner wow zoomIn" data-wow-delay=".8s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-04.svg" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">10</span><span>M</span></h3>
+                    <p class="desc">Visitor Per Day</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
+<!-- Counter Area End -->
+
+<!-- Brand Area Start -->
+<section class="rts-brand-area rts-section-gapTop">
+    <div class="container">
+        <div class="section-title-area2">
+            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
+            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
+        </div>
+        <div class="section-inner mt--80">
+            <ul>
+                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- Brand Area End -->
+
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="call-to:+16544521505">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    +1-654-452-1505
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>
