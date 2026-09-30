@@ -93,6 +93,8 @@ namespace FinalProject.MVC.Controllers
         public IActionResult CarsThree()
         {
             ViewData["Title"] = "Cars Three - AutoVault";
+            ViewData["BodyClass"] = "with-sidebar";
+            ViewData["HeaderStyle"] = "three";
             return View();
         }
 
@@ -110,13 +112,17 @@ namespace FinalProject.MVC.Controllers
                 return RedirectToAction(nameof(CarsOne));
             }
 
-            ViewData["Title"] = $"{car.Name} - AutoVault";
+            ViewData["Title"] = "Mercedes-Benz E-Class - AutoVault";
+            ViewData["BodyClass"] = "with-sidebar";
+            ViewData["HeaderStyle"] = "three";
             return View(car);
         }
 
         public IActionResult DetailsTwo(int? id)
         {
-            ViewData["Title"] = "Car Details Two - AutoVault";
+            ViewData["Title"] = "Car Single Two - AutoVault";
+            ViewData["BodyClass"] = "with-sidebar";
+            ViewData["HeaderStyle"] = "three";
             ViewData["CarId"] = id ?? 1;
             return View();
         }
