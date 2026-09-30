@@ -1,10 +1,12 @@
 ﻿@{
     ViewData["Title"] = "Calculator - AutoVault";
 }
-<div class="rts-breadcrumb-area service jarallax">
+
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area service calc jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Loan Calculator</h1>
+            <h1 class="title">Car Loan Calculator</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
                 <a href="#" class="current">Calculator</a>
@@ -12,25 +14,211 @@
         </div>
     </div>
 </div>
-<section class="rts-section-gap">
+<!-- rts breadcrumb area end -->
+
+<!-- Calculator Area Start -->
+<section class="rts-calculator-area rts-section-gap">
     <div class="container">
-        <div class="calculator-form">
-            <h3>Calculate Your Monthly Payment</h3>
-            <form>
-                <div class="form-group">
-                    <label>Loan Amount</label>
-                    <input type="number" class="form-control" placeholder="Enter loan amount">
+        <div class="calculator-form-inner">
+            <h4 class="text-center mb--30">Car Loan Calculator</h4>
+            <form id="carLoanCalculator" action="#">
+                <div class="single-wrapper">
+                    <span>
+                        <select name="my_select" class="mySelect">
+                            <option value="2" selected>Select A Car</option>
+                            <option value="10">Mazda</option>
+                            <option value="1">Citroen</option>
+                            <option value="13">Honda</option>
+                            <option value="14">Mitsubishi</option>
+                            <option value="15">Peugeot</option>
+                        </select>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
+                    <span>
+                        <input type="text" placeholder="Vehicle Price" required>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
                 </div>
-                <div class="form-group">
-                    <label>Interest Rate (%)</label>
-                    <input type="number" class="form-control" placeholder="Enter interest rate">
+                <div class="single-wrapper">
+                    <span>
+                        <input type="text" placeholder="Down Payment" required>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
+                    <span>
+                        <input type="text" placeholder="Interest Rate" required>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
                 </div>
-                <div class="form-group">
-                    <label>Loan Term (months)</label>
-                    <input type="number" class="form-control" placeholder="Enter loan term">
+                <div class="single-wrapper">
+                    <span>
+                        <select name="my_select" class="mySelect">
+                            <option value="2" selected>Payment Type</option>
+                            <option value="10">Paypal</option>
+                            <option value="1">Payoneer</option>
+                            <option value="13">Skrill</option>
+                            <option value="14">Wise</option>
+                        </select>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
                 </div>
-                <button type="button" class="rts-btn btn-primary">Calculate</button>
+                <div class="single-wrapper">
+                    <button type="submit" class="rts-btn radius-small btn-primary mb--20">Calculate</button>
+                </div>
+                <div class="single-wrapper">
+                    <span>
+                        <input type="text" placeholder="Monthly Payment" readonly>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
+                    <span>
+                        <input type="text" placeholder="Total Interest" readonly>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
+                    <span>
+                        <input type="text" placeholder="Total Payments" readonly>
+                        <img src="~/assets/images/icon/car-03.svg" alt="">
+                    </span>
+                </div>
             </form>
         </div>
     </div>
 </section>
+<!-- Calculator Area End -->
+
+<!-- Counter Area Start -->
+<section class="rts-counter-area jarallax">
+    <div class="container">
+        <div class="counter-inner">
+            <div class="inner wow zoomIn" data-wow-delay=".2s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-01.svg" width="74" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">320</span><span>M</span></h3>
+                    <p class="desc">Cars For Sale</p>
+                </div>
+            </div>
+            <div class="inner wow zoomIn" data-wow-delay=".4s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-02.svg" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">5500</span><span>+</span></h3>
+                    <p class="desc">Dealer Review</p>
+                </div>
+            </div>
+            <div class="inner wow zoomIn" data-wow-delay=".6s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-03.svg" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">300</span><span>M</span></h3>
+                    <p class="desc">Verified User</p>
+                </div>
+            </div>
+            <div class="inner wow zoomIn" data-wow-delay=".8s" data-wow-duration="1s">
+                <div class="icon">
+                    <img src="~/assets/images/counter/icon-04.svg" alt="">
+                </div>
+                <div class="text">
+                    <h3 class="title cw"><span class="counter">10</span><span>M</span></h3>
+                    <p class="desc">Visitor Per Day</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Counter Area End -->
+
+<!-- Brand Area Start -->
+<section class="rts-brand-area rts-section-gapTop">
+    <div class="container">
+        <div class="section-title-area2">
+            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
+            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
+        </div>
+        <div class="section-inner mt--80">
+            <ul>
+                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- Brand Area End -->
+
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="call-to:+16544521505">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    +1-654-452-1505
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var form = document.getElementById("carLoanCalculator");
+            if (!form) {
+                return;
+            }
+
+            var months = 60;
+            var priceInput = form.querySelector('input[placeholder="Vehicle Price"]');
+            var downInput = form.querySelector('input[placeholder="Down Payment"]');
+            var rateInput = form.querySelector('input[placeholder="Interest Rate"]');
+            var monthlyInput = form.querySelector('input[placeholder="Monthly Payment"]');
+            var interestInput = form.querySelector('input[placeholder="Total Interest"]');
+            var totalInput = form.querySelector('input[placeholder="Total Payments"]');
+
+            function parseAmount(value) {
+                var number = parseFloat(String(value).replace(/[^0-9.]/g, ""));
+                return isNaN(number) ? 0 : number;
+            }
+
+            function formatMoney(value) {
+                return "$" + value.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                var price = parseAmount(priceInput.value);
+                var down = parseAmount(downInput.value);
+                var annualRate = parseAmount(rateInput.value);
+                var principal = Math.max(price - down, 0);
+                var monthlyRate = annualRate / 100 / 12;
+                var monthly;
+
+                if (monthlyRate === 0) {
+                    monthly = principal / months;
+                } else {
+                    var factor = Math.pow(1 + monthlyRate, months);
+                    monthly = principal * monthlyRate * factor / (factor - 1);
+                }
+
+                var totalPayments = monthly * months;
+                var totalInterest = totalPayments - principal;
+
+                monthlyInput.value = formatMoney(monthly);
+                interestInput.value = formatMoney(totalInterest);
+                totalInput.value = formatMoney(totalPayments);
+            });
+        })();
+    </script>
+}

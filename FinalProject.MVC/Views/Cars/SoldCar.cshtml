@@ -1,40 +1,119 @@
 @{
     ViewData["Title"] = "Sold Car - AutoVault";
+
+    var soldCars = new[]
+    {
+        new { Name = "Thunderbolt Car", Image = "04.webp", ImageCount = 7 },
+        new { Name = "Mercedes-Benz E-Class", Image = "05.webp", ImageCount = 7 },
+        new { Name = "Ford Mustang Convertible", Image = "06.webp", ImageCount = 7 },
+        new { Name = "Mazda MX-5 Miata", Image = "07.webp", ImageCount = 7 },
+        new { Name = "Honda Civic Hatchback", Image = "08.webp", ImageCount = 5 },
+        new { Name = "Hyundai Veloster", Image = "09.webp", ImageCount = 7 },
+        new { Name = "Thunderbolt Car", Image = "04.webp", ImageCount = 7 },
+        new { Name = "Mercedes-Benz E-Class", Image = "05.webp", ImageCount = 7 },
+        new { Name = "Ford Mustang Convertible", Image = "06.webp", ImageCount = 7 }
+    };
 }
 
-<!-- Content based on sold-car.html -->
-<div class="rts-breadcrumb-area service jarallax">
+<!-- rts breadcrumb area start -->
+<div class="rts-breadcrumb-area portfolio-3 jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Sold Cars</h1>
+            <h1 class="title">Sold</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Sold Cars</a>
+                <a href="#" class="current">Sold</a>
             </div>
         </div>
     </div>
 </div>
+<!-- rts breadcrumb area end -->
 
-<section class="rts-section-gap">
+<section class="rts-portfolio-area sold-car rts-section-gap">
     <div class="container">
-        <div class="section-title-area text-center">
-            <h2 class="section-title">Successfully <span>Sold</span> Vehicles</h2>
-            <p>View our recently sold vehicles and their success stories</p>
-        </div>
-        <div class="row g-5 mt--30">
-            <div class="col-lg-4">
-                <div class="sold-car-wrapper">
-                    <div class="image-area">
-                        <img src="~/assets/images/portfolio/04.webp" alt="">
-                        <span class="sold-badge">SOLD</span>
+        <div class="section-inner">
+            <div class="row g-5">
+                @foreach (var car in soldCars)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="project-wrapper2">
+                            <div class="image-area">
+                                <a asp-controller="Cars" asp-action="Details" asp-route-id="1">
+                                    <img src="~/assets/images/portfolio/@car.Image" alt="">
+                                </a>
+                                <span class="tag">Sold Out</span>
+                                <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                <a href="~/assets/images/portfolio/@car.Image" class="gallery-image">
+                                    <img src="~/assets/images/icon/image.svg" alt="">
+                                    @car.ImageCount
+                                </a>
+                            </div>
+                            <span class="price">14,000$</span>
+                            <div class="content-area">
+                                <h6 class="title">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1">@car.Name</a>
+                                </h6>
+                                <ul class="feature-area">
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                        100 Miles
+                                    </li>
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                        Petrol
+                                    </li>
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                        Autometic
+                                    </li>
+                                </ul>
+                                <div class="button-area">
+                                    <p class="">$400</p>
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-small">View Details</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="content">
-                        <h5>Mercedes-Benz E-Class</h5>
-                        <p class="price">Sold for $28,500</p>
-                        <p class="sold-date">Sold on March 15, 2024</p>
-                    </div>
-                </div>
+                }
             </div>
         </div>
     </div>
 </section>
+
+<!-- Brand Area Start -->
+<section class="rts-brand-area">
+    <div class="container">
+        <div class="section-title-area2">
+            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
+            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
+        </div>
+        <div class="section-inner mt--80">
+            <ul>
+                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- Brand Area End -->
+
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="call-to:+16544521505">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    +1-654-452-1505
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>
