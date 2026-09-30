@@ -1,8 +1,21 @@
+@model IReadOnlyList<FinalProject.MVC.Models.Car>
 @{
     ViewData["Title"] = "Cars Two - AutoVault";
+    var makes = Model.GroupBy(car => car.Make).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
+    var models = Model.GroupBy(car => car.Model).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
+    var seats = Model.GroupBy(car => car.Seats).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
+    var colors = Model.GroupBy(car => car.Color).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
+    var fuels = Model.GroupBy(car => car.Fuel).OrderBy(group => group.Key).Select(group => group.Key).ToList();
+    var minPrice = Model.Min(car => car.Price);
+    var maxPrice = Model.Max(car => car.Price);
+    const int pageSize = 6;
 }
 
-<!-- rts breadcrumb area start -->
+<style>
+    .side-box.tag-area ul li { cursor: pointer; }
+    .side-box.tag-area ul li.is-active { background: var(--color-primary); color: #fff; }
+</style>
+
 <div class="rts-breadcrumb-area portfolio jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
@@ -14,7 +27,6 @@
         </div>
     </div>
 </div>
-<!-- rts breadcrumb area end -->
 
 <div class="rts-portfolio-area inner rts-section-gapNew">
     <div class="container">
@@ -24,9 +36,9 @@
                     <div class="left-side-bar">
                         <div class="search-area side-box">
                             <h2>Cars Search</h2>
-                            <form action="#">
+                            <form action="#" id="carSearchForm">
                                 <div class="input-wrapper">
-                                    <input type="text" placeholder="Search Vehicles" required>
+                                    <input type="text" id="carSearch" placeholder="Search Vehicles">
                                     <button type="submit"><i class="fa-regular fa-magnifying-glass"></i></button>
                                 </div>
                             </form>
@@ -35,58 +47,75 @@
                         <div class="car-make side-box">
                             <h2>Car Make</h2>
                             <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" checked />
-                                        <span>Mercedes-Benz</span>
-                                    </label>
-                                    <span>(130)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Volkswagen</span>
-                                    </label>
-                                    <span>(80)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Mitsubishi</span>
-                                    </label>
-                                    <span>(199)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Honda</span>
-                                    </label>
-                                    <span>(70)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Lamborghini</span>
-                                    </label>
-                                    <span>(160)</span>
-                                </li>
+                                @foreach (var make in makes)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="make-filter" value="@make.Name" />
+                                            <span>@make.Name</span>
+                                        </label>
+                                        <span>(@make.Count)</span>
+                                    </li>
+                                }
                             </ul>
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>
                         <div class="car-make side-box">
-                            <h2>Price Range</h2>
-                            <div class="range-slider">
-                                <div class="slider">
-                                    <div class="progress"></div>
+                            <h2>Car Model</h2>
+                            <ul class="checkbox-list">
+                                @foreach (var carModel in models)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="model-filter" value="@carModel.Name" />
+                                            <span>@carModel.Name</span>
+                                        </label>
+                                        <span>(@carModel.Count)</span>
+                                    </li>
+                                }
+                            </ul>
+                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
+                        </div>
+                        <div class="price-box side-box">
+                            <h2>Price</h2>
+                            <div class="slider-container">
+                                <div class="histogram">
+                                    <div class="histogram-bar" style="height: 67px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
+                                    <div class="histogram-bar" style="height: 52px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
+                                    <div class="histogram-bar" style="height: 99px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
+                                    <div class="histogram-bar" style="height: 75px;"></div>
+                                    <div class="histogram-bar" style="height: 93px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
+                                    <div class="histogram-bar" style="height: 99px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
+                                    <div class="histogram-bar" style="height: 75px;"></div>
+                                    <div class="histogram-bar" style="height: 93px;"></div>
+                                    <div class="histogram-bar" style="height: 93px;"></div>
+                                    <div class="histogram-bar" style="height: 75px;"></div>
+                                    <div class="histogram-bar" style="height: 98px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
+                                    <div class="histogram-bar" style="height: 107px;"></div>
+                                    <div class="histogram-bar" style="height: 75px;"></div>
+                                    <div class="histogram-bar" style="height: 93px;"></div>
+                                    <div class="histogram-bar" style="height: 102px;"></div>
+                                    <div class="histogram-bar" style="height: 52px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
+                                    <div class="histogram-bar" style="height: 94px;"></div>
+                                    <div class="histogram-bar" style="height: 75px;"></div>
+                                    <div class="histogram-bar" style="height: 86px;"></div>
                                 </div>
-                                <div class="range-input">
-                                    <input type="range" class="range-min" min="0" max="10000" value="2500">
-                                    <input type="range" class="range-max" min="0" max="10000" value="7500">
+                                <div class="range-slider">
+                                    <div class="track"></div>
+                                    <div class="range" id="range"></div>
+                                    <input type="range" id="minRange" min="0" max="100" value="0">
+                                    <input type="range" id="maxRange" min="0" max="100" value="100">
                                 </div>
-                                <div class="price-input">
-                                    <span id="minPrice">$2500</span>
-                                    <span> - </span>
-                                    <span id="maxPrice">$5000</span>
+                                <div class="price-labels">
+                                    <span id="minPrice">$@minPrice.ToString("N0")</span>
+                                    <span id="maxPrice">$@maxPrice.ToString("N0")</span>
                                 </div>
                             </div>
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
@@ -94,38 +123,42 @@
                         <div class="car-make side-box">
                             <h2>Car Seats</h2>
                             <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" checked />
-                                        <span>2 seats</span>
-                                    </label>
-                                    <span>(30)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>4 seats</span>
-                                    </label>
-                                    <span>(179)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>5 seats</span>
-                                    </label>
-                                    <span>(40)</span>
-                                </li>
+                                @foreach (var seat in seats)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="seat-filter" value="@seat.Name" />
+                                            <span>@seat.Name seats</span>
+                                        </label>
+                                        <span>(@seat.Count)</span>
+                                    </li>
+                                }
+                            </ul>
+                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
+                        </div>
+                        <div class="car-make side-box">
+                            <h2>Car Color</h2>
+                            <ul class="checkbox-list">
+                                @foreach (var color in colors)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="color-filter" value="@color.Name" />
+                                            <span>@color.Name</span>
+                                        </label>
+                                        <span>(@color.Count)</span>
+                                    </li>
+                                }
                             </ul>
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>
                         <div class="tag-area side-box">
                             <h2>Fuel</h2>
-                            <ul>
-                                <li>Gasoline</li>
-                                <li>Diesel</li>
-                                <li>Plug-in Hybrid</li>
-                                <li>Hybrid</li>
-                                <li>Electric</li>
+                            <ul id="fuelFilters">
+                                @foreach (var fuel in fuels)
+                                {
+                                    <li class="fuel-filter" data-fuel="@fuel">@fuel</li>
+                                }
                             </ul>
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>
@@ -133,116 +166,203 @@
                 </div>
             </div>
             <div class="col-lg-8">
-                <div class="right-side-porfolio">
-                    <div class="row g-5">
-                        <div class="col-lg-6">
-                            <div class="project-wrapper2">
-                                <div class="image-area">
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/04.webp" alt=""></a>
-                                    <span class="tag">Stocks</span>
-                                    <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                    <a href="~/assets/images/portfolio/04.webp" class="gallery-image">
-                                        <img src="~/assets/images/icon/image.svg" alt="">
-                                        7
-                                    </a>
-                                </div>
-                                <span class="price">14,000$</span>
-                                <div class="content-area">
-                                    <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Thunderbolt Car</a></h6>
-                                    <ul class="feature-area">
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                            100 Miles
-                                        </li>
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                            Petrol
-                                        </li>
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                            Automatic
-                                        </li>
-                                    </ul>
-                                    <div class="button-area">
-                                        <p class="">$400</p>
-                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-small">View Details</a>
+                <div class="right">
+                    <div class="row g-5" id="carGrid">
+                        @{
+                            var index = 0;
+                        }
+                        @foreach (var car in Model)
+                        {
+                            <div class="col-lg-6 car-card @(index >= pageSize ? "d-none" : null)"
+                                 data-search="@($"{car.Name} {car.Make} {car.Model}")"
+                                 data-make="@car.Make"
+                                 data-model="@car.Model"
+                                 data-price="@car.Price"
+                                 data-seats="@car.Seats"
+                                 data-color="@car.Color"
+                                 data-fuel="@car.Fuel">
+                                <div class="project-wrapper2">
+                                    <div class="image-area">
+                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"><img src="@Url.Content(car.ImagePath)" alt="@car.Name"></a>
+                                        <span class="tag">@car.Badge</span>
+                                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                        <a href="@Url.Content(car.ImagePath)" class="gallery-image">
+                                            <img src="~/assets/images/icon/image.svg" alt="">
+                                            @car.ImageCount
+                                        </a>
+                                    </div>
+                                    <span class="price">@($"{car.Price:N0}$")</span>
+                                    <div class="content-area">
+                                        <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
+                                        <ul class="feature-area">
+                                            <li>
+                                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                                @($"{car.Mileage:N0} Miles")
+                                            </li>
+                                            <li>
+                                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                                @car.Fuel
+                                            </li>
+                                            <li>
+                                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                                @car.Transmission
+                                            </li>
+                                        </ul>
+                                        <div class="button-area">
+                                            <p class="">@($"${car.MonthlyPayment:N0}")</p>
+                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="project-wrapper2">
-                                <div class="image-area">
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="2"><img src="~/assets/images/portfolio/05.webp" alt=""></a>
-                                    <span class="tag">New</span>
-                                    <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                    <a href="~/assets/images/portfolio/05.webp" class="gallery-image">
-                                        <img src="~/assets/images/icon/image.svg" alt="">
-                                        5
-                                    </a>
-                                </div>
-                                <span class="price">14,000$</span>
-                                <div class="content-area">
-                                    <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="2">Mercedes-Benz E-Class</a></h6>
-                                    <ul class="feature-area">
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                            100 Miles
-                                        </li>
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                            Petrol
-                                        </li>
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                            Automatic
-                                        </li>
-                                    </ul>
-                                    <div class="button-area">
-                                        <p class="">$400</p>
-                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="2" class="rts-btn btn-primary radius-small">View Details</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="project-wrapper2">
-                                <div class="image-area">
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="3"><img src="~/assets/images/portfolio/06.webp" alt=""></a>
-                                    <span class="tag">Trending</span>
-                                    <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                    <a href="~/assets/images/portfolio/06.webp" class="gallery-image">
-                                        <img src="~/assets/images/icon/image.svg" alt="">
-                                        5
-                                    </a>
-                                </div>
-                                <span class="price">14,000$</span>
-                                <div class="content-area">
-                                    <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="3">Ford Mustang Convertible</a></h6>
-                                    <ul class="feature-area">
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                            100 Miles
-                                        </li>
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                            Petrol
-                                        </li>
-                                        <li>
-                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                            Automatic
-                                        </li>
-                                    </ul>
-                                    <div class="button-area">
-                                        <p class="">$400</p>
-                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="3" class="rts-btn btn-primary radius-small">View Details</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            index++;
+                        }
                     </div>
+                    <h6 id="carEmpty" class="d-none text-center mt--40">No cars match this filter.</h6>
+                    <a href="#" class="rts-btn load-more-btn btn-border" id="carLoadMore">Load More</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="call-to:+16544521505">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    +1-654-452-1505
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var pageSize = @pageSize;
+            var shown = pageSize;
+            var priceFloor = @minPrice;
+            var priceCeil = @maxPrice;
+            var minRange = document.getElementById("minRange");
+            var maxRange = document.getElementById("maxRange");
+            var range = document.getElementById("range");
+            var bars = document.querySelectorAll(".histogram-bar");
+            var minLabel = document.getElementById("minPrice");
+            var maxLabel = document.getElementById("maxPrice");
+            var search = document.getElementById("carSearch");
+            var empty = document.getElementById("carEmpty");
+            var loadMore = document.getElementById("carLoadMore");
+
+            function selected(selector) {
+                return Array.prototype.slice.call(document.querySelectorAll(selector + ":checked")).map(function (input) {
+                    return input.value;
+                });
+            }
+
+            function priceBounds() {
+                var minValue = parseInt(minRange.value, 10);
+                var maxValue = parseInt(maxRange.value, 10);
+                return {
+                    min: Math.round((minValue / 100) * (priceCeil - priceFloor) + priceFloor),
+                    max: Math.round((maxValue / 100) * (priceCeil - priceFloor) + priceFloor)
+                };
+            }
+
+            function updateRange() {
+                var minValue = parseInt(minRange.value, 10);
+                var maxValue = parseInt(maxRange.value, 10);
+                range.style.left = minValue + "%";
+                range.style.right = (100 - maxValue) + "%";
+                bars.forEach(function (bar, index) {
+                    var barValue = (index / (bars.length - 1)) * 100;
+                    bar.classList.toggle("active", barValue >= minValue && barValue <= maxValue);
+                });
+                var bounds = priceBounds();
+                minLabel.textContent = "$" + bounds.min.toLocaleString();
+                maxLabel.textContent = "$" + bounds.max.toLocaleString();
+            }
+
+            function apply() {
+                var query = search.value.trim().toLowerCase();
+                var makes = selected(".make-filter");
+                var models = selected(".model-filter");
+                var seatValues = selected(".seat-filter");
+                var colorValues = selected(".color-filter");
+                var fuelValues = Array.prototype.slice.call(document.querySelectorAll(".fuel-filter.is-active")).map(function (item) {
+                    return item.getAttribute("data-fuel");
+                });
+                var bounds = priceBounds();
+                var matches = Array.prototype.slice.call(document.querySelectorAll(".car-card")).filter(function (card) {
+                    var price = parseFloat(card.getAttribute("data-price"));
+                    if (query && card.getAttribute("data-search").toLowerCase().indexOf(query) === -1) return false;
+                    if (makes.length && makes.indexOf(card.getAttribute("data-make")) === -1) return false;
+                    if (models.length && models.indexOf(card.getAttribute("data-model")) === -1) return false;
+                    if (seatValues.length && seatValues.indexOf(card.getAttribute("data-seats")) === -1) return false;
+                    if (colorValues.length && colorValues.indexOf(card.getAttribute("data-color")) === -1) return false;
+                    if (fuelValues.length && fuelValues.indexOf(card.getAttribute("data-fuel")) === -1) return false;
+                    return price >= bounds.min && price <= bounds.max;
+                });
+                document.querySelectorAll(".car-card").forEach(function (card) {
+                    card.classList.add("d-none");
+                });
+                matches.forEach(function (card, index) {
+                    if (index < shown) card.classList.remove("d-none");
+                });
+                empty.classList.toggle("d-none", matches.length > 0);
+                loadMore.classList.toggle("d-none", matches.length <= shown);
+            }
+
+            minRange.addEventListener("input", function () {
+                if (parseInt(minRange.value, 10) > parseInt(maxRange.value, 10) - 5) {
+                    minRange.value = parseInt(maxRange.value, 10) - 5;
+                }
+                shown = pageSize;
+                updateRange();
+                apply();
+            });
+            maxRange.addEventListener("input", function () {
+                if (parseInt(maxRange.value, 10) < parseInt(minRange.value, 10) + 5) {
+                    maxRange.value = parseInt(minRange.value, 10) + 5;
+                }
+                shown = pageSize;
+                updateRange();
+                apply();
+            });
+            document.getElementById("carSearchForm").addEventListener("submit", function (event) {
+                event.preventDefault();
+                shown = pageSize;
+                apply();
+            });
+            search.addEventListener("input", function () {
+                shown = pageSize;
+                apply();
+            });
+            document.querySelectorAll(".make-filter, .model-filter, .seat-filter, .color-filter").forEach(function (input) {
+                input.addEventListener("change", function () {
+                    shown = pageSize;
+                    apply();
+                });
+            });
+            document.querySelectorAll(".fuel-filter").forEach(function (item) {
+                item.addEventListener("click", function () {
+                    item.classList.toggle("is-active");
+                    shown = pageSize;
+                    apply();
+                });
+            });
+            loadMore.addEventListener("click", function (event) {
+                event.preventDefault();
+                shown += pageSize;
+                apply();
+            });
+            updateRange();
+            apply();
+        })();
+    </script>
+}

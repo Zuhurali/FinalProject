@@ -85,7 +85,9 @@ namespace FinalProject.MVC.Controllers
         public IActionResult CarsTwo()
         {
             ViewData["Title"] = "Cars Two - AutoVault";
-            return View();
+            ViewData["BodyClass"] = "with-sidebar";
+            ViewData["HeaderStyle"] = "three";
+            return View(_allCars);
         }
 
         public IActionResult CarsThree()

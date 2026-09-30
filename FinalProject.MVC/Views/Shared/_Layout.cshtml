@@ -46,6 +46,12 @@
     <div class="rts-wrapper">
         <div class="rts-wrapper-inner">
             <!-- header area start -->
+            @if ((ViewData["HeaderStyle"] as string) == "three")
+            {
+                <partial name="_HeaderThree" />
+            }
+            else
+            {
             <header class="header-one header--sticky">
                 <div class="row">
                     <div class="col-lg-12">
@@ -239,6 +245,7 @@
                     </div>
                 </div>
             </header>
+            }
             <!-- header area end -->
             
             <!-- Main content -->

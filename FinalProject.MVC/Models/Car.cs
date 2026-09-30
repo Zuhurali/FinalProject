@@ -15,6 +15,7 @@ namespace FinalProject.MVC.Models
         public int ImageCount { get; set; } = 7; // Number of gallery images
         public int Year { get; set; }
         public string Color { get; set; } = string.Empty;
+        public int Seats { get; set; } = 5;
         public string Description { get; set; } = string.Empty;
         public bool InStock { get; set; } = true;
         public decimal MonthlyPayment { get; set; } // For financing
