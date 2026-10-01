@@ -7,22 +7,42 @@ namespace FinalProject.MVC.Controllers
     public class CarsController : Controller
     {
         private readonly List<Car> _allCars = CarCatalog.Create();
+        private readonly List<Car> _templateCars = CarCatalog.TemplateCards();
 
-        public IActionResult Index()
+        public IActionResult Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, int page = 1)
         {
             ViewData["Title"] = "Cars - AutoVault";
-            return View();
+
+            var query = new CarListingQuery
+            {
+                Category = category,
+                Make = make,
+                Model = model,
+                PriceRange = priceRange,
+                Fuel = fuel,
+                Transmission = transmission,
+                Page = page
+            };
+
+            var matches = CarListingFilter.Filter(_allCars, query);
+            var listing = CarListingFilter.Page(matches, query, _allCars);
+            return View(listing);
         }
 
         public IActionResult CarsOne(string? make, string? model, string? priceRange)
         {
             ViewData["Title"] = "Cars One - AutoVault";
 
-            var filteredCars = FilterCars(make, model, priceRange);
+            var filteredCars = CarListingFilter.Filter(_templateCars, new CarListingQuery
+            {
+                Make = make,
+                Model = model,
+                PriceRange = priceRange
+            }).ToList();
 
             // Get distinct makes and models for dropdowns
-            ViewBag.Makes = _allCars.Select(c => c.Make).Distinct().OrderBy(m => m).ToList();
-            ViewBag.Models = _allCars.Select(c => c.Model).Distinct().OrderBy(m => m).ToList();
+            ViewBag.Makes = _templateCars.Select(c => c.Make).Distinct().OrderBy(m => m).ToList();
+            ViewBag.Models = _templateCars.Select(c => c.Model).Distinct().OrderBy(m => m).ToList();
             ViewBag.SelectedMake = make;
             ViewBag.SelectedModel = model;
             ViewBag.SelectedPriceRange = priceRange;
@@ -33,53 +53,22 @@ namespace FinalProject.MVC.Controllers
         [HttpPost]
         public JsonResult FilterCars([FromBody] CarFilterRequest request)
         {
-            var filteredCars = FilterCars(request.Make, request.Model, request.PriceRange);
+            var filteredCars = CarListingFilter.Filter(_templateCars, new CarListingQuery
+            {
+                Category = request.Category,
+                Make = request.Make,
+                Model = request.Model,
+                PriceRange = request.PriceRange,
+                Fuel = request.Fuel,
+                Transmission = request.Transmission
+            });
 
             return Json(new CarFilterResponse
             {
-                Cars = filteredCars,
+                Cars = filteredCars.ToList(),
                 TotalCars = filteredCars.Count,
                 ResultsText = $"Showing {filteredCars.Count} car(s)"
             });
-        }
-
-        private List<Car> FilterCars(string? make, string? model, string? priceRange)
-        {
-            var query = _allCars.AsEnumerable();
-
-            // Filter by make
-            if (!string.IsNullOrEmpty(make) && make != "All")
-            {
-                query = query.Where(c => c.Make.Equals(make, StringComparison.OrdinalIgnoreCase));
-            }
-
-            // Filter by model
-            if (!string.IsNullOrEmpty(model) && model != "All")
-            {
-                query = query.Where(c => c.Model.Equals(model, StringComparison.OrdinalIgnoreCase));
-            }
-
-            // Filter by price range
-            if (!string.IsNullOrEmpty(priceRange) && priceRange != "All")
-            {
-                var (minPrice, maxPrice) = ParsePriceRange(priceRange);
-                query = query.Where(c => c.Price >= minPrice && c.Price <= maxPrice);
-            }
-
-            return query.ToList();
-        }
-
-        private (decimal minPrice, decimal maxPrice) ParsePriceRange(string priceRange)
-        {
-            return priceRange switch
-            {
-                "0-25000" => (0, 25000),
-                "25000-35000" => (25000, 35000),
-                "35000-50000" => (35000, 50000),
-                "50000-70000" => (50000, 70000),
-                "70000+" => (70000, decimal.MaxValue),
-                _ => (0, decimal.MaxValue)
-            };
         }
 
         public IActionResult CarsTwo()
@@ -87,7 +76,7 @@ namespace FinalProject.MVC.Controllers
             ViewData["Title"] = "Cars Two - AutoVault";
             ViewData["BodyClass"] = "with-sidebar";
             ViewData["HeaderStyle"] = "three";
-            return View(_allCars);
+            return View(_templateCars);
         }
 
         public IActionResult CarsThree()
@@ -112,7 +101,7 @@ namespace FinalProject.MVC.Controllers
                 return RedirectToAction(nameof(CarsOne));
             }
 
-            ViewData["Title"] = "Mercedes-Benz E-Class - AutoVault";
+            ViewData["Title"] = $"{car.Name} - AutoVault";
             ViewData["BodyClass"] = "with-sidebar";
             ViewData["HeaderStyle"] = "three";
             return View(car);

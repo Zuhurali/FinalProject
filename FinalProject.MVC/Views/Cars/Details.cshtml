@@ -1,29 +1,31 @@
+@model Car
 @{
-    ViewData["Title"] = "Mercedes-Benz E-Class - AutoVault";
-    var slides = new[] { "30", "31", "32", "33", "34", "35", "30", "31", "32", "33", "34", "35" };
+    ViewData["Title"] = $"{Model.Name} - AutoVault";
+    var slides = Enumerable.Repeat(Model.ImagePath, 6).ToArray();
+    var relatedCars = CarCatalog.Create().Where(car => car.Id != Model.Id).Take(2).ToList();
 }
 
-<div class="rts-breadcrumb-area portfolio details jarallax">
+<div class="rts-breadcrumb-area portfolio details jarallax" style="background-image: url('@Url.Content(Model.ImagePath)'); background-size: cover; background-position: center;">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
             <div class="left">
-                <h1 class="title">Mercedes-Benz E-Class</h1>
+                <h1 class="title">@Model.Name</h1>
                 <ul class="feature-area">
                     <li>
                         <img src="~/assets/images/portfolio/feature-icon/05.svg" alt="">
-                        100 Miles
+                        @Model.Mileage.ToString("N0") Miles
                     </li>
                     <li>
                         <img src="~/assets/images/portfolio/feature-icon/06.svg" alt="">
-                        Petrol
+                        @Model.Fuel
                     </li>
                     <li>
                         <img src="~/assets/images/portfolio/feature-icon/07.svg" alt="">
-                        Autometic
+                        @Model.Transmission
                     </li>
                     <li>
                         <img src="~/assets/images/portfolio/feature-icon/08.svg" alt="">
-                        Person
+                        @Model.Seats Person
                     </li>
                 </ul>
             </div>
@@ -46,7 +48,7 @@
                                 @foreach (var slide in slides)
                                 {
                                     <div class="swiper-slide">
-                                        <div class="image"><img src="@Url.Content($"~/assets/images/portfolio/{slide}.webp")" alt=""></div>
+                                        <div class="image"><img src="@Url.Content(slide)" alt="@Model.Name"></div>
                                     </div>
                                 }
                             </div>
@@ -59,7 +61,7 @@
                                         <div class="swiper-slide">
                                             <div class="single-thumb">
                                                 <div class="thumbnail">
-                                                    <img src="@Url.Content($"~/assets/images/portfolio/{slide}.webp")" alt="">
+                                                    <img src="@Url.Content(slide)" alt="@Model.Name">
                                                 </div>
                                             </div>
                                         </div>
@@ -96,43 +98,43 @@
                         <li>
                             <span class="number">1</span>
                             <div class="text">
-                                <h6>Car Transmission</h6>
-                                <p>Fuel type</p>
+                                <h6>@Model.Transmission</h6>
+                                <p>Transmission</p>
                             </div>
                         </li>
                         <li>
                             <span class="number">2</span>
                             <div class="text">
-                                <h6>15 hrs</h6>
-                                <p>Level Two Charging</p>
+                                <h6>@Model.Year</h6>
+                                <p>Model Year</p>
                             </div>
                         </li>
                         <li>
                             <span class="number">3</span>
                             <div class="text">
-                                <h6>100 kWh</h6>
-                                <p>Battery Capacity</p>
+                                <h6>@Model.Fuel</h6>
+                                <p>Fuel Type</p>
                             </div>
                         </li>
                         <li>
                             <span class="number">4</span>
                             <div class="text">
-                                <h6>30 mins</h6>
-                                <p>Dc Fast Changing</p>
+                                <h6>@Model.Mileage.ToString("N0") Miles</h6>
+                                <p>Mileage</p>
                             </div>
                         </li>
                         <li>
                             <span class="number">5</span>
                             <div class="text">
-                                <h6>Battery</h6>
-                                <p>96 month/150000 miles</p>
+                                <h6>@Model.Seats Person</h6>
+                                <p>Seating</p>
                             </div>
                         </li>
                         <li>
                             <span class="number">6</span>
                             <div class="text">
-                                <h6>Powertrain</h6>
-                                <p>96 month/unlimited</p>
+                                <h6>@Model.Color</h6>
+                                <p>Exterior Color</p>
                             </div>
                         </li>
                     </ul>
@@ -153,43 +155,43 @@
                         <li>
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
-                                <p>Displacement</p>
-                                <p>3L</p>
+                                <p>Make</p>
+                                <p>@Model.Make</p>
                             </div>
                         </li>
                         <li>
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
-                                <p>Torque</p>
-                                <p>350 lb.-ft</p>
+                                <p>Model</p>
+                                <p>@Model.Model</p>
                             </div>
                         </li>
                         <li>
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
-                                <p>Horespower</p>
-                                <p>210 kW / 286 hp</p>
+                                <p>Category</p>
+                                <p>@Model.Category</p>
                             </div>
                         </li>
                         <li>
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
-                                <p>Number of cylinders</p>
-                                <p>4</p>
+                                <p>Drive Type</p>
+                                <p>@Model.DriveType</p>
                             </div>
                         </li>
                         <li>
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
-                                <p>Engine Layout</p>
-                                <p>First-Engine</p>
+                                <p>Year</p>
+                                <p>@Model.Year</p>
                             </div>
                         </li>
                         <li>
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
-                                <p>Engine Configurations</p>
-                                <p>V Engine (V6, V8)</p>
+                                <p>Fuel</p>
+                                <p>@Model.Fuel</p>
                             </div>
                         </li>
                     </ul>
@@ -214,76 +216,44 @@
                     <div class="related-project">
                         <h3 class="mb--40 text-center">Related listings</h3>
                         <div class="row g-5">
-                            <div class="col-lg-6">
-                                <div class="project-wrapper2">
-                                    <div class="image-area">
-                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/04.webp" alt=""></a>
-                                        <span class="tag">Stocks</span>
-                                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                        <a href="~/assets/images/portfolio/04.webp" class="gallery-image">
-                                            <img src="~/assets/images/icon/image.svg" alt="">
-                                            7
-                                        </a>
-                                    </div>
-                                    <span class="price">14,000$</span>
-                                    <div class="content-area">
-                                        <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Thunderbolt Car</a></h6>
-                                        <ul class="feature-area">
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                100 Miles
-                                            </li>
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                Petrol
-                                            </li>
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                Autometic
-                                            </li>
-                                        </ul>
-                                        <div class="button-area">
-                                            <p class="">$400</p>
-                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-small">View Details</a>
+                            @foreach (var relatedCar in relatedCars)
+                            {
+                                <div class="col-lg-6">
+                                    <div class="project-wrapper2">
+                                        <div class="image-area">
+                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id"><img src="@Url.Content(relatedCar.ImagePath)" alt="@relatedCar.Name"></a>
+                                            <span class="tag">@relatedCar.Badge</span>
+                                            <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                                            <a href="@Url.Content(relatedCar.ImagePath)" class="gallery-image">
+                                                <img src="~/assets/images/icon/image.svg" alt="">
+                                                @relatedCar.ImageCount
+                                            </a>
+                                        </div>
+                                        <span class="price">$@relatedCar.Price.ToString("N0")</span>
+                                        <div class="content-area">
+                                            <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id">@relatedCar.Name</a></h6>
+                                            <ul class="feature-area">
+                                                <li>
+                                                    <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                                    @relatedCar.Mileage.ToString("N0") Miles
+                                                </li>
+                                                <li>
+                                                    <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                                    @relatedCar.Fuel
+                                                </li>
+                                                <li>
+                                                    <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                                    @relatedCar.Transmission
+                                                </li>
+                                            </ul>
+                                            <div class="button-area">
+                                                <p class="">$@relatedCar.Price.ToString("N0")</p>
+                                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="project-wrapper2">
-                                    <div class="image-area">
-                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="6"><img src="~/assets/images/portfolio/05.webp" alt=""></a>
-                                        <span class="tag">New</span>
-                                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                        <a href="~/assets/images/portfolio/05.webp" class="gallery-image">
-                                            <img src="~/assets/images/icon/image.svg" alt="">
-                                            5
-                                        </a>
-                                    </div>
-                                    <span class="price">14,000$</span>
-                                    <div class="content-area">
-                                        <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="6">Mercedes-Benz E-Class</a></h6>
-                                        <ul class="feature-area">
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                100 Miles
-                                            </li>
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                Petrol
-                                            </li>
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                Autometic
-                                            </li>
-                                        </ul>
-                                        <div class="button-area">
-                                            <p class="">$400</p>
-                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="6" class="rts-btn btn-primary radius-small">View Details</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -292,7 +262,7 @@
                 <div class="sticky-top">
                     <div class="left-side-bar">
                         <div class="price-area side-box">
-                            <h5>$1200,00</h5>
+                            <h5>$@Model.Price.ToString("N0")</h5>
                             <ul class="price-meta">
                                 <li><img src="~/assets/images/portfolio/calender.svg" alt=""> Feb 23, 2025</li>
                                 <li><img src="~/assets/images/portfolio/view.svg" alt=""> View</li>
@@ -309,56 +279,56 @@
                                     <img src="~/assets/images/portfolio/feature-icon/09.svg" alt="">
                                     <div class="text">
                                         <p>Car Type</p>
-                                        <p>Mercedes - Benz</p>
+                                        <p>@Model.Category</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/10.svg" alt="">
                                     <div class="text">
                                         <p>Mileage</p>
-                                        <p>100 Miles</p>
+                                        <p>@Model.Mileage.ToString("N0") Miles</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/11.svg" alt="">
                                     <div class="text">
                                         <p>Fuel Type</p>
-                                        <p>Petrol</p>
+                                        <p>@Model.Fuel</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/12.svg" alt="">
                                     <div class="text">
                                         <p>Transmission</p>
-                                        <p>Autometic</p>
+                                        <p>@Model.Transmission</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/13.svg" alt="">
                                     <div class="text">
                                         <p>Person</p>
-                                        <p>5 Person</p>
+                                        <p>@Model.Seats Person</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/14.svg" alt="">
                                     <div class="text">
                                         <p>Drive Type</p>
-                                        <p>Race Car Drivers</p>
+                                        <p>@Model.DriveType</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/15.svg" alt="">
                                     <div class="text">
                                         <p>Engine</p>
-                                        <p>Mazda RX-7</p>
+                                        <p>@Model.Model</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/16.svg" alt="">
                                     <div class="text">
                                         <p>Color</p>
-                                        <p>Red Color</p>
+                                        <p>@Model.Color</p>
                                     </div>
                                 </li>
                             </ul>

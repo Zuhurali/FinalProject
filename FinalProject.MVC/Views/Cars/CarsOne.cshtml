@@ -76,16 +76,16 @@
                         <div class="project-wrapper2">
                             <div class="image-area">
                                 <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
-                                    <img src="@car.ImagePath" alt="@car.Name">
+                                    <img src="@Url.Content(car.ImagePath)" alt="@car.Name">
                                 </a>
                                 <span class="tag">@car.Badge</span>
                                 <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                <a href="@car.ImagePath" class="gallery-image">
+                                <a href="@Url.Content(car.ImagePath)" class="gallery-image">
                                     <img src="~/assets/images/icon/image.svg" alt="">
                                     @car.ImageCount
                                 </a>
                             </div>
-                            <span class="price">$@car.Price.ToString("N0")</span>
+                            <span class="price">@car.Price.ToString("N0")$</span>
                             <div class="content-area">
                                 <h6 class="title">
                                     <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a>
@@ -105,7 +105,7 @@
                                     </li>
                                 </ul>
                                 <div class="button-area">
-                                    <p class="">$@car.MonthlyPayment/mo</p>
+                                    <p class="">$@car.Price.ToString("N0")</p>
                                     <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
                                 </div>
                             </div>
@@ -213,21 +213,22 @@
             }
 
             cars.forEach(function(car) {
+                const imageSrc = (car.imagePath || "").replace("~", "");
                 const carCard = `
                     <div class="col-lg-4">
                         <div class="project-wrapper2">
                             <div class="image-area">
                                 <a href="/Cars/Details/${car.id}">
-                                    <img src="${car.imagePath}" alt="${car.name}">
+                                    <img src="${imageSrc}" alt="${car.name}">
                                 </a>
                                 <span class="tag">${car.badge}</span>
                                 <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                <a href="${car.imagePath}" class="gallery-image">
+                                <a href="${imageSrc}" class="gallery-image">
                                     <img src="/assets/images/icon/image.svg" alt="">
                                     ${car.imageCount}
                                 </a>
                             </div>
-                            <span class="price">$${car.price.toLocaleString()}</span>
+                            <span class="price">${Number(car.price).toLocaleString()}$</span>
                             <div class="content-area">
                                 <h6 class="title">
                                     <a href="/Cars/Details/${car.id}">${car.name}</a>
@@ -247,7 +248,7 @@
                                     </li>
                                 </ul>
                                 <div class="button-area">
-                                    <p class="">$${car.monthlyPayment}/mo</p>
+                                    <p class="">$${car.monthlyPayment}</p>
                                     <a href="/Cars/Details/${car.id}" class="rts-btn btn-primary radius-small">View Details</a>
                                 </div>
                             </div>

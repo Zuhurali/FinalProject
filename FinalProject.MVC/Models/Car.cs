@@ -6,6 +6,7 @@ namespace FinalProject.MVC.Models
         public string Name { get; set; } = string.Empty;
         public string Make { get; set; } = string.Empty; // Brand
         public string Model { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int Mileage { get; set; }
         public string Fuel { get; set; } = string.Empty; // Petrol, Diesel, Electric, Hybrid
@@ -19,15 +20,20 @@ namespace FinalProject.MVC.Models
         public string Description { get; set; } = string.Empty;
         public bool InStock { get; set; } = true;
         public decimal MonthlyPayment { get; set; } // For financing
+        public string DriveType { get; set; } = string.Empty;
     }
 
     public class CarFilterRequest
     {
+        public string? Category { get; set; }
         public string? Make { get; set; }
         public string? Model { get; set; }
         public string? PriceRange { get; set; }
+        public string? Fuel { get; set; }
+        public string? Transmission { get; set; }
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
+        public int Page { get; set; } = 1;
     }
 
     public class CarFilterResponse

@@ -15630,6 +15630,12 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
   padding: 30px 30px;
   text-align: center;
   transition: all 0.4s;
+  position: relative;
+}
+.category-wrapper .title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 .category-wrapper:hover {
   background: var(--color-primary);

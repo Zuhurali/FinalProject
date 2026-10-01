@@ -4,36 +4,121 @@ namespace FinalProject.MVC.Data
 {
     public static class CarCatalog
     {
+        public static List<Car> TemplateCards()
+        {
+            return Create();
+        }
+
         public static List<Car> Create()
         {
             return new List<Car>
             {
-                new Car { Id = 1, Name = "Honda Civic", Make = "Honda", Model = "Civic", Price = 24500, Mileage = 35000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/04.webp", Badge = "Stocks", Year = 2022, Color = "Silver", Seats = 5, MonthlyPayment = 450, Description = "Reliable and fuel-efficient Honda Civic" },
-                new Car { Id = 2, Name = "Honda Accord", Make = "Honda", Model = "Accord", Price = 28900, Mileage = 28000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/05.webp", Badge = "New", Year = 2023, Color = "Black", Seats = 5, MonthlyPayment = 520, Description = "Spacious and comfortable Honda Accord" },
-                new Car { Id = 3, Name = "Honda CR-V", Make = "Honda", Model = "CR-V", Price = 32500, Mileage = 20000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/06.webp", Badge = "Trending", Year = 2023, Color = "White", Seats = 5, MonthlyPayment = 580, Description = "Versatile Honda CR-V SUV" },
-                new Car { Id = 4, Name = "Honda Pilot", Make = "Honda", Model = "Pilot", Price = 38900, Mileage = 15000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/07.webp", Badge = "New", Year = 2024, Color = "Blue", Seats = 7, MonthlyPayment = 680, Description = "Family-friendly Honda Pilot" },
-                new Car { Id = 5, Name = "Mercedes-Benz C-Class", Make = "Mercedes-Benz", Model = "C-Class", Price = 45000, Mileage = 12000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/08.webp", Badge = "New", Year = 2023, Color = "Silver", Seats = 5, MonthlyPayment = 780, Description = "Luxury Mercedes-Benz C-Class" },
-                new Car { Id = 6, Name = "Mercedes-Benz E-Class", Make = "Mercedes-Benz", Model = "E-Class", Price = 55000, Mileage = 8000, Fuel = "Diesel", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/09.webp", Badge = "Trending", Year = 2023, Color = "Black", Seats = 5, MonthlyPayment = 920, Description = "Executive Mercedes-Benz E-Class" },
-                new Car { Id = 7, Name = "Mercedes-Benz GLE", Make = "Mercedes-Benz", Model = "GLE", Price = 68000, Mileage = 5000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/10.webp", Badge = "New", Year = 2024, Color = "White", Seats = 5, MonthlyPayment = 1150, Description = "Premium Mercedes-Benz GLE SUV" },
-                new Car { Id = 8, Name = "Mercedes-Benz S-Class", Make = "Mercedes-Benz", Model = "S-Class", Price = 95000, Mileage = 3000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/11.webp", Badge = "New", Year = 2024, Color = "Black", Seats = 5, MonthlyPayment = 1580, Description = "Flagship Mercedes-Benz S-Class" },
-                new Car { Id = 9, Name = "BMW 3 Series", Make = "BMW", Model = "3 Series", Price = 42000, Mileage = 18000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/12.webp", Badge = "Stocks", Year = 2022, Color = "Blue", Seats = 5, MonthlyPayment = 720, Description = "Sporty BMW 3 Series" },
-                new Car { Id = 10, Name = "BMW 5 Series", Make = "BMW", Model = "5 Series", Price = 52000, Mileage = 10000, Fuel = "Diesel", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/13.webp", Badge = "Trending", Year = 2023, Color = "Gray", Seats = 5, MonthlyPayment = 880, Description = "Performance-oriented BMW 5 Series" },
-                new Car { Id = 11, Name = "BMW X3", Make = "BMW", Model = "X3", Price = 48000, Mileage = 14000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/14.webp", Badge = "New", Year = 2023, Color = "White", Seats = 5, MonthlyPayment = 820, Description = "Compact BMW X3 SUV" },
-                new Car { Id = 12, Name = "BMW X5", Make = "BMW", Model = "X5", Price = 65000, Mileage = 6000, Fuel = "Diesel", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/15.webp", Badge = "New", Year = 2024, Color = "Black", Seats = 5, MonthlyPayment = 1100, Description = "Luxury BMW X5 SUV" },
-                new Car { Id = 13, Name = "Toyota Camry", Make = "Toyota", Model = "Camry", Price = 26500, Mileage = 30000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/01.webp", Badge = "Stocks", Year = 2022, Color = "Silver", Seats = 5, MonthlyPayment = 480, Description = "Reliable Toyota Camry" },
-                new Car { Id = 14, Name = "Toyota Corolla", Make = "Toyota", Model = "Corolla", Price = 22000, Mileage = 40000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/02.webp", Badge = "Stocks", Year = 2021, Color = "White", Seats = 5, MonthlyPayment = 400, Description = "Economical Toyota Corolla" },
-                new Car { Id = 15, Name = "Toyota RAV4", Make = "Toyota", Model = "RAV4", Price = 31000, Mileage = 22000, Fuel = "Hybrid", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/03.webp", Badge = "Trending", Year = 2023, Color = "Blue", Seats = 5, MonthlyPayment = 550, Description = "Hybrid Toyota RAV4" },
-                new Car { Id = 16, Name = "Toyota Highlander", Make = "Toyota", Model = "Highlander", Price = 38000, Mileage = 16000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/04.webp", Badge = "New", Year = 2023, Color = "Gray", Seats = 7, MonthlyPayment = 650, Description = "Spacious Toyota Highlander" },
-                new Car { Id = 17, Name = "Ford Mustang", Make = "Ford", Model = "Mustang", Price = 35000, Mileage = 25000, Fuel = "Petrol", Transmission = "Manual", ImagePath = "~/assets/images/portfolio/05.webp", Badge = "Trending", Year = 2022, Color = "Red", Seats = 4, MonthlyPayment = 620, Description = "Iconic Ford Mustang" },
-                new Car { Id = 18, Name = "Ford F-150", Make = "Ford", Model = "F-150", Price = 42000, Mileage = 20000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/06.webp", Badge = "Stocks", Year = 2023, Color = "Black", Seats = 5, MonthlyPayment = 720, Description = "Powerful Ford F-150 truck" },
-                new Car { Id = 19, Name = "Ford Explorer", Make = "Ford", Model = "Explorer", Price = 39500, Mileage = 18000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/07.webp", Badge = "New", Year = 2023, Color = "White", Seats = 7, MonthlyPayment = 680, Description = "Adventure-ready Ford Explorer" },
-                new Car { Id = 20, Name = "Volkswagen Golf", Make = "Volkswagen", Model = "Golf", Price = 25000, Mileage = 32000, Fuel = "Petrol", Transmission = "Manual", ImagePath = "~/assets/images/portfolio/08.webp", Badge = "Stocks", Year = 2022, Color = "Silver", Seats = 5, MonthlyPayment = 450, Description = "Compact Volkswagen Golf" },
-                new Car { Id = 21, Name = "Volkswagen Passat", Make = "Volkswagen", Model = "Passat", Price = 28000, Mileage = 26000, Fuel = "Diesel", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/09.webp", Badge = "Stocks", Year = 2022, Color = "Blue", Seats = 5, MonthlyPayment = 500, Description = "Comfortable Volkswagen Passat" },
-                new Car { Id = 22, Name = "Volkswagen Tiguan", Make = "Volkswagen", Model = "Tiguan", Price = 33000, Mileage = 19000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/10.webp", Badge = "New", Year = 2023, Color = "Black", Seats = 5, MonthlyPayment = 580, Description = "Versatile Volkswagen Tiguan" },
-                new Car { Id = 23, Name = "Mazda CX-5", Make = "Mazda", Model = "CX-5", Price = 29500, Mileage = 24000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/11.webp", Badge = "Trending", Year = 2023, Color = "Red", Seats = 5, MonthlyPayment = 520, Description = "Stylish Mazda CX-5" },
-                new Car { Id = 24, Name = "Mazda3", Make = "Mazda", Model = "Mazda3", Price = 23500, Mileage = 28000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/12.webp", Badge = "Stocks", Year = 2022, Color = "White", Seats = 5, MonthlyPayment = 430, Description = "Sporty Mazda3" },
-                new Car { Id = 25, Name = "Mitsubishi Outlander", Make = "Mitsubishi", Model = "Outlander", Price = 30000, Mileage = 21000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/13.webp", Badge = "Stocks", Year = 2023, Color = "Silver", Seats = 7, MonthlyPayment = 540, Description = "Practical Mitsubishi Outlander" },
-                new Car { Id = 26, Name = "Mitsubishi Eclipse Cross", Make = "Mitsubishi", Model = "Eclipse Cross", Price = 27500, Mileage = 25000, Fuel = "Petrol", Transmission = "Automatic", ImagePath = "~/assets/images/portfolio/14.webp", Badge = "Stocks", Year = 2022, Color = "Black", Seats = 5, MonthlyPayment = 490, Description = "Dynamic Mitsubishi Eclipse Cross" }
+                Car(1, "Ferrari California", "Ferrari", "California", "Convertible",
+                    "~/assets/images/portfolio/02.webp", "New", 2018, "Red", 4, 189000, 14500,
+                    "Petrol", "Automatic", 2890, "Rear-Wheel Drive"),
+                Car(2, "Mercedes-Benz SL-Class", "Mercedes-Benz", "SL-Class", "Convertible",
+                    "~/assets/images/portfolio/05.webp", "Trending", 2019, "Black", 2, 92000, 18200,
+                    "Petrol", "Automatic", 1480, "Rear-Wheel Drive"),
+                Car(3, "Mercedes-Benz SL-Class", "Mercedes-Benz", "SL-Class", "Convertible",
+                    "~/assets/images/about/07.webp", "Stocks", 2016, "White", 2, 78000, 27400,
+                    "Petrol", "Automatic", 1260, "Rear-Wheel Drive"),
+
+                Car(4, "Nissan 350Z", "Nissan", "350Z", "Sports Car",
+                    "~/assets/images/portfolio/08.webp", "Stocks", 2008, "Black", 2, 18500, 46200,
+                    "Petrol", "Manual", 310, "Rear-Wheel Drive"),
+                Car(5, "Lamborghini Diablo", "Lamborghini", "Diablo", "Sports Car",
+                    "~/assets/images/portfolio/09.webp", "Trending", 1998, "Red", 2, 265000, 16800,
+                    "Petrol", "Manual", 3990, "Rear-Wheel Drive"),
+                Car(6, "Porsche 911 GT3 RS", "Porsche", "911 GT3 RS", "Sports Car",
+                    "~/assets/images/portfolio/24.webp", "New", 2019, "Red", 2, 219000, 6400,
+                    "Petrol", "Automatic", 3350, "Rear-Wheel Drive"),
+                Car(7, "Porsche 911", "Porsche", "911", "Sports Car",
+                    "~/assets/images/banner/banner-slider-bg-09.webp", "Trending", 2011, "Gray", 2, 128000, 24100,
+                    "Petrol", "Manual", 1980, "Rear-Wheel Drive"),
+                Car(8, "Mercedes-AMG GT", "Mercedes-Benz", "AMG GT", "Sports Car",
+                    "~/assets/images/portfolio/34.webp", "New", 2018, "Black", 2, 118000, 15300,
+                    "Petrol", "Automatic", 1850, "Rear-Wheel Drive"),
+                Car(9, "Maserati GranTurismo", "Maserati", "GranTurismo", "Sports Car",
+                    "~/assets/images/banner/banner-slider-bg-08.webp", "Stocks", 2017, "White", 4, 74000, 22800,
+                    "Petrol", "Automatic", 1190, "Rear-Wheel Drive"),
+
+                Car(10, "Nissan Leaf", "Nissan", "Leaf", "Hatchback",
+                    "~/assets/images/about/02.webp", "Stocks", 2021, "Red", 5, 21900, 18600,
+                    "Electric", "Automatic", 360, "Front-Wheel Drive"),
+
+                Car(11, "Rolls-Royce Phantom", "Rolls-Royce", "Phantom", "Luxury Cars",
+                    "~/assets/images/portfolio/06.webp", "New", 2022, "Black", 5, 455000, 3200,
+                    "Petrol", "Automatic", 6900, "Rear-Wheel Drive"),
+                Car(12, "Rolls-Royce Wraith", "Rolls-Royce", "Wraith", "Luxury Cars",
+                    "~/assets/images/about/06.webp", "New", 2020, "White", 4, 318000, 8100,
+                    "Petrol", "Automatic", 4850, "Rear-Wheel Drive"),
+
+                Car(13, "Tesla Model 3", "Tesla", "Model 3", "Sedan",
+                    "~/assets/images/portfolio/29.webp", "New", 2023, "Red", 5, 42900, 11200,
+                    "Electric", "Automatic", 690, "Rear-Wheel Drive"),
+
+                Car(14, "Toyota Highlander", "Toyota", "Highlander", "SUV",
+                    "~/assets/images/blog/11.webp", "New", 2024, "Red", 7, 46500, 4800,
+                    "Petrol", "Automatic", 760, "All-Wheel Drive")
+            };
+        }
+
+        public static int CountInCategory(string categoryName)
+        {
+            var category = CarCategories.Resolve(categoryName);
+            if (category == null)
+            {
+                return 0;
+            }
+
+            return Create().Count(car => car.Category.Equals(category.Value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public static string CountLabel(string categoryName)
+        {
+            var count = CountInCategory(categoryName);
+            return count == 1 ? "1 Car" : $"{count} Cars";
+        }
+
+        private static Car Car(
+            int id,
+            string name,
+            string make,
+            string model,
+            string category,
+            string imagePath,
+            string badge,
+            int year,
+            string color,
+            int seats,
+            decimal price,
+            int mileage,
+            string fuel,
+            string transmission,
+            decimal monthlyPayment,
+            string driveType)
+        {
+            return new Car
+            {
+                Id = id,
+                Name = name,
+                Make = make,
+                Model = model,
+                Category = category,
+                ImagePath = imagePath,
+                Badge = badge,
+                ImageCount = 1,
+                Year = year,
+                Color = color,
+                Seats = seats,
+                Price = price,
+                Mileage = mileage,
+                Fuel = fuel,
+                Transmission = transmission,
+                MonthlyPayment = monthlyPayment,
+                DriveType = driveType,
+                Description = name,
+                InStock = true
             };
         }
     }
