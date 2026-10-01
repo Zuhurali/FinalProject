@@ -21,18 +21,21 @@ namespace FinalProject.MVC.Controllers
         public IActionResult DealerTwo()
         {
             ViewData["Title"] = "Dealer Two - AutoVault";
+            ViewData["BodyClass"] = "home-two";
             return View();
         }
 
         public IActionResult DealerThree()
         {
             ViewData["Title"] = "Dealer Three - AutoVault";
+            ViewData["HeaderStyle"] = "three";
             return View();
         }
 
         public IActionResult ShopDemo()
         {
             ViewData["Title"] = "Shop Demo - AutoVault";
+            ViewData["BodyClass"] = "home-four";
             return View();
         }
 

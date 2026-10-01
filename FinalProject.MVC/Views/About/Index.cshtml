@@ -1,8 +1,14 @@
 @{
     ViewData["Title"] = "About Us - AutoVault";
+    var team = new (string Image, string Name, string Role)[]
+    {
+        ("01", "Amelia Scot", "Office Executive"),
+        ("02", "Michael Roy", "Manager"),
+        ("03", "Emma Elizabeth", "Office Executive"),
+        ("04", "Michael Roy", "Manager")
+    };
 }
 
-<!-- rts breadcrumb area start -->
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
@@ -14,9 +20,7 @@
         </div>
     </div>
 </div>
-<!-- rts breadcrumb area end -->
 
-<!-- About Area Start -->
 <section class="rts-about-area inner two rts-section-gapTop">
     <div class="container">
         <div class="section-inner">
@@ -43,14 +47,16 @@
                                 <span>Vehicles</span>
                             </h2>
                         </div>
-                        <p class="desc wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s">Welcome to Autovault where innovation drives every journey. Discover a range of designed to elevate your driving experience.</p>
-                        <a href="tel:+994505590606" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s">
+                        <p class="desc wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s">Welcome to Autovault where innovation drives every journey. Discover a
+                            range
+                            of designed to elevate your driving experience.</p>
+                        <a href="call-to:+12505550199" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s">
                             <span>
                                 <i class="fa-regular fa-phone"></i>
                             </span>
                             <div class="content">
                                 <h6>Call Us Now</h6>
-                                <p>+994505590606</p>
+                                <p>+12505550199</p>
                             </div>
                         </a>
                     </div>
@@ -63,9 +69,7 @@
         <img src="~/assets/images/category/shape/shape-02.svg" alt="">
     </div>
 </section>
-<!-- About Area End -->
 
-<!-- Counter Area Start -->
 <section class="rts-counter-area-two">
     <div class="container">
         <div class="counter-inner">
@@ -108,9 +112,7 @@
         </div>
     </div>
 </section>
-<!-- Counter Area End -->
 
-<!-- Testimonials Area Start -->
 <section class="rts-testimonials-area area-2 rts-section-gap">
     <div class="bg-shape-area">
     </div>
@@ -123,52 +125,105 @@
                 <div class="col-xl-5">
                     <div class="section-title-area">
                         <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Testimonial</p>
-                        <h2 class="section-title wow move-right">What Our <span>Client</span> Says</h2>
+                        <h2 class="section-title wow move-right">What Our <span>Client</span> Says
+                        </h2>
                     </div>
                     <div class="slider-inner mt--50">
                         <div class="swiper testimonialSlider">
                             <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <div class="review-wrapper">
-                                        <p class="desc">
-                                            Choosing Autovault was one of the best decisions we've ever made. They
-                                            have proven to be a reliable and innovative partner, always ready to
-                                            tackle new challenges with expertise. Their commitment to delivering tailored solutions is exceptional.
-                                        </p>
-                                        <div class="author-area d-flex align-items-center">
-                                            <div class="image">
-                                                <img src="~/assets/images/testimonials/author-01.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title">Sarah Martinez</h6>
-                                                <p class="designation">CEO of Apex Solutions</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="review-wrapper">
-                                        <p class="desc">
-                                            Outstanding service and quality vehicles. The team at Autovault went above and beyond to help me find the perfect car. Highly recommended for anyone looking for reliable automotive solutions.
-                                        </p>
-                                        <div class="author-area d-flex align-items-center">
-                                            <div class="image">
-                                                <img src="~/assets/images/testimonials/author-01.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title">Michael Johnson</h6>
-                                                <p class="designation">Business Owner</p>
+                                @for (var i = 0; i < 5; i++)
+                                {
+                                    <div class="swiper-slide">
+                                        <div class="review-wrapper">
+                                            <p class="desc">
+                                                Choosing Bokinn was one of the best decisions we've ever made. They
+                                                have proven to be a reliable and innovative partner, always ready to
+                                                tackle new challenges with and expertise.Their commitment to and
+                                                delivering tailored.
+                                            </p>
+                                            <div class="author-area d-flex align-items-center">
+                                                <div class="image">
+                                                    <img src="~/assets/images/testimonials/author-01.svg" alt="">
+                                                </div>
+                                                <div class="text">
+                                                    <h6 class="title">Sarah Martinez</h6>
+                                                    <p class="designation">CEO of Apex Solutions</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                }
                             </div>
                         </div>
-                        <div class="swiper-pagination-3"></div>
+                        <div class="swiper-pagination-4"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Testimonials Area End -->
+
+<section class="rts-team-area rts-section-gap">
+    <div class="container">
+        <div class="section-title-area2">
+            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Our Team</p>
+            <h2 class="section-title wow move-right">Let’s Meet Our <span>Expert</span></h2>
+        </div>
+        <div class="section-inner mt--60">
+            <div class="row g-5">
+                @foreach (var member in team)
+                {
+                    <div class="col-lg-3 col-md-6">
+                        <div class="team-wrapper">
+                            <div class="image-area">
+                                <a href="#">
+                                    <img src="@Url.Content($"~/assets/images/team/{member.Image}.webp")" alt="">
+                                </a>
+                                <div class="content">
+                                    <h6 class="title cw">@member.Name</h6>
+                                    <p class="designation cw">@member.Role</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="rts-brand-area">
+    <div class="container">
+        <div class="section-title-area2">
+            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
+            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
+        </div>
+        <div class="section-inner mt--80">
+            <ul>
+                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="call-to:+16544521505">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    +1-654-452-1505
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>
