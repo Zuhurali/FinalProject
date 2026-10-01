@@ -50,6 +50,14 @@
             {
                 <partial name="_HeaderThree" />
             }
+            else if ((ViewData["HeaderStyle"] as string) == "five")
+            {
+                <partial name="_HeaderFive" />
+            }
+            else if ((ViewData["HeaderStyle"] as string) == "six")
+            {
+                <partial name="_HeaderSix" />
+            }
             else
             {
             <header class="header-one header--sticky">
@@ -254,6 +262,16 @@
     </div>
 
     <!-- Footer area start -->
+    @if ((ViewData["FooterStyle"] as string) == "wash")
+    {
+        <partial name="_FooterWash" />
+    }
+    else if ((ViewData["FooterStyle"] as string) == "repair")
+    {
+        <partial name="_FooterRepair" />
+    }
+    else
+    {
     <div class="rts-footer-area footer-bg-1" id="rts-footer">
                 <div class="container">
                     <div class="row">
@@ -335,13 +353,25 @@
                     </div>
                 </div>
     </div>
+    }
     <!-- Footer area end -->
 
     <!-- sidebar menu area -->
+    @if ((ViewData["HeaderStyle"] as string) == "five")
+    {
+        <partial name="_WashSidebar" />
+    }
+    else if ((ViewData["HeaderStyle"] as string) == "six")
+    {
+        <partial name="_RepairSidebar" />
+    }
+    else
+    {
     <div id="side-bar" class="side-bar header-two">
         <button class="close-icon-menu"><i class="far fa-times"></i></button>
         <div class="mobile-menu"></div>
     </div>
+    }
 
     <!-- JavaScript files -->
     <script src="~/assets/js/plugins/jquery.js"></script>

@@ -54,12 +54,16 @@ namespace FinalProject.MVC.Controllers
         public IActionResult WashDemo()
         {
             ViewData["Title"] = "Wash Demo - AutoVault";
+            ViewData["HeaderStyle"] = "five";
+            ViewData["FooterStyle"] = "wash";
             return View();
         }
 
         public IActionResult RepairDemo()
         {
             ViewData["Title"] = "Repair Demo - AutoVault";
+            ViewData["HeaderStyle"] = "six";
+            ViewData["FooterStyle"] = "repair";
             return View();
         }
 
