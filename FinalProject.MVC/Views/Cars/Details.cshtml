@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = $"{Model.Name} - AutoVault";
     var slides = Enumerable.Repeat(Model.ImagePath, 6).ToArray();
-    var relatedCars = CarCatalog.Create().Where(car => car.Id != Model.Id).Take(2).ToList();
+    var relatedCars = ViewData["RelatedCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
 }
 
 <div class="rts-breadcrumb-area portfolio details jarallax" style="background-image: url('@Url.Content(Model.ImagePath)'); background-size: cover; background-position: center;">
@@ -25,7 +25,7 @@
                     </li>
                     <li>
                         <img src="~/assets/images/portfolio/feature-icon/08.svg" alt="">
-                        @Model.Seats Person
+                        @(Model.Seats > 0 ? $"{Model.Seats} Person" : "—")
                     </li>
                 </ul>
             </div>
@@ -126,7 +126,7 @@
                         <li>
                             <span class="number">5</span>
                             <div class="text">
-                                <h6>@Model.Seats Person</h6>
+                                <h6>@(Model.Seats > 0 ? $"{Model.Seats} Person" : "—")</h6>
                                 <p>Seating</p>
                             </div>
                         </li>
@@ -177,7 +177,7 @@
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
                                 <p>Drive Type</p>
-                                <p>@Model.DriveType</p>
+                                <p>@(string.IsNullOrWhiteSpace(Model.DriveType) ? "—" : Model.DriveType)</p>
                             </div>
                         </li>
                         <li>
@@ -307,14 +307,14 @@
                                     <img src="~/assets/images/portfolio/feature-icon/13.svg" alt="">
                                     <div class="text">
                                         <p>Person</p>
-                                        <p>@Model.Seats Person</p>
+                                        <p>@(Model.Seats > 0 ? $"{Model.Seats} Person" : "—")</p>
                                     </div>
                                 </li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/14.svg" alt="">
                                     <div class="text">
                                         <p>Drive Type</p>
-                                        <p>@Model.DriveType</p>
+                                        <p>@(string.IsNullOrWhiteSpace(Model.DriveType) ? "—" : Model.DriveType)</p>
                                     </div>
                                 </li>
                                 <li>

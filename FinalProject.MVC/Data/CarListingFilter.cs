@@ -39,6 +39,8 @@ public class CarListingResult
 
     public bool CategoryRequested { get; set; }
 
+    public string? ErrorMessage { get; set; }
+
     public IReadOnlyList<string> Makes { get; set; } = Array.Empty<string>();
 
     public IReadOnlyList<string> Models { get; set; } = Array.Empty<string>();

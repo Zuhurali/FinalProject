@@ -178,6 +178,10 @@
                     </form>
                     <div class="related-project">
                         <h3 class="mb--40 text-center">Related listings</h3>
+                        @if (ViewData["CarApiError"] is string carApiError)
+                        {
+                            <h3 class="title text-center">@carApiError</h3>
+                        }
                         <div class="row">
                             @foreach (var car in Model.RelatedCars)
                             {

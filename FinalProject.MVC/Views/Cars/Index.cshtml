@@ -106,7 +106,13 @@
 <div class="rts-portfolio-area inner rts-section-gapNew">
     <div class="container">
         <div class="row g-5">
-            @if (Model.Cars.Count == 0)
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage) || TempData["Error"] is string)
+            {
+                <div class="col-12">
+                    <h3 class="title text-center">@(Model.ErrorMessage ?? TempData["Error"])</h3>
+                </div>
+            }
+            else if (Model.Cars.Count == 0)
             {
                 <div class="col-12">
                     <h3 class="title text-center">@(Model.CategoryRequested ? "No cars found for this category." : "No cars found.")</h3>

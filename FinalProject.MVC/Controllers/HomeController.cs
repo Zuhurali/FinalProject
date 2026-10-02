@@ -1,4 +1,6 @@
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Services;
+using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -6,15 +8,46 @@ namespace FinalProject.MVC.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private static readonly string[] HomeCategories =
+        {
+            "Hatchback",
+            "Minivans",
+            "Luxury Cars",
+            "Sedans",
+            "Convertible",
+            "Sports Car"
+        };
 
-        public HomeController(ILogger<HomeController> logger)
+        private readonly ILogger<HomeController> _logger;
+        private readonly ICarApiService _carApi;
+
+        public HomeController(ILogger<HomeController> logger, ICarApiService carApi)
         {
             _logger = logger;
+            _carApi = carApi;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var labels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
+                foreach (var category in HomeCategories)
+                {
+                    labels[category] = CarApiMapper.CountLabel(cars, category);
+                }
+            }
+            catch (CarApiException exception)
+            {
+                ViewData["CarApiError"] = exception.Message;
+                foreach (var category in HomeCategories)
+                {
+                    labels[category] = "Unavailable";
+                }
+            }
+
+            ViewData["CategoryLabels"] = labels;
             return View();
         }
 

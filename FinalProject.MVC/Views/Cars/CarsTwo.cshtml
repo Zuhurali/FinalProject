@@ -6,8 +6,8 @@
     var seats = Model.GroupBy(car => car.Seats).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
     var colors = Model.GroupBy(car => car.Color).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
     var fuels = Model.GroupBy(car => car.Fuel).OrderBy(group => group.Key).Select(group => group.Key).ToList();
-    var minPrice = Model.Min(car => car.Price);
-    var maxPrice = Model.Max(car => car.Price);
+    var minPrice = Model.Count == 0 ? 0 : Model.Min(car => car.Price);
+    var maxPrice = Model.Count == 0 ? 0 : Model.Max(car => car.Price);
     const int pageSize = 6;
 }
 
@@ -168,6 +168,12 @@
             <div class="col-lg-8">
                 <div class="right">
                     <div class="row g-5" id="carGrid">
+                        @if (ViewData["CarApiError"] is string carApiError)
+                        {
+                            <div class="col-12">
+                                <h3 class="title text-center">@carApiError</h3>
+                            </div>
+                        }
                         @{
                             var index = 0;
                         }

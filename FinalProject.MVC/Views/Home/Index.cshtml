@@ -1,5 +1,8 @@
 @{
     ViewData["Title"] = "Home - AutoVault";
+    var categoryLabels = ViewData["CategoryLabels"] as IReadOnlyDictionary<string, string>;
+    string CategoryLabel(string name) =>
+        categoryLabels != null && categoryLabels.TryGetValue(name, out var label) ? label : "Unavailable";
 }
             <section class="rts-banner-area bg_image_one jarallax">
                 <div class="container">
@@ -65,6 +68,10 @@
                     <div class="section-title-area">
                         <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Car Category</p>
                         <h2 class="section-title wow move-right">Browse By <span>Car</span> Type</h2>
+                        @if (ViewData["CarApiError"] is string carApiError)
+                        {
+                            <p class="sub-title">@carApiError</p>
+                        }
                     </div>
                     <div class="section-inner wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
                         <div class="swiper category-slider">
@@ -75,7 +82,7 @@
                                             <img src="~/assets/images/category/01.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Hatchback")">Hatchback</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Hatchback")</p>
+                                        <p class="desc">@CategoryLabel("Hatchback")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
@@ -84,7 +91,7 @@
                                             <img src="~/assets/images/category/02.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Minivans")">Minivans</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Minivans")</p>
+                                        <p class="desc">@CategoryLabel("Minivans")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
@@ -93,7 +100,7 @@
                                             <img src="~/assets/images/category/03.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Luxury Cars")">Luxury Cars</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Luxury Cars")</p>
+                                        <p class="desc">@CategoryLabel("Luxury Cars")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
@@ -102,7 +109,7 @@
                                             <img src="~/assets/images/category/04.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Sedans")">Sedans</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Sedans")</p>
+                                        <p class="desc">@CategoryLabel("Sedans")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
@@ -111,7 +118,7 @@
                                             <img src="~/assets/images/category/05.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Convertible")">Convertible</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Convertible")</p>
+                                        <p class="desc">@CategoryLabel("Convertible")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
@@ -120,7 +127,7 @@
                                             <img src="~/assets/images/category/06.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Sports Car")">Sports Car</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Sports Car")</p>
+                                        <p class="desc">@CategoryLabel("Sports Car")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
@@ -129,7 +136,7 @@
                                             <img src="~/assets/images/category/05.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Convertible")">Convertible</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Convertible")</p>
+                                        <p class="desc">@CategoryLabel("Convertible")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">
@@ -138,7 +145,7 @@
                                             <img src="~/assets/images/category/06.svg" alt="">
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Sports Car")">Sports Car</a></h6>
-                                        <p class="desc">@CarCatalog.CountLabel("Sports Car")</p>
+                                        <p class="desc">@CategoryLabel("Sports Car")</p>
                                     </div>
                                 </div>
                             </div>

@@ -1,5 +1,7 @@
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Services;
+using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,6 +41,17 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
     options.SlidingExpiration = true;
+});
+
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"];
+if (string.IsNullOrWhiteSpace(apiBaseUrl))
+{
+    throw new InvalidOperationException("ApiSettings:BaseUrl is not configured.");
+}
+
+builder.Services.AddHttpClient<ICarApiService, CarApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
 
 // Add session support
