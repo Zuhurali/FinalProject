@@ -39,48 +39,16 @@
                         <div class="car-make side-box">
                             <h2>Car Make</h2>
                             <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="make" data-value="Mercedes-Benz" />
-                                        <span>Mercedes-Benz</span>
-                                    </label>
-                                    <span>(5)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="make" data-value="BMW" />
-                                        <span>BMW</span>
-                                    </label>
-                                    <span>(5)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="make" data-value="Honda" />
-                                        <span>Honda</span>
-                                    </label>
-                                    <span>(5)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="make" data-value="Volkswagen" />
-                                        <span>Volkswagen</span>
-                                    </label>
-                                    <span>(5)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="make" data-value="Mitsubishi" />
-                                        <span>Mitsubishi</span>
-                                    </label>
-                                    <span>(4)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="make" data-value="Lamborghini" />
-                                        <span>Lamborghini</span>
-                                    </label>
-                                    <span>(3)</span>
-                                </li>
+                                @foreach (var make in (Dictionary<string, int>)ViewBag.MakeCounts)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" data-filter="make" data-value="@make.Key" />
+                                            <span>@make.Key</span>
+                                        </label>
+                                        <span>(@make.Value)</span>
+                                    </li>
+                                }
                             </ul>
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>
@@ -89,62 +57,16 @@
                         <div class="car-make side-box">
                             <h2>Car Model</h2>
                             <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="C-Class" />
-                                        <span>C-Class</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="E-Class" />
-                                        <span>E-Class</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="3 Series" />
-                                        <span>3 Series</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="5 Series" />
-                                        <span>5 Series</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="Civic" />
-                                        <span>Civic</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="Accord" />
-                                        <span>Accord</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="Golf" />
-                                        <span>Golf</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" data-filter="model" data-value="Outlander" />
-                                        <span>Outlander</span>
-                                    </label>
-                                    <span>(2)</span>
-                                </li>
+                                @foreach (var carModel in (Dictionary<string, int>)ViewBag.ModelCounts)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" data-filter="model" data-value="@carModel.Key" />
+                                            <span>@carModel.Key</span>
+                                        </label>
+                                        <span>(@carModel.Value)</span>
+                                    </li>
+                                }
                             </ul>
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>
@@ -213,7 +135,7 @@
                                 <div class="project-wrapper4">
                                     <div class="image-area">
                                         <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">
-                                            <img src="@product.ImagePath" alt="@product.Name">
+                                            <img src="@Url.Content(product.ImagePath)" alt="@product.Name">
                                         </a>
                                     </div>
                                     <div class="content-area">

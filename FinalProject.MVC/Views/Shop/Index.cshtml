@@ -69,7 +69,7 @@
                     <div class="project-wrapper4">
                         <div class="image-area">
                             <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">
-                                <img src="@product.ImagePath" alt="@product.Name">
+                                <img src="@Url.Content(product.ImagePath)" alt="@product.Name">
                             </a>
                         </div>
                         <div class="content-area">

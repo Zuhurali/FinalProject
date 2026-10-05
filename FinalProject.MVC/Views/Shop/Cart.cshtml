@@ -75,7 +75,7 @@
                                             </td>
                                             <td class="product-thumbnail">
                                                 <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId">
-                                                    <img src="@item.ImagePath" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" alt="@item.ProductName">
+                                                    <img src="@Url.Content(item.ImagePath)" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" alt="@item.ProductName">
                                                 </a>
                                             </td>
                                             <td class="product-name" data-title="Product">
