@@ -50,6 +50,39 @@ public class CarService : ICarService
         };
     }
 
+    public async Task<IReadOnlyList<CarSuggestionResponse>> GetSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default)
+    {
+        var term = query.Trim().ToLower();
+        var brandNames = await _dbContext.Brands
+            .AsNoTracking()
+            .Where(brand => brand.Name.ToLower().Contains(term))
+            .Select(brand => brand.Name)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var carNames = await _dbContext.Cars
+            .AsNoTracking()
+            .Where(car =>
+                car.Description.ToLower().Contains(term)
+                || car.Model.ToLower().Contains(term)
+                || car.Brand.Name.ToLower().Contains(term))
+            .Select(car => car.Description)
+            .Where(name => name != "")
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return brandNames
+            .Select(name => new CarSuggestionResponse { Text = name, Type = "brand" })
+            .Concat(carNames
+                .Where(name => !brandNames.Contains(name, StringComparer.OrdinalIgnoreCase))
+                .Select(name => new CarSuggestionResponse { Text = name, Type = "car" }))
+            .OrderBy(item => item.Type == "brand" ? 0 : 1)
+            .ThenBy(item => SuggestionRank(item.Text, term))
+            .ThenBy(item => item.Text, StringComparer.OrdinalIgnoreCase)
+            .Take(limit)
+            .ToList();
+    }
+
     public async Task<CarResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var car = await _dbContext.Cars
@@ -66,10 +99,15 @@ public class CarService : ICarService
     {
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            var search = query.Search.Trim().ToLower();
-            cars = cars.Where(car =>
-                car.Model.ToLower().Contains(search)
-                || car.Brand.Name.ToLower().Contains(search));
+            var terms = query.Search.Trim().ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var term in terms)
+            {
+                var token = term;
+                cars = cars.Where(car =>
+                    car.Brand.Name.ToLower().Contains(token)
+                    || car.Model.ToLower().Contains(token)
+                    || car.Description.ToLower().Contains(token));
+            }
         }
 
         if (query.BrandId is int brandId)
@@ -121,5 +159,16 @@ public class CarService : ICarService
         }
 
         return cars;
+    }
+
+    private static int SuggestionRank(string text, string term)
+    {
+        var value = text.ToLowerInvariant();
+        if (value.StartsWith(term, StringComparison.Ordinal))
+        {
+            return 0;
+        }
+
+        return value.Contains(term, StringComparison.Ordinal) ? 1 : 2;
     }
 }

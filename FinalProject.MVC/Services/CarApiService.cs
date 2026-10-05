@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Services.Interfaces;
 
@@ -8,6 +9,8 @@ namespace FinalProject.MVC.Services;
 
 public class CarApiService : ICarApiService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly HttpClient _httpClient;
 
     public CarApiService(HttpClient httpClient)
@@ -23,7 +26,7 @@ public class CarApiService : ICarApiService
             throw new CarApiException(FailureMessage(response));
         }
 
-        var page = await response.Content.ReadFromJsonAsync<PagedCarsDto>(cancellationToken);
+        var page = await response.Content.ReadFromJsonAsync<PagedCarsDto>(JsonOptions, cancellationToken);
         if (page?.Items == null)
         {
             throw new CarApiException("The car API returned an unreadable car list.");
@@ -39,22 +42,36 @@ public class CarApiService : ICarApiService
         firstQuery.PageSize = CarApiQuery.MaxPageSize;
 
         var firstPage = await GetCarsAsync(firstQuery, cancellationToken);
-        if (firstPage.TotalPages <= 1)
+        var cars = new List<CarApiDto>(firstPage.Items);
+        var totalPages = firstPage.TotalPages;
+        if (totalPages <= 1 && firstPage.TotalCount > cars.Count && firstQuery.PageSize > 0)
         {
-            return firstPage.Items;
+            totalPages = (int)Math.Ceiling(firstPage.TotalCount / (double)firstQuery.PageSize);
         }
 
-        var cars = new List<CarApiDto>(firstPage.Items);
-        for (var page = 2; page <= firstPage.TotalPages; page++)
+        for (var pageNumber = 2; pageNumber <= totalPages && cars.Count < firstPage.TotalCount; pageNumber++)
         {
             var nextQuery = Copy(query);
-            nextQuery.Page = page;
+            nextQuery.Page = pageNumber;
             nextQuery.PageSize = CarApiQuery.MaxPageSize;
             var nextPage = await GetCarsAsync(nextQuery, cancellationToken);
             cars.AddRange(nextPage.Items);
         }
 
         return cars;
+    }
+
+    public async Task<IReadOnlyList<CarSuggestionDto>> GetSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default)
+    {
+        var url = $"api/cars/suggestions?query={Uri.EscapeDataString(query)}&limit={limit}";
+        using var response = await SendAsync(url, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new CarApiException(FailureMessage(response));
+        }
+
+        var suggestions = await response.Content.ReadFromJsonAsync<List<CarSuggestionDto>>(JsonOptions, cancellationToken);
+        return suggestions ?? new List<CarSuggestionDto>();
     }
 
     public async Task<CarApiDto?> GetCarByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -70,7 +87,7 @@ public class CarApiService : ICarApiService
             throw new CarApiException(FailureMessage(response));
         }
 
-        var car = await response.Content.ReadFromJsonAsync<CarApiDto>(cancellationToken);
+        var car = await response.Content.ReadFromJsonAsync<CarApiDto>(JsonOptions, cancellationToken);
         if (car == null)
         {
             throw new CarApiException($"The car API returned an unreadable car for id {id}.");
@@ -81,18 +98,28 @@ public class CarApiService : ICarApiService
 
     private async Task<HttpResponseMessage> SendAsync(string relativeUrl, CancellationToken cancellationToken)
     {
-        try
+        const int attempts = 20;
+        for (var attempt = 1; attempt <= attempts; attempt++)
         {
-            return await _httpClient.GetAsync(relativeUrl, cancellationToken);
+            try
+            {
+                return await _httpClient.GetAsync(relativeUrl, cancellationToken);
+            }
+            catch (HttpRequestException) when (attempt < attempts && !cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            }
+            catch (HttpRequestException exception)
+            {
+                throw new CarApiException("The car API could not be reached.", exception);
+            }
+            catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw new CarApiException("The car API request timed out.", exception);
+            }
         }
-        catch (HttpRequestException exception)
-        {
-            throw new CarApiException("The car API could not be reached.", exception);
-        }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw new CarApiException("The car API request timed out.", exception);
-        }
+
+        throw new CarApiException("The car API could not be reached.");
     }
 
     private static CarApiQuery Copy(CarApiQuery? query)

@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "API + MVC",
+    "Projects": [
+      {
+        "Path": "FinalProject\\FinalProject.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "FinalProject.MVC\\FinalProject.MVC.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      }
+    ]
+  }
+]

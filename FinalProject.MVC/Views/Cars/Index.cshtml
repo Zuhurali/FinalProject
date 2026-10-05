@@ -26,6 +26,13 @@
             width: 48%;
         }
     }
+    .car-api-status {
+        padding: 48px 16px 12px;
+    }
+    .car-api-status p {
+        margin: 12px 0 24px;
+        color: var(--color-body);
+    }
 </style>
 
 <div class="rts-breadcrumb-area portfolio jarallax">
@@ -88,6 +95,7 @@
                 </div>
                 <input type="hidden" name="fuel" value="@query.Fuel" />
                 <input type="hidden" name="transmission" value="@query.Transmission" />
+                <input type="hidden" name="search" value="@query.Search" />
                 <button type="submit" class="rts-btn radius-small icon btn-primary">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10.69 10.69L13 13M12.3333 6.68575C12.3333 9.826 9.796 12.3715 6.667 12.3715C3.53725 12.3715 1 9.826 1 6.6865C1 3.54475 3.53725 1 6.66625 1C9.796 1 12.3333 3.5455 12.3333 6.68575Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -106,10 +114,20 @@
 <div class="rts-portfolio-area inner rts-section-gapNew">
     <div class="container">
         <div class="row g-5">
-            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage) || TempData["Error"] is string)
+            @if (Model.ApiUnavailable || TempData["CarApiUnavailable"] != null)
             {
                 <div class="col-12">
-                    <h3 class="title text-center">@(Model.ErrorMessage ?? TempData["Error"])</h3>
+                    <div class="car-api-status text-center">
+                        <h3 class="title">Cars are temporarily unavailable.</h3>
+                        <p>Please try again in a moment.</p>
+                        <a class="rts-btn btn-primary radius-small" href="@($"{Context.Request.Path}{Context.Request.QueryString}")">Try Again</a>
+                    </div>
+                </div>
+            }
+            else if (TempData["Error"] is string pageError)
+            {
+                <div class="col-12">
+                    <h3 class="title text-center">@pageError</h3>
                 </div>
             }
             else if (Model.Cars.Count == 0)
@@ -166,18 +184,18 @@
                         <nav aria-label="Page navigation">
                             <ul class="pagination">
                                 <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
-                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-page="@(Model.Page - 1)" aria-label="Previous">
+                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@(Model.Page - 1)" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
                                 @for (var i = 1; i <= Model.TotalPages; i++)
                                 {
                                     <li class="page-item @(i == Model.Page ? "active" : null)">
-                                        <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-page="@i">@i</a>
+                                        <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@i">@i</a>
                                     </li>
                                 }
                                 <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)">
-                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-page="@(Model.Page + 1)" aria-label="Next">
+                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@(Model.Page + 1)" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>

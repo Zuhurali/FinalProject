@@ -52,6 +52,12 @@ if (string.IsNullOrWhiteSpace(apiBaseUrl))
 builder.Services.AddHttpClient<ICarApiService, CarApiService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(20);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromSeconds(30),
+    ConnectTimeout = TimeSpan.FromSeconds(5)
 });
 
 // Add session support

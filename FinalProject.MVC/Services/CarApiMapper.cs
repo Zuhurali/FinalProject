@@ -31,7 +31,7 @@ public static class CarApiMapper
             DriveType = dto.DriveType ?? string.Empty,
             Description = name,
             ImagePath = NormalizeImagePath(dto.MainImage),
-            ImageCount = dto.Images.Count == 0 ? 1 : dto.Images.Count,
+            ImageCount = dto.Images == null || dto.Images.Count == 0 ? 1 : dto.Images.Count,
             Badge = dto.IsNew ? "New" : string.Empty,
             Seats = 0,
             InStock = true

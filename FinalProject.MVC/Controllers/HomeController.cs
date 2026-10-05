@@ -18,6 +18,9 @@ namespace FinalProject.MVC.Controllers
             "Sports Car"
         };
 
+        private static readonly object CatalogLock = new();
+        private static IReadOnlyList<Car>? CatalogCache;
+
         private readonly ILogger<HomeController> _logger;
         private readonly ICarApiService _carApi;
 
@@ -30,24 +33,42 @@ namespace FinalProject.MVC.Controllers
         public async Task<IActionResult> Index()
         {
             var labels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            IReadOnlyList<string> makes = Array.Empty<string>();
+            IReadOnlyDictionary<string, string[]> modelsByMake = new Dictionary<string, string[]>();
+            IReadOnlyList<Car> cars;
             try
             {
-                var cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
-                foreach (var category in HomeCategories)
+                cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
+                lock (CatalogLock)
                 {
-                    labels[category] = CarApiMapper.CountLabel(cars, category);
+                    CatalogCache = cars;
                 }
             }
             catch (CarApiException exception)
             {
-                ViewData["CarApiError"] = exception.Message;
-                foreach (var category in HomeCategories)
+                _logger.LogWarning(exception, "Home car catalog could not be loaded.");
+                lock (CatalogLock)
                 {
-                    labels[category] = "Unavailable";
+                    cars = CatalogCache ?? Array.Empty<Car>();
                 }
             }
 
+            foreach (var category in HomeCategories)
+            {
+                labels[category] = cars.Count == 0 ? "—" : CarApiMapper.CountLabel(cars, category);
+            }
+
+            makes = cars.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList();
+            modelsByMake = cars
+                .Where(car => !string.IsNullOrWhiteSpace(car.Make) && !string.IsNullOrWhiteSpace(car.Model))
+                .GroupBy(car => car.Make)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(car => car.Model).Distinct().OrderBy(model => model).ToArray());
+
             ViewData["CategoryLabels"] = labels;
+            ViewData["SearchMakes"] = makes;
+            ViewData["ModelsByMake"] = modelsByMake;
             return View();
         }
 

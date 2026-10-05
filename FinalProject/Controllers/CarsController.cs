@@ -30,6 +30,29 @@ public class CarsController : ControllerBase
         return Ok(cars);
     }
 
+    [HttpGet("suggestions")]
+    [ProducesResponseType(typeof(IReadOnlyList<CarSuggestionResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<CarSuggestionResponse>>> GetSuggestions([FromQuery] string? query, [FromQuery] int limit = 8, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 2)
+        {
+            return Ok(Array.Empty<CarSuggestionResponse>());
+        }
+
+        if (limit < 1)
+        {
+            limit = 8;
+        }
+
+        if (limit > 20)
+        {
+            limit = 20;
+        }
+
+        var suggestions = await _carService.GetSuggestionsAsync(query, limit, cancellationToken);
+        return Ok(suggestions);
+    }
+
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -16,6 +16,8 @@ public class CarListingQuery
 
     public string? Transmission { get; set; }
 
+    public string? Search { get; set; }
+
     public int Page { get; set; } = 1;
 }
 
@@ -41,6 +43,8 @@ public class CarListingResult
 
     public string? ErrorMessage { get; set; }
 
+    public bool ApiUnavailable { get; set; }
+
     public IReadOnlyList<string> Makes { get; set; } = Array.Empty<string>();
 
     public IReadOnlyList<string> Models { get; set; } = Array.Empty<string>();
@@ -51,7 +55,8 @@ public class CarListingResult
         || HasValue(Query.Model)
         || HasValue(Query.PriceRange)
         || HasValue(Query.Fuel)
-        || HasValue(Query.Transmission);
+        || HasValue(Query.Transmission)
+        || HasValue(Query.Search);
 
     private static bool HasValue(string? value)
     {

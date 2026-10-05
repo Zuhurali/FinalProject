@@ -10,13 +10,15 @@ namespace FinalProject.MVC.Controllers
     public class CarsController : Controller
     {
         private readonly ICarApiService _carApi;
+        private readonly ILogger<CarsController> _logger;
 
-        public CarsController(ICarApiService carApi)
+        public CarsController(ICarApiService carApi, ILogger<CarsController> logger)
         {
             _carApi = carApi;
+            _logger = logger;
         }
 
-        public async Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, int page = 1)
+        public async Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, int page = 1)
         {
             ViewData["Title"] = "Cars - AutoVault";
 
@@ -28,6 +30,7 @@ namespace FinalProject.MVC.Controllers
                 PriceRange = priceRange,
                 Fuel = fuel,
                 Transmission = transmission,
+                Search = search,
                 Page = page
             };
 
@@ -38,9 +41,30 @@ namespace FinalProject.MVC.Controllers
             }
             catch (CarApiException exception)
             {
+                _logger.LogError(exception, "Car listing could not be loaded.");
                 var listing = CarListingFilter.Page(Array.Empty<Car>(), query, Array.Empty<Car>());
-                listing.ErrorMessage = exception.Message;
+                listing.ApiUnavailable = true;
                 return View(listing);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Suggestions(string? query, int limit = 8)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 2)
+            {
+                return Json(Array.Empty<CarSuggestionDto>());
+            }
+
+            try
+            {
+                var suggestions = await _carApi.GetSuggestionsAsync(query.Trim(), limit, HttpContext.RequestAborted);
+                return Json(suggestions);
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Car suggestions could not be loaded.");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = "Cars are temporarily unavailable." });
             }
         }
 
@@ -154,7 +178,8 @@ namespace FinalProject.MVC.Controllers
             }
             catch (CarApiException exception)
             {
-                TempData["Error"] = exception.Message;
+                _logger.LogError(exception, "Car {CarId} could not be loaded.", id);
+                TempData["CarApiUnavailable"] = true;
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -284,6 +309,11 @@ namespace FinalProject.MVC.Controllers
             if (HasFilterValue(query.Transmission))
             {
                 apiQuery.Transmission = query.Transmission;
+            }
+
+            if (HasFilterValue(query.Search))
+            {
+                apiQuery.Search = query.Search!.Trim();
             }
 
             return true;

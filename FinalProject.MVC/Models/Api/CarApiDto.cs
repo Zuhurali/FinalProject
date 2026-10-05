@@ -98,7 +98,14 @@ public class CarApiDto
     public List<CarImageApiDto> Images { get; set; } = new();
 
     public string MainImage =>
-        Images.OrderBy(image => image.DisplayOrder).FirstOrDefault(image => image.IsMain)?.ImageUrl
-        ?? Images.OrderBy(image => image.DisplayOrder).FirstOrDefault()?.ImageUrl
+        Images?.OrderBy(image => image.DisplayOrder).FirstOrDefault(image => image.IsMain)?.ImageUrl
+        ?? Images?.OrderBy(image => image.DisplayOrder).FirstOrDefault()?.ImageUrl
         ?? string.Empty;
+}
+
+public class CarSuggestionDto
+{
+    public string Text { get; set; } = string.Empty;
+
+    public string Type { get; set; } = string.Empty;
 }
