@@ -1,5 +1,47 @@
 namespace FinalProject.MVC.Models.Api;
 
+public class CarApiQuery
+{
+    public const int MaxPageSize = 100;
+
+    public string? Search { get; set; }
+
+    public int? BrandId { get; set; }
+
+    public int? CategoryId { get; set; }
+
+    public string? Model { get; set; }
+
+    public decimal? MinPrice { get; set; }
+
+    public decimal? MaxPrice { get; set; }
+
+    public int? MinYear { get; set; }
+
+    public int? MaxYear { get; set; }
+
+    public string? Fuel { get; set; }
+
+    public string? Transmission { get; set; }
+
+    public int Page { get; set; } = 1;
+
+    public int PageSize { get; set; } = 10;
+}
+
+public class PagedCarsDto
+{
+    public List<CarApiDto> Items { get; set; } = new();
+
+    public int CurrentPage { get; set; }
+
+    public int PageSize { get; set; }
+
+    public int TotalCount { get; set; }
+
+    public int TotalPages { get; set; }
+}
+
 public class BrandApiDto
 {
     public int Id { get; set; }

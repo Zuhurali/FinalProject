@@ -16,10 +16,17 @@ public class CarsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<CarResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<CarResponse>>> GetAll(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<CarResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PagedResult<CarResponse>>> GetAll([FromQuery] CarListQuery query, CancellationToken cancellationToken)
     {
-        var cars = await _carService.GetAllAsync(cancellationToken);
+        var validationError = query.Validate();
+        if (validationError != null)
+        {
+            return BadRequest(validationError);
+        }
+
+        var cars = await _carService.QueryAsync(query, cancellationToken);
         return Ok(cars);
     }
 
