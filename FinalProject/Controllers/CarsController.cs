@@ -1,6 +1,8 @@
 using FinalProject.DTOs;
 using FinalProject.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FinalProject.Controllers;
 
@@ -71,5 +73,105 @@ public class CarsController : ControllerBase
         }
 
         return Ok(car);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("lookups")]
+    [ProducesResponseType(typeof(CarLookupResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CarLookupResponse>> GetLookups(CancellationToken cancellationToken)
+    {
+        return Ok(await _carService.GetLookupsAsync(cancellationToken));
+    }
+
+    [Authorize]
+    [HttpGet("mine")]
+    [ProducesResponseType(typeof(IReadOnlyList<CarResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<CarResponse>>> GetMine(CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        return userId == null
+            ? Unauthorized()
+            : Ok(await _carService.GetOwnedAsync(userId, cancellationToken));
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ProducesResponseType(typeof(CarResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<CarResponse>> Create(
+        [FromBody] SaveCarRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var car = await _carService.CreateAsync(userId, request, cancellationToken);
+        return car == null
+            ? BadRequest(new { message = "The owner, brand, or category is invalid." })
+            : CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
+    }
+
+    [Authorize]
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CarResponse>> Update(
+        int id,
+        [FromBody] SaveCarRequest request,
+        CancellationToken cancellationToken)
+    {
+        var existing = await _carService.GetByIdAsync(id, cancellationToken);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+
+        if (!CanManage(existing.OwnerId))
+        {
+            return Forbid();
+        }
+
+        var updated = await _carService.UpdateAsync(id, request, cancellationToken);
+        return updated == null
+            ? BadRequest(new { message = "The brand or category is invalid." })
+            : Ok(updated);
+    }
+
+    [Authorize]
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var existing = await _carService.GetByIdAsync(id, cancellationToken);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+
+        if (!CanManage(existing.OwnerId))
+        {
+            return Forbid();
+        }
+
+        await _carService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
+
+    private string? CurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    private bool CanManage(string? ownerId)
+    {
+        var userId = CurrentUserId();
+        return userId != null
+            && (string.Equals(userId, ownerId, StringComparison.Ordinal)
+                || User.IsInRole("Admin"));
     }
 }

@@ -4,6 +4,8 @@ using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace FinalProject.MVC.Controllers
 {
@@ -11,11 +13,22 @@ namespace FinalProject.MVC.Controllers
     {
         private readonly ICarApiService _carApi;
         private readonly ILogger<CarsController> _logger;
+        private readonly IMarketplaceApiService _marketplaceApi;
+        private readonly IApiAccessTokenService _tokenService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CarsController(ICarApiService carApi, ILogger<CarsController> logger)
+        public CarsController(
+            ICarApiService carApi,
+            ILogger<CarsController> logger,
+            IMarketplaceApiService marketplaceApi,
+            IApiAccessTokenService tokenService,
+            UserManager<ApplicationUser> userManager)
         {
             _carApi = carApi;
             _logger = logger;
+            _marketplaceApi = marketplaceApi;
+            _tokenService = tokenService;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, int page = 1)
@@ -37,7 +50,9 @@ namespace FinalProject.MVC.Controllers
             try
             {
                 var catalog = await _carApi.GetAllCarsAsync(cancellationToken: HttpContext.RequestAborted);
-                return View(await BuildListingAsync(query, catalog));
+                var listing = await BuildListingAsync(query, catalog);
+                await MarkFavoritesAsync(listing.Cars);
+                return View(listing);
             }
             catch (CarApiException exception)
             {
@@ -90,6 +105,7 @@ namespace FinalProject.MVC.Controllers
                     PriceRange = priceRange
                 }, catalogDtos)
                 : new List<Car>();
+            await MarkFavoritesAsync(filteredCars);
 
             ViewBag.Makes = catalog.Select(c => c.Make).Distinct().OrderBy(m => m).ToList();
             ViewBag.Models = catalog.Select(c => c.Model).Distinct().OrderBy(m => m).ToList();
@@ -137,7 +153,9 @@ namespace FinalProject.MVC.Controllers
             ViewData["Title"] = "Cars Two - AutoVault";
             ViewData["BodyClass"] = "with-sidebar";
             ViewData["HeaderStyle"] = "three";
-            return View(await LoadCarsAsync());
+            var cars = await LoadCarsAsync();
+            await MarkFavoritesAsync(cars);
+            return View(cars);
         }
 
         public IActionResult CarsThree()
@@ -171,6 +189,7 @@ namespace FinalProject.MVC.Controllers
                     .ToList();
 
                 var car = CarApiMapper.ToCar(carDto);
+                await MarkFavoritesAsync([car]);
                 ViewData["Title"] = $"{car.Name} - AutoVault";
                 ViewData["BodyClass"] = "with-sidebar";
                 ViewData["HeaderStyle"] = "three";
@@ -197,6 +216,82 @@ namespace FinalProject.MVC.Controllers
         {
             ViewData["Title"] = "Sold Car - AutoVault";
             return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddFavorite(int id, string? returnUrl = null)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            await _marketplaceApi.AddFavoriteAsync(
+                id,
+                await CreateAccessTokenAsync(user),
+                HttpContext.RequestAborted);
+            return SafeReturn(returnUrl, id);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveFavorite(int id, string? returnUrl = null)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            await _marketplaceApi.RemoveFavoriteAsync(
+                id,
+                await CreateAccessTokenAsync(user),
+                HttpContext.RequestAborted);
+            return SafeReturn(returnUrl, id);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ContactSeller(
+            int id,
+            string? subject,
+            string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                TempData["Error"] = "Enter a message for the seller.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                var conversation = await _marketplaceApi.StartConversationAsync(
+                    id,
+                    subject,
+                    message,
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                return RedirectToAction(
+                    "Conversation",
+                    "Account",
+                    new { id = conversation.Id });
+            }
+            catch (CarApiException exception)
+            {
+                TempData["Error"] = exception.Message;
+                return RedirectToAction(nameof(Details), new { id });
+            }
         }
 
         private async Task<List<Car>> LoadCarsAsync()
@@ -346,6 +441,48 @@ namespace FinalProject.MVC.Controllers
         private static bool HasFilterValue(string? value)
         {
             return !string.IsNullOrWhiteSpace(value) && !value.Equals("All", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task MarkFavoritesAsync(IEnumerable<Car> cars)
+        {
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                return;
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var ids = (await _marketplaceApi.GetFavoriteIdsAsync(
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted)).ToHashSet();
+                foreach (var car in cars)
+                {
+                    car.IsFavorite = ids.Contains(car.Id);
+                }
+            }
+            catch (CarApiException)
+            {
+                ViewData["FavoriteServiceUnavailable"] = true;
+            }
+        }
+
+        private async Task<string> CreateAccessTokenAsync(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            return _tokenService.CreateToken(User, roles);
+        }
+
+        private IActionResult SafeReturn(string? returnUrl, int carId)
+        {
+            return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? LocalRedirect(returnUrl)
+                : RedirectToAction(nameof(Details), new { id = carId });
         }
     }
 }

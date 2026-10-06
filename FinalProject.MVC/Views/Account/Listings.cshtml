@@ -1,0 +1,75 @@
+@model AccountListingsViewModel
+@{
+    ViewData["Title"] = "My Listings - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container"><div class="breadcrumb-area-wrapper">
+        <h1 class="title">My Listings</h1>
+        <div class="nav-bread-crumb"><a asp-action="Index">Account</a><a href="#" class="current">Listings</a></div>
+    </div></div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container">
+        @if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
+        @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+        <div class="row g-5">
+            <div class="col-lg-3"><partial name="_AccountNavigation" /></div>
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="title mb-0">Your Vehicles</h3>
+                    <a asp-action="AddCar" class="rts-btn btn-primary radius-small">Add Car</a>
+                </div>
+                @if (ViewData["AccountServiceUnavailable"] != null)
+                {
+                    <div class="alert alert-warning">Listings are temporarily unavailable.</div>
+                }
+                else if (Model.Cars.Count == 0)
+                {
+                    <div class="account-empty-state text-center">
+                        <i class="fa-solid fa-car"></i><h4>No listings yet.</h4>
+                        <p>List your first vehicle to make it available in the AutoVault catalog.</p>
+                        <a asp-action="AddCar" class="rts-btn btn-primary radius-small">Create Listing</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        @foreach (var car in Model.Cars)
+                        {
+                            <div class="col-12">
+                                <article class="account-listing-card">
+                                    <img src="@Url.Content(car.MainImage)" alt="@car.Brand?.Name @car.Model">
+                                    <div class="content">
+                                        <span class="tag">@car.Status</span>
+                                        <h5>@car.Brand?.Name @car.Model</h5>
+                                        <p>@car.Year · $@car.Price.ToString("N0")</p>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-border radius-small">View Details</a>
+                                            <a asp-action="EditListing" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">Edit</a>
+                                            <form asp-action="DeleteListing" asp-route-id="@car.Id" method="post" onsubmit="return confirm('Delete this listing?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="rts-btn btn-border radius-small">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .account-listing-card { display:flex; gap:24px; padding:18px; border:1px solid #ececec; border-radius:12px; background:#fff; }
+    .account-listing-card > img { width:220px; height:145px; object-fit:cover; border-radius:10px; }
+    .account-listing-card .content { flex:1; }
+    .account-listing-card .tag { color:var(--color-primary); font-weight:600; }
+    .account-empty-state { padding:55px 25px; border:1px dashed #d8d8d8; border-radius:12px; }
+    .account-empty-state i { color:var(--color-primary); font-size:42px; margin-bottom:15px; }
+    @@media(max-width:767px){.account-listing-card{display:block}.account-listing-card>img{width:100%;margin-bottom:18px}}
+</style>

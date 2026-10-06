@@ -1,0 +1,84 @@
+@model IReadOnlyList<FinalProject.MVC.Models.AdminProductRatingViewModel>
+@{
+    ViewData["Title"] = "Manage Product Ratings - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Product Ratings</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Manage Ratings</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="rts-shop-area inner rts-section-gap">
+    <div class="container">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (ViewData["RatingServiceUnavailable"] is true)
+        {
+            <div class="alert alert-warning">Ratings are temporarily unavailable. Please try again.</div>
+        }
+        else if (Model.Count == 0)
+        {
+            <p>No product ratings have been submitted.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>User</th>
+                            <th>Rating</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rating in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-controller="Shop"
+                                       asp-action="Details"
+                                       asp-route-id="@rating.ProductId">@rating.ProductName</a>
+                                </td>
+                                <td>
+                                    @rating.UserDisplayName
+                                    <small class="d-block text-muted">@rating.UserId</small>
+                                </td>
+                                <td>@rating.Rating / 5</td>
+                                <td>@rating.CreatedAt.ToLocalTime().ToString("g")</td>
+                                <td>@rating.UpdatedAt.ToLocalTime().ToString("g")</td>
+                                <td>
+                                    <form asp-action="Delete" method="post">
+                                        <input type="hidden" name="productId" value="@rating.ProductId" />
+                                        <input type="hidden" name="ratingId" value="@rating.Id" />
+                                        <button type="submit"
+                                                class="rts-btn btn-primary radius-small"
+                                                onclick="return confirm('Delete this rating?');">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -17,7 +17,7 @@ namespace FinalProject.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.30")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -124,8 +124,19 @@ namespace FinalProject.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("OwnerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("Active");
 
                     b.Property<string>("Transmission")
                         .IsRequired()
@@ -143,6 +154,9 @@ namespace FinalProject.Data.Migrations
                     b.HasIndex("BrandId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("IX_Cars_OwnerId");
 
                     b.ToTable("Cars");
                 });
@@ -174,6 +188,49 @@ namespace FinalProject.Data.Migrations
                     b.HasIndex("CarId");
 
                     b.ToTable("CarImages");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.CarMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("ConversationId", "CreatedAt");
+
+                    b.HasIndex("ReceiverId", "IsRead");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("FinalProject.Models.Entities.Category", b =>
@@ -224,6 +281,152 @@ namespace FinalProject.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FinalProject.Models.Entities.Conversation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BuyerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CarId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerId");
+
+                    b.HasIndex("SellerId");
+
+                    b.HasIndex("UpdatedAt");
+
+                    b.HasIndex("CarId", "BuyerId", "SellerId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Conversations_CarId_BuyerId_SellerId");
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.Favorite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CarId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarId");
+
+                    b.HasIndex("UserId", "CarId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Favorites_UserId_CarId");
+
+                    b.ToTable("Favorites");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.IdentityUserReference", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AspNetUsers", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.ProductRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("IX_ProductRatings_ProductId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProductRatings_UserId_ProductId");
+
+                    b.ToTable("ProductRatings", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductRatings_Rating", "[Rating] >= 1 AND [Rating] <= 5");
+                        });
+                });
+
             modelBuilder.Entity("FinalProject.Models.Entities.Car", b =>
                 {
                     b.HasOne("FinalProject.Models.Entities.Brand", "Brand")
@@ -238,9 +441,16 @@ namespace FinalProject.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Brand");
 
                     b.Navigation("Category");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("FinalProject.Models.Entities.CarImage", b =>
@@ -254,6 +464,79 @@ namespace FinalProject.Data.Migrations
                     b.Navigation("Car");
                 });
 
+            modelBuilder.Entity("FinalProject.Models.Entities.CarMessage", b =>
+                {
+                    b.HasOne("FinalProject.Models.Entities.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.Conversation", b =>
+                {
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FinalProject.Models.Entities.Car", "Car")
+                        .WithMany("Conversations")
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "Seller")
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Buyer");
+
+                    b.Navigation("Car");
+
+                    b.Navigation("Seller");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.Favorite", b =>
+                {
+                    b.HasOne("FinalProject.Models.Entities.Car", "Car")
+                        .WithMany("Favorites")
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Car");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FinalProject.Models.Entities.Brand", b =>
                 {
                     b.Navigation("Cars");
@@ -261,12 +544,21 @@ namespace FinalProject.Data.Migrations
 
             modelBuilder.Entity("FinalProject.Models.Entities.Car", b =>
                 {
+                    b.Navigation("Conversations");
+
+                    b.Navigation("Favorites");
+
                     b.Navigation("Images");
                 });
 
             modelBuilder.Entity("FinalProject.Models.Entities.Category", b =>
                 {
                     b.Navigation("Cars");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

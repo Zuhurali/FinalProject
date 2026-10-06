@@ -1,41 +1,80 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.Services;
+using FinalProject.MVC.Services.Interfaces;
 using System.Threading.Tasks;
 
 namespace FinalProject.MVC.Controllers
 {
+    [TypeFilter(typeof(RedirectAuthenticatedAuthPageOnAntiforgeryFailureFilter))]
     public class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IMarketplaceApiService _marketplaceApi;
+        private readonly ICarApiService _carApi;
+        private readonly IApiAccessTokenService _tokenService;
 
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public AccountController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
+            IMarketplaceApiService marketplaceApi,
+            ICarApiService carApi,
+            IApiAccessTokenService tokenService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
+            _marketplaceApi = marketplaceApi;
+            _carApi = carApi;
+            _tokenService = tokenService;
         }
 
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Account - AutoVault";
-
-            if (User.Identity?.IsAuthenticated == true)
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
-                {
-                    var name = $"{user.FirstName} {user.LastName}".Trim();
-                    ViewData["AccountName"] = string.IsNullOrWhiteSpace(name) ? user.Email : name;
-                }
+                return Challenge();
             }
 
-            return View();
+            var displayName = $"{user.FirstName} {user.LastName}".Trim();
+            var model = new AccountDashboardViewModel
+            {
+                DisplayName = string.IsNullOrWhiteSpace(displayName)
+                    ? user.Email ?? user.UserName ?? "User"
+                    : displayName
+            };
+            try
+            {
+                model.Summary = await _marketplaceApi.GetSummaryAsync(
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+            }
+            catch (CarApiException)
+            {
+                ViewData["AccountServiceUnavailable"] = true;
+            }
+
+            return View(model);
         }
 
         [HttpGet]
         public IActionResult SignIn(string? returnUrl = null)
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             ViewData["Title"] = "Sign In - AutoVault";
             ViewData["ReturnUrl"] = returnUrl;
             return View();
@@ -47,6 +86,11 @@ namespace FinalProject.MVC.Controllers
         {
             ViewData["Title"] = "Sign In - AutoVault";
 
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             IActionResult InvalidLogin()
             {
                 if (fromAccount)
@@ -54,9 +98,11 @@ namespace FinalProject.MVC.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                return View();
+                return RedirectToAction(nameof(SignIn), new { returnUrl });
             }
-            
+
+            ViewData["ReturnUrl"] = returnUrl;
+
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 TempData["Error"] = "Please enter both email and password.";
@@ -79,10 +125,11 @@ namespace FinalProject.MVC.Controllers
             
             if (result.Succeeded)
             {
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                if (IsSafeReturnUrl(returnUrl))
                 {
-                    return Redirect(returnUrl);
+                    return LocalRedirect(returnUrl!);
                 }
+
                 return RedirectToAction("Index", "Home");
             }
             
@@ -93,6 +140,11 @@ namespace FinalProject.MVC.Controllers
         [HttpGet]
         public IActionResult Register()
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             ViewData["Title"] = "Register - AutoVault";
             return View();
         }
@@ -103,6 +155,11 @@ namespace FinalProject.MVC.Controllers
         {
             ViewData["Title"] = "Register - AutoVault";
 
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             IActionResult InvalidRegistration()
             {
                 if (fromAccount)
@@ -110,7 +167,7 @@ namespace FinalProject.MVC.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                return View();
+                return RedirectToAction(nameof(Register));
             }
             
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
@@ -138,9 +195,23 @@ namespace FinalProject.MVC.Controllers
 
             if (result.Succeeded)
             {
-                await _signInManager.SignInAsync(user, isPersistent: true);
-                TempData["Success"] = "Account created successfully!";
-                return RedirectToAction("Index", "Home");
+                if (!await _roleManager.RoleExistsAsync("User"))
+                {
+                    await _userManager.DeleteAsync(user);
+                    TempData["Error"] = "The user role is not available. Please try again.";
+                    return InvalidRegistration();
+                }
+
+                var roleResult = await _userManager.AddToRoleAsync(user, "User");
+                if (!roleResult.Succeeded)
+                {
+                    await _userManager.DeleteAsync(user);
+                    TempData["Error"] = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                    return InvalidRegistration();
+                }
+
+                TempData["Success"] = "Account created successfully. Please sign in.";
+                return RedirectToAction(nameof(SignIn));
             }
 
             TempData["Error"] = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -156,16 +227,395 @@ namespace FinalProject.MVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        public IActionResult AddCar()
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> AddCar()
         {
             ViewData["Title"] = "Add Car - AutoVault";
-            return View();
+            try
+            {
+                return View(new CarEditorViewModel
+                {
+                    Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted)
+                });
+            }
+            catch (CarApiException)
+            {
+                ViewData["AccountServiceUnavailable"] = true;
+                return View(new CarEditorViewModel());
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddCar(CarEditorViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                await _carApi.CreateCarAsync(
+                    model.Car,
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                TempData["Success"] = "Your car listing was created.";
+                return RedirectToAction(nameof(Listings));
+            }
+            catch (CarApiException exception)
+            {
+                ModelState.AddModelError(string.Empty, exception.Message);
+                model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                return View(model);
+            }
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Listings()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            ViewData["Title"] = "My Listings - AutoVault";
+            try
+            {
+                var cars = await _carApi.GetMyCarsAsync(
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                return View(new AccountListingsViewModel { Cars = cars });
+            }
+            catch (CarApiException)
+            {
+                ViewData["AccountServiceUnavailable"] = true;
+                return View(new AccountListingsViewModel());
+            }
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> EditListing(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            var cars = await _carApi.GetMyCarsAsync(
+                await CreateAccessTokenAsync(user),
+                HttpContext.RequestAborted);
+            var car = cars.SingleOrDefault(item => item.Id == id);
+            if (car == null && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
+            car ??= await _carApi.GetCarByIdAsync(id, HttpContext.RequestAborted);
+            if (car == null)
+            {
+                return NotFound();
+            }
+
+            return View(new CarEditorViewModel
+            {
+                Id = id,
+                Car = new SaveCarDto
+                {
+                    BrandId = car.Brand?.Id ?? 0,
+                    CategoryId = car.Category?.Id ?? 0,
+                    Model = car.Model,
+                    Year = car.Year,
+                    Price = car.Price,
+                    Mileage = car.Mileage,
+                    FuelType = car.FuelType,
+                    Transmission = car.Transmission,
+                    Color = car.Color,
+                    Description = car.Description,
+                    ImageUrl = car.MainImage,
+                    Status = car.Status
+                },
+                Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted)
+            });
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditListing(int id, CarEditorViewModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.Id = id;
+                model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                return View(model);
+            }
+
+            try
+            {
+                await _carApi.UpdateCarAsync(
+                    id,
+                    model.Car,
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                TempData["Success"] = "Your listing was updated.";
+                return RedirectToAction(nameof(Listings));
+            }
+            catch (CarApiException exception)
+            {
+                ModelState.AddModelError(string.Empty, exception.Message);
+                model.Id = id;
+                model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                return View(model);
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteListing(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                await _carApi.DeleteCarAsync(
+                    id,
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                TempData["Success"] = "The listing was deleted.";
+            }
+            catch (CarApiException exception)
+            {
+                TempData["Error"] = exception.Message;
+            }
+
+            return RedirectToAction(nameof(Listings));
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Favorites()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            ViewData["Title"] = "Favorites - AutoVault";
+            try
+            {
+                var favorites = await _marketplaceApi.GetFavoritesAsync(
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                return View(new AccountFavoritesViewModel { Favorites = favorites });
+            }
+            catch (CarApiException)
+            {
+                ViewData["AccountServiceUnavailable"] = true;
+                return View(new AccountFavoritesViewModel());
+            }
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Messages()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            ViewData["Title"] = "Messages - AutoVault";
+            try
+            {
+                var conversations = await _marketplaceApi.GetConversationsAsync(
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                return View(new AccountMessagesViewModel { Conversations = conversations });
+            }
+            catch (CarApiException)
+            {
+                ViewData["AccountServiceUnavailable"] = true;
+                return View(new AccountMessagesViewModel());
+            }
+        }
+
+        [Authorize]
+        [HttpGet("Account/Messages/{id:int}")]
+        public async Task<IActionResult> Conversation(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            var conversation = await _marketplaceApi.GetConversationAsync(
+                id,
+                await CreateAccessTokenAsync(user),
+                HttpContext.RequestAborted);
+            return conversation == null ? NotFound() : View(conversation);
+        }
+
+        [Authorize]
+        [HttpPost("Account/Messages/{id:int}/Reply")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reply(int id, string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                TempData["Error"] = "Enter a message.";
+                return RedirectToAction(nameof(Conversation), new { id });
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            await _marketplaceApi.ReplyAsync(
+                id,
+                content,
+                await CreateAccessTokenAsync(user),
+                HttpContext.RequestAborted);
+            return RedirectToAction(nameof(Conversation), new { id });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            return View(new AccountProfileViewModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber
+            });
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(AccountProfileViewModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            model.Email = user.Email ?? string.Empty;
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            user.FirstName = model.FirstName?.Trim();
+            user.LastName = model.LastName?.Trim();
+            user.PhoneNumber = model.PhoneNumber?.Trim();
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["Success"] = "Your profile was updated.";
+            return RedirectToAction(nameof(Profile));
         }
 
         public IActionResult AccessDenied()
         {
             ViewData["Title"] = "Access Denied - AutoVault";
             return View();
+        }
+
+        private bool IsSafeReturnUrl(string? returnUrl)
+        {
+            if (string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl))
+            {
+                return false;
+            }
+
+            var path = returnUrl.Split('?', '#')[0];
+            if (!path.StartsWith('/'))
+            {
+                path = "/" + path;
+            }
+
+            path = path.TrimEnd('/');
+            return !path.Equals("/Account/SignIn", StringComparison.OrdinalIgnoreCase)
+                && !path.Equals("/Account/Register", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<string> CreateAccessTokenAsync(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            return _tokenService.CreateToken(User, roles);
+        }
+    }
+
+    public sealed class RedirectAuthenticatedAuthPageOnAntiforgeryFailureFilter : IAlwaysRunResultFilter
+    {
+        public void OnResultExecuting(ResultExecutingContext context)
+        {
+            if (context.Result is not AntiforgeryValidationFailedResult)
+            {
+                return;
+            }
+
+            if (context.HttpContext.User.Identity?.IsAuthenticated != true)
+            {
+                return;
+            }
+
+            var action = context.RouteData.Values["action"]?.ToString();
+            if (!string.Equals(action, "SignIn", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(action, "Register", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            context.Result = new RedirectToActionResult("Index", "Account", null);
+        }
+
+        public void OnResultExecuted(ResultExecutedContext context)
+        {
         }
     }
 }

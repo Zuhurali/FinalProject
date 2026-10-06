@@ -1,0 +1,70 @@
+@model AccountMessagesViewModel
+@{
+    ViewData["Title"] = "Messages - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container"><div class="breadcrumb-area-wrapper">
+        <h1 class="title">Messages</h1>
+        <div class="nav-bread-crumb"><a asp-action="Index">Account</a><a href="#" class="current">Messages</a></div>
+    </div></div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container"><div class="row g-5">
+        <div class="col-lg-3"><partial name="_AccountNavigation" /></div>
+        <div class="col-lg-9">
+            <h3 class="title mb-4">Conversations</h3>
+            @if (ViewData["AccountServiceUnavailable"] != null)
+            {
+                <div class="alert alert-warning">Messages are temporarily unavailable.</div>
+            }
+            else if (Model.Conversations.Count == 0)
+            {
+                <div class="account-empty-state text-center">
+                    <i class="fa-regular fa-envelope"></i><h4>No messages yet.</h4>
+                    <p>Conversations about your listings will appear here.</p>
+                </div>
+            }
+            else
+            {
+                <div class="conversation-list">
+                    @foreach (var conversation in Model.Conversations)
+                    {
+                        <a asp-action="Conversation" asp-route-id="@conversation.Id" class="conversation-row @(conversation.UnreadCount > 0 ? "unread" : null)">
+                            @if (!string.IsNullOrWhiteSpace(conversation.CarImageUrl))
+                            {
+                                <img src="@Url.Content(conversation.CarImageUrl)" alt="@conversation.CarName">
+                            }
+                            <div class="conversation-content">
+                                <div class="d-flex justify-content-between gap-3">
+                                    <h5>@conversation.CarName</h5>
+                                    <time>@conversation.UpdatedAt.ToLocalTime().ToString("g")</time>
+                                </div>
+                                <p><strong>With:</strong> @conversation.OtherUserDisplayName</p>
+                                <p class="last-message">@conversation.LastMessage</p>
+                            </div>
+                            @if (conversation.UnreadCount > 0)
+                            {
+                                <span class="unread-count">@conversation.UnreadCount</span>
+                            }
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div></div>
+</div>
+
+<style>
+    .conversation-row { display:flex; align-items:center; gap:18px; padding:18px; border:1px solid #ececec; border-radius:12px; color:inherit; margin-bottom:14px; }
+    .conversation-row.unread { border-left:4px solid var(--color-primary); background:#fff8f5; }
+    .conversation-row img { width:100px; height:75px; object-fit:cover; border-radius:8px; }
+    .conversation-content { flex:1; min-width:0; }
+    .conversation-content h5,.conversation-content p { margin-bottom:5px; }
+    .conversation-content time { font-size:13px; white-space:nowrap; color:var(--color-body); }
+    .last-message { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .unread-count { display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--color-primary); color:#fff; }
+    .account-empty-state { padding:55px 25px; border:1px dashed #d8d8d8; border-radius:12px; }
+    .account-empty-state i { color:var(--color-primary); font-size:42px; margin-bottom:15px; }
+</style>

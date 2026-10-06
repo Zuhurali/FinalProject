@@ -3,6 +3,8 @@
     ViewData["Title"] = $"{Model.Name} - AutoVault";
     var slides = Enumerable.Repeat(Model.ImagePath, 6).ToArray();
     var relatedCars = ViewData["RelatedCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var isOwner = !string.IsNullOrWhiteSpace(Model.OwnerId) && Model.OwnerId == currentUserId;
 }
 
 <div class="rts-breadcrumb-area portfolio details jarallax" style="background-image: url('@Url.Content(Model.ImagePath)'); background-size: cover; background-position: center;">
@@ -75,12 +77,7 @@
                         </div>
                     </div>
                     <h2 class="mb--30">Car Description</h2>
-                    <p class="mb--30">A car is a motorized vehicle designed primarily for the transportation of passengers, typically seating between one
-                        to eight people. It consists of a metal or composite body structure mounted on a set of wheels, usually four, and is
-                        powered by an internal combustion engine, an electric motor, or a hybrid system that combines both. The car’s it is
-                        main components include the engine, transmission, drivetrain, suspension, and braking system, all of which work
-                        together to provide motion and control.</p>
-                    <p>Cars come in a variety of body styles and sizes, such as sedans, SUVs, hatchbacks, coupes, convertibles, and for pickup trucks, each serving different needs and preferences.</p>
+                    <p class="mb--30">@Model.Description</p>
                     <h2 class="mb--30">Car Features</h2>
                     <ul class="feature-list mb--40">
                         <li><i class="fa-regular fa-circle-check"></i> Engine Type</li>
@@ -195,24 +192,35 @@
                             </div>
                         </li>
                     </ul>
-                    <form action="#" class="message-form mb--100" id="carMessageForm">
-                        <h2>Send Message</h2>
-                        <div class="form-inner">
-                            <div class="input-wrapper">
-                                <input type="text" name="Name" placeholder="Your Name" required>
-                                <input type="email" name="Email" placeholder="Your Email*" required>
-                                <input type="text" name="Phone" placeholder="Phone" required>
-                            </div>
-                            <textarea name="message" id="message" placeholder="Type a message*"></textarea>
-                            <div class="form-bottom">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" />
-                                    <span>I accept The <a href="#">Privacy Policy</a></span>
-                                </label>
-                                <button class="rts-btn btn-primary radius-small" type="submit"><img src="~/assets/images/portfolio/send.svg" alt="">Submit Message</button>
-                            </div>
-                        </div>
-                    </form>
+                    <div class="message-form mb--100" id="carMessageForm">
+                        <h2>Contact Seller</h2>
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="alert alert-danger">@TempData["Error"]</div>
+                        }
+                        @if (string.IsNullOrWhiteSpace(Model.OwnerId))
+                        {
+                            <div class="alert alert-info">Seller contact is not available for this listing.</div>
+                        }
+                        else if (isOwner)
+                        {
+                            <div class="alert alert-info">This is your listing. Messages from buyers will appear in your account.</div>
+                        }
+                        else if (User.Identity?.IsAuthenticated != true)
+                        {
+                            <p>Please sign in to contact the seller.</p>
+                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path" class="rts-btn btn-primary radius-small">Sign In</a>
+                        }
+                        else
+                        {
+                            <form asp-action="ContactSeller" asp-route-id="@Model.Id" method="post" class="form-inner">
+                                @Html.AntiForgeryToken()
+                                <input type="text" name="subject" placeholder="Subject (optional)" maxlength="200">
+                                <textarea name="message" placeholder="Type your message*" required maxlength="4000"></textarea>
+                                <button class="rts-btn btn-primary radius-small" type="submit"><img src="~/assets/images/portfolio/send.svg" alt=""> Send Message</button>
+                            </form>
+                        }
+                    </div>
                     <div class="related-project">
                         <h3 class="mb--40 text-center">Related listings</h3>
                         <div class="row g-5">
@@ -266,7 +274,20 @@
                             <ul class="price-meta">
                                 <li><img src="~/assets/images/portfolio/calender.svg" alt=""> Feb 23, 2025</li>
                                 <li><img src="~/assets/images/portfolio/view.svg" alt=""> View</li>
-                                <li><img src="~/assets/images/portfolio/heart.svg" alt=""> Favourite</li>
+                                <li>
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <form asp-action="@(Model.IsFavorite ? "RemoveFavorite" : "AddFavorite")" asp-route-id="@Model.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path">
+                                            <button type="submit" class="favorite-action"><i class="@(Model.IsFavorite ? "fa-solid" : "fa-regular") fa-heart"></i> @(Model.IsFavorite ? "Saved" : "Favourite")</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path">Favourite</a>
+                                    }
+                                </li>
                             </ul>
                             <div class="price-btn">
                                 <a href="#" class="rts-btn btn-primary radius-small">Call For Final Price</a>
@@ -340,18 +361,23 @@
                             </div>
                         </div>
                         <div class="contact side-box">
-                            <h2>Contacts</h2>
+                            <h2>Seller</h2>
                             <div class="contact-inner">
-                                <div class="author-img">
-                                    <img src="~/assets/images/portfolio/author.webp" alt="">
-                                </div>
-                                <h5>Jonathon Doe</h5>
-                                <p>Car Dealer</p>
-                                <div class="contact-button-area">
-                                    <a href="#" class="rts-btn radius-small whatsapp"><img src="~/assets/images/portfolio/whatsapp.svg" alt=""> +994503546767</a>
-                                    <a href="#" class="rts-btn radius-small btn-primary phone"><img src="~/assets/images/portfolio/phone.svg" alt=""> +994503546767</a>
-                                    <a href="#carMessageForm" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Send Message</a>
-                                </div>
+                                @if (string.IsNullOrWhiteSpace(Model.OwnerId))
+                                {
+                                    <p>Seller contact is not available for this listing.</p>
+                                }
+                                else
+                                {
+                                    <h5>@Model.OwnerDisplayName</h5>
+                                    <p>AutoVault Seller</p>
+                                    @if (!isOwner)
+                                    {
+                                        <div class="contact-button-area">
+                                            <a href="#carMessageForm" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Send Message</a>
+                                        </div>
+                                    }
+                                }
                             </div>
                         </div>
                         <div class="social-area side-box">
@@ -385,10 +411,4 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        document.getElementById("carMessageForm")?.addEventListener("submit", function (event) {
-            event.preventDefault();
-        });
-    </script>
-}
+<style>.favorite-action{border:0;background:transparent;padding:0;color:inherit}</style>

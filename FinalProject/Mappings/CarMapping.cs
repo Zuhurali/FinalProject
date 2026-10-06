@@ -20,6 +20,11 @@ public static class CarMapping
             Description = car.Description,
             IsNew = car.IsNew,
             IsFeatured = car.IsFeatured,
+            OwnerId = car.OwnerId,
+            OwnerDisplayName = car.Owner == null
+                ? null
+                : DisplayName(car.Owner),
+            Status = car.Status,
             CreatedAt = car.CreatedAt,
             UpdatedAt = car.UpdatedAt,
             Brand = new BrandResponse
@@ -45,5 +50,13 @@ public static class CarMapping
                 })
                 .ToList()
         };
+    }
+
+    private static string DisplayName(IdentityUserReference user)
+    {
+        var fullName = $"{user.FirstName} {user.LastName}".Trim();
+        return string.IsNullOrWhiteSpace(fullName)
+            ? user.Email ?? user.UserName ?? "User"
+            : fullName;
     }
 }

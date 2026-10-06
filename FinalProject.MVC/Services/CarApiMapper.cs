@@ -34,7 +34,11 @@ public static class CarApiMapper
             ImageCount = dto.Images == null || dto.Images.Count == 0 ? 1 : dto.Images.Count,
             Badge = dto.IsNew ? "New" : string.Empty,
             Seats = 0,
-            InStock = true
+            InStock = dto.Status == "Active",
+            OwnerId = dto.OwnerId,
+            OwnerDisplayName = dto.OwnerDisplayName,
+            Status = dto.Status,
+            CreatedAt = dto.CreatedAt
         };
     }
 

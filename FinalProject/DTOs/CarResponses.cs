@@ -51,6 +51,12 @@ public class CarResponse
 
     public bool IsFeatured { get; set; }
 
+    public string? OwnerId { get; set; }
+
+    public string? OwnerDisplayName { get; set; }
+
+    public string Status { get; set; } = "Active";
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }

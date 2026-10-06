@@ -21,6 +21,11 @@ namespace FinalProject.MVC.Models
         public bool InStock { get; set; } = true;
         public decimal MonthlyPayment { get; set; } // For financing
         public string DriveType { get; set; } = string.Empty;
+        public string? OwnerId { get; set; }
+        public string? OwnerDisplayName { get; set; }
+        public string Status { get; set; } = "Active";
+        public DateTime CreatedAt { get; set; }
+        public bool IsFavorite { get; set; }
     }
 
     public class CarFilterRequest

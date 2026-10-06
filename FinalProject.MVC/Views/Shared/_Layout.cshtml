@@ -213,8 +213,8 @@
                                     </div>
                                     <div class="bottom-right">
                                         <div class="button-area">
-                                            <a asp-controller="Account" asp-action="SignIn" class="rts-btn btn-border radius-small icon">
-                                                Sign In
+                                            <a asp-controller="Account" asp-action="@(User.Identity?.IsAuthenticated == true ? "Index" : "SignIn")" class="rts-btn btn-border radius-small icon" title="@(User.Identity?.IsAuthenticated == true ? User.Identity?.Name : null)">
+                                                @(User.Identity?.IsAuthenticated == true ? "Account" : "Sign In")
                                                 <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <rect width="19" height="19" fill="url(#pattern0_2295_364)" />
                                                     <defs>
@@ -225,6 +225,13 @@
                                                     </defs>
                                                 </svg>
                                             </a>
+                                            @if (User.Identity?.IsAuthenticated == true)
+                                            {
+                                                <form asp-controller="Account" asp-action="SignOut" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="rts-btn btn-border radius-small">Sign Out</button>
+                                                </form>
+                                            }
                                             <a asp-controller="Account" asp-action="AddCar" class="rts-btn btn-primary radius-small icon">
                                                 Add Car
                                                 <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">

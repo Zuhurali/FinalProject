@@ -1,0 +1,66 @@
+@model AccountFavoritesViewModel
+@{
+    ViewData["Title"] = "Favorites - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container"><div class="breadcrumb-area-wrapper">
+        <h1 class="title">Favorites</h1>
+        <div class="nav-bread-crumb"><a asp-action="Index">Account</a><a href="#" class="current">Favorites</a></div>
+    </div></div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container"><div class="row g-5">
+        <div class="col-lg-3"><partial name="_AccountNavigation" /></div>
+        <div class="col-lg-9">
+            <h3 class="title mb-4">Favorite Cars</h3>
+            @if (ViewData["AccountServiceUnavailable"] != null)
+            {
+                <div class="alert alert-warning">Favorites are temporarily unavailable.</div>
+            }
+            else if (Model.Favorites.Count == 0)
+            {
+                <div class="account-empty-state text-center">
+                    <i class="fa-regular fa-heart"></i><h4>No favorite cars yet.</h4>
+                    <p>Save cars from the catalog and they will appear here.</p>
+                    <a asp-controller="Cars" asp-action="Index" class="rts-btn btn-primary radius-small">Browse Cars</a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var favorite in Model.Favorites)
+                    {
+                        <div class="col-md-6">
+                            <div class="project-wrapper2">
+                                <div class="image-area">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@favorite.Car.Id">
+                                        <img src="@Url.Content(favorite.Car.MainImage)" alt="@favorite.Car.Brand?.Name @favorite.Car.Model">
+                                    </a>
+                                </div>
+                                <div class="content-area">
+                                    <span class="price">$@favorite.Car.Price.ToString("N0")</span>
+                                    <h6 class="title">@favorite.Car.Brand?.Name @favorite.Car.Model</h6>
+                                    <div class="d-flex gap-2">
+                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@favorite.Car.Id" class="rts-btn btn-primary radius-small">View</a>
+                                        <form asp-controller="Cars" asp-action="RemoveFavorite" asp-route-id="@favorite.Car.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path">
+                                            <button class="rts-btn btn-border radius-small" type="submit">Remove</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div></div>
+</div>
+
+<style>
+    .account-empty-state { padding:55px 25px; border:1px dashed #d8d8d8; border-radius:12px; }
+    .account-empty-state i { color:var(--color-primary); font-size:42px; margin-bottom:15px; }
+</style>

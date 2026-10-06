@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Data;
+using FinalProject.MVC.Services;
+using FinalProject.MVC.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject.MVC.Controllers
@@ -9,15 +13,25 @@ namespace FinalProject.MVC.Controllers
     {
         private readonly List<ShopProduct> _allProducts;
         private readonly ApplicationDbContext _context;
+        private readonly IProductRatingApiService _ratingApiService;
+        private readonly IApiAccessTokenService _tokenService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ShopController(ApplicationDbContext context)
+        public ShopController(
+            ApplicationDbContext context,
+            IProductRatingApiService ratingApiService,
+            IApiAccessTokenService tokenService,
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _ratingApiService = ratingApiService;
+            _tokenService = tokenService;
+            _userManager = userManager;
             // Brand-specific automotive products with realistic relationships
             _allProducts = TemplateProducts();
         }
 
-        private static List<ShopProduct> TemplateProducts()
+        internal static List<ShopProduct> TemplateProducts()
         {
             return new List<ShopProduct>
             {
@@ -65,7 +79,8 @@ namespace FinalProject.MVC.Controllers
                 CarMake = make,
                 CarModel = model,
                 ImagePath = "~/assets/images/portfolio/" + image,
-                Rating = rating,
+                Rating = 0,
+                RatingCount = 0,
                 Description = description,
                 InStock = true,
                 SearchKeywords = string.Join(" ", new[] { name, category, make, model }.Where(value => !string.IsNullOrWhiteSpace(value)))
@@ -84,6 +99,7 @@ namespace FinalProject.MVC.Controllers
                 CarModel = product.CarModel,
                 ImagePath = product.ImagePath,
                 Rating = product.Rating,
+                RatingCount = product.RatingCount,
                 Description = product.Description,
                 InStock = product.InStock,
                 Color = product.Color,
@@ -118,12 +134,45 @@ namespace FinalProject.MVC.Controllers
                 .ToDictionary(group => group.Key, group => group.Count());
         }
 
-        public IActionResult Index()
+        private async Task ApplyRatingsAsync(
+            IEnumerable<ShopProduct> products,
+            CancellationToken cancellationToken)
+        {
+            var productList = products.ToList();
+            if (productList.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                var summaries = await _ratingApiService.GetSummariesAsync(
+                    productList.Select(product => product.Id),
+                    cancellationToken);
+                var byProduct = summaries.ToDictionary(summary => summary.ProductId);
+
+                foreach (var product in productList)
+                {
+                    if (byProduct.TryGetValue(product.Id, out var summary))
+                    {
+                        product.Rating = summary.AverageRating;
+                        product.RatingCount = summary.TotalCount;
+                    }
+                }
+            }
+            catch (CarApiException)
+            {
+                ViewData["RatingServiceUnavailable"] = true;
+            }
+        }
+
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop - AutoVault";
             
             // Initial load - show first 6 products (matching original template)
             var initialProducts = _allProducts.Take(6).ToList();
+            await ApplyRatingsAsync(initialProducts, cancellationToken);
             var response = new ShopFilterResponse
             {
                 Products = initialProducts,
@@ -140,8 +189,11 @@ namespace FinalProject.MVC.Controllers
         }
 
         [HttpPost]
-        public JsonResult FilterProducts([FromBody] ShopFilterRequest request)
+        public async Task<JsonResult> FilterProducts(
+            [FromBody] ShopFilterRequest request,
+            CancellationToken cancellationToken)
         {
+            await ApplyRatingsAsync(_allProducts, cancellationToken);
             var filteredProducts = _allProducts.AsQueryable();
 
             // Apply search text filter (name, description, keywords)
@@ -271,12 +323,16 @@ namespace FinalProject.MVC.Controllers
         }
 
         [HttpPost]
-        public JsonResult LoadMore(int page = 1, int pageSize = 6)
+        public async Task<JsonResult> LoadMore(
+            int page = 1,
+            int pageSize = 6,
+            CancellationToken cancellationToken = default)
         {
             var products = _allProducts
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
+            await ApplyRatingsAsync(products, cancellationToken);
 
             var totalPages = (int)Math.Ceiling(_allProducts.Count / (double)pageSize);
 
@@ -293,11 +349,12 @@ namespace FinalProject.MVC.Controllers
             return Json(response);
         }
 
-        public IActionResult ShopTwo()
+        public async Task<IActionResult> ShopTwo(CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop Two - AutoVault";
             
             var products = _allProducts.Select(CopyPart).ToList();
+            await ApplyRatingsAsync(products, cancellationToken);
 
             var response = new ShopFilterResponse
             {
@@ -314,7 +371,7 @@ namespace FinalProject.MVC.Controllers
             return View(response);
         }
 
-        public IActionResult ShopThree()
+        public async Task<IActionResult> ShopThree(CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop Three - AutoVault";
             
@@ -323,6 +380,7 @@ namespace FinalProject.MVC.Controllers
             var products = order
                 .Select(id => CopyPart(_allProducts.First(product => product.Id == id)))
                 .ToList();
+            await ApplyRatingsAsync(products, cancellationToken);
 
             var response = new ShopFilterResponse
             {
@@ -339,7 +397,7 @@ namespace FinalProject.MVC.Controllers
             return View(response);
         }
 
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id, CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop Details - AutoVault";
 
@@ -357,7 +415,91 @@ namespace FinalProject.MVC.Controllers
                 return RedirectToAction("Index");
             }
 
+            try
+            {
+                var summary = await _ratingApiService.GetRatingsAsync(product.Id, cancellationToken);
+                product.Rating = summary?.AverageRating ?? 0;
+                product.RatingCount = summary?.TotalCount ?? 0;
+
+                if (User.Identity?.IsAuthenticated == true)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    if (user != null)
+                    {
+                        var roles = await _userManager.GetRolesAsync(user);
+                        var accessToken = _tokenService.CreateToken(User, roles);
+                        var userRating = await _ratingApiService.GetMyRatingAsync(
+                            product.Id,
+                            accessToken,
+                            cancellationToken);
+                        ViewBag.UserRating = userRating?.Rating ?? 0;
+                    }
+                }
+            }
+            catch (CarApiException)
+            {
+                ViewData["RatingServiceUnavailable"] = true;
+            }
+
             return View(product);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> SubmitRating(
+            int productId,
+            int rating,
+            CancellationToken cancellationToken)
+        {
+            if (rating is < 1 or > 5)
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                return Json(new { success = false, message = "Choose a rating from 1 to 5 stars." });
+            }
+
+            if (_allProducts.All(product => product.Id != productId))
+            {
+                Response.StatusCode = StatusCodes.Status404NotFound;
+                return Json(new { success = false, message = "Product not found." });
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Json(new { success = false, message = "Please sign in to rate this product." });
+            }
+
+            try
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var accessToken = _tokenService.CreateToken(User, roles);
+                await _ratingApiService.SaveRatingAsync(
+                    productId,
+                    rating,
+                    accessToken,
+                    cancellationToken);
+                var summary = await _ratingApiService.GetRatingsAsync(productId, cancellationToken);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Your rating has been saved.",
+                    averageRating = summary?.AverageRating ?? rating,
+                    totalCount = summary?.TotalCount ?? 1,
+                    userRating = rating
+                });
+            }
+            catch (CarApiException)
+            {
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return Json(new
+                {
+                    success = false,
+                    message = "Ratings are temporarily unavailable. Please try again."
+                });
+            }
         }
 
         public IActionResult Cart()

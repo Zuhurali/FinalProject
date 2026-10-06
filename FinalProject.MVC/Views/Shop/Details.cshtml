@@ -60,24 +60,57 @@
                     
                     <!-- Rating -->
                     <div class="ms-woocommerce-product-rating woocommerce-product-rating">
-                        <ul class="ms-rating-icon">
+                        <ul class="ms-rating-icon" id="averageRatingStars">
                             @for (int i = 1; i <= 5; i++)
                             {
-                                if (i <= Math.Floor(Model.Rating))
-                                {
-                                    <li><i class="fa-sharp fa-solid fa-star"></i></li>
-                                }
-                                else if (i <= Model.Rating)
-                                {
-                                    <li><i class="fa-solid fa-star-half-stroke"></i></li>
-                                }
-                                else
-                                {
-                                    <li><i class="fa-light fa-star"></i></li>
-                                }
+                                <li><i class="@(i <= Math.Round(Model.Rating) ? "fa-sharp fa-solid fa-star" : "fa-light fa-star")"></i></li>
                             }
                         </ul>
-                        <a href="#reviews" class="woocommerce-review-link" rel="nofollow">(@Model.Rating.ToString("0.0") Rating)</a>
+                        <a href="#reviews" class="woocommerce-review-link" id="averageRatingText" rel="nofollow">
+                            @if (Model.RatingCount == 0)
+                            {
+                                <text>No ratings</text>
+                            }
+                            else
+                            {
+                                <text>@Model.Rating.ToString("0.0") (@Model.RatingCount @(Model.RatingCount == 1 ? "Rating" : "Ratings"))</text>
+                            }
+                        </a>
+                    </div>
+
+                    <div class="product-user-rating">
+                        <h6>Your Rating</h6>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form id="productRatingForm">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" id="selectedRating" value="@((int?)ViewBag.UserRating ?? 0)" />
+                                <div class="user-rating-stars" role="radiogroup" aria-label="Your rating">
+                                    @for (var i = 1; i <= 5; i++)
+                                    {
+                                        <button type="button"
+                                                class="rating-star @(i <= ((int?)ViewBag.UserRating ?? 0) ? "selected" : "")"
+                                                data-rating="@i"
+                                                aria-label="@i star rating"
+                                                aria-pressed="@(i <= ((int?)ViewBag.UserRating ?? 0) ? "true" : "false")">
+                                            <i class="fa-solid fa-star"></i>
+                                        </button>
+                                    }
+                                </div>
+                                <button type="submit" class="rts-btn btn-primary radius-small" id="submitRatingBtn">
+                                    Submit Rating
+                                </button>
+                                <p id="ratingMessage" class="mt--10" aria-live="polite"></p>
+                            </form>
+                        }
+                        else
+                        {
+                            <p>
+                                <a asp-controller="Account"
+                                   asp-action="SignIn"
+                                   asp-route-returnUrl="@Context.Request.Path">Please sign in to rate this product.</a>
+                            </p>
+                        }
                     </div>
                     
                     <!-- Price -->
@@ -392,11 +425,104 @@
         display: block;
         margin-bottom: 5px;
     }
+
+    .product-user-rating {
+        margin: 24px 0;
+        padding: 20px;
+        border: 1px solid rgba(85, 85, 85, 0.15);
+        border-radius: 12px;
+    }
+
+    .product-user-rating h6 {
+        margin-bottom: 10px;
+    }
+
+    .user-rating-stars {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 15px;
+    }
+
+    .rating-star {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #c9c9c9;
+        font-size: 25px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .rating-star.selected,
+    .rating-star:hover {
+        color: var(--color-primary);
+    }
 </style>
 
 <script>
     $(document).ready(function() {
         const unitPrice = parseFloat($('#unitPrice').val());
+
+        function paintUserRating(value) {
+            $('.rating-star').each(function() {
+                const active = Number($(this).data('rating')) <= value;
+                $(this).toggleClass('selected', active).attr('aria-pressed', active);
+            });
+        }
+
+        function paintAverageRating(average, count) {
+            $('#averageRatingStars li i').each(function(index) {
+                $(this)
+                    .toggleClass('fa-sharp fa-solid', index < Math.round(average))
+                    .toggleClass('fa-light', index >= Math.round(average));
+            });
+            $('#averageRatingText').text(
+                count === 0
+                    ? 'No ratings'
+                    : average.toFixed(1) + ' (' + count + (count === 1 ? ' Rating)' : ' Ratings)'));
+        }
+
+        $('.rating-star').on('click', function() {
+            const value = Number($(this).data('rating'));
+            $('#selectedRating').val(value);
+            paintUserRating(value);
+        });
+
+        $('#productRatingForm').on('submit', function(event) {
+            event.preventDefault();
+            const rating = Number($('#selectedRating').val());
+            const button = $('#submitRatingBtn');
+            const message = $('#ratingMessage');
+
+            if (rating < 1 || rating > 5) {
+                message.text('Choose a rating from 1 to 5 stars.').css('color', '#dc3545');
+                return;
+            }
+
+            button.prop('disabled', true).text('Saving...');
+            $.ajax({
+                url: '@Url.Action("SubmitRating", "Shop")',
+                type: 'POST',
+                data: {
+                    productId: @Model.Id,
+                    rating: rating,
+                    __RequestVerificationToken: $('#productRatingForm input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    paintUserRating(response.userRating);
+                    paintAverageRating(response.averageRating, response.totalCount);
+                    message.text(response.message).css('color', '#28a745');
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    message.text(response?.message || 'Ratings are temporarily unavailable. Please try again.')
+                        .css('color', '#dc3545');
+                },
+                complete: function() {
+                    button.prop('disabled', false).text('Submit Rating');
+                }
+            });
+        });
         
         // Function to update total price
         function updateTotalPrice() {

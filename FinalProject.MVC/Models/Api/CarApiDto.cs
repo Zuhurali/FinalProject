@@ -89,6 +89,16 @@ public class CarApiDto
 
     public bool IsNew { get; set; }
 
+    public string? OwnerId { get; set; }
+
+    public string? OwnerDisplayName { get; set; }
+
+    public string Status { get; set; } = "Active";
+
+    public DateTime CreatedAt { get; set; }
+
+    public DateTime? UpdatedAt { get; set; }
+
     public string DriveType { get; set; } = string.Empty;
 
     public BrandApiDto? Brand { get; set; }

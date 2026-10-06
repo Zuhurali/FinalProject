@@ -33,6 +33,7 @@ public class CarService : ICarService
                 .Take(query.PageSize)
                 .Include(car => car.Brand)
                 .Include(car => car.Category)
+                .Include(car => car.Owner)
                 .Include(car => car.Images)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
@@ -89,10 +90,171 @@ public class CarService : ICarService
             .AsNoTracking()
             .Include(item => item.Brand)
             .Include(item => item.Category)
+            .Include(item => item.Owner)
             .Include(item => item.Images)
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         return car?.ToResponse();
+    }
+
+    public async Task<IReadOnlyList<CarResponse>> GetOwnedAsync(
+        string ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        var cars = await _dbContext.Cars
+            .AsNoTracking()
+            .Where(car => car.OwnerId == ownerId)
+            .OrderByDescending(car => car.CreatedAt)
+            .Include(car => car.Brand)
+            .Include(car => car.Category)
+            .Include(car => car.Owner)
+            .Include(car => car.Images)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+
+        return cars.Select(car => car.ToResponse()).ToList();
+    }
+
+    public async Task<CarResponse?> CreateAsync(
+        string ownerId,
+        SaveCarRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await _dbContext.IdentityUsers.AnyAsync(user => user.Id == ownerId, cancellationToken)
+            || !await LookupsExistAsync(request.BrandId, request.CategoryId, cancellationToken))
+        {
+            return null;
+        }
+
+        var now = DateTime.UtcNow;
+        var car = new Models.Entities.Car
+        {
+            BrandId = request.BrandId,
+            CategoryId = request.CategoryId,
+            Model = request.Model.Trim(),
+            Year = request.Year,
+            Price = request.Price,
+            Mileage = request.Mileage,
+            FuelType = request.FuelType.Trim(),
+            Transmission = request.Transmission.Trim(),
+            Color = request.Color.Trim(),
+            Description = request.Description.Trim(),
+            OwnerId = ownerId,
+            Status = request.Status,
+            IsNew = true,
+            CreatedAt = now,
+            Images =
+            {
+                new Models.Entities.CarImage
+                {
+                    ImageUrl = request.ImageUrl.Trim(),
+                    IsMain = true,
+                    DisplayOrder = 0
+                }
+            }
+        };
+
+        _dbContext.Cars.Add(car);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return await GetByIdAsync(car.Id, cancellationToken);
+    }
+
+    public async Task<CarResponse?> UpdateAsync(
+        int id,
+        SaveCarRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await LookupsExistAsync(request.BrandId, request.CategoryId, cancellationToken))
+        {
+            return null;
+        }
+
+        var car = await _dbContext.Cars
+            .Include(item => item.Images)
+            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (car == null)
+        {
+            return null;
+        }
+
+        car.BrandId = request.BrandId;
+        car.CategoryId = request.CategoryId;
+        car.Model = request.Model.Trim();
+        car.Year = request.Year;
+        car.Price = request.Price;
+        car.Mileage = request.Mileage;
+        car.FuelType = request.FuelType.Trim();
+        car.Transmission = request.Transmission.Trim();
+        car.Color = request.Color.Trim();
+        car.Description = request.Description.Trim();
+        car.Status = request.Status;
+        car.UpdatedAt = DateTime.UtcNow;
+
+        var image = car.Images.OrderBy(item => item.DisplayOrder).FirstOrDefault();
+        if (image == null)
+        {
+            car.Images.Add(new Models.Entities.CarImage
+            {
+                ImageUrl = request.ImageUrl.Trim(),
+                IsMain = true,
+                DisplayOrder = 0
+            });
+        }
+        else
+        {
+            image.ImageUrl = request.ImageUrl.Trim();
+            image.IsMain = true;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return await GetByIdAsync(id, cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var car = await _dbContext.Cars.FindAsync([id], cancellationToken);
+        if (car == null)
+        {
+            return false;
+        }
+
+        _dbContext.Cars.Remove(car);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<CarLookupResponse> GetLookupsAsync(CancellationToken cancellationToken = default)
+    {
+        var brands = await _dbContext.Brands
+            .AsNoTracking()
+            .OrderBy(brand => brand.Name)
+            .Select(brand => new BrandResponse
+            {
+                Id = brand.Id,
+                Name = brand.Name,
+                CreatedAt = brand.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+        var categories = await _dbContext.Categories
+            .AsNoTracking()
+            .OrderBy(category => category.Name)
+            .Select(category => new CategoryResponse
+            {
+                Id = category.Id,
+                Name = category.Name
+            })
+            .ToListAsync(cancellationToken);
+
+        return new CarLookupResponse(brands, categories);
+    }
+
+    private async Task<bool> LookupsExistAsync(
+        int brandId,
+        int categoryId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.Brands.AnyAsync(brand => brand.Id == brandId, cancellationToken)
+            && await _dbContext.Categories.AnyAsync(category => category.Id == categoryId, cancellationToken);
     }
 
     private static IQueryable<Models.Entities.Car> ApplyFilters(IQueryable<Models.Entities.Car> cars, CarListQuery query)

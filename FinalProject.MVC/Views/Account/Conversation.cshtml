@@ -1,0 +1,51 @@
+@model FinalProject.MVC.Models.Api.ConversationDetailsDto
+@{
+    ViewData["Title"] = $"Conversation - {Model.CarName}";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container"><div class="breadcrumb-area-wrapper">
+        <h1 class="title">Conversation</h1>
+        <div class="nav-bread-crumb"><a asp-action="Messages">Messages</a><a href="#" class="current">@Model.CarName</a></div>
+    </div></div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container"><div class="row g-5">
+        <div class="col-lg-3"><partial name="_AccountNavigation" /></div>
+        <div class="col-lg-9">
+            <div class="conversation-header mb-4">
+                @if (!string.IsNullOrWhiteSpace(Model.CarImageUrl)) { <img src="@Url.Content(Model.CarImageUrl)" alt="@Model.CarName"> }
+                <div><h3>@Model.CarName</h3><p>@Model.Subject</p><a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.CarId">View listing</a></div>
+            </div>
+            @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+            <div class="message-thread">
+                @foreach (var message in Model.Messages)
+                {
+                    <div class="message-bubble @(message.SenderId == currentUserId ? "mine" : "theirs")">
+                        <strong>@message.SenderDisplayName</strong>
+                        <p>@message.Content</p>
+                        <time>@message.CreatedAt.ToLocalTime().ToString("g")</time>
+                    </div>
+                }
+            </div>
+            <form asp-action="Reply" asp-route-id="@Model.Id" method="post" class="message-reply-form mt-4">
+                @Html.AntiForgeryToken()
+                <textarea name="content" rows="4" class="input-form" placeholder="Write a reply..." required maxlength="4000"></textarea>
+                <button type="submit" class="rts-btn btn-primary radius-small mt-3">Send Reply</button>
+            </form>
+        </div>
+    </div></div>
+</div>
+
+<style>
+    .conversation-header { display:flex; gap:18px; align-items:center; padding:18px; border:1px solid #eee; border-radius:12px; }
+    .conversation-header img { width:130px; height:85px; object-fit:cover; border-radius:9px; }
+    .message-thread { display:flex; flex-direction:column; gap:14px; padding:20px; background:#f7f7f7; border-radius:12px; }
+    .message-bubble { max-width:78%; padding:14px 18px; border-radius:14px; background:#fff; }
+    .message-bubble.mine { align-self:flex-end; background:#fff0ea; }
+    .message-bubble.theirs { align-self:flex-start; }
+    .message-bubble p { margin:6px 0; white-space:pre-wrap; }
+    .message-bubble time { font-size:12px; color:var(--color-body); }
+</style>

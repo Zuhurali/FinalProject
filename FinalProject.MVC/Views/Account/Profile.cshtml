@@ -1,0 +1,37 @@
+@model AccountProfileViewModel
+@{
+    ViewData["Title"] = "Profile Settings - AutoVault";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container"><div class="breadcrumb-area-wrapper">
+        <h1 class="title">Profile Settings</h1>
+        <div class="nav-bread-crumb"><a asp-action="Index">Account</a><a href="#" class="current">Profile</a></div>
+    </div></div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container"><div class="row g-5">
+        <div class="col-lg-3"><partial name="_AccountNavigation" /></div>
+        <div class="col-lg-9">
+            <div class="mian-wrapper-form">
+                <h3 class="title mb-4">Personal Information</h3>
+                @if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
+                <form asp-action="Profile" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="row">
+                        <div class="col-md-6"><input asp-for="FirstName" placeholder="First Name"><span asp-validation-for="FirstName" class="text-danger"></span></div>
+                        <div class="col-md-6"><input asp-for="LastName" placeholder="Last Name"><span asp-validation-for="LastName" class="text-danger"></span></div>
+                    </div>
+                    <label asp-for="Email">Email</label>
+                    <input asp-for="Email" readonly>
+                    <label asp-for="PhoneNumber">Phone</label>
+                    <input asp-for="PhoneNumber" placeholder="Phone Number">
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    <button type="submit" class="rts-btn btn-primary radius-small mt-3">Save Profile</button>
+                </form>
+            </div>
+        </div>
+    </div></div>
+</div>

@@ -46,6 +46,13 @@ public class Car
 
     public bool IsFeatured { get; set; }
 
+    [MaxLength(450)]
+    public string? OwnerId { get; set; }
+
+    [Required]
+    [MaxLength(30)]
+    public string Status { get; set; } = "Active";
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
@@ -54,5 +61,11 @@ public class Car
 
     public Category Category { get; set; } = null!;
 
+    public IdentityUserReference? Owner { get; set; }
+
     public ICollection<CarImage> Images { get; set; } = new List<CarImage>();
+
+    public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+
+    public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
 }

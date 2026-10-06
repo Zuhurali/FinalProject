@@ -59,6 +59,27 @@ builder.Services.AddHttpClient<ICarApiService, CarApiService>(client =>
     PooledConnectionLifetime = TimeSpan.FromSeconds(30),
     ConnectTimeout = TimeSpan.FromSeconds(5)
 });
+builder.Services.AddHttpClient<IProductRatingApiService, ProductRatingApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(20);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromSeconds(30),
+    ConnectTimeout = TimeSpan.FromSeconds(5)
+});
+builder.Services.AddHttpClient<IMarketplaceApiService, MarketplaceApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(20);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromSeconds(30),
+    ConnectTimeout = TimeSpan.FromSeconds(5)
+});
+builder.Services.AddSingleton<IApiAccessTokenService, ApiAccessTokenService>();
 
 // Add session support
 builder.Services.AddDistributedMemoryCache();
@@ -93,4 +114,27 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+await SeedIdentityRolesAsync(app);
+
 app.Run();
+
+static async Task SeedIdentityRolesAsync(WebApplication app)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    foreach (var roleName in new[] { "Admin", "User" })
+    {
+        if (await roleManager.RoleExistsAsync(roleName))
+        {
+            continue;
+        }
+
+        var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Unable to create the {roleName} role: {string.Join(", ", result.Errors.Select(error => error.Description))}");
+        }
+    }
+}

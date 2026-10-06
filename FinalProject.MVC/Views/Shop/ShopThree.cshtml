@@ -210,6 +210,11 @@
                                                 }
                                             }
                                         </ul>
+                                        <small class="product-rating-summary">
+                                            @(product.RatingCount == 0
+                                                ? "No ratings"
+                                                : $"{product.Rating:0.0} ({product.RatingCount})")
+                                        </small>
                                         <h6 class="title">
                                             <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">@product.Name</a>
                                         </h6>
@@ -368,6 +373,9 @@
                     starsHtml += '<li><i class="rt-icon-star" style="color: #ddd;"></i></li>';
                 }
             }
+            const ratingSummary = product.ratingCount === 0
+                ? 'No ratings'
+                : Number(product.rating).toFixed(1) + ' (' + product.ratingCount + ')';
 
             // Convert ~ path to relative path
             let imagePath = product.imagePath;
@@ -387,6 +395,7 @@
                             <ul class="star-rating">
                                 ${starsHtml}
                             </ul>
+                            <small class="product-rating-summary">${ratingSummary}</small>
                             <h6 class="title">
                                 <a href="/Shop/Details/${product.id}">${product.name}</a>
                             </h6>

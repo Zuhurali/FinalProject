@@ -10,6 +10,7 @@ namespace FinalProject.MVC.Models
         public string CarModel { get; set; } = string.Empty;
         public string ImagePath { get; set; } = string.Empty;
         public double Rating { get; set; }
+        public int RatingCount { get; set; }
         public string Description { get; set; } = string.Empty;
         public bool InStock { get; set; } = true;
         public string Color { get; set; } = string.Empty;

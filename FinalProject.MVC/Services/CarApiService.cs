@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FinalProject.MVC.Models.Api;
@@ -96,30 +97,147 @@ public class CarApiService : ICarApiService
         return car;
     }
 
-    private async Task<HttpResponseMessage> SendAsync(string relativeUrl, CancellationToken cancellationToken)
+    public async Task<CarLookupDto> GetLookupsAsync(CancellationToken cancellationToken = default)
     {
-        const int attempts = 20;
-        for (var attempt = 1; attempt <= attempts; attempt++)
+        using var response = await SendAsync("api/cars/lookups", cancellationToken);
+        if (!response.IsSuccessStatusCode)
         {
-            try
-            {
-                return await _httpClient.GetAsync(relativeUrl, cancellationToken);
-            }
-            catch (HttpRequestException) when (attempt < attempts && !cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-            }
-            catch (HttpRequestException exception)
-            {
-                throw new CarApiException("The car API could not be reached.", exception);
-            }
-            catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-            {
-                throw new CarApiException("The car API request timed out.", exception);
-            }
+            throw new CarApiException(FailureMessage(response));
         }
 
-        throw new CarApiException("The car API could not be reached.");
+        return await response.Content.ReadFromJsonAsync<CarLookupDto>(JsonOptions, cancellationToken)
+            ?? throw new CarApiException("The car API returned unreadable lookup data.");
+    }
+
+    public async Task<IReadOnlyList<CarApiDto>> GetMyCarsAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            "api/cars/mine",
+            accessToken,
+            null,
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<CarApiDto>>(
+                   JsonOptions,
+                   cancellationToken)
+               ?? [];
+    }
+
+    public async Task<CarApiDto> CreateCarAsync(
+        SaveCarDto car,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Post,
+            "api/cars",
+            accessToken,
+            JsonContent.Create(car),
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<CarApiDto>(JsonOptions, cancellationToken)
+            ?? throw new CarApiException("The car API returned an unreadable listing.");
+    }
+
+    public async Task<CarApiDto> UpdateCarAsync(
+        int id,
+        SaveCarDto car,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Put,
+            $"api/cars/{id}",
+            accessToken,
+            JsonContent.Create(car),
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<CarApiDto>(JsonOptions, cancellationToken)
+            ?? throw new CarApiException("The car API returned an unreadable listing.");
+    }
+
+    public async Task DeleteCarAsync(
+        int id,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Delete,
+            $"api/cars/{id}",
+            accessToken,
+            null,
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+    }
+
+    private async Task<HttpResponseMessage> SendAsync(string relativeUrl, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _httpClient.GetAsync(relativeUrl, cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            throw new CarApiException("The car API could not be reached.", exception);
+        }
+        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new CarApiException("The car API request timed out.", exception);
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendAuthorizedAsync(
+        HttpMethod method,
+        string relativeUrl,
+        string accessToken,
+        HttpContent? content,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(method, relativeUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = content;
+        try
+        {
+            return await _httpClient.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            throw new CarApiException("The car API could not be reached.", exception);
+        }
+        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new CarApiException("The car API request timed out.", exception);
+        }
+    }
+
+    private static async Task EnsureSuccessAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var message = FailureMessage(response);
+        try
+        {
+            using var document = JsonDocument.Parse(
+                await response.Content.ReadAsStringAsync(cancellationToken));
+            if (document.RootElement.TryGetProperty("message", out var value)
+                && !string.IsNullOrWhiteSpace(value.GetString()))
+            {
+                message = value.GetString()!;
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        throw new CarApiException(message);
     }
 
     private static CarApiQuery Copy(CarApiQuery? query)
