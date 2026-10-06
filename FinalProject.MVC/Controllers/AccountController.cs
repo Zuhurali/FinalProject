@@ -421,7 +421,7 @@ namespace FinalProject.MVC.Controllers
                 await CreateAccessTokenAsync(user),
                 HttpContext.RequestAborted);
             var car = cars.SingleOrDefault(item => item.Id == id);
-            if (car == null && !User.IsInRole("Admin"))
+            if (car == null && !User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.SuperAdmin))
             {
                 return Forbid();
             }

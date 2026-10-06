@@ -39,16 +39,21 @@ public static class IdentityRoleSeeder
             }
         }
 
-        var email = configuration["AdminSeed:SuperAdminEmail"];
-        var password = configuration["AdminSeed:SuperAdminPassword"];
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        var email = configuration["AdminSeed:SuperAdminEmail"]?.Trim();
+        if (string.IsNullOrWhiteSpace(email))
         {
             return;
         }
 
+        var password = configuration["AdminSeed:SuperAdminPassword"];
         var superAdmin = await userManager.FindByEmailAsync(email);
         if (superAdmin == null)
         {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                return;
+            }
+
             superAdmin = new ApplicationUser
             {
                 UserName = email,
