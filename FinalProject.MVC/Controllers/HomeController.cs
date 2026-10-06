@@ -1,4 +1,5 @@
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -66,9 +67,21 @@ namespace FinalProject.MVC.Controllers
                     group => group.Key,
                     group => group.Select(car => car.Model).Distinct().OrderBy(model => model).ToArray());
 
+            IReadOnlyList<BrandApiDto> brands = Array.Empty<BrandApiDto>();
+            try
+            {
+                brands = (await _carApi.GetLookupsAsync(HttpContext.RequestAborted)).Brands;
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Home brand list could not be loaded.");
+            }
+
             ViewData["CategoryLabels"] = labels;
             ViewData["SearchMakes"] = makes;
             ViewData["ModelsByMake"] = modelsByMake;
+            ViewData["HomeCars"] = cars;
+            ViewData["HomeBrands"] = brands;
             return View();
         }
 

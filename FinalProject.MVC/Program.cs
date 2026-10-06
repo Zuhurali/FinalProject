@@ -1,4 +1,5 @@
 using FinalProject.MVC.Data;
+using FinalProject.MVC.Hosting;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
@@ -111,6 +112,12 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DevelopmentApiHost));
+    await DevelopmentApiHost.EnsureStartedAsync(app.Environment.ContentRootPath, apiBaseUrl, app.Lifetime, startupLogger);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

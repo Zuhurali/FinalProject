@@ -1,4 +1,5 @@
 using FinalProject.Data;
+using FinalProject.Hosting;
 using FinalProject.Services;
 using FinalProject.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+
+DevelopmentHostAnnouncement.Announce();
 
 var builder = WebApplication.CreateBuilder(args);
 

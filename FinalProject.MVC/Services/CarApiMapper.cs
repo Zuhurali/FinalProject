@@ -11,9 +11,27 @@ public static class CarApiMapper
     {
         var brand = dto.Brand?.Name ?? string.Empty;
         var model = dto.Model ?? string.Empty;
-        var name = string.IsNullOrWhiteSpace(dto.Description)
-            ? $"{brand} {model}".Trim()
-            : dto.Description;
+        var description = dto.Description ?? string.Empty;
+        var fallbackName = $"{brand} {model}".Trim();
+        var name = string.IsNullOrWhiteSpace(description)
+            ? fallbackName
+            : description.Split(". ", 2, StringSplitOptions.None)[0];
+        var seats = 0;
+        var driveType = dto.DriveType ?? string.Empty;
+        var specIndex = description.IndexOf(". ", StringComparison.Ordinal);
+        if (specIndex >= 0)
+        {
+            var spec = description[(specIndex + 2)..].Trim().TrimEnd('.');
+            var seatSplit = spec.Split(" seats, ", 2, StringSplitOptions.None);
+            if (seatSplit.Length == 2 && int.TryParse(seatSplit[0], out var parsedSeats))
+            {
+                seats = parsedSeats;
+                if (string.IsNullOrWhiteSpace(driveType))
+                {
+                    driveType = seatSplit[1];
+                }
+            }
+        }
 
         return new Car
         {
@@ -28,12 +46,12 @@ public static class CarApiMapper
             Fuel = dto.FuelType,
             Transmission = dto.Transmission,
             Color = dto.Color,
-            DriveType = dto.DriveType ?? string.Empty,
-            Description = name,
+            DriveType = driveType,
+            Description = string.IsNullOrWhiteSpace(description) ? name : description,
             ImagePath = NormalizeImagePath(dto.MainImage),
             ImageCount = dto.Images == null || dto.Images.Count == 0 ? 1 : dto.Images.Count,
             Badge = dto.IsNew ? "New" : string.Empty,
-            Seats = 0,
+            Seats = seats,
             InStock = dto.Status == "Active",
             OwnerId = dto.OwnerId,
             OwnerDisplayName = dto.OwnerDisplayName,

@@ -316,7 +316,8 @@ namespace FinalProject.MVC.Controllers
         private async Task<CarListingResult> BuildListingAsync(CarListingQuery query, IReadOnlyList<CarApiDto> catalog)
         {
             var catalogCars = catalog.Select(CarApiMapper.ToCar).ToList();
-            if (!TryCreateApiQuery(query, catalog, CarListingResult.PageSize, out var apiQuery))
+            var brandId = await ResolveBrandIdAsync(query.Make, catalog);
+            if (!TryCreateApiQuery(query, catalog, CarListingResult.PageSize, brandId, out var apiQuery))
             {
                 return ListingFrom(query, catalogCars, Array.Empty<Car>(), query.Page < 1 ? 1 : query.Page, 0, 0);
             }
@@ -339,7 +340,8 @@ namespace FinalProject.MVC.Controllers
 
         private async Task<List<Car>> LoadMatchingCarsAsync(CarListingQuery query, IReadOnlyList<CarApiDto> catalogDtos)
         {
-            if (!TryCreateApiQuery(query, catalogDtos, CarApiQuery.MaxPageSize, out var apiQuery))
+            var brandId = await ResolveBrandIdAsync(query.Make, catalogDtos);
+            if (!TryCreateApiQuery(query, catalogDtos, CarApiQuery.MaxPageSize, brandId, out var apiQuery))
             {
                 return new List<Car>();
             }
@@ -348,7 +350,24 @@ namespace FinalProject.MVC.Controllers
             return matches.Select(CarApiMapper.ToCar).ToList();
         }
 
-        private static bool TryCreateApiQuery(CarListingQuery query, IReadOnlyList<CarApiDto> catalog, int pageSize, out CarApiQuery apiQuery)
+        private async Task<int?> ResolveBrandIdAsync(string? make, IReadOnlyList<CarApiDto> catalog)
+        {
+            if (string.IsNullOrWhiteSpace(make) || make == "All Makes")
+            {
+                return null;
+            }
+
+            var fromCatalog = catalog.FirstOrDefault(car => string.Equals(car.Brand?.Name, make, StringComparison.OrdinalIgnoreCase))?.Brand?.Id;
+            if (fromCatalog != null)
+            {
+                return fromCatalog;
+            }
+
+            var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+            return lookups.Brands.FirstOrDefault(brand => string.Equals(brand.Name, make, StringComparison.OrdinalIgnoreCase))?.Id;
+        }
+
+        private static bool TryCreateApiQuery(CarListingQuery query, IReadOnlyList<CarApiDto> catalog, int pageSize, int? brandId, out CarApiQuery apiQuery)
         {
             apiQuery = new CarApiQuery
             {
@@ -372,7 +391,6 @@ namespace FinalProject.MVC.Controllers
 
             if (HasFilterValue(query.Make))
             {
-                var brandId = catalog.FirstOrDefault(car => string.Equals(car.Brand?.Name, query.Make, StringComparison.OrdinalIgnoreCase))?.Brand?.Id;
                 if (brandId == null)
                 {
                     return false;

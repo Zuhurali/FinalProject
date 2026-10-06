@@ -289,14 +289,6 @@
                                         <img src="~/assets/images/logo/footer-logo.svg" width="99" alt="AutoVault">
                                     </a>
                                     <p class="desc">Your trusted partner for quality vehicles and exceptional service. Find your perfect car with confidence at AutoVault.</p>
-                                    <div class="social-area-transparent">
-                                        <ul class="wrapper">
-                                            <li><a href="#"><i class="fab fa-facebook-f"></i></a></li>
-                                            <li><a href="#"><i class="fab fa-twitter"></i></a></li>
-                                            <li><a href="#"><i class="fab fa-instagram"></i></a></li>
-                                            <li><a href="#"><i class="fab fa-youtube"></i></a></li>
-                                        </ul>
-                                    </div>
                                 </div>
                                 <div class="single-wized">
                                     <div class="wized-title">
@@ -305,10 +297,10 @@
                                     <div class="wized-body">
                                         <ul class="menu-nav">
                                             <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                                            <li><a href="#">About Us</a></li>
-                                            <li><a href="#">Cars</a></li>
-                                            <li><a href="#">Services</a></li>
-                                            <li><a href="#">Contact</a></li>
+                                            <li><a asp-controller="About" asp-action="Index">About Us</a></li>
+                                            <li><a asp-controller="Cars" asp-action="Index">Cars</a></li>
+                                            <li><a asp-controller="Services" asp-action="Index">Services</a></li>
+                                            <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
                                         </ul>
                                     </div>
                                 </div>

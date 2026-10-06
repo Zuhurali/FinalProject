@@ -134,7 +134,7 @@
             else if (Model.Cars.Count == 0)
             {
                 <div class="col-12">
-                    <h3 class="title text-center">@(Model.CategoryRequested ? "No cars found for this category." : "No cars found.")</h3>
+                    <h3 class="title text-center">@(string.IsNullOrWhiteSpace(Model.Query.Make) ? (Model.CategoryRequested ? "No cars found for this category." : "No cars found.") : $"No {Model.Query.Make} vehicles are currently in the catalog.")</h3>
                 </div>
             }
             @foreach (var car in Model.Cars)
@@ -167,6 +167,7 @@
                         <div class="content-area">
                             <h6 class="title"><a asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
                             <ul class="feature-area">
+                                <li>@car.Year</li>
                                 <li>
                                     <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
                                     @car.Mileage.ToString("N0") Miles

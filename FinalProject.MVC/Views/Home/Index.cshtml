@@ -4,8 +4,32 @@
     var categoryLabels = ViewData["CategoryLabels"] as IReadOnlyDictionary<string, string>;
     var searchMakes = ViewData["SearchMakes"] as IEnumerable<string> ?? Enumerable.Empty<string>();
     var modelsByMake = ViewData["ModelsByMake"] as IReadOnlyDictionary<string, string[]> ?? new Dictionary<string, string[]>();
+    var homeCars = ViewData["HomeCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
+    var homeBrands = ViewData["HomeBrands"] as IEnumerable<BrandApiDto> ?? Enumerable.Empty<BrandApiDto>();
+    var newCars = homeCars.Where(car => car.Badge == "New").ToList();
+    var usedCars = homeCars.Where(car => car.Badge != "New").ToList();
+    var trendingCars = homeCars.OrderByDescending(car => car.Year).ThenBy(car => car.Name).Take(6).ToList();
+    var stockCars = homeCars.Where(car => car.InStock).ToList();
+    var featuredCars = homeCars
+        .OrderByDescending(car => car.Make.Contains("Mercedes", StringComparison.OrdinalIgnoreCase))
+        .ThenByDescending(car => car.Year)
+        .ThenBy(car => car.Name)
+        .Take(6)
+        .ToList();
+    BrandApiDto? MatchBrand(string name) =>
+        homeBrands.FirstOrDefault(brand => string.Equals(brand.Name, name, StringComparison.OrdinalIgnoreCase));
     string CategoryLabel(string name) =>
         categoryLabels != null && categoryLabels.TryGetValue(name, out var label) ? label : "—";
+    var premiumBrands = new (string? Image, string Name, string Delay)[]
+    {
+        ("~/assets/images/brand/01-w.svg", "Jeep", ".2s"),
+        ("~/assets/images/brand/02.svg", "Ford", ".4s"),
+        (null, "Mazda", ".6s"),
+        ("~/assets/images/brand/04.svg", "BMW", ".8s"),
+        ("~/assets/images/brand/05.svg", "Honda", "1s"),
+        ("~/assets/images/brand/06.svg", "Audi", "1.2s"),
+        ("~/assets/images/brand/07.svg", "Nissan", "1.4s")
+    };
 }
 
 <style>
@@ -118,6 +142,217 @@
         .hero-search-form .select-area-down {
             max-width: 100%;
         }
+    }
+    .rts-brand-area.home-brand-area .section-inner ul {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(120px, 1fr));
+        gap: 24px;
+        width: 100%;
+    }
+    .rts-brand-area.home-brand-area .section-inner ul li {
+        width: 100%;
+        height: 150px;
+        line-height: normal;
+        background: #fff;
+        transition: var(--transition);
+    }
+    .rts-brand-area.home-brand-area .section-inner ul li:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 16px 35px rgba(18, 18, 18, 0.08);
+        transform: translateY(-4px);
+    }
+    .rts-brand-area.home-brand-area .section-inner ul li a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 30px 20px;
+    }
+    .rts-brand-area.home-brand-area .section-inner ul li img {
+        display: block;
+        width: auto;
+        max-width: 126px;
+        max-height: 64px;
+        opacity: 1;
+    }
+    .home-brand-wordmark {
+        color: #231f20;
+        font-family: var(--font-primary);
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+    .rts-portfolio-area.home-cars-area {
+        overflow: hidden;
+    }
+    .rts-portfolio-area.home-cars-area .section-inner {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 1320px;
+        padding: 0 12px;
+    }
+    .home-car-slider {
+        overflow: hidden;
+        padding: 5px 2px 70px;
+    }
+    .home-car-slider .swiper-slide {
+        height: auto;
+        padding-bottom: 0;
+    }
+    .home-car-slider .home-car-card {
+        height: 100%;
+        border-radius: 16px;
+        border: 1px solid rgba(85, 85, 85, 0.15);
+        background: var(--color-white);
+        overflow: hidden;
+    }
+    .home-car-slider .home-car-card .image-area {
+        height: 260px;
+        border-radius: 0;
+        background: #f4f5f7;
+    }
+    .home-car-slider .home-car-card .image-area > a {
+        display: block;
+        height: 100%;
+    }
+    .home-car-slider .home-car-card .image-area img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    .home-car-slider .home-car-card .price {
+        display: block;
+        top: 22px;
+        left: 22px;
+        transform: scale(1);
+        font-size: 18px;
+    }
+    .home-car-slider .home-car-brand {
+        position: absolute;
+        right: 22px;
+        top: 22px;
+        z-index: 2;
+        padding: 8px 13px;
+        border-radius: 30px;
+        background: var(--color-primary);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1;
+    }
+    .home-car-slider .home-car-card .content-area {
+        padding: 26px 28px 28px;
+    }
+    .home-car-slider .home-car-card .content-area .title {
+        min-height: 29px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .home-car-slider .home-car-card .content-area .feature-area {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 12px 18px;
+        min-height: 40px;
+        margin-bottom: 24px;
+    }
+    .home-car-slider .home-car-card .button-area {
+        padding-top: 20px;
+        border-top: 1px solid rgba(85, 85, 85, 0.15);
+    }
+    .home-car-slider .home-car-card .button-area p {
+        color: var(--color-primary);
+    }
+    .home-car-slider .home-car-pagination {
+        bottom: 18px;
+        text-align: center;
+    }
+    .home-car-slider .swiper-button-next,
+    .home-car-slider .swiper-button-prev {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(18, 18, 18, 0.14);
+        color: var(--color-primary);
+    }
+    .home-car-slider .swiper-button-next::after,
+    .home-car-slider .swiper-button-prev::after {
+        font-size: 16px;
+        font-weight: 700;
+    }
+    @@media (max-width: 1199px) {
+        .rts-brand-area.home-brand-area .section-inner ul {
+            grid-template-columns: repeat(4, minmax(130px, 1fr));
+        }
+    }
+    @@media (max-width: 767px) {
+        .rts-brand-area.home-brand-area .section-inner ul {
+            grid-template-columns: repeat(2, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        .rts-brand-area.home-brand-area .section-inner ul li {
+            height: 125px;
+        }
+        .rts-portfolio-area.home-cars-area .section-inner {
+            padding: 0 15px;
+        }
+        .home-car-slider .home-car-card .image-area {
+            height: 235px;
+        }
+        .home-car-slider .swiper-button-next,
+        .home-car-slider .swiper-button-prev {
+            display: none;
+        }
+    }
+    .rts-feature-area,
+    .rts-feature-area .slider-area,
+    .rts-feature-area .featureSlider,
+    .rts-feature-area .featureSlider .swiper-wrapper,
+    .rts-feature-area .featureSlider .swiper-slide,
+    .rts-feature-area .feature-wrapper,
+    .rts-feature-area .feature-wrapper .image-area,
+    .rts-feature-area .feature-wrapper .image-area a {
+        background: #fff;
+    }
+    .rts-feature-area .featureSlider .swiper-slide {
+        height: auto;
+    }
+    .rts-feature-area .feature-wrapper .image-area {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        min-height: 0;
+    }
+    .rts-feature-area .feature-wrapper .image-area a {
+        display: block;
+        width: min(961px, 100%);
+        height: clamp(280px, 34vw, 480px);
+        overflow: hidden;
+    }
+    .rts-feature-area .feature-wrapper .image-area img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        margin: 0 auto;
+        object-fit: cover;
+        object-position: center;
+        background: transparent;
+    }
+    @@media (max-width: 767px) {
+        .rts-feature-area .slider-area {
+            margin-top: 40px;
+        }
+    }
+    .home-catalog-empty {
+        text-align: center;
+        padding: 40px 16px;
     }
 </style>
             <section class="rts-banner-area bg_image_one jarallax">
@@ -276,760 +511,72 @@
             <!-- Category Area End -->
 
             <!-- Portfolio Area Start -->
-            <section class="rts-portfolio-area rts-section-gap">
-                <div class="section-title-area2">
-                    <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Select Car</p>
-                    <h2 class="section-title wow move-right">Our Amazing <span>Car</span></h2>
-                </div>
-                <div class="tab-area">
-                    <ul class="nav nav-tabs" id="myTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="new-cars-tab" data-bs-toggle="tab" data-bs-target="#new-cars" type="button" role="tab" aria-controls="new-cars" aria-selected="true">New Cars</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="used-tab" data-bs-toggle="tab" data-bs-target="#used" type="button" role="tab" aria-controls="used" aria-selected="false">Used Cars</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="trending-tab" data-bs-toggle="tab" data-bs-target="#trending" type="button" role="tab" aria-controls="trending" aria-selected="false">Trending
-                                Cars</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false">In Stocks</button>
-                        </li>
-                    </ul>
-                </div>
-                <div class="section-inner mt--80 wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
-                    <div class=" tab-content" id="myTabContent">
-                        <div class="tab-pane fade show active" id="new-cars" role="tabpanel" aria-labelledby="new-cars-tab">
-                            <div class="slider-area">
-                                <div class="swiper projectSlider">
-                                    <div class="swiper-wrapper">
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1">
-                                                        <img src="~/assets/images/portfolio/01.webp" alt="">
-                                                    </a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
+            <section class="rts-portfolio-area home-cars-area rts-section-gap">
+                <div class="container">
+                    <div class="section-title-area2">
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Select Car</p>
+                        <h2 class="section-title wow move-right">Our Amazing <span>Car</span></h2>
+                    </div>
+                    <div class="tab-area">
+                        <ul class="nav nav-tabs" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="new-cars-tab" data-bs-toggle="tab" data-bs-target="#new-cars" type="button" role="tab" aria-controls="new-cars" aria-selected="true">New Cars</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="used-tab" data-bs-toggle="tab" data-bs-target="#used" type="button" role="tab" aria-controls="used" aria-selected="false">Used Cars</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="trending-tab" data-bs-toggle="tab" data-bs-target="#trending" type="button" role="tab" aria-controls="trending" aria-selected="false">Trending Cars</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false">In Stocks</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="section-inner mt--80 wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
+                        <div class="tab-content" id="myTabContent">
+                        @{
+                            var portfolioTabs = new (string Id, IReadOnlyList<Car> Cars, string Empty)[]
+                            {
+                                ("new-cars", newCars, "No new cars are currently listed."),
+                                ("used", usedCars, "No used cars are currently listed."),
+                                ("trending", trendingCars, "No cars are currently listed."),
+                                ("stocks", stockCars, "No cars are currently in stock.")
+                            };
+                        }
+                        @foreach (var tab in portfolioTabs)
+                        {
+                            <div class="tab-pane fade @(tab.Id == "new-cars" ? "show active" : "")" id="@tab.Id" role="tabpanel" aria-labelledby="@(tab.Id)-tab">
+                                @if (tab.Cars.Count == 0)
+                                {
+                                    <p class="home-catalog-empty">@tab.Empty</p>
+                                }
+                                else
+                                {
+                                    <div class="slider-area">
+                                        <div class="swiper home-car-slider">
+                                            <div class="swiper-wrapper">
+                                                @foreach (var car in tab.Cars)
+                                                {
+                                                    <div class="swiper-slide">
+                                                        <partial name="_CatalogCarCard" model="car" />
+                                                    </div>
+                                                }
                                             </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/01.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
+                                            <div class="swiper-pagination home-car-pagination"></div>
+                                            <div class="swiper-button-prev" aria-label="Previous car"></div>
+                                            <div class="swiper-button-next" aria-label="Next car"></div>
                                         </div>
                                     </div>
-                                    <div class="swiper-pagination-2"></div>
-                                </div>
+                                }
                             </div>
-                        </div>
-                        <div class="tab-pane fade" id="used" role="tabpanel" aria-labelledby="used-tab">
-                            <div class="slider-area">
-                                <div class="swiper projectSlider">
-                                    <div class="swiper-wrapper">
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/01.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/01.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-pagination-2"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="trending" role="tabpanel" aria-labelledby="trending-tab">
-                            <div class="slider-area">
-                                <div class="swiper projectSlider">
-                                    <div class="swiper-wrapper">
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/01.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                            4 Person
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/01.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                            4 Person
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-pagination-2"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="stocks" role="tabpanel" aria-labelledby="stocks-tab">
-                            <div class="slider-area">
-                                <div class="swiper projectSlider">
-                                    <div class="swiper-wrapper">
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/01.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                            4 Person
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/01.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/02.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">189,000$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Ferrari California</a></h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            14,500 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                            4 Person
-                                                        </li>
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="project-wrapper">
-                                                <div class="image-area">
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car"><img src="~/assets/images/portfolio/03.webp" alt=""></a>
-                                                </div>
-                                                <span class="price">14,500$</span>
-                                                <div class="content-area">
-                                                    <h5 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car">Sports Coupe</a>
-                                                    </h5>
-                                                    <ul class="feature-area">
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                            110 Miles
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                            Petrol
-                                                        </li>
-                                                        <li>
-                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                            Automatic
-                                                        </li>
-
-                                                    </ul>
-                                                    <a asp-controller="Cars" asp-action="Index" asp-route-category="Sports-Car" class="rts-btn btn-primary radius-big">View
-                                                        Details</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-pagination-2"></div>
-                                </div>
-                            </div>
+                        }
                         </div>
                     </div>
                 </div>
             </section>
             <!-- Portfolio Area End -->
+
 
             <!-- About Area Start -->
             <section class="rts-about-area rts-section-gapBottom">
@@ -1086,7 +633,7 @@
             <!-- Video Area End -->
 
             <!-- Brand Area Start -->
-            <section class="rts-brand-area rts-section-gap">
+            <section class="rts-brand-area home-brand-area rts-section-gap">
                 <div class="container">
                     <div class="section-title-area2">
                         <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Car Brand</p>
@@ -1094,13 +641,52 @@
                     </div>
                     <div class="section-inner mt--80">
                         <ul>
-                            <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
+                            @foreach (var brand in premiumBrands)
+                            {
+                                var match = MatchBrand(brand.Name);
+                                var openBmwListing = string.Equals(brand.Name, "BMW", StringComparison.OrdinalIgnoreCase);
+                                <li class="wow fadeInUp" data-wow-delay="@brand.Delay" data-wow-duration="1s">
+                                    @if (openBmwListing)
+                                    {
+                                        <a asp-controller="Cars" asp-action="Index" asp-route-make="BMW" aria-label="@brand.Name">
+                                            @if (brand.Image != null)
+                                            {
+                                                <img src="@Url.Content(brand.Image)" alt="@brand.Name logo">
+                                            }
+                                            else
+                                            {
+                                                <span class="home-brand-wordmark">@brand.Name</span>
+                                            }
+                                        </a>
+                                    }
+                                    else if (match != null)
+                                    {
+                                        <a asp-controller="Brand" asp-action="Details" asp-route-id="@match.Id" aria-label="@brand.Name">
+                                            @if (brand.Image != null)
+                                            {
+                                                <img src="@Url.Content(brand.Image)" alt="@brand.Name logo">
+                                            }
+                                            else
+                                            {
+                                                <span class="home-brand-wordmark">@brand.Name</span>
+                                            }
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Cars" asp-action="Index" asp-route-make="@brand.Name" aria-label="@brand.Name">
+                                            @if (brand.Image != null)
+                                            {
+                                                <img src="@Url.Content(brand.Image)" alt="@brand.Name logo">
+                                            }
+                                            else
+                                            {
+                                                <span class="home-brand-wordmark">@brand.Name</span>
+                                            }
+                                        </a>
+                                    }
+                                </li>
+                            }
                         </ul>
                     </div>
                 </div>
@@ -1174,157 +760,58 @@
                         <h2 class="section-title wow move-right">Our Featured <span>Car</span></h2>
                     </div>
                     <div class="slider-area mt--80 wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
-                        <div class="swiper featureSlider">
-                            <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <div class="feature-wrapper">
-                                        <div class="image-area">
-                                            <img src="~/assets/images/feature/slider-01.webp" width="961" alt="">
+                        @if (featuredCars.Count == 0)
+                        {
+                            <p class="home-catalog-empty">No featured cars are currently listed.</p>
+                        }
+                        else
+                        {
+                            <div class="swiper featureSlider">
+                                <div class="swiper-wrapper">
+                                    @foreach (var car in featuredCars)
+                                    {
+                                        <div class="swiper-slide">
+                                            <div class="feature-wrapper">
+                                                <div class="image-area">
+                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
+                                                        @if (!string.IsNullOrWhiteSpace(car.ImagePath))
+                                                        {
+                                                            <img src="@Url.Content(car.ImagePath)" alt="@car.Name">
+                                                        }
+                                                    </a>
+                                                </div>
+                                                <div class="content-area">
+                                                    <span class="dot"></span>
+                                                    <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
+                                                    <ul class="feature-area">
+                                                        <li>
+                                                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                                            @car.Mileage.ToString("N0") Miles
+                                                        </li>
+                                                        <li>
+                                                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                                            @car.Fuel
+                                                        </li>
+                                                        <li>
+                                                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                                            @car.Transmission
+                                                        </li>
+                                                    </ul>
+                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn radius-big">View Details</a>
+                                                </div>
+                                                <img src="~/assets/images/feature/round-shape.svg" alt="" class="shape">
+                                            </div>
                                         </div>
-                                        <div class="content-area">
-                                            <span class="dot"></span>
-                                            <h6 class="title"><a asp-controller="Cars" asp-action="Index">Thunderbolt Car</a></h6>
-                                            <ul class="feature-area">
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                    100 Miles
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                    Autometic
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                    5 Person
-                                                </li>
-                                            </ul>
-                                            <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big">View
-                                                Details</a>
-                                        </div>
-                                        <img src="~/assets/images/feature/round-shape.svg" alt="" class="shape">
-                                    </div>
+                                    }
                                 </div>
-                                <div class="swiper-slide">
-                                    <div class="feature-wrapper">
-                                        <div class="image-area">
-                                            <img src="~/assets/images/feature/slider-02.webp" width="961" alt="">
-                                        </div>
-                                        <div class="content-area">
-                                            <span class="dot"></span>
-                                            <h6 class="title"><a asp-controller="Cars" asp-action="Index">Mazda MX-5 Miata</a></h6>
-                                            <ul class="feature-area">
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                    100 Miles
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                    Autometic
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                    5 Person
-                                                </li>
-                                            </ul>
-                                            <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big">View
-                                                Details</a>
-                                        </div>
-                                        <img src="~/assets/images/feature/round-shape.svg" alt="" class="shape">
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="feature-wrapper">
-                                        <div class="image-area">
-                                            <img src="~/assets/images/feature/slider-03.webp" width="961" alt="">
-                                        </div>
-                                        <div class="content-area">
-                                            <span class="dot"></span>
-                                            <h6 class="title"><a asp-controller="Cars" asp-action="Index">Mercedes-Benz E-Class</a>
-                                            </h6>
-                                            <ul class="feature-area">
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                    100 Miles
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                    Autometic
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                    5 Person
-                                                </li>
-                                            </ul>
-                                            <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big">View
-                                                Details</a>
-                                        </div>
-                                        <img src="~/assets/images/feature/round-shape.svg" alt="" class="shape">
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="feature-wrapper">
-                                        <div class="image-area">
-                                            <img src="~/assets/images/feature/slider-04.webp" width="961" alt="">
-                                        </div>
-                                        <div class="content-area">
-                                            <span class="dot"></span>
-                                            <h6 class="title"><a asp-controller="Cars" asp-action="Index">Honda Civic Hatchback</a>
-                                            </h6>
-                                            <ul class="feature-area">
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                    100 Miles
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                    Autometic
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                    5 Person
-                                                </li>
-                                            </ul>
-                                            <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big">View
-                                                Details</a>
-                                        </div>
-                                        <img src="~/assets/images/feature/round-shape.svg" alt="" class="shape">
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="feature-wrapper">
-                                        <div class="image-area">
-                                            <img src="~/assets/images/feature/slider-05.webp" width="961" alt="">
-                                        </div>
-                                        <div class="content-area">
-                                            <span class="dot"></span>
-                                            <h6 class="title"><a asp-controller="Cars" asp-action="Index">Hyundai Veloster</a></h6>
-                                            <ul class="feature-area">
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                    100 Miles
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                    Autometic
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/04.svg" alt="">
-                                                    5 Person
-                                                </li>
-                                            </ul>
-                                            <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big">View
-                                                Details</a>
-                                        </div>
-                                        <img src="~/assets/images/feature/round-shape.svg" alt="" class="shape">
-                                    </div>
-                                </div>
+                                <div class="swiper-pagination-3"></div>
                             </div>
-                            <div class="swiper-pagination-3"></div>
-                        </div>
+                        }
                     </div>
                 </div>
             </section>
             <!-- Feature Area End -->
+
 
             <!-- Testimonials Area Start -->
             <section class="rts-testimonials-area rts-section-gap">
@@ -1537,4 +1024,51 @@
 <script type="application/json" id="heroModelsByMake">@Html.Raw(JsonSerializer.Serialize(modelsByMake))</script>
 @section Scripts {
     <script src="~/js/hero-search.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const homeCarSwipers = [];
+
+            document.querySelectorAll(".home-car-slider").forEach(function (element) {
+                const pagination = element.querySelector(".home-car-pagination");
+                const nextButton = element.querySelector(".swiper-button-next");
+                const previousButton = element.querySelector(".swiper-button-prev");
+
+                homeCarSwipers.push(new Swiper(element, {
+                    slidesPerView: 1,
+                    spaceBetween: 20,
+                    speed: 700,
+                    rewind: true,
+                    watchOverflow: true,
+                    observer: true,
+                    observeParents: true,
+                    pagination: {
+                        el: pagination,
+                        clickable: true
+                    },
+                    navigation: {
+                        nextEl: nextButton,
+                        prevEl: previousButton
+                    },
+                    breakpoints: {
+                        768: {
+                            slidesPerView: 2,
+                            spaceBetween: 24
+                        },
+                        1200: {
+                            slidesPerView: 3,
+                            spaceBetween: 30
+                        }
+                    }
+                }));
+            });
+
+            document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function (tabButton) {
+                tabButton.addEventListener("shown.bs.tab", function () {
+                    homeCarSwipers.forEach(function (swiper) {
+                        swiper.update();
+                    });
+                });
+            });
+        });
+    </script>
 }

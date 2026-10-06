@@ -1,0 +1,30 @@
+@model Car
+@{
+    var imagePath = string.IsNullOrWhiteSpace(Model.ImagePath) ? string.Empty : Model.ImagePath;
+}
+<div class="project-wrapper3 home-car-card">
+    <div class="image-area">
+        <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.Id">
+            @if (!string.IsNullOrWhiteSpace(imagePath))
+            {
+                <img src="@Url.Content(imagePath)" alt="@Model.Name">
+            }
+        </a>
+        <span class="home-car-brand">@Model.Make</span>
+        <span class="price">$@Model.Price.ToString("N0")</span>
+    </div>
+    <div class="content-area">
+        <h6 class="title">
+            <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a>
+        </h6>
+        <ul class="feature-area">
+            <li><img src="~/assets/images/portfolio/feature-icon/01.svg" alt=""> @Model.Mileage.ToString("N0") Miles</li>
+            <li><img src="~/assets/images/portfolio/feature-icon/02.svg" alt=""> @Model.Fuel</li>
+            <li><img src="~/assets/images/portfolio/feature-icon/03.svg" alt=""> @Model.Transmission</li>
+        </ul>
+        <div class="button-area">
+            <p>@Model.Year</p>
+            <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.Id" class="rts-btn btn-primary radius-small">View Details</a>
+        </div>
+    </div>
+</div>

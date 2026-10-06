@@ -140,6 +140,21 @@ public static class VerifiedCatalogSeeder
         new("Rolls-Royce", "Phantom", "Luxury Cars", 2022, 455000m, 3200, "Petrol", "Automatic", "Black", "Rolls-Royce Phantom", true, "/assets/images/portfolio/06.webp"),
         new("Rolls-Royce", "Wraith", "Luxury Cars", 2020, 318000m, 8100, "Petrol", "Automatic", "White", "Rolls-Royce Wraith", true, "/assets/images/about/06.webp"),
         new("Tesla", "Model 3", "Sedan", 2023, 42900m, 11200, "Electric", "Automatic", "Red", "Tesla Model 3", true, "/assets/images/portfolio/29.webp"),
-        new("Toyota", "Highlander", "SUV", 2024, 46500m, 4800, "Petrol", "Automatic", "Red", "Toyota Highlander", true, "/assets/images/blog/11.webp")
+        new("Toyota", "Highlander", "SUV", 2024, 46500m, 4800, "Petrol", "Automatic", "Red", "Toyota Highlander", true, "/assets/images/blog/11.webp"),
+        new("BMW", "330i", "Sedan", 2021, 31850m, 28640, "Petrol", "Automatic", "White", "BMW 3 Series 330i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/330i.jpg"),
+        new("BMW", "M340i", "Sedan", 2022, 48750m, 18420, "Petrol", "Automatic", "Blue", "BMW 3 Series M340i. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m340i.jpg"),
+        new("BMW", "M3 Competition", "Sports Car", 2022, 72900m, 12480, "Petrol", "Automatic", "Blue", "BMW M3 Competition. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/m3-competition.jpg"),
+        new("BMW", "M440i", "Coupe", 2022, 46980m, 21360, "Petrol", "Automatic", "Grey", "BMW 4 Series M440i. 4 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m440i.jpg"),
+        new("BMW", "M4 Competition", "Coupe", 2021, 74250m, 9860, "Petrol", "Automatic", "Yellow", "BMW M4 Competition. 4 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/m4-competition.jpg"),
+        new("BMW", "530i", "Sedan", 2020, 32480m, 34720, "Petrol", "Automatic", "Grey", "BMW 5 Series 530i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/530i.jpg"),
+        new("BMW", "M5 (F90)", "Sports Car", 2020, 79450m, 21860, "Petrol", "Automatic", "Grey", "BMW M5 (F90). 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m5-f90.jpg"),
+        new("BMW", "740i", "Sedan", 2023, 81250m, 8420, "Petrol", "Automatic", "Grey", "BMW 7 Series 740i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/740i.jpg"),
+        new("BMW", "M850i", "Convertible", 2019, 62750m, 24180, "Petrol", "Automatic", "White", "BMW 8 Series M850i. 4 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m850i.jpg"),
+        new("BMW", "X3 M40i", "SUV", 2023, 49870m, 16240, "Petrol", "Automatic", "Blue", "BMW X3 M40i. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x3-m40i.jpg"),
+        new("BMW", "X5 xDrive40i", "SUV", 2021, 51940m, 29870, "Petrol", "Automatic", "Grey", "BMW X5 xDrive40i. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x5-xdrive40i.jpg"),
+        new("BMW", "X5 M Competition", "SUV", 2021, 89750m, 19640, "Petrol", "Automatic", "Green", "BMW X5 M Competition. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x5-m-competition.jpg"),
+        new("BMW", "X6 M Competition", "SUV", 2022, 96400m, 14280, "Petrol", "Automatic", "Grey", "BMW X6 M Competition. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x6-m-competition.jpg"),
+        new("BMW", "Z4 M40i", "Convertible", 2023, 54890m, 9840, "Petrol", "Automatic", "White", "BMW Z4 M40i. 2 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/z4-m40i.jpg"),
+        new("BMW", "i4 M50", "Electric", 2022, 49850m, 14760, "Electric", "Automatic", "Blue", "BMW i4 M50. 5 seats, all-wheel drive.", false, "/assets/images/catalog/bmw/i4-m50.jpg")
     };
 }
