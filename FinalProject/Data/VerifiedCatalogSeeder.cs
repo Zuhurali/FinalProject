@@ -155,6 +155,17 @@ public static class VerifiedCatalogSeeder
         new("BMW", "X5 M Competition", "SUV", 2021, 89750m, 19640, "Petrol", "Automatic", "Green", "BMW X5 M Competition. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x5-m-competition.jpg"),
         new("BMW", "X6 M Competition", "SUV", 2022, 96400m, 14280, "Petrol", "Automatic", "Grey", "BMW X6 M Competition. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x6-m-competition.jpg"),
         new("BMW", "Z4 M40i", "Convertible", 2023, 54890m, 9840, "Petrol", "Automatic", "White", "BMW Z4 M40i. 2 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/z4-m40i.jpg"),
-        new("BMW", "i4 M50", "Electric", 2022, 49850m, 14760, "Electric", "Automatic", "Blue", "BMW i4 M50. 5 seats, all-wheel drive.", false, "/assets/images/catalog/bmw/i4-m50.jpg")
+        new("BMW", "i4 M50", "Electric", 2022, 49850m, 14760, "Electric", "Automatic", "Blue", "BMW i4 M50. 5 seats, all-wheel drive.", false, "/assets/images/catalog/bmw/i4-m50.jpg"),
+        new("Nissan", "Altima", "Sedan", 2021, 18640m, 41280, "Petrol", "Automatic", "Beige", "Nissan Altima. 5 seats, front-wheel drive, 2.5L.", false, "/assets/images/catalog/nissan/altima.jpg"),
+        new("Nissan", "Maxima", "Sedan", 2019, 22480m, 36750, "Petrol", "Automatic", "White", "Nissan Maxima. 5 seats, front-wheel drive, 3.5L V6.", false, "/assets/images/catalog/nissan/maxima.jpg"),
+        new("Nissan", "Sentra", "Sedan", 2014, 10480m, 86420, "Petrol", "Automatic", "Silver", "Nissan Sentra. 5 seats, front-wheel drive, 1.8L.", false, "/assets/images/catalog/nissan/sentra.jpg"),
+        new("Nissan", "Rogue", "SUV", 2024, 27840m, 12460, "Petrol", "Automatic", "White", "Nissan Rogue. 5 seats, all-wheel drive, 1.5L turbo.", false, "/assets/images/catalog/nissan/rogue.jpg"),
+        new("Nissan", "Pathfinder", "SUV", 2023, 37920m, 16840, "Petrol", "Automatic", "Grey", "Nissan Pathfinder. 7 seats, four-wheel drive, 3.5L V6.", false, "/assets/images/catalog/nissan/pathfinder.jpg"),
+        new("Nissan", "Murano", "SUV", 2019, 23680m, 41250, "Petrol", "Automatic", "Brown", "Nissan Murano. 5 seats, all-wheel drive, 3.5L V6.", false, "/assets/images/catalog/nissan/murano.jpg"),
+        new("Nissan", "Armada", "SUV", 2023, 48750m, 18240, "Petrol", "Automatic", "Silver", "Nissan Armada. 8 seats, four-wheel drive, 5.6L V8.", false, "/assets/images/catalog/nissan/armada.jpg"),
+        new("Nissan", "GT-R", "Sports Car", 2008, 58940m, 41280, "Petrol", "Automatic", "Black", "Nissan GT-R. 4 seats, all-wheel drive, 3.8L twin-turbo.", false, "/assets/images/catalog/nissan/gt-r.jpg"),
+        new("Nissan", "Z", "Sports Car", 2023, 42860m, 6420, "Petrol", "Automatic", "Blue", "Nissan Z. 2 seats, rear-wheel drive, 3.0L twin-turbo.", false, "/assets/images/catalog/nissan/z.jpg"),
+        new("Nissan", "Kicks", "SUV", 2024, 21870m, 11240, "Petrol", "Automatic", "Black", "Nissan Kicks. 5 seats, front-wheel drive, 1.6L.", false, "/assets/images/catalog/nissan/kicks.jpg"),
+        new("Nissan", "Frontier", "SUV", 2022, 32470m, 28160, "Petrol", "Automatic", "Grey", "Nissan Frontier Pro-4X. 5 seats, four-wheel drive, 3.8L V6.", false, "/assets/images/catalog/nissan/frontier.jpg")
     };
 }

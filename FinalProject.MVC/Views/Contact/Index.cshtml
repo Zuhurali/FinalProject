@@ -170,7 +170,7 @@
     </div>
 </section>
 
-<section class="rts-brand-area rts-section-gapTop">
+<section class="rts-brand-area contact-brand-area rts-section-gapTop">
     <div class="container">
         <div class="section-title-area2">
             <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
@@ -178,17 +178,26 @@
         </div>
         <div class="section-inner mt--80">
             <ul>
-                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
+                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Jeep" aria-label="Jeep"><img src="~/assets/images/brand/01-w.svg" alt="Jeep"></a></li>
+                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Ford" aria-label="Ford"><img src="~/assets/images/brand/02.svg" alt="Ford"></a></li>
+                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Mazda" aria-label="Mazda"><img src="~/assets/images/brand/03.svg" alt="Mazda"></a></li>
+                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="BMW" aria-label="BMW"><img src="~/assets/images/brand/04.svg" alt="BMW"></a></li>
+                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Honda" aria-label="Honda"><img src="~/assets/images/brand/05.svg" alt="Honda"></a></li>
+                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Audi" aria-label="Audi"><img src="~/assets/images/brand/06.svg" alt="Audi"></a></li>
+                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Nissan" aria-label="Nissan"><img src="~/assets/images/brand/07.svg" alt="Nissan"></a></li>
             </ul>
         </div>
     </div>
 </section>
+<style>
+    .rts-brand-area.contact-brand-area .section-inner ul li a {
+        display: block;
+        width: 100%;
+        height: 100%;
+        line-height: 158px;
+        text-align: center;
+    }
+</style>
 
 <div class="rts-cta-area area-2">
     <div class="container">
