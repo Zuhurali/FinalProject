@@ -7,29 +7,32 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject.MVC.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,SuperAdmin")]
 [Route("Admin/Ratings")]
 public sealed class AdminRatingsController : Controller
 {
     private readonly IProductRatingApiService _ratingApiService;
     private readonly IApiAccessTokenService _tokenService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IShopCatalogService _shopCatalog;
 
     public AdminRatingsController(
         IProductRatingApiService ratingApiService,
         IApiAccessTokenService tokenService,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        IShopCatalogService shopCatalog)
     {
         _ratingApiService = ratingApiService;
         _tokenService = tokenService;
         _userManager = userManager;
+        _shopCatalog = shopCatalog;
     }
 
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Manage Product Ratings - AutoVault";
-        var catalog = ShopController.TemplateProducts();
+        var catalog = await _shopCatalog.GetAllAsync(cancellationToken);
         var productNames = catalog.ToDictionary(product => product.Id, product => product.Name);
 
         try

@@ -173,6 +173,22 @@ public class CarApiService : ICarApiService
         await EnsureSuccessAsync(response, cancellationToken);
     }
 
+    public async Task<CarApiDto> CreateCatalogCarAsync(
+        SaveCarDto car,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Post,
+            "api/cars/catalog",
+            accessToken,
+            JsonContent.Create(car),
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<CarApiDto>(JsonOptions, cancellationToken)
+            ?? throw new CarApiException("The car API returned an unreadable listing.");
+    }
+
     private async Task<HttpResponseMessage> SendAsync(string relativeUrl, CancellationToken cancellationToken)
     {
         try

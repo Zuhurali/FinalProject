@@ -42,7 +42,7 @@
                         <div class="form__control mb-3">
                             <input type="password" name="password" class="input-form" placeholder="Password" required>
                         </div>
-                        <div class="form__control mb-3 remember-me-field">
+                        <div class="form__control mb-3 sign-in-remember">
                             <input type="checkbox" name="rememberMe" value="true" id="rememberMe">
                             <input type="hidden" name="rememberMe" value="false">
                             <label for="rememberMe">Remember me</label>
@@ -52,6 +52,14 @@
                         </div>
                         @Html.AntiForgeryToken()
                     </form>
+                    @if (TempData["UnconfirmedEmail"] != null)
+                    {
+                        <form asp-action="ResendConfirmation" method="post" class="text-center mt-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="email" value="@TempData["UnconfirmedEmail"]">
+                            <button type="submit" class="btn btn-link">Resend confirmation email</button>
+                        </form>
+                    }
                     <div class="text-center mt-3">
                         <p>Don't have an account? <a asp-controller="Account" asp-action="Register">Create Account</a></p>
                     </div>
@@ -62,7 +70,9 @@
 </section>
 
 <style>
-    .remember-me-field { display:flex; align-items:center; }
-    .remember-me-field input[type=checkbox] { position:absolute; opacity:0; }
-    .remember-me-field label { margin:0; }
+    .sign-in-remember { display:flex; align-items:center; gap:8px; }
+    .sign-in-remember input[type=checkbox] { opacity:1 !important; position:static !important; width:18px !important; height:18px !important; margin:0; }
+    .sign-in-remember label { padding-left:0 !important; margin:0; }
+    .sign-in-remember label::before,
+    .sign-in-remember label::after { display:none !important; content:none !important; }
 </style>

@@ -1,0 +1,33 @@
+@model IReadOnlyList<ShopProduct>
+@{
+    Layout = "_AdminLayout";
+}
+<div class="d-flex justify-content-between mb-4">
+    <h1 class="h3">Products</h1>
+    @if (User.IsInRole("SuperAdmin"))
+    {
+        <a class="btn btn-primary" asp-action="Create">Add Product</a>
+    }
+</div>
+<div class="admin-card">
+    <table class="table">
+        <thead><tr><th>Name</th><th>Category</th><th>Price</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Name</td>
+                <td>@product.Category</td>
+                <td>@product.Price.ToString("C0")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@product.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this product?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-link text-danger p-0" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

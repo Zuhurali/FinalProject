@@ -26,7 +26,7 @@ public sealed class ProductRatingService : IProductRatingService
         int productId,
         CancellationToken cancellationToken = default)
     {
-        if (!ProductExists(productId))
+        if (!await ProductExistsAsync(productId, cancellationToken))
         {
             return null;
         }
@@ -58,10 +58,7 @@ public sealed class ProductRatingService : IProductRatingService
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken = default)
     {
-        var validIds = productIds
-            .Where(ProductExists)
-            .Distinct()
-            .ToArray();
+        var validIds = await ValidProductIdsAsync(productIds, cancellationToken);
 
         var aggregates = await _context.ProductRatings
             .AsNoTracking()
@@ -85,7 +82,7 @@ public sealed class ProductRatingService : IProductRatingService
         string userId,
         CancellationToken cancellationToken = default)
     {
-        if (!ProductExists(productId) || !await UserExistsAsync(userId, cancellationToken))
+        if (!await ProductExistsAsync(productId, cancellationToken) || !await UserExistsAsync(userId, cancellationToken))
         {
             return null;
         }
@@ -108,7 +105,7 @@ public sealed class ProductRatingService : IProductRatingService
         int rating,
         CancellationToken cancellationToken = default)
     {
-        if (!ProductExists(productId) ||
+        if (!await ProductExistsAsync(productId, cancellationToken) ||
             rating is < 1 or > 5 ||
             !await UserExistsAsync(userId, cancellationToken))
         {
@@ -154,7 +151,7 @@ public sealed class ProductRatingService : IProductRatingService
         int ratingId,
         CancellationToken cancellationToken = default)
     {
-        if (!ProductExists(productId))
+        if (!await ProductExistsAsync(productId, cancellationToken))
         {
             return false;
         }
@@ -172,7 +169,38 @@ public sealed class ProductRatingService : IProductRatingService
         return true;
     }
 
-    private bool ProductExists(int productId) => _productIds.Contains(productId);
+    private async Task<bool> ProductExistsAsync(int productId, CancellationToken cancellationToken)
+    {
+        if (_productIds.Contains(productId))
+        {
+            return true;
+        }
+
+        return await _context.ShopProducts.AsNoTracking()
+            .AnyAsync(product => product.Id == productId, cancellationToken);
+    }
+
+    private async Task<int[]> ValidProductIdsAsync(
+        IReadOnlyCollection<int> productIds,
+        CancellationToken cancellationToken)
+    {
+        var distinct = productIds.Distinct().ToArray();
+        var known = distinct.Where(_productIds.Contains).ToHashSet();
+        var extras = distinct.Where(id => !known.Contains(id)).ToArray();
+        if (extras.Length > 0)
+        {
+            var found = await _context.ShopProducts.AsNoTracking()
+                .Where(product => extras.Contains(product.Id))
+                .Select(product => product.Id)
+                .ToListAsync(cancellationToken);
+            foreach (var id in found)
+            {
+                known.Add(id);
+            }
+        }
+
+        return distinct.Where(known.Contains).ToArray();
+    }
 
     private Task<bool> UserExistsAsync(string userId, CancellationToken cancellationToken) =>
         !string.IsNullOrWhiteSpace(userId)

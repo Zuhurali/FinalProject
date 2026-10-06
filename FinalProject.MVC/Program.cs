@@ -28,8 +28,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.User.RequireUniqueEmail = true;
 
     // Sign-in settings
-    options.SignIn.RequireConfirmedEmail = false;
-    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedEmail = true;
+    options.SignIn.RequireConfirmedAccount = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -79,7 +79,27 @@ builder.Services.AddHttpClient<IMarketplaceApiService, MarketplaceApiService>(cl
     PooledConnectionLifetime = TimeSpan.FromSeconds(30),
     ConnectTimeout = TimeSpan.FromSeconds(5)
 });
+builder.Services.AddHttpClient<IAdminApiService, AdminApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(20);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromSeconds(30),
+    ConnectTimeout = TimeSpan.FromSeconds(5)
+});
 builder.Services.AddSingleton<IApiAccessTokenService, ApiAccessTokenService>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminPanel", policy => policy.RequireRole(AppRoles.Admin, AppRoles.SuperAdmin));
+    options.AddPolicy("CatalogCreate", policy => policy.RequireRole(AppRoles.SuperAdmin));
+    options.AddPolicy("ManageUsers", policy => policy.RequireRole(AppRoles.SuperAdmin));
+});
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddSingleton<IEmailSender, EmailSender>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
 
 // Add session support
 builder.Services.AddDistributedMemoryCache();
@@ -114,27 +134,18 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-await SeedIdentityRolesAsync(app);
+await SeedApplicationAsync(app);
 
 app.Run();
 
-static async Task SeedIdentityRolesAsync(WebApplication app)
+static async Task SeedApplicationAsync(WebApplication app)
 {
-    await using var scope = app.Services.CreateAsyncScope();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-    foreach (var roleName in new[] { "Admin", "User" })
+    await using (var catalogScope = app.Services.CreateAsyncScope())
     {
-        if (await roleManager.RoleExistsAsync(roleName))
-        {
-            continue;
-        }
-
-        var result = await roleManager.CreateAsync(new IdentityRole(roleName));
-        if (!result.Succeeded)
-        {
-            throw new InvalidOperationException(
-                $"Unable to create the {roleName} role: {string.Join(", ", result.Errors.Select(error => error.Description))}");
-        }
+        var catalog = catalogScope.ServiceProvider.GetRequiredService<IShopCatalogService>();
+        await catalog.EnsureSeedAsync();
     }
+
+    await using var identityScope = app.Services.CreateAsyncScope();
+    await IdentityRoleSeeder.SeedAsync(identityScope.ServiceProvider, app.Configuration);
 }

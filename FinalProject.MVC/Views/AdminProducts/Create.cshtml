@@ -1,0 +1,22 @@
+@model ShopCatalogProduct
+@{
+    Layout = "_AdminLayout";
+    var editing = Model.Id > 0;
+}
+<h1 class="h3 mb-4">@(editing ? "Edit Product" : "Add Product")</h1>
+<form asp-action="@(editing ? "Edit" : "Create")" asp-route-id="@(editing ? Model.Id : null)" method="post" class="admin-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-6"><label>Name</label><input asp-for="Name" class="form-control" required></div>
+        <div class="col-md-3"><label>Price</label><input asp-for="Price" class="form-control" required></div>
+        <div class="col-md-3"><label>Category</label><input asp-for="Category" class="form-control" required></div>
+        <div class="col-md-4"><label>Car make</label><input asp-for="CarMake" class="form-control"></div>
+        <div class="col-md-4"><label>Car model</label><input asp-for="CarModel" class="form-control"></div>
+        <div class="col-md-4"><label class="d-block">In stock</label><input asp-for="InStock"></div>
+        <div class="col-12"><label>Image path</label><input asp-for="ImagePath" class="form-control" required></div>
+        <div class="col-12"><label>Description</label><textarea asp-for="Description" class="form-control" rows="3"></textarea></div>
+    </div>
+    <button class="btn btn-primary mt-3" type="submit">Save</button>
+    <a class="btn btn-link" asp-action="Index">Cancel</a>
+</form>

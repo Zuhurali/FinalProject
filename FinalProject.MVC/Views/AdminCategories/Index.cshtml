@@ -1,0 +1,42 @@
+@model CarLookupDto
+@{
+    Layout = "_AdminLayout";
+}
+<h1 class="h3 mb-4">Categories</h1>
+@if (ViewData["ServiceUnavailable"] != null)
+{
+    <div class="alert alert-warning">The catalog service is temporarily unavailable.</div>
+}
+@if (User.IsInRole("SuperAdmin"))
+{
+    <form asp-action="Create" method="post" class="admin-card mb-3 d-flex gap-2">
+        @Html.AntiForgeryToken()
+        <input name="name" class="form-control" placeholder="New category" required maxlength="100">
+        <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+}
+<div class="admin-card">
+    <table class="table">
+        <thead><tr><th>Name</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var category in Model.Categories)
+        {
+            <tr>
+                <td>
+                    <form asp-action="Edit" asp-route-id="@category.Id" method="post" class="d-flex gap-2">
+                        @Html.AntiForgeryToken()
+                        <input name="name" value="@category.Name" class="form-control" required maxlength="100">
+                        <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                    </form>
+                </td>
+                <td>
+                    <form asp-action="Delete" asp-route-id="@category.Id" method="post" onsubmit="return confirm('Delete this category?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

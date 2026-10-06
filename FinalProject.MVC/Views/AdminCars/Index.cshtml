@@ -1,0 +1,40 @@
+@model IReadOnlyList<CarApiDto>
+@{
+    Layout = "_AdminLayout";
+    var canCreate = User.IsInRole("SuperAdmin");
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Cars</h1>
+    @if (canCreate)
+    {
+        <a class="btn btn-primary" asp-action="Create">Add Car</a>
+    }
+</div>
+@if (ViewData["ServiceUnavailable"] != null)
+{
+    <div class="alert alert-warning">The car service is temporarily unavailable.</div>
+}
+<div class="admin-card">
+    <table class="table">
+        <thead><tr><th>Car</th><th>Year</th><th>Price</th><th>Status</th><th>Owner</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var car in Model)
+        {
+            <tr>
+                <td>@car.Brand?.Name @car.Model</td>
+                <td>@car.Year</td>
+                <td>@car.Price.ToString("C0")</td>
+                <td>@car.Status</td>
+                <td>@(string.IsNullOrWhiteSpace(car.OwnerDisplayName) ? "Catalog" : car.OwnerDisplayName)</td>
+                <td class="text-nowrap">
+                    <a asp-action="Edit" asp-route-id="@car.Id">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@car.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this car?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-link text-danger p-0" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

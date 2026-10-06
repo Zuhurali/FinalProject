@@ -21,4 +21,6 @@ public interface ICarApiService
     Task<CarApiDto> UpdateCarAsync(int id, SaveCarDto car, string accessToken, CancellationToken cancellationToken = default);
 
     Task DeleteCarAsync(int id, string accessToken, CancellationToken cancellationToken = default);
+
+    Task<CarApiDto> CreateCatalogCarAsync(SaveCarDto car, string accessToken, CancellationToken cancellationToken = default);
 }

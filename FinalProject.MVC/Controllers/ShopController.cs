@@ -11,24 +11,26 @@ namespace FinalProject.MVC.Controllers
 {
     public class ShopController : Controller
     {
-        private readonly List<ShopProduct> _allProducts;
+        private List<ShopProduct> _allProducts = new();
+        private bool _catalogLoaded;
         private readonly ApplicationDbContext _context;
         private readonly IProductRatingApiService _ratingApiService;
         private readonly IApiAccessTokenService _tokenService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IShopCatalogService _shopCatalog;
 
         public ShopController(
             ApplicationDbContext context,
             IProductRatingApiService ratingApiService,
             IApiAccessTokenService tokenService,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IShopCatalogService shopCatalog)
         {
             _context = context;
             _ratingApiService = ratingApiService;
             _tokenService = tokenService;
             _userManager = userManager;
-            // Brand-specific automotive products with realistic relationships
-            _allProducts = TemplateProducts();
+            _shopCatalog = shopCatalog;
         }
 
         internal static List<ShopProduct> TemplateProducts()
@@ -108,6 +110,17 @@ namespace FinalProject.MVC.Controllers
             };
         }
 
+        private async Task EnsureCatalogAsync(CancellationToken cancellationToken)
+        {
+            if (_catalogLoaded)
+            {
+                return;
+            }
+
+            _allProducts = (await _shopCatalog.GetAllAsync(cancellationToken)).ToList();
+            _catalogLoaded = true;
+        }
+
         private void SetShopFilters()
         {
             ViewBag.CarMakes = _allProducts
@@ -169,6 +182,7 @@ namespace FinalProject.MVC.Controllers
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop - AutoVault";
+            await EnsureCatalogAsync(cancellationToken);
             
             // Initial load - show first 6 products (matching original template)
             var initialProducts = _allProducts.Take(6).ToList();
@@ -193,6 +207,7 @@ namespace FinalProject.MVC.Controllers
             [FromBody] ShopFilterRequest request,
             CancellationToken cancellationToken)
         {
+            await EnsureCatalogAsync(cancellationToken);
             await ApplyRatingsAsync(_allProducts, cancellationToken);
             var filteredProducts = _allProducts.AsQueryable();
 
@@ -328,6 +343,7 @@ namespace FinalProject.MVC.Controllers
             int pageSize = 6,
             CancellationToken cancellationToken = default)
         {
+            await EnsureCatalogAsync(cancellationToken);
             var products = _allProducts
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -352,6 +368,7 @@ namespace FinalProject.MVC.Controllers
         public async Task<IActionResult> ShopTwo(CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop Two - AutoVault";
+            await EnsureCatalogAsync(cancellationToken);
             
             var products = _allProducts.Select(CopyPart).ToList();
             await ApplyRatingsAsync(products, cancellationToken);
@@ -374,6 +391,7 @@ namespace FinalProject.MVC.Controllers
         public async Task<IActionResult> ShopThree(CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop Three - AutoVault";
+            await EnsureCatalogAsync(cancellationToken);
             
             // Use the same products from the main shop - show 12 products initially (col-lg-6 grid = 2 per row)
             var order = new[] { 1, 8, 3, 9, 5, 7, 10, 11, 4, 16, 6, 2 };
@@ -399,6 +417,7 @@ namespace FinalProject.MVC.Controllers
 
         public async Task<IActionResult> Details(int? id, CancellationToken cancellationToken)
         {
+            await EnsureCatalogAsync(cancellationToken);
             ViewData["Title"] = "Shop Details - AutoVault";
 
             if (id == null)
@@ -452,6 +471,7 @@ namespace FinalProject.MVC.Controllers
             int rating,
             CancellationToken cancellationToken)
         {
+            await EnsureCatalogAsync(cancellationToken);
             if (rating is < 1 or > 5)
             {
                 Response.StatusCode = StatusCodes.Status400BadRequest;
@@ -513,8 +533,9 @@ namespace FinalProject.MVC.Controllers
         }
 
         [HttpPost]
-        public JsonResult AddToCart([FromBody] AddToCartRequest request)
+        public async Task<JsonResult> AddToCart([FromBody] AddToCartRequest request, CancellationToken cancellationToken)
         {
+            await EnsureCatalogAsync(cancellationToken);
             var product = _allProducts.FirstOrDefault(p => p.Id == request.ProductId);
             if (product == null)
             {

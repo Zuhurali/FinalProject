@@ -30,6 +30,8 @@ public class FinalProjectDbContext : DbContext
 
     public DbSet<CarMessage> Messages => Set<CarMessage>();
 
+    public DbSet<ShopProductReference> ShopProducts => Set<ShopProductReference>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -109,6 +111,12 @@ public class FinalProjectDbContext : DbContext
             entity.Property(user => user.Email).HasMaxLength(256);
             entity.Property(user => user.FirstName).HasMaxLength(450);
             entity.Property(user => user.LastName).HasMaxLength(450);
+        });
+
+        modelBuilder.Entity<ShopProductReference>(entity =>
+        {
+            entity.ToTable("ShopProducts", table => table.ExcludeFromMigrations());
+            entity.HasKey(product => product.Id);
         });
 
         modelBuilder.Entity<Favorite>(entity =>

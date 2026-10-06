@@ -1,0 +1,42 @@
+@model CarEditorViewModel
+@Html.AntiForgeryToken()
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="row g-3">
+    <div class="col-md-6">
+        <label>Brand</label>
+        <select asp-for="Car.BrandId" class="form-select" required>
+            <option value="">Select brand</option>
+            @foreach (var brand in Model.Lookups.Brands)
+            {
+                <option value="@brand.Id">@brand.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label>Category</label>
+        <select asp-for="Car.CategoryId" class="form-select" required>
+            <option value="">Select category</option>
+            @foreach (var category in Model.Lookups.Categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-6"><label>Model</label><input asp-for="Car.Model" class="form-control" required></div>
+    <div class="col-md-3"><label>Year</label><input asp-for="Car.Year" class="form-control" required></div>
+    <div class="col-md-3"><label>Price</label><input asp-for="Car.Price" class="form-control" required></div>
+    <div class="col-md-3"><label>Mileage</label><input asp-for="Car.Mileage" class="form-control" required></div>
+    <div class="col-md-3"><label>Fuel</label><input asp-for="Car.FuelType" class="form-control" required></div>
+    <div class="col-md-3"><label>Transmission</label><input asp-for="Car.Transmission" class="form-control" required></div>
+    <div class="col-md-3">
+        <label>Status</label>
+        <select asp-for="Car.Status" class="form-select">
+            <option>Active</option>
+            <option>Sold</option>
+            <option>Draft</option>
+        </select>
+    </div>
+    <div class="col-md-6"><label>Color</label><input asp-for="Car.Color" class="form-control" required></div>
+    <div class="col-md-6"><label>Image path or URL</label><input asp-for="Car.ImageUrl" class="form-control" required></div>
+    <div class="col-12"><label>Description</label><textarea asp-for="Car.Description" class="form-control" rows="4" required></textarea></div>
+</div>

@@ -9,9 +9,9 @@
             <li><a asp-action="Favorites"><i class="fa-regular fa-heart"></i> Favorites</a></li>
             <li><a asp-action="Messages"><i class="fa-regular fa-envelope"></i> Messages</a></li>
             <li><a asp-action="Profile"><i class="fa-regular fa-user"></i> Profile Settings</a></li>
-            @if (User.IsInRole("Admin"))
+            @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
             {
-                <li><a asp-controller="AdminRatings" asp-action="Index"><i class="fa-solid fa-star"></i> Manage Ratings</a></li>
+                <li><a asp-controller="Admin" asp-action="Index"><i class="fa-solid fa-shield"></i> Admin Panel</a></li>
             }
             <li>
                 <form asp-action="SignOut" method="post">

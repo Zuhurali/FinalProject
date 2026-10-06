@@ -1,0 +1,10 @@
+@model CarEditorViewModel
+@{
+    Layout = "_AdminLayout";
+}
+<h1 class="h3 mb-4">Add Car</h1>
+<form asp-action="Create" method="post" class="admin-card">
+    <partial name="_CarFields" model="Model" />
+    <button class="btn btn-primary" type="submit">Create</button>
+    <a class="btn btn-link" asp-action="Index">Cancel</a>
+</form>

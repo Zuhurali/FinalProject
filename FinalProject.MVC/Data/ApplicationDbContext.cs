@@ -14,6 +14,7 @@ namespace FinalProject.MVC.Data
         public DbSet<CouponUsage> CouponUsages { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<ShopCatalogProduct> ShopProducts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -56,6 +57,21 @@ namespace FinalProject.MVC.Data
             builder.Entity<OrderItem>(entity =>
             {
                 entity.HasKey(e => e.Id);
+            });
+
+            builder.Entity<ShopCatalogProduct>(entity =>
+            {
+                entity.ToTable("ShopProducts");
+                entity.Property(product => product.Name).HasMaxLength(200).IsRequired();
+                entity.Property(product => product.Price).HasColumnType("decimal(18,2)");
+                entity.Property(product => product.Category).HasMaxLength(100).IsRequired();
+                entity.Property(product => product.CarMake).HasMaxLength(100);
+                entity.Property(product => product.CarModel).HasMaxLength(100);
+                entity.Property(product => product.ImagePath).HasMaxLength(500).IsRequired();
+                entity.Property(product => product.Description).HasMaxLength(2000);
+                entity.Property(product => product.Color).HasMaxLength(50);
+                entity.Property(product => product.Fuel).HasMaxLength(50);
+                entity.Property(product => product.SearchKeywords).HasMaxLength(500);
             });
         }
     }

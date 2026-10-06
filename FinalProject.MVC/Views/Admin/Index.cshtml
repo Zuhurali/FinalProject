@@ -1,0 +1,45 @@
+@model AdminDashboardViewModel
+@{
+    Layout = "_AdminLayout";
+}
+<h1 class="h3 mb-4">Dashboard</h1>
+@if (Model.ServiceUnavailable)
+{
+    <div class="alert alert-warning">Some catalog statistics are temporarily unavailable.</div>
+}
+<div class="row g-3">
+    @foreach (var card in new[]
+    {
+        ("Total Cars", Model.Summary.TotalCars),
+        ("Active Listings", Model.Summary.ActiveListings),
+        ("Total Members", Model.TotalMembers),
+        ("Total Products", Model.TotalProducts),
+        ("Total Ratings", Model.Summary.TotalRatings),
+        ("Conversations", Model.Summary.TotalConversations),
+        ("Unread Messages", Model.Summary.UnreadMessages)
+    })
+    {
+        <div class="col-md-4 col-xl-3">
+            <div class="admin-card">
+                <div class="text-muted">@card.Item1</div>
+                <div class="admin-stat">@card.Item2</div>
+            </div>
+        </div>
+    }
+</div>
+<h2 class="h5 mt-4 mb-3">Recent activity</h2>
+<div class="admin-card">
+    @if (Model.Summary.RecentActivity.Count == 0)
+    {
+        <p class="mb-0">No recent activity yet.</p>
+    }
+    else
+    {
+        <ul class="mb-0">
+            @foreach (var item in Model.Summary.RecentActivity)
+            {
+                <li>@item</li>
+            }
+        </ul>
+    }
+</div>

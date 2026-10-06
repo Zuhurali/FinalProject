@@ -17,6 +17,8 @@ builder.Services.AddDbContext<FinalProjectDbContext>(options =>
 builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<IProductRatingService, ProductRatingService>();
 builder.Services.AddScoped<IMarketplaceService, MarketplaceService>();
+builder.Services.AddScoped<ICatalogAdminService, CatalogAdminService>();
+builder.Services.AddAuthorization();
 var jwtKey = builder.Configuration["ApiAuthentication:SigningKey"];
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
 {

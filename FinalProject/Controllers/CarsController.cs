@@ -110,9 +110,29 @@ public class CarsController : ControllerBase
             return Unauthorized();
         }
 
+        if (User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+        {
+            return Forbid();
+        }
+
         var car = await _carService.CreateAsync(userId, request, cancellationToken);
         return car == null
             ? BadRequest(new { message = "The owner, brand, or category is invalid." })
+            : CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
+    }
+
+    [Authorize(Roles = "SuperAdmin")]
+    [HttpPost("catalog")]
+    [ProducesResponseType(typeof(CarResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<CarResponse>> CreateCatalog(
+        [FromBody] SaveCarRequest request,
+        CancellationToken cancellationToken)
+    {
+        var car = await _carService.CreateCatalogAsync(request, cancellationToken);
+        return car == null
+            ? BadRequest(new { message = "The brand or category is invalid." })
             : CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
     }
 
@@ -172,6 +192,7 @@ public class CarsController : ControllerBase
         var userId = CurrentUserId();
         return userId != null
             && (string.Equals(userId, ownerId, StringComparison.Ordinal)
-                || User.IsInRole("Admin"));
+                || User.IsInRole("Admin")
+                || User.IsInRole("SuperAdmin"));
     }
 }

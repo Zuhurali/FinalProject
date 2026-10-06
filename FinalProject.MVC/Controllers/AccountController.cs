@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Memory;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Services;
@@ -19,6 +20,9 @@ namespace FinalProject.MVC.Controllers
         private readonly IMarketplaceApiService _marketplaceApi;
         private readonly ICarApiService _carApi;
         private readonly IApiAccessTokenService _tokenService;
+        private readonly IEmailSender _emailSender;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IMemoryCache _cache;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -26,7 +30,10 @@ namespace FinalProject.MVC.Controllers
             RoleManager<IdentityRole> roleManager,
             IMarketplaceApiService marketplaceApi,
             ICarApiService carApi,
-            IApiAccessTokenService tokenService)
+            IApiAccessTokenService tokenService,
+            IEmailSender emailSender,
+            IWebHostEnvironment environment,
+            IMemoryCache cache)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -34,6 +41,9 @@ namespace FinalProject.MVC.Controllers
             _marketplaceApi = marketplaceApi;
             _carApi = carApi;
             _tokenService = tokenService;
+            _emailSender = emailSender;
+            _environment = environment;
+            _cache = cache;
         }
 
         [Authorize]
@@ -121,6 +131,13 @@ namespace FinalProject.MVC.Controllers
                 return InvalidLogin();
             }
 
+            if (!user.EmailConfirmed)
+            {
+                TempData["Error"] = "Please confirm your email before signing in.";
+                TempData["UnconfirmedEmail"] = user.Email;
+                return InvalidLogin();
+            }
+
             var result = await _signInManager.PasswordSignInAsync(user, password, rememberMe, lockoutOnFailure: false);
             
             if (result.Succeeded)
@@ -131,6 +148,13 @@ namespace FinalProject.MVC.Controllers
                 }
 
                 return RedirectToAction("Index", "Home");
+            }
+
+            if (result.IsNotAllowed)
+            {
+                TempData["Error"] = "Please confirm your email before signing in.";
+                TempData["UnconfirmedEmail"] = user.Email;
+                return InvalidLogin();
             }
             
             TempData["Error"] = "Invalid email or password.";
@@ -195,14 +219,14 @@ namespace FinalProject.MVC.Controllers
 
             if (result.Succeeded)
             {
-                if (!await _roleManager.RoleExistsAsync("User"))
+                if (!await _roleManager.RoleExistsAsync(AppRoles.Member))
                 {
                     await _userManager.DeleteAsync(user);
-                    TempData["Error"] = "The user role is not available. Please try again.";
+                    TempData["Error"] = "The member role is not available. Please try again.";
                     return InvalidRegistration();
                 }
 
-                var roleResult = await _userManager.AddToRoleAsync(user, "User");
+                var roleResult = await _userManager.AddToRoleAsync(user, AppRoles.Member);
                 if (!roleResult.Succeeded)
                 {
                     await _userManager.DeleteAsync(user);
@@ -210,12 +234,82 @@ namespace FinalProject.MVC.Controllers
                     return InvalidRegistration();
                 }
 
-                TempData["Success"] = "Account created successfully. Please sign in.";
-                return RedirectToAction(nameof(SignIn));
+                await SendConfirmationAsync(user);
+                return RedirectToAction(nameof(CheckEmail), new { email = user.Email });
             }
 
             TempData["Error"] = string.Join(", ", result.Errors.Select(e => e.Description));
             return InvalidRegistration();
+        }
+
+        [HttpGet]
+        public IActionResult CheckEmail(string? email)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["Title"] = "Check Your Email - AutoVault";
+            ViewData["Email"] = email;
+            if (!string.IsNullOrWhiteSpace(email)
+                && _cache.TryGetValue(DevelopmentLinkKey(email), out string? link))
+            {
+                ViewData["DevelopmentConfirmationLink"] = link;
+            }
+
+            ViewData["EmailConfigured"] = _emailSender.IsConfigured;
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            ViewData["Title"] = "Confirm Email - AutoVault";
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || string.IsNullOrWhiteSpace(token))
+            {
+                ViewData["Confirmed"] = false;
+                return View();
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            ViewData["Confirmed"] = result.Succeeded;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendConfirmation(string email)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return RedirectToAction(nameof(SignIn));
+            }
+
+            var cacheKey = $"confirm-resend:{email.Trim().ToLowerInvariant()}";
+            if (_cache.TryGetValue(cacheKey, out _))
+            {
+                TempData["Error"] = "Please wait a minute before requesting another confirmation email.";
+                return RedirectToAction(nameof(CheckEmail), new { email });
+            }
+
+            _cache.Set(cacheKey, true, TimeSpan.FromMinutes(1));
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null && !user.EmailConfirmed)
+            {
+                await SendConfirmationAsync(user);
+            }
+
+            TempData["Success"] = _emailSender.IsConfigured
+                ? "If the account exists and is not confirmed, a new confirmation email has been sent."
+                : "Email delivery is not configured. A new confirmation link was prepared for development.";
+            return RedirectToAction(nameof(CheckEmail), new { email });
         }
 
         [HttpPost]
@@ -231,6 +325,10 @@ namespace FinalProject.MVC.Controllers
         [HttpGet]
         public async Task<IActionResult> AddCar()
         {
+            if (User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.SuperAdmin))
+            {
+                return Forbid();
+            }
             ViewData["Title"] = "Add Car - AutoVault";
             try
             {
@@ -251,6 +349,11 @@ namespace FinalProject.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddCar(CarEditorViewModel model)
         {
+            if (User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.SuperAdmin))
+            {
+                return Forbid();
+            }
+
             if (!ModelState.IsValid)
             {
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
@@ -564,6 +667,37 @@ namespace FinalProject.MVC.Controllers
             ViewData["Title"] = "Access Denied - AutoVault";
             return View();
         }
+
+        private async Task SendConfirmationAsync(ApplicationUser user)
+        {
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = Url.Action(
+                nameof(ConfirmEmail),
+                "Account",
+                new { userId = user.Id, token },
+                Request.Scheme);
+            if (string.IsNullOrWhiteSpace(link) || string.IsNullOrWhiteSpace(user.Email))
+            {
+                return;
+            }
+
+            if (!_emailSender.IsConfigured)
+            {
+                if (_environment.IsDevelopment())
+                {
+                    _cache.Set(DevelopmentLinkKey(user.Email), link, TimeSpan.FromMinutes(30));
+                }
+
+                return;
+            }
+
+            var text = $"Confirm your AutoVault account: {link}";
+            var html = $"<p>Confirm your AutoVault account.</p><p><a href=\"{link}\">Confirm email</a></p>";
+            await _emailSender.SendAsync(user.Email, "Confirm your AutoVault account", html, text);
+        }
+
+        private static string DevelopmentLinkKey(string email) =>
+            $"dev-confirm:{email.Trim().ToLowerInvariant()}";
 
         private bool IsSafeReturnUrl(string? returnUrl)
         {

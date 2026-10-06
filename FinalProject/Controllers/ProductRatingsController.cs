@@ -31,7 +31,7 @@ public sealed class ProductRatingsController : ControllerBase
             return NotFound(new { message = "Product not found." });
         }
 
-        return User.IsInRole("Admin")
+        return User.IsInRole("Admin") || User.IsInRole("SuperAdmin")
             ? Ok(result)
             : Ok(result with { Ratings = Array.Empty<ProductRatingItem>() });
     }
@@ -112,7 +112,7 @@ public sealed class ProductRatingsController : ControllerBase
             : Ok(result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpDelete("{productId:int}/ratings/{ratingId:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

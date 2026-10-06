@@ -1,0 +1,36 @@
+@model IReadOnlyList<AdminUserViewModel>
+@{
+    Layout = "_AdminLayout";
+}
+<h1 class="h3 mb-4">Users</h1>
+<div class="admin-card">
+    <table class="table">
+        <thead><tr><th>User</th><th>Email</th><th>Confirmed</th><th>Role</th><th>Registered</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@(string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName)</td>
+                <td>@user.Email</td>
+                <td>@(user.EmailConfirmed ? "Yes" : "No")</td>
+                <td>@user.Role</td>
+                <td>@user.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                <td>
+                    @if (!user.IsSuperAdmin)
+                    {
+                        <form asp-action="ChangeRole" method="post" class="d-flex gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userId" value="@user.Id" />
+                            <select name="role" class="form-select form-select-sm">
+                                <option value="Member" selected="@(user.Role == "Member")">Member</option>
+                                <option value="Admin" selected="@(user.Role == "Admin")">Admin</option>
+                            </select>
+                            <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -159,6 +159,48 @@ public class CarService : ICarService
         return await GetByIdAsync(car.Id, cancellationToken);
     }
 
+    public async Task<CarResponse?> CreateCatalogAsync(
+        SaveCarRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await LookupsExistAsync(request.BrandId, request.CategoryId, cancellationToken))
+        {
+            return null;
+        }
+
+        var now = DateTime.UtcNow;
+        var car = new Models.Entities.Car
+        {
+            BrandId = request.BrandId,
+            CategoryId = request.CategoryId,
+            Model = request.Model.Trim(),
+            Year = request.Year,
+            Price = request.Price,
+            Mileage = request.Mileage,
+            FuelType = request.FuelType.Trim(),
+            Transmission = request.Transmission.Trim(),
+            Color = request.Color.Trim(),
+            Description = request.Description.Trim(),
+            OwnerId = null,
+            Status = request.Status,
+            IsNew = true,
+            CreatedAt = now,
+            Images =
+            {
+                new Models.Entities.CarImage
+                {
+                    ImageUrl = request.ImageUrl.Trim(),
+                    IsMain = true,
+                    DisplayOrder = 0
+                }
+            }
+        };
+
+        _dbContext.Cars.Add(car);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return await GetByIdAsync(car.Id, cancellationToken);
+    }
+
     public async Task<CarResponse?> UpdateAsync(
         int id,
         SaveCarRequest request,
