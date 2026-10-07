@@ -2,6 +2,19 @@
 @{
     ViewData["Title"] = "Cars - AutoVault";
     var query = Model.Query;
+
+    string EmptyCatalogMessage(CarListingResult listing)
+    {
+        if (!string.IsNullOrWhiteSpace(listing.Query.Make))
+        {
+            var makeKnown = listing.Makes.Any(make => make.Equals(listing.Query.Make, StringComparison.OrdinalIgnoreCase));
+            return makeKnown
+                ? $"No {listing.Query.Make} vehicles match this search."
+                : $"No {listing.Query.Make} vehicles are currently in the catalog.";
+        }
+
+        return listing.CategoryRequested ? "No cars found for this category." : "No cars found.";
+    }
 }
 
 <style>
@@ -134,7 +147,7 @@
             else if (Model.Cars.Count == 0)
             {
                 <div class="col-12">
-                    <h3 class="title text-center">@(string.IsNullOrWhiteSpace(Model.Query.Make) ? (Model.CategoryRequested ? "No cars found for this category." : "No cars found.") : $"No {Model.Query.Make} vehicles are currently in the catalog.")</h3>
+                    <h3 class="title text-center">@EmptyCatalogMessage(Model)</h3>
                 </div>
             }
             @foreach (var car in Model.Cars)

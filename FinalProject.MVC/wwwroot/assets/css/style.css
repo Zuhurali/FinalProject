@@ -15752,6 +15752,13 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
   padding: 25px;
   border-radius: 10px;
 }
+a.category-wrapper2 {
+  text-decoration: none;
+  color: inherit;
+}
+a.category-wrapper2:hover {
+  color: inherit;
+}
 .category-wrapper2 .text .title {
   margin-bottom: 10px;
 }

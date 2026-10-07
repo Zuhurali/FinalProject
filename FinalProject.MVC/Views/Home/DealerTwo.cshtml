@@ -1,4 +1,5 @@
 @using System.Text.Json
+@using FinalProject.MVC.Mappings
 @{
     ViewData["Title"] = "Dealer Two - AutoVault";
     var dealerCars = ViewData["DealerCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
@@ -140,72 +141,31 @@
                         <div class="float-right">
                             <div class="swiper category-slider2">
                                 <div class="swiper-wrapper">
-                                    <div class="swiper-slide">
-                                        <div class="category-wrapper2">
-                                            <div class="icon">
-                                                <img src="~/assets/images/category/07.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title cw"><a href="#">Hatchback</a></h6>
-                                                <p class="desc">30+ Car</p>
-                                            </div>
+                                    @{
+                                        var typeCards = new (string Title, string Category, string Icon)[]
+                                        {
+                                            ("Hatchback", "Hatchback", "07.svg"),
+                                            ("Minivans", "Minivans", "08.svg"),
+                                            ("Luxury Cars", "Luxury Cars", "09.svg"),
+                                            ("Sedans", "Sedans", "10.svg"),
+                                            ("Convertible", "Convertible", "11.svg"),
+                                            ("Sports Car", "Sports Car", "12.svg")
+                                        };
+                                    }
+                                    @foreach (var card in typeCards)
+                                    {
+                                        <div class="swiper-slide">
+                                            <a class="category-wrapper2" asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug(card.Category)">
+                                                <div class="icon">
+                                                    <img src="~/assets/images/category/@card.Icon" alt="">
+                                                </div>
+                                                <div class="text">
+                                                    <h6 class="title cw">@card.Title</h6>
+                                                    <p class="desc">@CarApiMapper.CountLabel(dealerCars, card.Category)</p>
+                                                </div>
+                                            </a>
                                         </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="category-wrapper2">
-                                            <div class="icon">
-                                                <img src="~/assets/images/category/08.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title cw"><a href="#">Minivans</a></h6>
-                                                <p class="desc">20+ Car</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="category-wrapper2">
-                                            <div class="icon">
-                                                <img src="~/assets/images/category/09.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title cw"><a href="#">Luxury Cars</a></h6>
-                                                <p class="desc">15+ Car</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="category-wrapper2">
-                                            <div class="icon">
-                                                <img src="~/assets/images/category/10.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title cw"><a href="#">Sadans</a></h6>
-                                                <p class="desc">25+ Car</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="category-wrapper2">
-                                            <div class="icon">
-                                                <img src="~/assets/images/category/11.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title cw"><a href="#">Convertible</a></h6>
-                                                <p class="desc">55+ Car</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="swiper-slide">
-                                        <div class="category-wrapper2">
-                                            <div class="icon">
-                                                <img src="~/assets/images/category/12.svg" alt="">
-                                            </div>
-                                            <div class="text">
-                                                <h6 class="title cw"><a href="#">Sports Car</a></h6>
-                                                <p class="desc">35+ Car</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    }
                                 </div>
                             </div>
                         </div>
