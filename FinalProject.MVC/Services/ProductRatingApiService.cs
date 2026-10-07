@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Services.Interfaces;
 

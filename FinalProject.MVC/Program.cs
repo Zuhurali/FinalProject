@@ -1,6 +1,8 @@
+using FinalProject.MVC.Configuration;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Hosting;
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Security;
 using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -101,6 +103,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // Add session support
 builder.Services.AddDistributedMemoryCache();

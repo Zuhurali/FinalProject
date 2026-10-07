@@ -277,10 +277,13 @@
     }, true);
 })();
 
-function bindMakeModels(form) {
+function bindMakeModels(form, dataElementId, autoSubmit) {
     var makeSelect = form.querySelector('select[name="make"]');
     var modelSelect = form.querySelector('select[name="model"]');
-    var dataElement = document.getElementById("heroModelsByMake");
+    var dataElement = document.getElementById(dataElementId || "heroModelsByMake");
+    if (autoSubmit === undefined) {
+        autoSubmit = true;
+    }
     if (!makeSelect || !modelSelect || !dataElement) {
         return null;
     }
@@ -442,7 +445,7 @@ function bindMakeModels(form) {
     }
 
     function onModelChange() {
-        if (suppressModelSubmit || !modelSelect.value) {
+        if (!autoSubmit || suppressModelSubmit || !modelSelect.value) {
             return;
         }
 

@@ -2,7 +2,8 @@
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
-using FinalProject.MVC.Services;
+using FinalProject.MVC.Exceptions;
+using FinalProject.MVC.Mappings;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,7 +32,7 @@ namespace FinalProject.MVC.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, int page = 1)
+        public async Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, string? condition, int page = 1)
         {
             ViewData["Title"] = "Cars - AutoVault";
 
@@ -44,6 +45,7 @@ namespace FinalProject.MVC.Controllers
                 Fuel = fuel,
                 Transmission = transmission,
                 Search = search,
+                Condition = condition,
                 Page = page
             };
 
@@ -427,6 +429,15 @@ namespace FinalProject.MVC.Controllers
             if (HasFilterValue(query.Search))
             {
                 apiQuery.Search = query.Search!.Trim();
+            }
+
+            if (string.Equals(query.Condition, "new", StringComparison.OrdinalIgnoreCase))
+            {
+                apiQuery.IsNew = true;
+            }
+            else if (string.Equals(query.Condition, "used", StringComparison.OrdinalIgnoreCase))
+            {
+                apiQuery.IsNew = false;
             }
 
             return true;

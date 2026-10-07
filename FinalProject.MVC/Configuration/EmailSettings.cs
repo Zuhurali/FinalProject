@@ -1,4 +1,4 @@
-namespace FinalProject.MVC.Services;
+namespace FinalProject.MVC.Configuration;
 
 public sealed class EmailSettings
 {

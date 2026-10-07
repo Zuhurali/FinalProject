@@ -362,6 +362,11 @@ public class CarService : ICarService
             cars = cars.Where(car => car.Transmission.ToLower() == transmission);
         }
 
+        if (query.IsNew is bool isNew)
+        {
+            cars = cars.Where(car => car.IsNew == isNew);
+        }
+
         return cars;
     }
 

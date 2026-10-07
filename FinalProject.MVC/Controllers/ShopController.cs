@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Data;
-using FinalProject.MVC.Services;
+using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,62 +31,6 @@ namespace FinalProject.MVC.Controllers
             _tokenService = tokenService;
             _userManager = userManager;
             _shopCatalog = shopCatalog;
-        }
-
-        internal static List<ShopProduct> TemplateProducts()
-        {
-            return new List<ShopProduct>
-            {
-                Part(1, "Car Parts Gears and Equipment", 400, "11.webp", "Parts", 4.5, "Porsche", "911", "Gear, shaft, and workshop equipment set."),
-                Part(2, "Brake and Suspension Parts Kit", 599, "12.webp", "Brakes", 4.0, "Mercedes-Benz", "AMG GT", "Brake caliper, drilled rotor, coilover, filters, timing belt, and bearings."),
-                Part(3, "High-Performance Tires", 399, "13.webp", "Tires", 5.0, "Toyota", "Highlander", "High-performance tire."),
-                Part(4, "Micrometer with check ring", 790, "14.webp", "Tools", 4.5, "", "", "Outside micrometer, bore gauges, and check ring."),
-                Part(5, "Car Parts Mufflers And Pipes", 270, "15.webp", "Parts", 4.0, "Nissan", "350Z", "Exhaust mufflers, pipes, and turbo assembly."),
-                Part(6, "Car Gears Machine part", 699, "16.webp", "Parts", 4.5, "Lamborghini", "Diablo", "Machine gear and bearing."),
-                Part(7, "Engine Assembly", 2490, "parts/engine-assembly.webp", "Parts", 5.0, "Ferrari", "California", "Complete engine assembly."),
-                Part(8, "Brake Caliper and Rotor", 549, "parts/brake-caliper.webp", "Brakes", 4.5, "Porsche", "911", "Red brake caliper on a drilled rotor."),
-                Part(9, "Coilover Shock Absorber", 429, "parts/coilover-shock.webp", "Suspension", 4.0, "Nissan", "350Z", "Coilover shock absorber with red spring."),
-                Part(10, "Pleated Engine Air Filter", 49, "parts/air-filter.webp", "Filters", 4.5, "Toyota", "Highlander", "Pleated engine air filter."),
-                Part(11, "Spin-On Oil Filter", 28, "parts/oil-filter.webp", "Filters", 4.0, "Tesla", "Model 3", "Spin-on oil filter."),
-                Part(12, "Timing Belt", 89, "parts/timing-belt.webp", "Parts", 4.5, "Maserati", "GranTurismo", "Engine timing belt."),
-                Part(13, "Ball Bearing", 64, "parts/ball-bearing.webp", "Parts", 3.5, "Mercedes-Benz", "SL-Class", "Ball bearing."),
-                Part(14, "Bore Gauge Set", 340, "parts/bore-gauge.webp", "Tools", 5.0, "", "", "Bore gauge set for engine measurement."),
-                Part(15, "Precision Check Ring", 155, "parts/check-ring.webp", "Tools", 4.5, "", "", "Precision check ring for gauge setup."),
-                Part(16, "Turbocharger Assembly", 1290, "parts/turbocharger.webp", "Parts", 4.5, "Nissan", "350Z", "Turbocharger and exhaust housing."),
-                Part(17, "Exhaust Muffler", 320, "parts/exhaust-muffler.webp", "Parts", 4.0, "Porsche", "911", "Exhaust muffler."),
-                Part(18, "Exhaust Tip", 180, "parts/exhaust-tip.webp", "Parts", 4.5, "Mercedes-Benz", "SL-Class", "Exhaust tip."),
-                Part(19, "Splined Driveshaft", 260, "parts/splined-shaft.webp", "Parts", 4.0, "Toyota", "Highlander", "Splined driveshaft."),
-                Part(20, "Gear Shaft and Fastener Kit", 175, "parts/gear-shaft.webp", "Parts", 4.5, "Rolls-Royce", "Phantom", "Gear shafts, nuts, and fasteners."),
-                Part(21, "Outside Micrometer", 220, "parts/outside-micrometer.webp", "Tools", 5.0, "", "", "Outside micrometer.")
-            };
-        }
-
-        private static ShopProduct Part(
-            int id,
-            string name,
-            decimal price,
-            string image,
-            string category,
-            double rating,
-            string make,
-            string model,
-            string description)
-        {
-            return new ShopProduct
-            {
-                Id = id,
-                Name = name,
-                Price = price,
-                Category = category,
-                CarMake = make,
-                CarModel = model,
-                ImagePath = "~/assets/images/portfolio/" + image,
-                Rating = 0,
-                RatingCount = 0,
-                Description = description,
-                InStock = true,
-                SearchKeywords = string.Join(" ", new[] { name, category, make, model }.Where(value => !string.IsNullOrWhiteSpace(value)))
-            };
         }
 
         private static ShopProduct CopyPart(ShopProduct product)

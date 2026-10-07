@@ -1,0 +1,81 @@
+@model IReadOnlyList<Car>
+@{
+    var make = ViewData["Make"] as string ?? "this brand";
+    var preferred = ViewData["PreferredModel"] as string;
+    var feature = Model.FirstOrDefault(car => !string.IsNullOrWhiteSpace(preferred) && car.Model.Equals(preferred, StringComparison.OrdinalIgnoreCase))
+        ?? Model.FirstOrDefault();
+    var rest = feature == null
+        ? new List<Car>()
+        : Model.Where(car => car.Id != feature.Id).Take(5).ToList();
+}
+@if (feature == null)
+{
+    <h3 class="title cw text-center">No @make vehicles are currently in the catalog.</h3>
+}
+else
+{
+    <div class="row g-5">
+        <div class="col-lg-6">
+            <div class="project-wrapper2 long">
+                <div class="image-area">
+                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@feature.Id"><img src="@Url.Content(feature.ImagePath)" alt="@feature.Name"></a>
+                </div>
+                <div class="content-area">
+                    <h6 class="title cw"><a asp-controller="Cars" asp-action="Details" asp-route-id="@feature.Id">@feature.Name</a></h6>
+                    <ul class="feature-area">
+                        <li>
+                            <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                            @feature.Mileage.ToString("N0") Miles
+                        </li>
+                        <li>
+                            <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                            @feature.Fuel
+                        </li>
+                        <li>
+                            <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                            @feature.Transmission
+                        </li>
+                    </ul>
+                    <div class="button-area">
+                        <p class="cw">@feature.Price.ToString("C0")</p>
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@feature.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            @foreach (var car in rest)
+            {
+                <div class="project-wrapper2 list-style mb--30">
+                    <div class="image-area">
+                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
+                            <img src="@Url.Content(car.ImagePath)" height="206" alt="@car.Name">
+                        </a>
+                    </div>
+                    <div class="content-area">
+                        <h6 class="title cw"><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
+                        <ul class="feature-area">
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                @car.Mileage.ToString("N0") Miles
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                @car.Fuel
+                            </li>
+                            <li>
+                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                @car.Transmission
+                            </li>
+                        </ul>
+                        <div class="button-area">
+                            <p class="cw">@car.Price.ToString("C0")</p>
+                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            }
+            <a asp-controller="Cars" asp-action="Index" asp-route-make="@make" class="rts-btn radius-small btn-border load-more-btn cw">View All</a>
+        </div>
+    </div>
+}

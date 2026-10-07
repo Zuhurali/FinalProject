@@ -1,3 +1,4 @@
+using FinalProject.MVC.Configuration;
 using FinalProject.MVC.Services.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;

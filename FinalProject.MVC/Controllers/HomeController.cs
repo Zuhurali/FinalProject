@@ -1,6 +1,7 @@
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
-using FinalProject.MVC.Services;
+using FinalProject.MVC.Exceptions;
+using FinalProject.MVC.Mappings;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -85,10 +86,39 @@ namespace FinalProject.MVC.Controllers
             return View();
         }
 
-        public IActionResult DealerTwo()
+        public async Task<IActionResult> DealerTwo()
         {
+            IReadOnlyList<Car> cars;
+            try
+            {
+                cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
+                lock (CatalogLock)
+                {
+                    CatalogCache = cars;
+                }
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Dealer Two catalog could not be loaded.");
+                lock (CatalogLock)
+                {
+                    cars = CatalogCache ?? Array.Empty<Car>();
+                }
+            }
+
+            var makes = cars.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList();
+            var modelsByMake = cars
+                .Where(car => !string.IsNullOrWhiteSpace(car.Make) && !string.IsNullOrWhiteSpace(car.Model))
+                .GroupBy(car => car.Make)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(car => car.Model).Distinct().OrderBy(model => model).ToArray());
+
             ViewData["Title"] = "Dealer Two - AutoVault";
             ViewData["BodyClass"] = "home-two";
+            ViewData["DealerCars"] = cars;
+            ViewData["SearchMakes"] = makes;
+            ViewData["ModelsByMake"] = modelsByMake;
             return View();
         }
 

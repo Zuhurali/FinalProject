@@ -199,18 +199,18 @@
                         <nav aria-label="Page navigation">
                             <ul class="pagination">
                                 <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
-                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@(Model.Page - 1)" aria-label="Previous">
+                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-condition="@query.Condition" asp-route-page="@(Model.Page - 1)" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
                                 @for (var i = 1; i <= Model.TotalPages; i++)
                                 {
                                     <li class="page-item @(i == Model.Page ? "active" : null)">
-                                        <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@i">@i</a>
+                                        <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-condition="@query.Condition" asp-route-page="@i">@i</a>
                                     </li>
                                 }
                                 <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)">
-                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@(Model.Page + 1)" aria-label="Next">
+                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-condition="@query.Condition" asp-route-page="@(Model.Page + 1)" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>

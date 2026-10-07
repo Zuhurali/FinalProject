@@ -1,4 +1,4 @@
-namespace FinalProject.MVC.Services;
+namespace FinalProject.MVC.Exceptions;
 
 public sealed class CarApiException : Exception
 {

@@ -1,4 +1,4 @@
-namespace FinalProject.MVC.Services;
+namespace FinalProject.MVC.Security;
 
 public static class AppRoles
 {

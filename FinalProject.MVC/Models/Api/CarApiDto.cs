@@ -24,6 +24,8 @@ public class CarApiQuery
 
     public string? Transmission { get; set; }
 
+    public bool? IsNew { get; set; }
+
     public int Page { get; set; } = 1;
 
     public int PageSize { get; set; } = 10;

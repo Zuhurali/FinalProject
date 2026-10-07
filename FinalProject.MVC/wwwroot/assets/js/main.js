@@ -546,12 +546,15 @@
           if (swiperthumb2) swiperthumb2.destroy(true, true);
           if (swiper2) swiper2.destroy(true, true);
           const isMobile = window.innerWidth <= 991;
+          const thumbCount = document.querySelectorAll(".SlideThumb2 .swiper-slide").length;
+          const heroCount = document.querySelectorAll(".rts-heroSlider2 .swiper-slide").length;
+          const thumbPerView = Math.max(1, Math.min(isMobile ? 4 : 6, thumbCount || 1));
           swiperthumb2 = new Swiper(".SlideThumb2", {
             direction: isMobile ? "horizontal" : "vertical",
             spaceBetween: 0,
-            slidesPerView: isMobile ? 4 : 6,
+            slidesPerView: thumbPerView,
             mousewheel: !isMobile,
-            loop: true,
+            loop: thumbCount > thumbPerView,
             watchSlidesProgress: true,
             navigation: {
               nextEl: ".thumb-next",
@@ -570,7 +573,7 @@
             speed: 1500,
             grabCursor: true,
             autoplay: false,
-            loop: true,
+            loop: heroCount > 1,
             thumbs: {
               swiper: swiperthumb2,
             },

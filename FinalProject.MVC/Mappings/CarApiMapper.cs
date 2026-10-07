@@ -3,7 +3,7 @@ using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Services.Interfaces;
 
-namespace FinalProject.MVC.Services;
+namespace FinalProject.MVC.Mappings;
 
 public static class CarApiMapper
 {
@@ -49,8 +49,16 @@ public static class CarApiMapper
             DriveType = driveType,
             Description = string.IsNullOrWhiteSpace(description) ? name : description,
             ImagePath = NormalizeImagePath(dto.MainImage),
+            GalleryImages = (dto.Images ?? new List<CarImageApiDto>())
+                .OrderByDescending(image => image.IsMain)
+                .ThenBy(image => image.DisplayOrder)
+                .Select(image => NormalizeImagePath(image.ImageUrl))
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList(),
             ImageCount = dto.Images == null || dto.Images.Count == 0 ? 1 : dto.Images.Count,
-            Badge = dto.IsNew ? "New" : string.Empty,
+            IsNew = dto.IsNew,
+            Badge = dto.IsNew ? "New" : "Used",
             Seats = seats,
             InStock = dto.Status == "Active",
             OwnerId = dto.OwnerId,

@@ -1,7 +1,13 @@
 @model Car
 @{
     ViewData["Title"] = $"{Model.Name} - AutoVault";
-    var slides = Enumerable.Repeat(Model.ImagePath, 6).ToArray();
+    var slides = (Model.GalleryImages ?? Array.Empty<string>())
+        .Where(path => !string.IsNullOrWhiteSpace(path))
+        .ToList();
+    if (slides.Count == 0 && !string.IsNullOrWhiteSpace(Model.ImagePath))
+    {
+        slides.Add(Model.ImagePath);
+    }
     var relatedCars = ViewData["RelatedCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var isOwner = !string.IsNullOrWhiteSpace(Model.OwnerId) && Model.OwnerId == currentUserId;

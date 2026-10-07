@@ -28,11 +28,29 @@ public static class VerifiedCatalogSeeder
                         && car.Color == vehicle.Color,
                     cancellationToken);
 
+            var imageUrls = ImageUrls(vehicle);
             if (existing != null)
             {
-                if (existing.Images.All(image => image.ImageUrl != vehicle.ImageUrl))
+                var known = existing.Images
+                    .Select(image => image.ImageUrl)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var order = existing.Images.Count == 0 ? 0 : existing.Images.Max(image => image.DisplayOrder) + 1;
+                var hasMain = existing.Images.Any(image => image.IsMain);
+                foreach (var imageUrl in imageUrls)
                 {
-                    existing.Images.Add(MainImage(vehicle.ImageUrl));
+                    if (!known.Add(imageUrl))
+                    {
+                        continue;
+                    }
+
+                    var isMain = !hasMain;
+                    existing.Images.Add(new CarImage
+                    {
+                        ImageUrl = imageUrl,
+                        IsMain = isMain,
+                        DisplayOrder = order++
+                    });
+                    hasMain |= isMain;
                 }
 
                 continue;
@@ -53,7 +71,12 @@ public static class VerifiedCatalogSeeder
                 IsNew = vehicle.IsNew,
                 IsFeatured = false,
                 CreatedAt = SeededAt,
-                Images = new List<CarImage> { MainImage(vehicle.ImageUrl) }
+                Images = imageUrls.Select((imageUrl, index) => new CarImage
+                {
+                    ImageUrl = imageUrl,
+                    IsMain = index == 0,
+                    DisplayOrder = index
+                }).ToList()
             });
         }
 
@@ -101,14 +124,27 @@ public static class VerifiedCatalogSeeder
         return existing.ToDictionary(category => category.Name);
     }
 
-    private static CarImage MainImage(string imageUrl)
+    private static List<string> ImageUrls(VehicleSeed vehicle)
     {
-        return new CarImage
+        var urls = new List<string>();
+        if (!string.IsNullOrWhiteSpace(vehicle.ImageUrl))
         {
-            ImageUrl = imageUrl,
-            IsMain = true,
-            DisplayOrder = 0
-        };
+            urls.Add(vehicle.ImageUrl);
+        }
+
+        if (vehicle.Gallery != null)
+        {
+            foreach (var imageUrl in vehicle.Gallery)
+            {
+                if (!string.IsNullOrWhiteSpace(imageUrl)
+                    && !urls.Contains(imageUrl, StringComparer.OrdinalIgnoreCase))
+                {
+                    urls.Add(imageUrl);
+                }
+            }
+        }
+
+        return urls;
     }
 
     private sealed record VehicleSeed(
@@ -123,7 +159,8 @@ public static class VerifiedCatalogSeeder
         string Color,
         string Description,
         bool IsNew,
-        string ImageUrl);
+        string ImageUrl,
+        string[]? Gallery = null);
 
     private static readonly VehicleSeed[] Vehicles =
     {
@@ -166,6 +203,29 @@ public static class VerifiedCatalogSeeder
         new("Nissan", "GT-R", "Sports Car", 2008, 58940m, 41280, "Petrol", "Automatic", "Black", "Nissan GT-R. 4 seats, all-wheel drive, 3.8L twin-turbo.", false, "/assets/images/catalog/nissan/gt-r.jpg"),
         new("Nissan", "Z", "Sports Car", 2023, 42860m, 6420, "Petrol", "Automatic", "Blue", "Nissan Z. 2 seats, rear-wheel drive, 3.0L twin-turbo.", false, "/assets/images/catalog/nissan/z.jpg"),
         new("Nissan", "Kicks", "SUV", 2024, 21870m, 11240, "Petrol", "Automatic", "Black", "Nissan Kicks. 5 seats, front-wheel drive, 1.6L.", false, "/assets/images/catalog/nissan/kicks.jpg"),
-        new("Nissan", "Frontier", "SUV", 2022, 32470m, 28160, "Petrol", "Automatic", "Grey", "Nissan Frontier Pro-4X. 5 seats, four-wheel drive, 3.8L V6.", false, "/assets/images/catalog/nissan/frontier.jpg")
+        new("Nissan", "Frontier", "SUV", 2022, 32470m, 28160, "Petrol", "Automatic", "Grey", "Nissan Frontier Pro-4X. 5 seats, four-wheel drive, 3.8L V6.", false, "/assets/images/catalog/nissan/frontier.jpg"),
+        new("Ford", "Mustang GT", "Sports Car", 2018, 31480m, 32640, "Petrol", "Automatic", "Yellow", "Ford Mustang GT. 4 seats, rear-wheel drive, 5.0L V8.", false, "/assets/images/catalog/ford/mustang-gt.jpg"),
+        new("Ford", "Mustang EcoBoost", "Coupe", 2024, 38960m, 6240, "Petrol", "Automatic", "White", "Ford Mustang EcoBoost. 4 seats, rear-wheel drive, 2.3L turbo.", false, "/assets/images/catalog/ford/mustang-ecoboost.jpg"),
+        new("Ford", "Mustang Mach-E", "SUV", 2021, 29840m, 28460, "Electric", "Automatic", "Grey", "Ford Mustang Mach-E. 5 seats, all-wheel drive, dual motor.", false, "/assets/images/catalog/ford/mustang-mach-e.jpg"),
+        new("Ford", "F-150", "SUV", 2021, 34280m, 41860, "Petrol", "Automatic", "Grey", "Ford F-150 SuperCrew. 5 seats, rear-wheel drive, 3.3L V6.", false, "/assets/images/catalog/ford/f-150.jpg"),
+        new("Ford", "Ranger", "SUV", 2023, 39750m, 18640, "Diesel", "Automatic", "Orange", "Ford Ranger Wildtrak. 5 seats, four-wheel drive, 2.0L diesel.", false, "/assets/images/catalog/ford/ranger.jpg"),
+        new("Ford", "Bronco", "SUV", 2023, 46890m, 12480, "Petrol", "Automatic", "Grey", "Ford Bronco. 5 seats, four-wheel drive, 2.3L turbo.", false, "/assets/images/catalog/ford/bronco.jpg"),
+        new("Ford", "Explorer", "SUV", 2020, 28940m, 41280, "Petrol", "Automatic", "Grey", "Ford Explorer. 7 seats, all-wheel drive, 2.3L turbo.", false, "/assets/images/catalog/ford/explorer.jpg"),
+        new("Ford", "Escape", "SUV", 2023, 26480m, 16820, "Petrol", "Automatic", "Grey", "Ford Escape. 5 seats, front-wheel drive, 1.5L turbo.", false, "/assets/images/catalog/ford/escape.jpg"),
+        new("Ford", "Edge", "SUV", 2018, 18750m, 48260, "Petrol", "Automatic", "White", "Ford Edge ST-Line. 5 seats, all-wheel drive, 2.0L turbo.", false, "/assets/images/catalog/ford/edge.jpg"),
+        new("Ford", "Focus", "Sedan", 2019, 14280m, 52640, "Petrol", "Automatic", "White", "Ford Focus. 5 seats, front-wheel drive, 1.5L turbo.", false, "/assets/images/catalog/ford/focus.jpg"),
+        new("Ford", "Fusion", "Sedan", 2019, 16480m, 41200, "Petrol", "Automatic", "Silver", "Ford Fusion. 5 seats, front-wheel drive, 1.5L turbo.", false, "/assets/images/catalog/ford/fusion.jpg"),
+        new("Mazda", "MX-5", "Convertible", 2019, 27850m, 18420, "Petrol", "Manual", "Grey", "Mazda MX-5 Miata. 2 seats, rear-wheel drive, 2.0L.", false, "/assets/images/catalog/mazda/mx-5-1.jpg", new[] { "/assets/images/catalog/mazda/mx-5-2.jpg", "/assets/images/catalog/mazda/mx-5-3.jpg", "/assets/images/catalog/mazda/mx-5-4.jpg" }),
+        new("Mazda", "Mazda3", "Sedan", 2021, 21480m, 28640, "Petrol", "Automatic", "Red", "Mazda3 Sedan. 5 seats, front-wheel drive, 2.5L.", false, "/assets/images/catalog/mazda/mazda3-1.jpg", new[] { "/assets/images/catalog/mazda/mazda3-2.jpg", "/assets/images/catalog/mazda/mazda3-3.jpg", "/assets/images/catalog/mazda/mazda3-4.jpg" }),
+        new("Mazda", "Mazda3 Hatchback", "Hatchback", 2020, 19860m, 32140, "Petrol", "Automatic", "White", "Mazda3 Hatchback. 5 seats, front-wheel drive, 2.0L Skyactiv-X.", false, "/assets/images/catalog/mazda/mazda3h-2.jpg", new[] { "/assets/images/catalog/mazda/mazda3h-1.jpg", "/assets/images/catalog/mazda/mazda3h-4.jpg", "/assets/images/catalog/mazda/mazda3h-3.jpg" }),
+        new("Mazda", "Mazda6", "Sedan", 2018, 18420m, 46820, "Diesel", "Automatic", "Red", "Mazda6. 5 seats, front-wheel drive, 2.2L diesel.", false, "/assets/images/catalog/mazda/mazda6-1.jpg", new[] { "/assets/images/catalog/mazda/mazda6-2.jpg", "/assets/images/catalog/mazda/mazda6-3.jpg", "/assets/images/catalog/mazda/mazda6-4.jpg" }),
+        new("Mazda", "CX-3", "SUV", 2018, 16280m, 54210, "Petrol", "Automatic", "Red", "Mazda CX-3. 5 seats, front-wheel drive, 2.0L.", false, "/assets/images/catalog/mazda/cx3-1.jpg", new[] { "/assets/images/catalog/mazda/cx3-2.jpg", "/assets/images/catalog/mazda/cx3-3.jpg", "/assets/images/catalog/mazda/cx3-4.jpg" }),
+        new("Mazda", "CX-30", "SUV", 2021, 24860m, 29480, "Petrol", "Automatic", "Red", "Mazda CX-30. 5 seats, all-wheel drive, 2.5L.", false, "/assets/images/catalog/mazda/cx30-1.jpg", new[] { "/assets/images/catalog/mazda/cx30-2.jpg", "/assets/images/catalog/mazda/cx30-3.jpg", "/assets/images/catalog/mazda/cx30-4.jpg" }),
+        new("Mazda", "CX-5", "SUV", 2022, 28940m, 22160, "Petrol", "Automatic", "Blue", "Mazda CX-5. 5 seats, all-wheel drive, 2.5L.", false, "/assets/images/catalog/mazda/cx5-1.jpg", new[] { "/assets/images/catalog/mazda/cx5-2.jpg", "/assets/images/catalog/mazda/cx5-3.jpg", "/assets/images/catalog/mazda/cx5-4.jpg" }),
+        new("Mazda", "CX-50", "SUV", 2024, 36480m, 8420, "Hybrid", "Automatic", "White", "Mazda CX-50 Hybrid. 5 seats, all-wheel drive, 2.5L hybrid.", false, "/assets/images/catalog/mazda/cx50-1.jpg", new[] { "/assets/images/catalog/mazda/cx50-2.jpg", "/assets/images/catalog/mazda/cx50-3.jpg", "/assets/images/catalog/mazda/cx50-4.jpg" }),
+        new("Mazda", "CX-60", "SUV", 2023, 42860m, 14620, "Hybrid", "Automatic", "White", "Mazda CX-60. 5 seats, all-wheel drive, 2.5L plug-in hybrid.", false, "/assets/images/catalog/mazda/cx60-1.jpg", new[] { "/assets/images/catalog/mazda/cx60-2.jpg", "/assets/images/catalog/mazda/cx60-3.jpg", "/assets/images/catalog/mazda/cx60-4.jpg" }),
+        new("Mazda", "CX-90", "SUV", 2024, 48960m, 2140, "Hybrid", "Automatic", "Blue", "Mazda CX-90. 6 seats, all-wheel drive, 3.3L turbo hybrid.", true, "/assets/images/catalog/mazda/cx90-1.jpg", new[] { "/assets/images/catalog/mazda/cx90-2.jpg", "/assets/images/catalog/mazda/cx90-3.jpg", "/assets/images/catalog/mazda/cx90-4.jpg" }),
+        new("Mazda", "RX-8", "Sports Car", 2008, 11480m, 68420, "Petrol", "Manual", "Silver", "Mazda RX-8. 4 seats, rear-wheel drive, 1.3L rotary.", false, "/assets/images/catalog/mazda/rx8-1.jpg", new[] { "/assets/images/catalog/mazda/rx8-2.jpg", "/assets/images/catalog/mazda/rx8-3.jpg", "/assets/images/catalog/mazda/rx8-4.jpg" }),
+        new("Mazda", "RX-7", "Sports Car", 2002, 54800m, 41280, "Petrol", "Manual", "Silver", "Mazda RX-7. 2 seats, rear-wheel drive, 1.3L twin-rotor.", false, "/assets/images/catalog/mazda/rx7-1.jpg", new[] { "/assets/images/catalog/mazda/rx7-4.jpg", "/assets/images/catalog/mazda/rx7-2.jpg", "/assets/images/catalog/mazda/rx7-3.jpg" })
     };
 }

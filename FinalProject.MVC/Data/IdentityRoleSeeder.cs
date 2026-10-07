@@ -1,7 +1,8 @@
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Security;
 using Microsoft.AspNetCore.Identity;
 
-namespace FinalProject.MVC.Services;
+namespace FinalProject.MVC.Data;
 
 public static class IdentityRoleSeeder
 {

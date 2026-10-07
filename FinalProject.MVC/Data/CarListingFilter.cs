@@ -18,6 +18,8 @@ public class CarListingQuery
 
     public string? Search { get; set; }
 
+    public string? Condition { get; set; }
+
     public int Page { get; set; } = 1;
 }
 
@@ -56,7 +58,8 @@ public class CarListingResult
         || HasValue(Query.PriceRange)
         || HasValue(Query.Fuel)
         || HasValue(Query.Transmission)
-        || HasValue(Query.Search);
+        || HasValue(Query.Search)
+        || HasValue(Query.Condition);
 
     private static bool HasValue(string? value)
     {

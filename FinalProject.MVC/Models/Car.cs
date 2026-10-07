@@ -12,8 +12,10 @@ namespace FinalProject.MVC.Models
         public string Fuel { get; set; } = string.Empty; // Petrol, Diesel, Electric, Hybrid
         public string Transmission { get; set; } = string.Empty; // Automatic, Manual
         public string ImagePath { get; set; } = string.Empty;
+        public IReadOnlyList<string> GalleryImages { get; set; } = Array.Empty<string>();
+        public bool IsNew { get; set; }
         public string Badge { get; set; } = string.Empty; // New, Stocks, Trending, etc.
-        public int ImageCount { get; set; } = 7; // Number of gallery images
+        public int ImageCount { get; set; } = 1;
         public int Year { get; set; }
         public string Color { get; set; } = string.Empty;
         public int Seats { get; set; } = 5;
