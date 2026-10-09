@@ -26,7 +26,9 @@ public static class CarCategories
         Define("Minivans", "Minivans", "Minivans"),
         Define("Luxury Cars", "Luxury-Cars", "Luxury Cars"),
         Define("Sedans", "Sedans", "Sedan"),
-        Define("SUV", "SUV", "SUV")
+        Define("SUV", "SUV", "SUV"),
+        Define("Coupe", "Coupe", "Coupe"),
+        Define("Electric", "Electric", "Electric")
     };
 
     public static string Slug(string displayName)
