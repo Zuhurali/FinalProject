@@ -65,20 +65,18 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="banner-right-side-two wow fadeInRight" data-wow-delay=".8s" data-wow-duration="1s">
-                                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                <ul class="nav nav-tabs" id="dealerConditionTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" id="new-car-tab" data-bs-toggle="tab" data-bs-target="#new-car" type="button" role="tab" aria-controls="new-car" aria-selected="true">New Car</button>
+                                        <button class="nav-link active" id="all-cars-tab" type="button" role="tab" data-condition="" aria-selected="true">All Cars</button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="used-car-tab" data-bs-toggle="tab" data-bs-target="#used-car" type="button" role="tab" aria-controls="used-car" aria-selected="false">Used Car</button>
+                                        <button class="nav-link" id="new-car-tab" type="button" role="tab" data-condition="new" aria-selected="false">New Car</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="used-car-tab" type="button" role="tab" data-condition="used" aria-selected="false">Used Car</button>
                                     </li>
                                 </ul>
-                                <div class="tab-pane fade show active" id="new-car" role="tabpanel" aria-labelledby="new-car-tab">
-                                    <partial name="_DealerSearchForm" model="searchMakes" view-data="@(new ViewDataDictionary(ViewData) { { "Condition", "new" } })" />
-                                </div>
-                                <div class="tab-pane fade" id="used-car" role="tabpanel" aria-labelledby="used-car-tab">
-                                    <partial name="_DealerSearchForm" model="searchMakes" view-data="@(new ViewDataDictionary(ViewData) { { "Condition", "used" } })" />
-                                </div>
+                                <partial name="_DealerSearchForm" model="searchMakes" />
                             </div>
                         </div>
                     </div>
@@ -566,11 +564,21 @@
         document.querySelectorAll("form.dealer-search-form").forEach(function (form) {
             bindMakeModels(form, "dealerModelsByMake", false);
         });
-        document.querySelectorAll("#myTab button[data-bs-toggle='tab']").forEach(function (button) {
-            button.addEventListener("shown.bs.tab", function () {
-                if (window.jQuery && window.jQuery.fn && window.jQuery.fn.niceSelect) {
-                    window.jQuery(".dealer-search-form select").niceSelect("update");
+        var conditionInput = document.getElementById("dealer-search-condition");
+        document.querySelectorAll("#dealerConditionTabs button[data-condition]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                document.querySelectorAll("#dealerConditionTabs button[data-condition]").forEach(function (item) {
+                    item.classList.remove("active");
+                    item.setAttribute("aria-selected", "false");
+                });
+                button.classList.add("active");
+                button.setAttribute("aria-selected", "true");
+                if (!conditionInput) {
+                    return;
                 }
+                var condition = button.getAttribute("data-condition") || "";
+                conditionInput.value = condition;
+                conditionInput.disabled = condition.length === 0;
             });
         });
     </script>

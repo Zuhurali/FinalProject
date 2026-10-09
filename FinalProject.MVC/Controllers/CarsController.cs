@@ -324,7 +324,7 @@ namespace FinalProject.MVC.Controllers
                 return ListingFrom(query, catalogCars, Array.Empty<Car>(), query.Page < 1 ? 1 : query.Page, 0, 0);
             }
 
-            var page = await GetListingPageAsync(apiQuery, query);
+            var page = await _carApi.GetCarsAsync(apiQuery, HttpContext.RequestAborted);
             if (page.TotalPages > 0 && apiQuery.Page > page.TotalPages)
             {
                 apiQuery.Page = page.TotalPages;
@@ -348,7 +348,7 @@ namespace FinalProject.MVC.Controllers
                 return new List<Car>();
             }
 
-            var matches = await GetMatchingDtosAsync(apiQuery, query);
+            var matches = await _carApi.GetAllCarsAsync(apiQuery, HttpContext.RequestAborted);
             return matches.Select(CarApiMapper.ToCar).ToList();
         }
 
@@ -465,36 +465,6 @@ namespace FinalProject.MVC.Controllers
                 Makes = catalog.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList(),
                 Models = catalog.Select(car => car.Model).Where(model => !string.IsNullOrWhiteSpace(model)).Distinct().OrderBy(model => model).ToList()
             };
-        }
-
-        private async Task<PagedCarsDto> GetListingPageAsync(CarApiQuery apiQuery, CarListingQuery query)
-        {
-            var page = await _carApi.GetCarsAsync(apiQuery, HttpContext.RequestAborted);
-            if (page.TotalCount == 0 && ShouldRelaxCondition(apiQuery, query))
-            {
-                apiQuery.IsNew = null;
-                page = await _carApi.GetCarsAsync(apiQuery, HttpContext.RequestAborted);
-            }
-
-            return page;
-        }
-
-        private async Task<IReadOnlyList<CarApiDto>> GetMatchingDtosAsync(CarApiQuery apiQuery, CarListingQuery query)
-        {
-            var matches = await _carApi.GetAllCarsAsync(apiQuery, HttpContext.RequestAborted);
-            if (matches.Count == 0 && ShouldRelaxCondition(apiQuery, query))
-            {
-                apiQuery.IsNew = null;
-                matches = await _carApi.GetAllCarsAsync(apiQuery, HttpContext.RequestAborted);
-            }
-
-            return matches;
-        }
-
-        private static bool ShouldRelaxCondition(CarApiQuery apiQuery, CarListingQuery query)
-        {
-            return apiQuery.IsNew != null
-                && (HasFilterValue(query.Make) || HasFilterValue(query.Model) || HasFilterValue(query.Search));
         }
 
         private static bool HasFilterValue(string? value)

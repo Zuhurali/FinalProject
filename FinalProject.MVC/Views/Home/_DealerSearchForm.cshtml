@@ -1,9 +1,18 @@
 @model IReadOnlyList<string>
 @{
-    var condition = ViewData["Condition"] as string ?? "used";
+    var condition = ViewData["Condition"] as string;
+    var hasCondition = string.Equals(condition, "new", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(condition, "used", StringComparison.OrdinalIgnoreCase);
 }
 <form class="dealer-search-form" method="get" asp-controller="Cars" asp-action="Index" onsubmit="this.querySelectorAll('[name]').forEach(function (field) { if (!field.value || !field.value.trim()) field.disabled = true; });">
-    <input type="hidden" name="condition" value="@condition" />
+    @if (hasCondition)
+    {
+        <input type="hidden" id="dealer-search-condition" name="condition" value="@condition" />
+    }
+    else
+    {
+        <input type="hidden" id="dealer-search-condition" name="condition" value="" disabled />
+    }
     <div class="select-area-down">
         <select name="make" class="mySelect">
             <option value="">Car Make</option>

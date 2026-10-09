@@ -31,6 +31,12 @@ public static class VerifiedCatalogSeeder
             var imageUrls = ImageUrls(vehicle);
             if (existing != null)
             {
+                if (string.Equals(vehicle.Brand, "Ford", StringComparison.Ordinal)
+                    && existing.IsNew != vehicle.IsNew)
+                {
+                    existing.IsNew = vehicle.IsNew;
+                }
+
                 var known = existing.Images
                     .Select(image => image.ImageUrl)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -205,11 +211,11 @@ public static class VerifiedCatalogSeeder
         new("Nissan", "Kicks", "SUV", 2024, 21870m, 11240, "Petrol", "Automatic", "Black", "Nissan Kicks. 5 seats, front-wheel drive, 1.6L.", false, "/assets/images/catalog/nissan/kicks.jpg"),
         new("Nissan", "Frontier", "SUV", 2022, 32470m, 28160, "Petrol", "Automatic", "Grey", "Nissan Frontier Pro-4X. 5 seats, four-wheel drive, 3.8L V6.", false, "/assets/images/catalog/nissan/frontier.jpg"),
         new("Ford", "Mustang GT", "Sports Car", 2018, 31480m, 32640, "Petrol", "Automatic", "Yellow", "Ford Mustang GT. 4 seats, rear-wheel drive, 5.0L V8.", false, "/assets/images/catalog/ford/mustang-gt.jpg"),
-        new("Ford", "Mustang EcoBoost", "Coupe", 2024, 38960m, 6240, "Petrol", "Automatic", "White", "Ford Mustang EcoBoost. 4 seats, rear-wheel drive, 2.3L turbo.", false, "/assets/images/catalog/ford/mustang-ecoboost.jpg"),
-        new("Ford", "Mustang Mach-E", "SUV", 2021, 29840m, 28460, "Electric", "Automatic", "Grey", "Ford Mustang Mach-E. 5 seats, all-wheel drive, dual motor.", false, "/assets/images/catalog/ford/mustang-mach-e.jpg"),
+        new("Ford", "Mustang EcoBoost", "Coupe", 2024, 38960m, 6240, "Petrol", "Automatic", "White", "Ford Mustang EcoBoost. 4 seats, rear-wheel drive, 2.3L turbo.", true, "/assets/images/catalog/ford/mustang-ecoboost.jpg"),
+        new("Ford", "Mustang Mach-E", "SUV", 2021, 29840m, 28460, "Electric", "Automatic", "Grey", "Ford Mustang Mach-E. 5 seats, all-wheel drive, dual motor.", true, "/assets/images/catalog/ford/mustang-mach-e.jpg"),
         new("Ford", "F-150", "SUV", 2021, 34280m, 41860, "Petrol", "Automatic", "Grey", "Ford F-150 SuperCrew. 5 seats, rear-wheel drive, 3.3L V6.", false, "/assets/images/catalog/ford/f-150.jpg"),
-        new("Ford", "Ranger", "SUV", 2023, 39750m, 18640, "Diesel", "Automatic", "Orange", "Ford Ranger Wildtrak. 5 seats, four-wheel drive, 2.0L diesel.", false, "/assets/images/catalog/ford/ranger.jpg"),
-        new("Ford", "Bronco", "SUV", 2023, 46890m, 12480, "Petrol", "Automatic", "Grey", "Ford Bronco. 5 seats, four-wheel drive, 2.3L turbo.", false, "/assets/images/catalog/ford/bronco.jpg"),
+        new("Ford", "Ranger", "SUV", 2023, 39750m, 18640, "Diesel", "Automatic", "Orange", "Ford Ranger Wildtrak. 5 seats, four-wheel drive, 2.0L diesel.", true, "/assets/images/catalog/ford/ranger.jpg"),
+        new("Ford", "Bronco", "SUV", 2023, 46890m, 12480, "Petrol", "Automatic", "Grey", "Ford Bronco. 5 seats, four-wheel drive, 2.3L turbo.", true, "/assets/images/catalog/ford/bronco.jpg"),
         new("Ford", "Explorer", "SUV", 2020, 28940m, 41280, "Petrol", "Automatic", "Grey", "Ford Explorer. 7 seats, all-wheel drive, 2.3L turbo.", false, "/assets/images/catalog/ford/explorer.jpg"),
         new("Ford", "Escape", "SUV", 2023, 26480m, 16820, "Petrol", "Automatic", "Grey", "Ford Escape. 5 seats, front-wheel drive, 1.5L turbo.", false, "/assets/images/catalog/ford/escape.jpg"),
         new("Ford", "Edge", "SUV", 2018, 18750m, 48260, "Petrol", "Automatic", "White", "Ford Edge ST-Line. 5 seats, all-wheel drive, 2.0L turbo.", false, "/assets/images/catalog/ford/edge.jpg"),
@@ -226,6 +232,16 @@ public static class VerifiedCatalogSeeder
         new("Mazda", "CX-60", "SUV", 2023, 42860m, 14620, "Hybrid", "Automatic", "White", "Mazda CX-60. 5 seats, all-wheel drive, 2.5L plug-in hybrid.", false, "/assets/images/catalog/mazda/cx60-1.jpg", new[] { "/assets/images/catalog/mazda/cx60-2.jpg", "/assets/images/catalog/mazda/cx60-3.jpg", "/assets/images/catalog/mazda/cx60-4.jpg" }),
         new("Mazda", "CX-90", "SUV", 2024, 48960m, 2140, "Hybrid", "Automatic", "Blue", "Mazda CX-90. 6 seats, all-wheel drive, 3.3L turbo hybrid.", true, "/assets/images/catalog/mazda/cx90-1.jpg", new[] { "/assets/images/catalog/mazda/cx90-2.jpg", "/assets/images/catalog/mazda/cx90-3.jpg", "/assets/images/catalog/mazda/cx90-4.jpg" }),
         new("Mazda", "RX-8", "Sports Car", 2008, 11480m, 68420, "Petrol", "Manual", "Silver", "Mazda RX-8. 4 seats, rear-wheel drive, 1.3L rotary.", false, "/assets/images/catalog/mazda/rx8-1.jpg", new[] { "/assets/images/catalog/mazda/rx8-2.jpg", "/assets/images/catalog/mazda/rx8-3.jpg", "/assets/images/catalog/mazda/rx8-4.jpg" }),
-        new("Mazda", "RX-7", "Sports Car", 2002, 54800m, 41280, "Petrol", "Manual", "Silver", "Mazda RX-7. 2 seats, rear-wheel drive, 1.3L twin-rotor.", false, "/assets/images/catalog/mazda/rx7-1.jpg", new[] { "/assets/images/catalog/mazda/rx7-4.jpg", "/assets/images/catalog/mazda/rx7-2.jpg", "/assets/images/catalog/mazda/rx7-3.jpg" })
+        new("Mazda", "RX-7", "Sports Car", 2002, 54800m, 41280, "Petrol", "Manual", "Silver", "Mazda RX-7. 2 seats, rear-wheel drive, 1.3L twin-rotor.", false, "/assets/images/catalog/mazda/rx7-1.jpg", new[] { "/assets/images/catalog/mazda/rx7-4.jpg", "/assets/images/catalog/mazda/rx7-2.jpg", "/assets/images/catalog/mazda/rx7-3.jpg" }),
+        new("Toyota", "Sienna", "Minivans", 2022, 42860m, 24680, "Hybrid", "Automatic", "Black", "Toyota Sienna Limited. 7 seats, front-wheel drive, 2.5L hybrid.", false, "/assets/images/catalog/minivans/sienna.jpg"),
+        new("Honda", "Odyssey", "Minivans", 2019, 28940m, 41280, "Petrol", "Automatic", "Black", "Honda Odyssey EX-L. 8 seats, front-wheel drive, 3.5L V6.", false, "/assets/images/catalog/minivans/odyssey.jpg"),
+        new("Kia", "Carnival", "Minivans", 2023, 36480m, 16420, "Diesel", "Automatic", "White", "Kia Carnival SX. 8 seats, front-wheel drive, 2.2L diesel.", false, "/assets/images/catalog/minivans/carnival.jpg"),
+        new("Chrysler", "Pacifica", "Minivans", 2022, 39240m, 8420, "Petrol", "Automatic", "Black", "Chrysler Pacifica. 7 seats, front-wheel drive, 3.6L V6.", true, "/assets/images/catalog/minivans/pacifica.jpg"),
+        new("Chrysler", "Voyager", "Minivans", 2020, 24860m, 38640, "Petrol", "Automatic", "White", "Chrysler Voyager LX. 7 seats, front-wheel drive, 3.6L V6.", false, "/assets/images/catalog/minivans/voyager.jpg"),
+        new("Volkswagen", "Multivan", "Minivans", 2022, 46890m, 12860, "Diesel", "Automatic", "Black", "Volkswagen Multivan Life. 7 seats, front-wheel drive, 2.0L diesel.", true, "/assets/images/catalog/minivans/multivan.jpg"),
+        new("Volkswagen", "Caravelle", "Minivans", 2019, 34280m, 52480, "Petrol", "Automatic", "Black", "Volkswagen Caravelle. 8 seats, front-wheel drive, 2.0L TSI.", false, "/assets/images/catalog/minivans/caravelle.jpg"),
+        new("Ford", "Tourneo Custom", "Minivans", 2023, 44280m, 4120, "Diesel", "Automatic", "Red", "Ford Tourneo Custom. 8 seats, front-wheel drive, 2.0L diesel.", true, "/assets/images/catalog/minivans/tourneo-custom.jpg"),
+        new("Hyundai", "Staria", "Minivans", 2023, 39750m, 6240, "Diesel", "Automatic", "White", "Hyundai Staria Premium. 7 seats, front-wheel drive, 2.2L diesel.", true, "/assets/images/catalog/minivans/staria.jpg"),
+        new("Mercedes-Benz", "V-Class", "Minivans", 2023, 62480m, 12840, "Diesel", "Automatic", "Grey", "Mercedes-Benz V-Class 300d. 7 seats, rear-wheel drive, 2.0L diesel.", false, "/assets/images/catalog/minivans/v-class.jpg")
     };
 }

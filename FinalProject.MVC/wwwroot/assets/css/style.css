@@ -15465,18 +15465,24 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
 .banner-right-side-two .nav {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 8px;
   border: none;
   justify-content: center;
   margin-bottom: 30px;
+}
+.banner-right-side-two .nav .nav-item {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .banner-right-side-two .nav button {
   border: none;
   background: var(--color-gray);
   color: var(--color-body);
   line-height: 1;
-  padding: 14px 20px;
+  padding: 14px 8px;
   border-radius: 6px;
+  width: 100%;
+  white-space: nowrap;
 }
 .banner-right-side-two .nav button.active {
   border: none;
