@@ -13,7 +13,7 @@
     {
         FindCar("Mazda", "MX-5"),
         FindCar("Ford", "Mustang GT"),
-        FindCar("BMW", "330i"),
+        FindCar("BMW", "M340i"),
         FindCar("Nissan", "GT-R")
     }.Where(car => car != null).Cast<Car>().ToList();
     var allCars = highlights
@@ -42,7 +42,7 @@
         .ToList();
     var brandTabs = new (string Id, string Make, string? Preferred, bool Active)[]
     {
-        ("bmw", "BMW", "330i", true),
+        ("bmw", "BMW", "M340i", true),
         ("mazda", "Mazda", "MX-5", false),
         ("honda", "Honda", null, false),
         ("nissan", "Nissan", "GT-R", false)

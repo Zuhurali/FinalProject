@@ -194,7 +194,11 @@
                         }
                         @if (string.IsNullOrWhiteSpace(Model.OwnerId))
                         {
-                            <div class="alert alert-info">Seller contact is not available for this listing.</div>
+                            <p>This vehicle is offered by the AutoVault showroom. Call or email the showroom for availability and pricing.</p>
+                            <div class="contact-button-area">
+                                <a href="tel:+994503546767" class="rts-btn radius-small telegram"><img src="~/assets/images/cta/call.svg" alt=""> +994 50 354 67 67</a>
+                                <a href="mailto:info@autovault.com" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> info@autovault.com</a>
+                            </div>
                         }
                         else if (isOwner)
                         {
@@ -284,7 +288,14 @@
                                 </li>
                             </ul>
                             <div class="price-btn">
-                                <a href="#" class="rts-btn btn-primary radius-small">Call For Final Price</a>
+                                @if (string.IsNullOrWhiteSpace(Model.OwnerId))
+                                {
+                                    <a href="tel:+994503546767" class="rts-btn btn-primary radius-small">Call For Final Price</a>
+                                }
+                                else
+                                {
+                                    <a href="#carMessageForm" class="rts-btn btn-primary radius-small">Call For Final Price</a>
+                                }
                             </div>
                         </div>
                         <div class="overview side-box">
@@ -357,7 +368,13 @@
                             <div class="contact-inner">
                                 @if (string.IsNullOrWhiteSpace(Model.OwnerId))
                                 {
-                                    <p>Seller contact is not available for this listing.</p>
+                                    <h5>AutoVault Showroom</h5>
+                                    <p>Catalog listing. Contact the Baku showroom.</p>
+                                    <p><a href="tel:+994503546767">+994 50 354 67 67</a></p>
+                                    <p><a href="mailto:info@autovault.com">info@autovault.com</a></p>
+                                    <div class="contact-button-area">
+                                        <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-small telegram">Contact showroom</a>
+                                    </div>
                                 }
                                 else
                                 {
@@ -392,7 +409,7 @@
         <div class="cta-inner">
             <h2 class="title">If you have any questions Please Call.</h2>
             <div class="contact">
-                <a href="call-to:+994 50 354 67 67">
+                <a href="tel:+994503546767">
                     <img src="~/assets/images/cta/call.svg" alt="">
                     +994 50 354 67 67
                 </a>

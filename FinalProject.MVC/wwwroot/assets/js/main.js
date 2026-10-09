@@ -199,16 +199,18 @@
         });
       });
       $(document).ready(function () {
-        var swiper = new Swiper(".projectSlider2", {
+        document.querySelectorAll(".projectSlider2").forEach(function (element) {
+          var slideCount = element.querySelectorAll(".swiper-slide").length;
+          new Swiper(element, {
           spaceBetween: 30,
           slidesPerView: 4,
-          loop: true,
+          loop: slideCount > 4,
           speed: 1000,
           // autoplay: {
           //   delay: 3000,
           // },
           pagination: {
-            el: ".swiper-pagination-2",
+            el: element.querySelector(".swiper-pagination-2"),
             clickable: true,
           },
           breakpoints: {
@@ -234,6 +236,20 @@
               slidesPerView: 1,
             }
           },
+        });
+        });
+        document.querySelectorAll('#myTab2 button[data-bs-toggle="tab"]').forEach(function (button) {
+          button.addEventListener("shown.bs.tab", function (event) {
+            var pane = document.querySelector(event.target.getAttribute("data-bs-target"));
+            if (!pane) {
+              return;
+            }
+            pane.querySelectorAll(".projectSlider2").forEach(function (element) {
+              if (element.swiper) {
+                element.swiper.update();
+              }
+            });
+          });
         });
       });
       $(document).ready(function () {

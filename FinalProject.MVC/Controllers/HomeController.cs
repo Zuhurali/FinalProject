@@ -122,10 +122,29 @@ namespace FinalProject.MVC.Controllers
             return View();
         }
 
-        public IActionResult DealerThree()
+        public async Task<IActionResult> DealerThree()
         {
+            IReadOnlyList<Car> cars;
+            try
+            {
+                cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
+                lock (CatalogLock)
+                {
+                    CatalogCache = cars;
+                }
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Dealer Three catalog could not be loaded.");
+                lock (CatalogLock)
+                {
+                    cars = CatalogCache ?? Array.Empty<Car>();
+                }
+            }
+
             ViewData["Title"] = "Dealer Three - AutoVault";
             ViewData["HeaderStyle"] = "three";
+            ViewData["DealerCars"] = cars;
             return View();
         }
 

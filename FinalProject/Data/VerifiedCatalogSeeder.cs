@@ -189,7 +189,6 @@ public static class VerifiedCatalogSeeder
         new("Rolls-Royce", "Wraith", "Luxury Cars", 2020, 318000m, 8100, "Petrol", "Automatic", "White", "Rolls-Royce Wraith", true, "/assets/images/about/06.webp"),
         new("Tesla", "Model 3", "Sedan", 2023, 42900m, 11200, "Electric", "Automatic", "Red", "Tesla Model 3", true, "/assets/images/portfolio/29.webp"),
         new("Toyota", "Highlander", "SUV", 2024, 46500m, 4800, "Petrol", "Automatic", "Red", "Toyota Highlander", true, "/assets/images/blog/11.webp"),
-        new("BMW", "330i", "Sedan", 2021, 31850m, 28640, "Petrol", "Automatic", "White", "BMW 3 Series 330i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/330i.jpg"),
         new("BMW", "M340i", "Sedan", 2022, 48750m, 18420, "Petrol", "Automatic", "Blue", "BMW 3 Series M340i. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m340i.jpg"),
         new("BMW", "M3 Competition", "Sedan", 2022, 72900m, 12480, "Petrol", "Automatic", "Blue", "BMW M3 Competition. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/m3-competition.jpg"),
         new("BMW", "M440i", "Coupe", 2022, 46980m, 21360, "Petrol", "Automatic", "Grey", "BMW 4 Series M440i. 4 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m440i.jpg"),
