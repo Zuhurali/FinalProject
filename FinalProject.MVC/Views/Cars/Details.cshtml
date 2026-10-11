@@ -13,7 +13,7 @@
     var isOwner = !string.IsNullOrWhiteSpace(Model.OwnerId) && Model.OwnerId == currentUserId;
 }
 
-<div class="rts-breadcrumb-area portfolio details jarallax" style="background-image: url('@Url.Content(Model.ImagePath)'); background-size: cover; background-position: center;">
+<div class="rts-breadcrumb-area portfolio details@(Model.Id == 1 ? " banner-contain" : " jarallax")" style="background-image: url('@Url.Content(Model.ImagePath)'); background-size: @(Model.Id == 1 ? "contain" : "cover"); background-position: center;@(Model.Id == 1 ? " background-repeat: no-repeat; background-color: #141820;" : "")">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
             <div class="left">
@@ -50,7 +50,7 @@
         <div class="row g-5">
             <div class="col-lg-8">
                 <div class="portfolio-details-area">
-                    <div class="portfolio-slider-area vertical details mb--40">
+                    <div class="portfolio-slider-area vertical details mb--40@(Model.Id == 1 ? " gallery-contain" : "")">
                         <div class="swiper rts-heroSlider2">
                             <div class="swiper-wrapper">
                                 @foreach (var slide in slides)

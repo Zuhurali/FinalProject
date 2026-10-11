@@ -7,6 +7,13 @@ public static class VerifiedCatalogSeeder
 {
     private static readonly DateTime SeededAt = new(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc);
 
+    private static readonly HashSet<string> RetiredPlaceholderImages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "/assets/images/portfolio/02.webp",
+        "/assets/images/portfolio/05.webp",
+        "/assets/images/about/07.webp"
+    };
+
     public static async Task SeedAsync(FinalProjectDbContext db, CancellationToken cancellationToken = default)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -40,6 +47,22 @@ public static class VerifiedCatalogSeeder
                     && existing.IsNew != vehicle.IsNew)
                 {
                     existing.IsNew = vehicle.IsNew;
+                }
+
+                if (string.Equals(vehicle.Brand, "Ferrari", StringComparison.Ordinal)
+                    && string.Equals(vehicle.Model, "California", StringComparison.Ordinal))
+                {
+                    SyncImageSet(db, existing, imageUrls);
+                    continue;
+                }
+
+                var primaryUrl = imageUrls[0];
+                var mainImage = existing.Images.FirstOrDefault(image => image.IsMain);
+                if (mainImage != null
+                    && !string.Equals(mainImage.ImageUrl, primaryUrl, StringComparison.OrdinalIgnoreCase)
+                    && RetiredPlaceholderImages.Contains(mainImage.ImageUrl))
+                {
+                    mainImage.ImageUrl = primaryUrl;
                 }
 
                 var known = existing.Images
@@ -158,6 +181,41 @@ public static class VerifiedCatalogSeeder
         return urls;
     }
 
+    private static void SyncImageSet(FinalProjectDbContext db, Car existing, IReadOnlyList<string> imageUrls)
+    {
+        var desired = imageUrls
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var extras = existing.Images
+            .Where(image => !desired.Contains(image.ImageUrl, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        if (extras.Count > 0)
+        {
+            db.RemoveRange(extras);
+            foreach (var extra in extras)
+            {
+                existing.Images.Remove(extra);
+            }
+        }
+
+        for (var index = 0; index < desired.Count; index++)
+        {
+            var url = desired[index];
+            var image = existing.Images.FirstOrDefault(item =>
+                string.Equals(item.ImageUrl, url, StringComparison.OrdinalIgnoreCase));
+            if (image == null)
+            {
+                image = new CarImage { ImageUrl = url };
+                existing.Images.Add(image);
+            }
+
+            image.IsMain = index == 0;
+            image.DisplayOrder = index;
+        }
+    }
+
     private sealed record VehicleSeed(
         string Brand,
         string Model,
@@ -175,9 +233,14 @@ public static class VerifiedCatalogSeeder
 
     private static readonly VehicleSeed[] Vehicles =
     {
-        new("Ferrari", "California", "Convertible", 2018, 189000m, 14500, "Petrol", "Automatic", "Red", "Ferrari California", true, "/assets/images/portfolio/02.webp"),
-        new("Mercedes-Benz", "SL-Class", "Convertible", 2019, 92000m, 18200, "Petrol", "Automatic", "Black", "Mercedes-Benz SL-Class", false, "/assets/images/portfolio/05.webp"),
-        new("Mercedes-Benz", "SL-Class", "Convertible", 2016, 78000m, 27400, "Petrol", "Automatic", "White", "Mercedes-Benz SL-Class", false, "/assets/images/about/07.webp"),
+        new("Ferrari", "California", "Convertible", 2018, 189000m, 14500, "Petrol", "Automatic", "Red", "Ferrari California", true, "/assets/images/catalog/convertible/ferrari-california-t-front.jpg",
+        [
+            "/assets/images/catalog/convertible/ferrari-california-t-rear-quarter.jpg",
+            "/assets/images/catalog/convertible/ferrari-california-t-rear.jpg",
+            "/assets/images/catalog/convertible/ferrari-california-t-side.jpg"
+        ]),
+        new("Mercedes-Benz", "SL-Class", "Convertible", 2019, 92000m, 18200, "Petrol", "Automatic", "Black", "Mercedes-Benz SL-Class", false, "/assets/images/catalog/convertible/mercedes-sl-class-black.jpg"),
+        new("Mercedes-Benz", "SL-Class", "Convertible", 2016, 78000m, 27400, "Petrol", "Automatic", "White", "Mercedes-Benz SL-Class", false, "/assets/images/catalog/convertible/mercedes-sl-class-white.jpg"),
         new("Nissan", "350Z", "Coupe", 2008, 18500m, 46200, "Petrol", "Manual", "Black", "Nissan 350Z", false, "/assets/images/portfolio/08.webp"),
         new("Lamborghini", "Diablo", "Sports Car", 1998, 265000m, 16800, "Petrol", "Manual", "Red", "Lamborghini Diablo", false, "/assets/images/portfolio/09.webp"),
         new("Porsche", "911 GT3 RS", "Sports Car", 2019, 219000m, 6400, "Petrol", "Automatic", "Red", "Porsche 911 GT3 RS", true, "/assets/images/portfolio/24.webp"),

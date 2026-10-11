@@ -215,15 +215,7 @@
                                         <div class="button-area">
                                             <a asp-controller="Account" asp-action="@(User.Identity?.IsAuthenticated == true ? "Index" : "SignIn")" class="rts-btn btn-border radius-small icon" title="@(User.Identity?.IsAuthenticated == true ? User.Identity?.Name : null)">
                                                 @(User.Identity?.IsAuthenticated == true ? "Account" : "Sign In")
-                                                <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect width="19" height="19" fill="url(#pattern0_2295_364)" />
-                                                    <defs>
-                                                        <pattern id="pattern0_2295_364" patternContentUnits="objectBoundingBox" width="1" height="1">
-                                                            <use href="#image0_2295_364" transform="scale(0.0111111)" />
-                                                        </pattern>
-                                                        <image id="image0_2295_364" width="90" height="90" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAYAAAA4qEECAAAACXBIWXMAAAsTAAALEwEAmpwYAAACVklEQVR4nO2dQXLTQBREexWOgIEtq2zxDBQXoFhwEQhsHW4AF0tgEeASZE8lVVirpmQEpArwxl/5PaN+Vb2V5r8ajyTrewwYY4wxxhhjzFLgQ9xhwRsWfGDFNSvYSK6nMZ/wGEdQhk/wgAVfBKTxwHwea4HwTO5BMqd8kpzZu+UiXw6D8wpqsOKjgBiGpuAcarDgqkPRV1AjXUqdJ1AjWwgtuu1AjWwhtOi2AzWyhdCi2w7UyBZCi247UCNbCC267UCNbCG06LYDNbKF0KLbDtQILG5gwYYFqykbVmwteiKsuILNX8de43mWbHQsevXP4xc8Y8F3i55ZdJZsdCz6dO95bnkZgRqBxW1HmSqyoUZwgQPXeLH3fLe0jECNGYocFGRDjZkKHbJlQ40ZZ9WQKRtqzPnxZaJsLEw0s2THCTrGEQzes+JSYkAHEn3rFzewindSAwpgfOhRFH3ZnejHuKsnuuCr1IAC4FPc1xPd49JR8VbzYjjKPnBmQwSqXgyjiCqMvd7eRdGjZC5M9OBH8Bv0KJkLET1kS16C6EFBcu+it36VtYc5+zpu4pezcaJX/z2H2w3cQNNFXwfdEvaH4CbHUz7CvV1+frfsJsdfZImgRfcRqJEthBbddqBGthBadNuBGtlCaNFtB2pkC6FFtx2okS2EFt12oEa2EFp024Ea2UK4GNF9bgL7DWpM27azs5xBDRa8FhDD0KzxEpJbz49742fLqUEpuJDcev73nyn0ILvgYvzVAJSZGttPxvWtqQtk2Y31bFwuZGeyMcYYY4wxxmAGfgAEuwTcQtFEYgAAAABJRU5ErkJggg==" />
-                                                    </defs>
-                                                </svg>
+                                                <partial name="_SignInIcon" />
                                             </a>
                                             @if (User.Identity?.IsAuthenticated == true)
                                             {

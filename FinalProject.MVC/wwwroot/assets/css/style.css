@@ -14843,6 +14843,13 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
 .rts-btn.icon {
   gap: 10px;
 }
+.button-area .rts-btn.btn-border.icon > svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  overflow: visible;
+}
 
 .text-btn {
   display: block;
@@ -21073,6 +21080,43 @@ a.category-wrapper2:hover {
   height: 100%;
   width: 100%;
   object-fit: cover;
+}
+.portfolio-slider-area.vertical.gallery-contain .rts-heroSlider2 .image {
+  background: #f3f3f3;
+}
+.portfolio-slider-area.vertical.gallery-contain .rts-heroSlider2 .image img,
+.portfolio-slider-area.vertical.gallery-contain .SlideThumb2 .swiper-slide .single-thumb .thumbnail img {
+  object-fit: contain;
+  object-position: center;
+}
+.portfolio-slider-area.vertical.gallery-contain .SlideThumb2 .swiper-slide .single-thumb .thumbnail {
+  background: #f3f3f3;
+}
+.project-wrapper2 .image-area.image-fit-contain {
+  aspect-ratio: 16 / 10;
+  background: #f3f3f3;
+}
+.project-wrapper2 .image-area.image-fit-contain > a:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.project-wrapper2 .image-area.image-fit-contain > a:first-child img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.project-wrapper2:hover .image-area.image-fit-contain > a:first-child img {
+  transform: none;
+}
+.rts-breadcrumb-area.portfolio.details.banner-contain {
+  background-color: #141820;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 .portfolio-slider-area.vertical .pagination-area {
   position: absolute;
