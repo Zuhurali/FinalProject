@@ -1,0 +1,140 @@
+== search-results.json
+76-interior type=list n=1
+   | File:2023 Volkswagen Golf GTI interior.jpg
+77-interior type=list n=2
+   | File:2021 Volkswagen Golf Mk7.5 1.4 TSi R Line red interior view in Brunei.jpg
+   | File:2020 VW Golf MK7.5 280 TSI R-Line interior view in Brunei.jpg
+78-interior type=list n=2
+   | File:Honda CIVIC TYPE R (FK8) interior.jpg
+   | File:Honda CIVIC TYPE R (DBA-FK8) interior.jpg
+79-interior type=list n=8
+   | File:TOYOTA COROLLA SEDAN HYBRID (E210) CHINA SPECIFICATION INTERIOR.jpg
+   | File:Toyota Corolla 2026 interior.jpg
+   | File:Toyota Corolla Hybrid (E210) Leonberg 2019 IMG 0125.jpg
+80-interior type=list n=0
+81-rear type=list n=5
+   | File:2012 Hyundai Veloster, rear left, 10-29-2023.jpg
+   | File:2012 Hyundai Veloster, rear left.jpg
+   | File:2012 Hyundai Veloster, front left, 10-29-2023.jpg
+81-interior type=list n=4
+   | File:2012 Hyundai Veloster (FS2) hatchback (2012-10-26) 04.jpg
+   | File:2013-hyundai-veloster-turbo-16-1326142958 - Flickr - theKCB.jpg
+   | File:2013-hyundai-veloster-turbo-18-1326142959 - Flickr - theKCB.jpg
+82-interior type=list n=0
+83-interior type=list n=0
+84-interior type=list n=0
+85-interior type=list n=8
+   | File:Audi A3 Sportback 8V facelift interior.jpg
+   | File:2019 Audi A3 Sportback Interior.jpg
+   | File:Audi A3 Sportback 1.4TFSI sport (DBA-8VCXS) interior.jpg
+86-rearcabin type=list n=0
+87-rear type=list n=0
+87-rearcabin type=list n=0
+88-rearcabin type=list n=0
+89-rear type=list n=4
+   | File:BMW 840i Gran Coupé M Sport (G16) rear.jpg
+   | File:BMW 840i Gran Coupe Rear.jpg
+   | File:2020 BMW 840d xDrive Automatic Gran Coupe 3.0 Rear (1).jpg
+89-rearcabin type=list n=0
+90-rear type=list n=8
+   | File:Audi A8 L 50 TDI Quattro D5 Terra Gray (10).jpg
+   | File:Audi A8 L 55 TFSI Quattro D5 Floret Silver Metallic (9).jpg
+   | File:2018 Audi A8 55 TFSi Quattro Rear Seat Remote (Detached).jpg
+90-rearcabin type=list n=2
+   | File:2018 Audi A8 55 TFSi Quattro Rear Seat Remote (Detached).jpg
+   | File:2018 Audi A8 55 TFSi Quattro Rear Seat Remote (Attached).jpg
+91-rearcabin type=list n=5
+   | File:Bentley Continental GTC V8 @ the 2012 New York International Auto Show (7047924139).jpg
+   | File:Bentley Continental GTC V8 @ the 2012 New York International Auto Show (7047924349).jpg
+   | File:Bentley Le MANSory GTC - Flickr - Alexandre Prévot.jpg
+92-rearcabin type=list n=0
+93-rearcabin type=list n=0
+94-rearcabin type=list n=0
+95-rear type=list n=8
+   | File:Genesis G90 RS4 Bariloche Brown (40).jpg
+   | File:Genesis G90 RS4 Bariloche Brown (41).jpg
+   | File:Genesis G90 RS4 Vik Black (85).jpg
+95-rearcabin type=list n=8
+   | File:Genesis G90 RS4 Standard Design Obsidian Black Monotone (79).jpg
+   | File:Genesis G90 RS4 SDS Obsidian Black Mono-tone (63).jpg
+   | File:Genesis G90 RS4 Standard Design Obsidian Black Monotone (78).jpg
+== search-results-broad.json
+77-interior type=list n=0
+79-interior type=list n=8
+   | File:1988 Toyota Corolla hatchback- interior (49482297958).jpg
+   | File:2019 Toyota Corolla Hybrid Hatchback Interior.jpg
+   | File:2007-2008 Toyota Corolla (ZRE152R) Levin ZR hatchback 05.jpg
+80-interior type=list n=2
+   | File:2013072904 Hyundai i30.png
+   | File:2018 Hyundai i30 Fastback SE Nav 1.4 Interior.jpg
+82-interior type=list n=0
+83-interior type=list n=0
+84-interior type=list n=0
+86-rearcabin type=list n=0
+87-rear type=list n=0
+87-rearcabin type=list n=0
+88-rearcabin type=list n=0
+89-rearcabin type=list n=0
+91-rearcabin type=list n=2
+   | File:2020 Bentley Continental GT V8 Convertible in Dark Sapphire, front left.jpg
+   | File:2020 Bentley Continental GT V8 Convertible in Dark Sapphire, rear left.jpg
+92-rearcabin type=list n=0
+93-rearcabin type=list n=0
+94-rearcabin type=list n=0
+== bmw
+id=21 rear n=10 q=BMW M4 G82 rear
+  CC BY-SA 4.0 | File:BMW M4 CS (G82) VR46 Edition IAA 2025 DSC 1308.jpg
+  CC BY-SA 4.0 | File:2021 BMW M4 Competition G82 rear.jpg
+id=21 interior n=10 q=BMW G82 interior
+  CC BY-SA 4.0 | File:BMW G82 M4 Competition Extended Merino Leather Kyalami Orange Black (12).jpg
+  CC BY-SA 4.0 | File:BMW G82 M4 Competition Extended Merino Leather Kyalami Orange Black (16).jpg
+id=22 rear n=2 q=BMW 530i G30 rear
+  CC BY-SA 4.0 | File:2019 BMW 530i M Sport rear-light.jpg
+  CC BY-SA 4.0 | File:2019 BMW 530i M Sport (40).jpg
+id=22 interior n=10 q=BMW G30 interior
+  CC BY-SA 4.0 | File:Osaka Motor Show 2017 (68) - BMW 530e iPerformance Luxury (G30).jpg
+  CC BY-SA 4.0 | File:BMW G30 LCI Exclusive Nappa Leather Mocha (8).jpg
+id=23 front n=10 q=BMW M5 F90
+  CC BY-SA 4.0 | File:2018 BMW M5 Automatic 4.4.jpg
+  CC BY-SA 4.0 | File:BMW M5 (F90) 1X7A6242.jpg
+id=23 interior n=2 q=BMW F90 interior
+  CC BY-SA 3.0 | File:2018 BMW M5 Competition in Alpinweiß, front left.jpg
+  CC BY-SA 3.0 | File:2018 BMW M5 Competition in Alpinweiß, rear left.jpg
+id=24 rear n=10 q=BMW G70 rear
+  CC BY-SA 4.0 | File:BMW 7-Series (G70) 750e 1X7A1899.jpg
+  CC BY-SA 4.0 | File:BMW 740d xDrive Excellence (G70) rear.jpg
+id=24 interior n=10 q=BMW G70 interior
+  CC BY-SA 4.0 | File:BMW G70's front Interior.jpg
+  CC BY-SA 4.0 | File:BMW G70 BMW Individual Merino Leather Amarone (36).jpg
+id=25 rear n=7 q=BMW M850i rear
+  CC BY-SA 4.0 | File:2019 BMW M850i xDrive Automatic 4.4 Rear.jpg
+  CC BY-SA 4.0 | File:BMW M850i Coupe Rear light2 IMG0797.jpg
+id=25 interior n=0 q=BMW G14 interior
+id=26 front n=10 q=BMW X3 M40i
+  CC BY-SA 4.0 | File:2023 BMW G01 X3 M40i DSC 7394.jpg
+  CC BY-SA 4.0 | File:BMW X3 M40i (G01) China.jpg
+id=26 interior n=9 q=BMW G01 interior
+  CC BY-SA 4.0 | File:Osaka Motor Show 2017 (72) - BMW X3 xDrive20d M Sport (G01).jpg
+  CC BY-SA 4.0 | File:2018 BMW X3 xDrive 20d M Sport (Cockpit).jpg
+id=27 rear n=10 q=BMW X5 G05 rear
+  CC BY-SA 4.0 | File:BMW X5 M (G05) 1X7A7047.jpg
+  CC BY-SA 4.0 | File:BMW X5 M Competition (G05) rear.jpg
+id=27 interior n=10 q=BMW G05 interior
+  CC BY-SA 4.0 | File:BMW X5 LWB (G05) INTERIOR.jpg
+  CC0 | File:2020 BMW X5 (G05) interior.jpg
+id=28 rear n=0 q=BMW X5 M F95 rear
+id=28 interior n=0 q=BMW F95 interior
+id=29 rear n=0 q=BMW X6 M F96 rear
+id=29 interior n=0 q=BMW F96 interior
+id=30 rear n=10 q=BMW Z4 G29 rear
+  CC BY-SA 4.0 | File:BMW G29 Z4 M40i (Facelift) 1X7A6948.jpg
+  CC BY-SA 4.0 | File:BMW Z4 (G29) (4).jpg
+id=30 interior n=7 q=BMW G29 interior
+  CC BY-SA 4.0 | File:BMW G29 Z4 M40i Vernasca Leather Ivory White Deco (2).jpg
+  CC BY-SA 4.0 | File:BMW G29 Z4 M40i Vernasca Leather Ivory White Deco (3).jpg
+id=31 rear n=10 q=BMW i4 rear
+  CC BY-SA 4.0 | File:BMW i4 IAA 2021 1X7A0307.jpg
+  CC BY-SA 4.0 | File:BMW i4 1X7A6838.jpg
+id=31 interior n=10 q=BMW i4 interior
+  CC BY-SA 4.0 | File:BMW G26E i4 Mocha Vernasca Leather (3).jpg
+  CC BY-SA 4.0 | File:BMW G26E i4 Mocha Vernasca Leather (8).jpg

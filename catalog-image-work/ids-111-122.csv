@@ -1,0 +1,37 @@
+CarId,Role,LocalUrl,CommonsFilePage,Author,License,VerifiedModel,Notes
+111,Front/Main,/assets/images/catalog/electric/ev6-1.jpg,,,,Kia EV6 first generation,Existing accurate front three-quarter file retained; no overwrite.
+111,Rear,/assets/images/catalog/electric/kia-ev6-first-gen-rear.jpg,https://commons.wikimedia.org/wiki/File:Kia_ev6_1gen_back.jpg,Nord794ub,CC BY-SA 4.0,Kia EV6 first generation,Downloaded and visually verified rear view.
+111,Interior,/assets/images/catalog/electric/kia-ev6-gt-line-interior.jpg,https://commons.wikimedia.org/wiki/File:Kia_EV6_GT-Line_interior.jpg,Ethan Llamas,CC BY-SA 4.0,Kia EV6 GT-Line first generation,Downloaded and visually verified dashboard and cabin.
+112,Front/Main,/assets/images/catalog/electric/nissan-ariya-2023-front.jpg,https://commons.wikimedia.org/wiki/File:2023_Nissan_Ariya_Advance_Front.jpg,Vauxford,CC BY-SA 4.0,2023 Nissan Ariya Advance,Downloaded and visually verified front three-quarter view.
+112,Rear,/assets/images/catalog/electric/ariya-1.jpg,,,,Nissan Ariya first generation,Existing accurate rear three-quarter file retained; no overwrite.
+112,Interior,/assets/images/catalog/electric/nissan-ariya-2022-interior.jpg,"https://commons.wikimedia.org/wiki/File:Nissan_Ariya,_BlueGray_interior,_2022.jpg",Kazyakuruma,CC BY-SA 4.0,2022 Nissan Ariya Japanese specification,Downloaded and visually verified dashboard and cabin.
+113,Front/Main,/assets/images/catalog/electric/id4-1.jpg,,,,Volkswagen ID.4 first generation,Existing accurate front three-quarter file retained; no overwrite.
+113,Rear,/assets/images/catalog/electric/volkswagen-id4-2020-rear.jpg,https://commons.wikimedia.org/wiki/File:2020_Volkswagen_ID.4_Pro_(Netherlands)_rear_view.jpg,Dennis Elzinga,CC BY 2.0,Volkswagen ID.4 Pro first generation,Downloaded and visually verified rear three-quarter view; 2020 vehicle is the same generation as database year 2022.
+113,Interior,/assets/images/catalog/electric/volkswagen-id4-pro-interior.jpg,https://commons.wikimedia.org/wiki/File:Volkswagen_ID.4_Pro_(ZAA-E2EBJ)_interior.jpg,Tokumeigakarinoaoshima,CC0,Volkswagen ID.4 Pro first generation,Downloaded and visually verified dashboard and cabin.
+114,Front/Main,/assets/images/catalog/electric/eqs-1.jpg,,,,Mercedes-Benz EQS V297,Existing accurate front three-quarter file retained; no overwrite.
+114,Rear,/assets/images/catalog/electric/mercedes-eqs-v297-rear.jpg,https://commons.wikimedia.org/wiki/File:Mercedes-Benz_EQS_rear_view_in_China.jpg,Randolph1981,CC BY-SA 4.0,Mercedes-Benz EQS V297 (2021-2024),Downloaded and visually verified rear three-quarter view.
+114,Interior,/assets/images/catalog/electric/mercedes-eqs-450plus-interior.jpg,https://commons.wikimedia.org/wiki/File:Mercedes-Benz_EQS_450%2B_(ZAA-297123)_interior.jpg,Tokumeigakarinoaoshima,CC BY-SA 4.0,Mercedes-Benz EQS 450+ V297,Downloaded and visually verified dashboard and cabin.
+115,Front/Main,/assets/images/catalog/electric/ix-1.jpg,,,,BMW iX I20,Existing accurate front three-quarter file retained; no overwrite.
+115,Rear,,,,,BMW iX I20,Unresolved: ix-2.jpg is a near-duplicate front three-quarter crop rather than a rear view and was removed from the seeded gallery.
+115,Interior,/assets/images/catalog/electric/bmw-ix-xdrive40-interior.jpg,https://commons.wikimedia.org/wiki/File:BMW_iX_xDrive40_(ZAA-12CF89S)_interior.jpg,Tokumeigakarinoaoshima,CC BY-SA 4.0,BMW iX xDrive40 I20,Downloaded and visually verified dashboard and cabin.
+116,Front/Main,/assets/images/catalog/sports-car/huracan-1.jpg,,,,2018 Lamborghini Huracan,Existing accurate front three-quarter file retained; no overwrite.
+116,Rear,/assets/images/catalog/sports-car/huracan-2.jpg,,,,2018 Lamborghini Huracan,Existing accurate rear three-quarter file retained; no overwrite.
+116,Interior,/assets/images/catalog/sports-car/huracan-3.jpg,,,,Lamborghini Huracan,Existing accurate cockpit file retained; no overwrite.
+117,Front/Main,/assets/images/catalog/sports-car/lamborghini-aventador-lp700-pirelli-front.jpg,https://commons.wikimedia.org/wiki/File:2015_Lamborghini_Aventador_LP700-4_Pirelli_Edition_6.5_Front.jpg,Vauxford,CC BY-SA 4.0,2015 Lamborghini Aventador LP700-4 Pirelli Edition,Downloaded and visually verified front three-quarter view; exact LP700-4 generation and year.
+117,Rear,/assets/images/catalog/sports-car/aventador-1.jpg,,,,2015 Lamborghini Aventador LP700-4,Existing accurate rear three-quarter file retained; aventador-2.jpg is a near-duplicate and was not used.
+117,Interior,/assets/images/catalog/sports-car/aventador-3.jpg,,,,Lamborghini Aventador LP700-4,Existing accurate cockpit file retained; no overwrite.
+118,Front/Main,/assets/images/catalog/sports-car/488-1.jpg,,,,2017 Ferrari 488 GTB,Existing accurate front three-quarter file retained; no overwrite.
+118,Rear,/assets/images/catalog/sports-car/488-2.jpg,,,,2017 Ferrari 488 GTB,Existing accurate rear three-quarter file retained; no overwrite.
+118,Interior,,,,,Ferrari 488 GTB,Unresolved: Commons searches produced no visually verifiable stock 488 GTB interior; existing 488-3 and 488-4 are roof and engine-detail views.
+119,Front/Main,/assets/images/catalog/sports-car/f8-1.jpg,,,,2020 Ferrari F8 Tributo,Existing accurate front three-quarter file retained; no overwrite.
+119,Rear,/assets/images/catalog/sports-car/f8-2.jpg,,,,2020 Ferrari F8 Tributo,Existing accurate rear three-quarter file retained; no overwrite.
+119,Interior,,,,,Ferrari F8 Tributo,Unresolved: existing f8-3 is another rear view and no visually verifiable Commons interior was found.
+120,Front/Main,/assets/images/catalog/sports-car/720s-3.jpg,,,,2018 McLaren 720S,Existing accurate front three-quarter file retained; no overwrite.
+120,Rear,/assets/images/catalog/sports-car/720s-2.jpg,,,,McLaren 720S,Existing accurate rear three-quarter file retained; no overwrite.
+120,Interior,,,,,McLaren 720S,Unresolved: only a heavily modified 720S cabin appeared in Commons results; rejected as unsuitable.
+121,Front/Main,/assets/images/catalog/sports-car/turbo-s-1.jpg,,,,2021 Porsche 911 Turbo S (992),Existing accurate front three-quarter file retained; no overwrite.
+121,Rear,/assets/images/catalog/sports-car/turbo-s-2.jpg,,,,Porsche 911 Turbo S (992),Existing accurate rear three-quarter file retained; no overwrite.
+121,Interior,,,,,Porsche 911 Turbo S (992),Unresolved: no exact visually verifiable 992 Turbo S interior was found on Commons.
+122,Front/Main,/assets/images/catalog/sports-car/corvette-1.jpg,,,,2021 Chevrolet Corvette C8,Existing accurate front three-quarter file retained; no overwrite.
+122,Rear,/assets/images/catalog/sports-car/chevrolet-corvette-c8-rear.jpg,https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_C8_State_Street_Bridge_downtown_Montpelier_VT_May_2022_rear.jpg,Artaxerxes,CC BY-SA 4.0,2022 Chevrolet Corvette C8,Downloaded and visually verified rear view; same C8 generation as database year 2021.
+122,Interior,/assets/images/catalog/sports-car/corvette-3.jpg,,,,Chevrolet Corvette C8,Existing accurate cockpit file retained; no overwrite.

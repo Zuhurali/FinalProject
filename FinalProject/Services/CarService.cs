@@ -232,7 +232,12 @@ public class CarService : ICarService
         car.Status = request.Status;
         car.UpdatedAt = DateTime.UtcNow;
 
-        var image = car.Images.OrderBy(item => item.DisplayOrder).FirstOrDefault();
+        foreach (var existingImage in car.Images)
+        {
+            existingImage.IsMain = false;
+        }
+
+        var image = car.Images.OrderBy(item => item.DisplayOrder).ThenBy(item => item.Id).FirstOrDefault();
         if (image == null)
         {
             car.Images.Add(new Models.Entities.CarImage

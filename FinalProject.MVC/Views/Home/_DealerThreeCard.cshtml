@@ -1,6 +1,6 @@
 @model Car
 <div class="project-wrapper2">
-    <div class="image-area@(Model.Id == 1 ? " image-fit-contain" : "")">
+    <div class="image-area">
         <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.Id"><img src="@Url.Content(Model.ImagePath)" alt="@Model.Name"></a>
         @if (!string.IsNullOrWhiteSpace(Model.Badge))
         {

@@ -15381,8 +15381,9 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
 }
 
 .bg_image_one {
-  background: url(../images/banner/banner-bg-01.webp);
-  background-size: cover;
+  background-color: #10141c;
+  background-image: url(../images/catalog/bmw/bmw-x5-black-hero.jpg);
+  background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -17670,6 +17671,28 @@ a.category-wrapper2:hover {
   transform: scale(100%);
   transition: var(--transition);
   width: 100%;
+}
+.project-wrapper2:not(.list-style) .image-area > a:first-child {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #fff;
+}
+.project-wrapper2:not(.list-style) .image-area > a:first-child > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.project-wrapper2:not(.list-style) .image-area > a:first-child > img.fit-cover {
+  object-fit: cover;
+}
+.project-wrapper2:not(.list-style) .image-area > a:first-child > img.fit-contain {
+  object-fit: contain;
+}
+.project-wrapper2:not(.list-style):hover .image-area > a:first-child > img.fit-contain {
+  transform: none;
 }
 .project-wrapper2 .image-area .tag {
   position: absolute;
@@ -21055,11 +21078,14 @@ a.category-wrapper2:hover {
   width: 100%;
   border-radius: 6px;
   overflow: hidden;
+  background: #fff;
 }
 .SlideThumb2 .swiper-slide .single-thumb .thumbnail img {
   height: 100%;
   width: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  transition: object-fit 0.2s ease;
 }
 .SlideThumb2 .swiper-slide.swiper-slide-thumb-active .single-thumb {
   border: 1px solid var(--color-primary);
@@ -21070,53 +21096,57 @@ a.category-wrapper2:hover {
 }
 .portfolio-slider-area.vertical .rts-heroSlider2 {
   max-width: 660px;
-  height: 650px;
+  height: auto;
+  aspect-ratio: 16 / 10;
   margin-left: 0 !important;
 }
 .portfolio-slider-area.vertical .rts-heroSlider2 .image {
   height: 100%;
+  background: #fff;
 }
 .portfolio-slider-area.vertical .rts-heroSlider2 .image img {
   height: 100%;
   width: 100%;
-  object-fit: cover;
-}
-.portfolio-slider-area.vertical.gallery-contain .rts-heroSlider2 .image {
-  background: #f3f3f3;
-}
-.portfolio-slider-area.vertical.gallery-contain .rts-heroSlider2 .image img,
-.portfolio-slider-area.vertical.gallery-contain .SlideThumb2 .swiper-slide .single-thumb .thumbnail img {
   object-fit: contain;
   object-position: center;
+  transition: object-fit 0.2s ease;
 }
-.portfolio-slider-area.vertical.gallery-contain .SlideThumb2 .swiper-slide .single-thumb .thumbnail {
-  background: #f3f3f3;
+.portfolio-slider-area.vertical [data-gallery-image].fit-cover {
+  object-fit: cover !important;
 }
-.project-wrapper2 .image-area.image-fit-contain {
-  aspect-ratio: 16 / 10;
-  background: #f3f3f3;
+.portfolio-slider-area.vertical [data-gallery-image].fit-contain {
+  object-fit: contain !important;
 }
-.project-wrapper2 .image-area.image-fit-contain > a:first-child {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+.rts-breadcrumb-area.portfolio.details.vehicle-details-hero {
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #f7f7f5;
+  background-image: none;
 }
-.project-wrapper2 .image-area.image-fit-contain > a:first-child img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-}
-.project-wrapper2:hover .image-area.image-fit-contain > a:first-child img {
-  transform: none;
-}
-.rts-breadcrumb-area.portfolio.details.banner-contain {
-  background-color: #141820;
+.rts-breadcrumb-area.portfolio.details.vehicle-details-hero::before {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  z-index: 0;
+  background-image: var(--vehicle-image);
   background-repeat: no-repeat;
   background-position: center;
-  background-size: contain;
+  background-size: cover;
+  filter: blur(16px) brightness(0.45) saturate(0.75);
+  transform: scale(1.04);
+}
+.rts-breadcrumb-area.portfolio.details.vehicle-details-hero::after {
+  z-index: 1;
+  background-image:
+    linear-gradient(90deg, rgba(5, 11, 32, 0.62), rgba(5, 11, 32, 0.08) 65%, rgba(5, 11, 32, 0.2)),
+    var(--vehicle-image);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%, contain;
+}
+.rts-breadcrumb-area.portfolio.details.vehicle-details-hero > .container {
+  position: relative;
+  z-index: 2;
 }
 .portfolio-slider-area.vertical .pagination-area {
   position: absolute;

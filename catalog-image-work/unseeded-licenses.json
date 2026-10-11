@@ -1,0 +1,180 @@
+[
+  {
+    "local": "/assets/images/catalog/convertible/audi-a5-f5-cabriolet-interior.jpg",
+    "query": "audi a5 f5 cabriolet interior",
+    "hits": 0,
+    "error": null,
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/convertible/ford-mustang-s650-interior.jpg",
+    "query": "ford mustang s650 interior",
+    "hits": 0,
+    "error": null,
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/convertible/mercedes-e-class-a238-interior.jpg",
+    "query": "mercedes e class a238 interior",
+    "hits": 0,
+    "error": null,
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/convertible/mercedes-e-class-a238-rear.jpg",
+    "query": "mercedes e class a238 rear",
+    "hits": 0,
+    "error": null,
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/convertible/porsche-911-992-cabriolet-interior.jpg",
+    "query": "porsche 911 992 cabriolet interior",
+    "hits": 0,
+    "error": null,
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/audi-tt-8s-interior.jpg",
+    "query": "audi tt 8s interior",
+    "hits": 0,
+    "error": null,
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/chevrolet-camaro-ss-2018-front.jpg",
+    "query": "chevrolet camaro ss 2018 front",
+    "hits": 0,
+    "error": null,
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-front.jpg",
+    "query": "dodge challenger srt hellcat front",
+    "hits": 1,
+    "error": null,
+    "info": {
+      "title": "File:Dodge Challenger SRT Hellcat front (20418607854).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Dodge_Challenger_SRT_Hellcat_front_(20418607854).jpg",
+      "license": "CC BY-SA 2.0",
+      "author": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/135753084@N02\">Zytonits</a>",
+      "width": 2592,
+      "height": 1944
+    }
+  },
+  {
+    "local": "/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-interior.jpg",
+    "query": "dodge challenger srt hellcat interior",
+    "hits": 1,
+    "error": null,
+    "info": {
+      "title": "File:Dodge Challenger SRT Hellcat interior (16320162432).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Dodge_Challenger_SRT_Hellcat_interior_(16320162432).jpg",
+      "license": "CC BY 2.0",
+      "author": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/128326674@N06\">Yahya S.</a> from Livonia, United States",
+      "width": 4000,
+      "height": 2248
+    }
+  },
+  {
+    "local": "/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-rear.jpg",
+    "query": "dodge challenger srt hellcat rear",
+    "hits": 1,
+    "error": null,
+    "info": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+    }
+  },
+  {
+    "local": "/assets/images/catalog/coupe/lexus-rc350-2018-interior.jpg",
+    "query": "lexus rc350 2018 interior",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/nissan-370z-z34-interior.jpg",
+    "query": "nissan 370z z34 interior",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/porsche-718-cayman-front.jpg",
+    "query": "porsche 718 cayman front",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/porsche-718-cayman-interior.jpg",
+    "query": "porsche 718 cayman interior",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/toyota-gr86-interior.jpg",
+    "query": "toyota gr86 interior",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/coupe/toyota-gr86-rear.jpg",
+    "query": "toyota gr86 rear",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/electric/audi-etron-gt-interior.jpg",
+    "query": "audi etron gt interior",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/electric/audi-etron-gt-rear.jpg",
+    "query": "audi etron gt rear",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/electric/hyundai-ioniq-5-2023-interior.jpg",
+    "query": "hyundai ioniq 5 2023 interior",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/electric/hyundai-ioniq-5-2023-rear.jpg",
+    "query": "hyundai ioniq 5 2023 rear",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/electric/porsche-taycan-front.jpg",
+    "query": "porsche taycan front",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/electric/porsche-taycan-interior.jpg",
+    "query": "porsche taycan interior",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  },
+  {
+    "local": "/assets/images/catalog/electric/tesla-model-s-refresh-rear.jpg",
+    "query": "tesla model s refresh rear",
+    "hits": 0,
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "info": null
+  }
+]

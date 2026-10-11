@@ -204,7 +204,7 @@
           new Swiper(element, {
           spaceBetween: 30,
           slidesPerView: 4,
-          loop: slideCount > 4,
+          loop: false,
           speed: 1000,
           // autoplay: {
           //   delay: 3000,
@@ -310,7 +310,7 @@
         var swiper = new Swiper(".featureSlider", {
           spaceBetween: 30,
           slidesPerView: 1,
-          loop: true,
+          loop: false,
           effect: "fade",
           speed: 1500,
           pagination: {
@@ -510,6 +510,10 @@
       
 
       $(document).ready(function() {
+        if (!document.querySelector(".SlideThumb") || !document.querySelector(".rts-heroSlider")) {
+          return;
+        }
+
         var swiperthumb = new Swiper(".SlideThumb", {
           spaceBetween: 0,
           slidesPerView: 6,
@@ -557,20 +561,47 @@
       $(document).ready(function () {
         let swiperthumb2;
         let swiper2;
+        let mobileLayout;
+        let resizeTimer;
+
+        function applyAdaptiveImageFit(selector) {
+          document.querySelectorAll(selector).forEach(function (image) {
+            function updateFit() {
+              var frame = image.parentElement;
+              if (!frame || !image.naturalWidth || !image.naturalHeight || !frame.clientWidth || !frame.clientHeight) {
+                return;
+              }
+
+              var imageRatio = image.naturalWidth / image.naturalHeight;
+              var frameRatio = frame.clientWidth / frame.clientHeight;
+              var visibleFraction = Math.min(imageRatio / frameRatio, frameRatio / imageRatio);
+              var shouldContain = imageRatio < 1.35 || visibleFraction < 0.88;
+
+              image.classList.toggle("fit-contain", shouldContain);
+              image.classList.toggle("fit-cover", !shouldContain);
+            }
+
+            if (image.complete) {
+              updateFit();
+            } else {
+              image.addEventListener("load", updateFit, { once: true });
+            }
+          });
+        }
 
         function initSwipers() {
           if (swiperthumb2) swiperthumb2.destroy(true, true);
           if (swiper2) swiper2.destroy(true, true);
           const isMobile = window.innerWidth <= 991;
+          mobileLayout = isMobile;
           const thumbCount = document.querySelectorAll(".SlideThumb2 .swiper-slide").length;
-          const heroCount = document.querySelectorAll(".rts-heroSlider2 .swiper-slide").length;
           const thumbPerView = Math.max(1, Math.min(isMobile ? 4 : 6, thumbCount || 1));
           swiperthumb2 = new Swiper(".SlideThumb2", {
             direction: isMobile ? "horizontal" : "vertical",
             spaceBetween: 0,
             slidesPerView: thumbPerView,
             mousewheel: !isMobile,
-            loop: thumbCount > thumbPerView,
+            loop: false,
             watchSlidesProgress: true,
             navigation: {
               nextEl: ".thumb-next",
@@ -589,17 +620,35 @@
             speed: 1500,
             grabCursor: true,
             autoplay: false,
-            loop: heroCount > 1,
+            loop: false,
             thumbs: {
               swiper: swiperthumb2,
             },
           });
+          applyAdaptiveImageFit(".portfolio-slider-area.vertical [data-gallery-image]");
+          applyAdaptiveImageFit(".project-wrapper2:not(.list-style) .image-area > a:first-child > img");
+        }
+
+        applyAdaptiveImageFit(".project-wrapper2:not(.list-style) .image-area > a:first-child > img");
+        if (!document.querySelector(".SlideThumb2") || !document.querySelector(".rts-heroSlider2")) {
+          return;
         }
 
         initSwipers();
 
         $(window).on("resize", function () {
-          initSwipers();
+          window.clearTimeout(resizeTimer);
+          resizeTimer = window.setTimeout(function () {
+            const isMobile = window.innerWidth <= 991;
+            if (isMobile !== mobileLayout) {
+              initSwipers();
+              return;
+            }
+
+            swiperthumb2.update();
+            swiper2.update();
+            applyAdaptiveImageFit(".portfolio-slider-area.vertical [data-gallery-image]");
+          }, 150);
         });
       });
 

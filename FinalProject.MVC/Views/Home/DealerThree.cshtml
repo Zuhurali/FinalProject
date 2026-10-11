@@ -1,6 +1,10 @@
+@using System.Text.Json
 @{
     ViewData["Title"] = "Dealer Three - AutoVault";
     var dealerCars = ViewData["DealerCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
+    var searchMakes = ViewData["SearchMakes"] as IReadOnlyList<string> ?? Array.Empty<string>();
+    var modelsByMake = ViewData["ModelsByMake"] as IReadOnlyDictionary<string, string[]> ?? new Dictionary<string, string[]>();
+    dealerCars = dealerCars.Where(car => car.ImagePath.Contains("/assets/images/catalog/", StringComparison.OrdinalIgnoreCase)).ToList();
     Car? FindCar(string make, string model) => dealerCars.FirstOrDefault(car =>
         car.Make.Equals(make, StringComparison.OrdinalIgnoreCase)
         && car.Model.Equals(model, StringComparison.OrdinalIgnoreCase));
@@ -87,49 +91,14 @@
                         <div class="col-lg-12">
                             <div class="select-inner">
                                 <div class="select-area-down wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
-                                    <form action="#" method="get" accept-charset="utf-8">
-                                        <select name="my_select" class="mySelect">
-                                            <option value="2" selected>Car Make</option>
-                                            <option value="10">Mazda</option>
-                                            <option value="1">Citroen</option>
-                                            <option value="13">Honda</option>
-                                            <option value="14">Mitsubishi</option>
-                                            <option value="15">Peugeot</option>
-                                        </select>
-                                    </form>
-                                    <form class="select-2" action="#" method="get" accept-charset="utf-8">
-                                        <select name="my_select2" class="my_select2">
-                                            <option value="2" selected>Car Model</option>
-                                            <option value="10">155</option>
-                                            <option value="1">151</option>
-                                            <option value="13">150</option>
-                                            <option value="14">152</option>
-                                            <option value="15">156</option>
-                                        </select>
-                                    </form>
-                                    <form class="select-2" action="#" method="get" accept-charset="utf-8">
-                                        <select name="my_select2" class="my_select2">
-                                            <option value="2" selected>Price</option>
-                                            <option value="10">22,000$</option>
-                                            <option value="1">27,000$</option>
-                                            <option value="13">30,000$</option>
-                                            <option value="14">32,000$</option>
-                                            <option value="15">38,000$</option>
-                                        </select>
-                                    </form>
-                                    <button type="submit" class="rts-btn radius-small icon btn-primary">
-                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M10.69 10.69L13 13M12.3333 6.68575C12.3333 9.826 9.796 12.3715 6.667 12.3715C3.53725 12.3715 1 9.826 1 6.6865C1 3.54475 3.53725 1 6.66625 1C9.796 1 12.3333 3.5455 12.3333 6.68575Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                        Search
-                                    </button>
+                                    <partial name="_DealerSearchForm" model="searchMakes" />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="banner-hero">
-                    <img class="wow slideInRight" data-wow-delay=".5s" data-wow-duration="2s" src="~/assets/images/portfolio/10.webp" width="1555" alt="">
+                    <img class="wow slideInRight" data-wow-delay=".5s" data-wow-duration="2s" src="~/assets/images/catalog/bmw/bmw-x5-black-hero.jpg" width="1555" alt="Black BMW X5">
                 </div>
             </section>
             <!-- Banner area end -->
@@ -199,7 +168,7 @@
             <!-- About Area Start -->
             <section class="rts-about-area-three">
                 <div class="left-image jarallax jara-mask-1">
-                    <img src="~/assets/images/about/06.webp" width="678" class="jarallax-img" alt="">
+                    <img src="~/assets/images/catalog/luxury/sclass-1.jpg" width="678" class="jarallax-img" alt="Mercedes-Benz S-Class">
                 </div>
                 <div class="container">
                     <div class="section-inner">
@@ -215,7 +184,7 @@
                                     </div>
                                     <div class="bottom-content d-flex">
                                         <div class="image-area jarallax jara-mask-1">
-                                            <img class="jarallax-img" src="~/assets/images/about/07.webp" width="318" alt="">
+                                            <img class="jarallax-img" src="~/assets/images/catalog/minivans/v-class.jpg" width="318" alt="Mercedes-Benz V-Class">
                                         </div>
                                         <div class="text">
                                             <p class="desc">Welcome to Autovault where innovation drives every journey.
@@ -617,3 +586,12 @@
                 </div>
             </div>
         </div>
+<script type="application/json" id="dealerModelsByMake">@Html.Raw(JsonSerializer.Serialize(modelsByMake))</script>
+@section Scripts {
+    <script src="~/js/hero-search.js" asp-append-version="true"></script>
+    <script>
+        document.querySelectorAll("form.dealer-search-form").forEach(function (form) {
+            bindMakeModels(form, "dealerModelsByMake", false);
+        });
+    </script>
+}

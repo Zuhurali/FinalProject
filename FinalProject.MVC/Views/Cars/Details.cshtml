@@ -13,7 +13,7 @@
     var isOwner = !string.IsNullOrWhiteSpace(Model.OwnerId) && Model.OwnerId == currentUserId;
 }
 
-<div class="rts-breadcrumb-area portfolio details@(Model.Id == 1 ? " banner-contain" : " jarallax")" style="background-image: url('@Url.Content(Model.ImagePath)'); background-size: @(Model.Id == 1 ? "contain" : "cover"); background-position: center;@(Model.Id == 1 ? " background-repeat: no-repeat; background-color: #141820;" : "")">
+<div class="rts-breadcrumb-area portfolio details vehicle-details-hero" style="--vehicle-image: url('@Url.Content(Model.ImagePath)');">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
             <div class="left">
@@ -50,13 +50,13 @@
         <div class="row g-5">
             <div class="col-lg-8">
                 <div class="portfolio-details-area">
-                    <div class="portfolio-slider-area vertical details mb--40@(Model.Id == 1 ? " gallery-contain" : "")">
+                    <div class="portfolio-slider-area vertical details mb--40">
                         <div class="swiper rts-heroSlider2">
                             <div class="swiper-wrapper">
                                 @foreach (var slide in slides)
                                 {
                                     <div class="swiper-slide">
-                                        <div class="image"><img src="@Url.Content(slide)" alt="@Model.Name"></div>
+                                        <div class="image"><img src="@Url.Content(slide)" alt="@Model.Name" data-gallery-image></div>
                                     </div>
                                 }
                             </div>
@@ -69,7 +69,7 @@
                                         <div class="swiper-slide">
                                             <div class="single-thumb">
                                                 <div class="thumbnail">
-                                                    <img src="@Url.Content(slide)" alt="@Model.Name">
+                                                    <img src="@Url.Content(slide)" alt="@Model.Name" data-gallery-image>
                                                 </div>
                                             </div>
                                         </div>

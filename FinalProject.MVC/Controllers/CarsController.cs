@@ -162,10 +162,7 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult CarsThree()
         {
-            ViewData["Title"] = "Cars Three - AutoVault";
-            ViewData["BodyClass"] = "with-sidebar";
-            ViewData["HeaderStyle"] = "three";
-            return View();
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -185,12 +182,16 @@ namespace FinalProject.MVC.Controllers
                 }
 
                 var cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
+                var car = CarApiMapper.ToCar(carDto);
                 ViewData["RelatedCars"] = cars
-                    .Where(car => car.Id != carDto.Id)
+                    .Where(item => item.Id != car.Id)
+                    .GroupBy(item => item.Id)
+                    .Select(group => group.First())
+                    .OrderByDescending(item => item.Category.Equals(car.Category, StringComparison.OrdinalIgnoreCase))
+                    .ThenByDescending(item => item.Make.Equals(car.Make, StringComparison.OrdinalIgnoreCase))
+                    .ThenBy(item => item.Name)
                     .Take(2)
                     .ToList();
-
-                var car = CarApiMapper.ToCar(carDto);
                 await MarkFavoritesAsync([car]);
                 ViewData["Title"] = $"{car.Name} - AutoVault";
                 ViewData["BodyClass"] = "with-sidebar";
@@ -207,17 +208,12 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult DetailsTwo(int? id)
         {
-            ViewData["Title"] = "Car Single Two - AutoVault";
-            ViewData["BodyClass"] = "with-sidebar";
-            ViewData["HeaderStyle"] = "three";
-            ViewData["CarId"] = id ?? 1;
-            return View();
+            return RedirectToAction(nameof(Details), new { id = id ?? 1 });
         }
 
         public IActionResult SoldCar()
         {
-            ViewData["Title"] = "Sold Car - AutoVault";
-            return View();
+            return RedirectToAction(nameof(Index));
         }
 
         [Authorize]

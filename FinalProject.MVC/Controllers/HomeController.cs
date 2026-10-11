@@ -142,9 +142,19 @@ namespace FinalProject.MVC.Controllers
                 }
             }
 
+            var makes = cars.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList();
+            var modelsByMake = cars
+                .Where(car => !string.IsNullOrWhiteSpace(car.Make) && !string.IsNullOrWhiteSpace(car.Model))
+                .GroupBy(car => car.Make)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(car => car.Model).Distinct().OrderBy(model => model).ToArray());
+
             ViewData["Title"] = "Dealer Three - AutoVault";
             ViewData["HeaderStyle"] = "three";
             ViewData["DealerCars"] = cars;
+            ViewData["SearchMakes"] = makes;
+            ViewData["ModelsByMake"] = modelsByMake;
             return View();
         }
 
@@ -157,14 +167,12 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult DealerSlider()
         {
-            ViewData["Title"] = "Dealer Slider - AutoVault";
-            return View();
+            return RedirectToAction(nameof(Index));
         }
 
         public IActionResult DealerVideo()
         {
-            ViewData["Title"] = "Dealer Video - AutoVault";
-            return View();
+            return RedirectToAction(nameof(Index));
         }
 
         public IActionResult WashDemo()

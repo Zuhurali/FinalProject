@@ -5,12 +5,17 @@
     var searchMakes = ViewData["SearchMakes"] as IEnumerable<string> ?? Enumerable.Empty<string>();
     var modelsByMake = ViewData["ModelsByMake"] as IReadOnlyDictionary<string, string[]> ?? new Dictionary<string, string[]>();
     var homeCars = ViewData["HomeCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
+    var showcaseCars = homeCars
+        .Where(car => car.ImagePath.Contains("/assets/images/catalog/", StringComparison.OrdinalIgnoreCase))
+        .GroupBy(car => car.Id)
+        .Select(group => group.First())
+        .ToList();
     var homeBrands = ViewData["HomeBrands"] as IEnumerable<BrandApiDto> ?? Enumerable.Empty<BrandApiDto>();
-    var newCars = homeCars.Where(car => car.Badge == "New").ToList();
-    var usedCars = homeCars.Where(car => car.Badge != "New").ToList();
-    var trendingCars = homeCars.OrderByDescending(car => car.Year).ThenBy(car => car.Name).Take(6).ToList();
-    var stockCars = homeCars.Where(car => car.InStock).ToList();
-    var featuredCars = homeCars
+    var newCars = showcaseCars.Where(car => car.Badge == "New").ToList();
+    var usedCars = showcaseCars.Where(car => car.Badge != "New").ToList();
+    var trendingCars = showcaseCars.OrderByDescending(car => car.Year).ThenBy(car => car.Name).Take(6).ToList();
+    var stockCars = showcaseCars.Where(car => car.InStock).ToList();
+    var featuredCars = showcaseCars
         .OrderByDescending(car => car.Make.Contains("Mercedes", StringComparison.OrdinalIgnoreCase))
         .ThenByDescending(car => car.Year)
         .ThenBy(car => car.Name)
@@ -355,7 +360,7 @@
         padding: 40px 16px;
     }
 </style>
-            <section class="rts-banner-area bg_image_one jarallax">
+            <section class="rts-banner-area bg_image_one">
                 <div class="container">
                     <div class="row">
                         <div class="col-lg-12">
@@ -460,24 +465,6 @@
                                         </div>
                                         <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Sedans")">Sedans</a></h6>
                                         <p class="desc">@CategoryLabel("Sedans")</p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/05.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Convertible")">Convertible</a></h6>
-                                        <p class="desc">@CategoryLabel("Convertible")</p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/06.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Sports Car")">Sports Car</a></h6>
-                                        <p class="desc">@CategoryLabel("Sports Car")</p>
                                     </div>
                                 </div>
                                 <div class="swiper-slide">

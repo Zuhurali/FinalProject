@@ -1,0 +1,382 @@
+[
+  {
+    "CarId": 32,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/altima-l34-2019-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2019_Nissan_Altima_rear_12.24.18.jpg",
+    "Author": "Kevauto",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2019 Nissan Altima L34",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 32,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/altima-l34-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2022_Nissan_Altima_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Nissan Altima L34",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 33,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/maxima-a36-2019-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2019_Nissan_Maxima_SL_(facelift),_rear_7.6.19.jpg",
+    "Author": "Kevauto",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2019 Nissan Maxima A36 facelift",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 33,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/maxima-a36-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2023_Nissan_Maxima_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Nissan Maxima A36 facelift",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 34,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/sentra-b17-2015-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2015_Nissan_Sentra_S_(6MT),_rear_left.jpg",
+    "Author": "Mr.choppers",
+    "License": "CC BY-SA 3.0",
+    "VerifiedModel": "2015 Nissan Sentra B17",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 35,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/rogue-t33-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2022_Nissan_Rogue_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2022 Nissan Rogue T33",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 36,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/pathfinder-r53-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Nissan_Pathfinder_(R53,_rear).jpg",
+    "Author": "Jason Lawrence",
+    "License": "CC BY 4.0",
+    "VerifiedModel": "Nissan Pathfinder R53",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 36,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/pathfinder-r53-china-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:NISSAN_PATHFINDER_(R53)_CHINA_VERSION_INTERIOR.jpg",
+    "Author": "Dinkun Chen",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Nissan Pathfinder R53 China-market interior",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 37,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/murano-z52-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2021_Nissan_Murano_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2021 Nissan Murano Z52",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 38,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/armada-y62-2021-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2021_Nissan_Armada_SV_2WD_in_Brilliant_Silver_Metallic,_rear_right.jpg",
+    "Author": "Mr.choppers",
+    "License": "CC BY-SA 3.0",
+    "VerifiedModel": "2021 Nissan Armada Y62 facelift",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 38,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/armada-y62-2023-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2023_Nissan_Armada_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2023 Nissan Armada Y62 facelift",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 42,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/frontier-d41-2022-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2022_Nissan_Frontier_S_King_Cab_in_Super_Black,_Rear_Right,_12-19-2021.jpg",
+    "Author": "Elise240SX",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2022 Nissan Frontier D41",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 42,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/frontier-d41-2022-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Nissan_Frontier_D41_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2022 Nissan Frontier D41",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 43,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/mustang-gt-s550-2018-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2018_Ford_Mustang_GT_5.0_Rear_(1).jpg",
+    "Author": "Vauxford",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2018 Ford Mustang GT S550 facelift",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 43,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/ford/mustang-gt-s550-2018-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2018_Ford_Mustang_GT_V8_5.0_facelift_Interior.jpg",
+    "Author": "Vauxford",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2018 Ford Mustang GT S550 facelift",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 44,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/mustang-s650-2024-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2024_Ford_Mustang_GT_Fastback_Nite_Pony_Package_in_Vapor_Blue_Metallic,_rear_right,_2025-04-18.jpg",
+    "Author": "Elise240SX",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2024 Ford Mustang S650 GT",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 45,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/mustang-mach-e-2021-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2021_Ford_Mustang_Mach-E_Standard_Range_Rear.jpg",
+    "Author": "Vauxford",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2021 Ford Mustang Mach-E",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 45,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/ford/mustang-mach-e-2021-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2021_Ford_Mustang_Mach-E_Standard_Range_Interior.jpg",
+    "Author": "Vauxford",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2021 Ford Mustang Mach-E",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 46,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/f-150-p702-2021-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2021_Ford_F-150_SuperCrew,_rear_4.28.21.jpg",
+    "Author": "Kevauto",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2021 Ford F-150 P702",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 46,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/ford/f-150-p702-2022-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2022_Ford_F-150_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2022 Ford F-150 P702",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 47,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/ranger-p703-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Ford_Ranger_P703_2.0_Bi-Turbo_Wildtrak_Special_Edition_4x4_Arctic_White_02.jpg",
+    "Author": "Ethan Llamas",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Ford Ranger P703 Wildtrak",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 47,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/ford/ranger-p703-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Ford_Ranger_P703_2.0_Bi-Turbo_Wildtrak_Special_Edition_4x4_interior.jpg",
+    "Author": "Ethan Llamas",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Ford Ranger P703 Wildtrak",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 48,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/bronco-u725-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Ford_Bronco_U725_Outer_Banks_with_Sasquatch_Package_Eruption_Green_02.jpg",
+    "Author": "Ethan Llamas",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Ford Bronco U725 Outer Banks",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 48,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/ford/bronco-u725-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Ford_Bronco_U725_Outer_Banks_with_Sasquatch_Package_interior.jpg",
+    "Author": "Ethan Llamas",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Ford Bronco U725 Outer Banks",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 49,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/explorer-u625-2020-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2020_Ford_Explorer_XLT_4WD,_rear_1.27.20.jpg",
+    "Author": "Kevauto",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2020 Ford Explorer U625",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 49,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/ford/explorer-u625-2022-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2022_Ford_Explorer_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Ford Explorer U625",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 50,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/escape-2023-facelift-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2023_Ford_Escape_rear_view.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2023 Ford Escape facelift",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 50,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/ford/escape-fourth-generation-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2022_Ford_Escape_interior.jpg",
+    "Author": "deathpallie325",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Ford Escape fourth generation",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 53,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/fusion-second-generation-2019-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2019_Ford_Fusion_Hybrid_SE,_Blue,_rear_left.jpg",
+    "Author": "Mr.choppers",
+    "License": "CC BY-SA 3.0",
+    "VerifiedModel": "2019 Ford Fusion second generation",
+    "Notes": "Downloaded from Commons 2000px thumbnail; visually pending"
+  },
+  {
+    "CarId": 35,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/rogue-t33-2021-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2021_Nissan_Rogue_SV_(United_States)_rear_view.png",
+    "Author": "Gold Pony",
+    "License": "CC BY 3.0",
+    "VerifiedModel": "2021 Nissan Rogue T33 pre-facelift",
+    "Notes": "Downloaded from Commons thumbnail and visually pending; PNG source converted to JPEG"
+  },
+  {
+    "CarId": 37,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/murano-z52-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Nissan_Murano_Back_P4220651.jpg",
+    "Author": "Alexander Migl",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "Nissan Murano Z52",
+    "Notes": "Downloaded from Commons 1920px thumbnail; visually pending"
+  },
+  {
+    "CarId": 39,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/gt-r-r35-2009-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2009_Nissan_GT-R_(CBA-R35)_rear.JPG",
+    "Author": "Tokumeigakarinoaoshima",
+    "License": "CC0",
+    "VerifiedModel": "2009 Nissan GT-R R35",
+    "Notes": "Downloaded from Commons 1920px thumbnail; visually pending"
+  },
+  {
+    "CarId": 39,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/gt-r-r35-2014-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:The_interior_of_Nissan_GT-R_(DBA-R35)_MY2014.JPG",
+    "Author": "Tokumeigakarinoaoshima",
+    "License": "CC0",
+    "VerifiedModel": "Nissan GT-R R35 2011-facelift interior",
+    "Notes": "Downloaded from Commons 1920px thumbnail; visually pending"
+  },
+  {
+    "CarId": 40,
+    "Role": "interior",
+    "LocalUrl": "/assets/images/catalog/nissan/z-rz34-interior.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Nissan_FAIRLADY_Z_version_ST_9M-ATx_(5BA-RZ34)_interior.jpg",
+    "Author": "Tokumeigakarinoaoshima",
+    "License": "CC0",
+    "VerifiedModel": "Nissan Z RZ34",
+    "Notes": "Downloaded from Commons 1920px thumbnail; visually pending"
+  },
+  {
+    "CarId": 41,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/nissan/kicks-p15-facelift-2021-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2021_Nissan_Kicks_(Colombia)_rear_view_02.png",
+    "Author": "Autosdeprimera",
+    "License": "CC BY 3.0",
+    "VerifiedModel": "2021 Nissan Kicks P15 facelift",
+    "Notes": "Downloaded from Commons thumbnail and visually pending; PNG source converted to JPEG"
+  },
+  {
+    "CarId": 50,
+    "Role": "front/main",
+    "LocalUrl": "/assets/images/catalog/ford/escape-2023-facelift-front.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2023_Ford_Escape_Base_(facelift),_front_1.23.23.jpg",
+    "Author": "Kevauto",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2023 Ford Escape facelift",
+    "Notes": "Downloaded from Commons 1920px thumbnail; visually pending"
+  },
+  {
+    "CarId": 51,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/edge-second-generation-2018-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:Ford_Edge_Back_Genf_2018.jpg",
+    "Author": "Alexander Migl",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2018 Ford Edge second generation",
+    "Notes": "Downloaded from Commons 1920px thumbnail; visually pending"
+  },
+  {
+    "CarId": 52,
+    "Role": "rear",
+    "LocalUrl": "/assets/images/catalog/ford/focus-mk4-sedan-2018-rear.jpg",
+    "CommonsFilePage": "https://commons.wikimedia.org/wiki/File:2018_Ford_Focus_sedan_(rear).jpg",
+    "Author": "User3204",
+    "License": "CC BY-SA 4.0",
+    "VerifiedModel": "2018 Ford Focus Mk IV sedan",
+    "Notes": "Downloaded from Commons 1920px thumbnail; visually pending"
+  }
+]
