@@ -575,10 +575,17 @@
               var imageRatio = image.naturalWidth / image.naturalHeight;
               var frameRatio = frame.clientWidth / frame.clientHeight;
               var visibleFraction = Math.min(imageRatio / frameRatio, frameRatio / imageRatio);
-              var shouldContain = imageRatio < 1.35 || visibleFraction < 0.88;
+              var isInterior = /interior|cabin|dashboard|cockpit|console/i.test(image.getAttribute("src") || "");
+              var shouldContain = isInterior || imageRatio < 1.35 || visibleFraction < 0.88;
 
               image.classList.toggle("fit-contain", shouldContain);
               image.classList.toggle("fit-cover", !shouldContain);
+              frame.classList.toggle("has-soft-backdrop", shouldContain);
+              if (shouldContain) {
+                frame.style.setProperty("--gallery-photo", "url('" + image.currentSrc + "')");
+              } else {
+                frame.style.removeProperty("--gallery-photo");
+              }
             }
 
             if (image.complete) {
@@ -603,6 +610,7 @@
             mousewheel: !isMobile,
             loop: false,
             watchSlidesProgress: true,
+            slideToClickedSlide: true,
             navigation: {
               nextEl: ".thumb-next",
               prevEl: ".thumb-prev",
@@ -617,13 +625,18 @@
             slidesPerView: 1,
             effect: "fade",
             spaceBetween: 0,
-            speed: 1500,
+            speed: 450,
             grabCursor: true,
             autoplay: false,
             loop: false,
             thumbs: {
               swiper: swiperthumb2,
             },
+          });
+          swiperthumb2.on("click", function () {
+            if (typeof this.clickedIndex === "number") {
+              swiper2.slideTo(this.clickedIndex);
+            }
           });
           applyAdaptiveImageFit(".portfolio-slider-area.vertical [data-gallery-image]");
           applyAdaptiveImageFit(".project-wrapper2:not(.list-style) .image-area > a:first-child > img");

@@ -1,0 +1,136 @@
+[
+  {
+    "query": "Rolls-Royce Phantom VIII",
+    "titles": [
+      "File:Rolls-Royce Phantom VIII Series I IMG 9101.jpg",
+      "File:Rolls-Royce Phantom VIII Series I (Crown Prince of Brunei).jpg",
+      "File:D\u00fclmen, Rolls-Royce Phantom II -- 2024 -- 5862.jpg",
+      "File:Geneva International Motor Show 2018, Le Grand-Saconnex (1X7A1231).jpg",
+      "File:Rolls-Royce Phantom, Geneva International Motor Show 2018, Le Grand-Saconnex (1X7A1220).jpg"
+    ]
+  },
+  {
+    "query": "Rolls-Royce Phantom VIII rear",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": ""
+  },
+  {
+    "query": "Rolls-Royce Wraith interior",
+    "titles": [
+      "File:1948 Rolls-Royce Silver Wraith James Young drophead intR (5012706704).jpg",
+      "File:2014 Rolls-Royce Wraith, diamond black rR.jpg",
+      "File:1956 Rolls-Royce Silver Wraith Gulbenkian (cropped).jpg",
+      "File:1956Rolls-RoyceSilverWraithPerspexRoof-side.jpg",
+      "File:1956Rolls-RoyceSilverWraithPerspexRoof-rear.jpg"
+    ]
+  },
+  {
+    "query": "Rolls-Royce Wraith rear",
+    "titles": [
+      "File:Rolls-Royce Wraith rear - Tokyo Auto Salon 2015.jpg",
+      "File:Rolls-Royce Silver Wraith \u2013 Heckansicht, 13. Juni 2011, Wuppertal.jpg",
+      "File:Rolls-Royce Wraith (2019) (53627615714).jpg",
+      "File:Geneva MotorShow 2013 - Rolls-Royce Wraith back.jpg",
+      "File:1956Rolls-RoyceSilverWraithPerspexRoof-rear.jpg"
+    ]
+  },
+  {
+    "query": "BMW 7 Series G12 interior",
+    "titles": [
+      "File:\" (a picture by david adam kess, pic.a1665.jpg",
+      "File:\" (a picture by david adam kess, pic.a168.jpg",
+      "File:\" (a picture by david adam kess, pic.a19.jpg",
+      "File:Federal Register 1980-05-29- Vol 45 Iss 105 (IA sim federal-register-find 1980-05-29 45 105 0).pdf"
+    ]
+  },
+  {
+    "query": "BMW 7 Series G11 rear",
+    "titles": [
+      "File:BMW 7-Series (G11) 745e (2019) (53332492790).jpg",
+      "File:BMW 7-Series (G11) 730d (2022) (53327092300).jpg",
+      "File:BMW 7-Series (G11) 730d (2020) (53325763257).jpg",
+      "File:BMW 7-Series (G11) 730d (2022) (53326860348).jpg",
+      "File:BMW 7-Series (G11) 730d (2020) (53327095320).jpg"
+    ]
+  },
+  {
+    "query": "Audi A8 D5 front",
+    "titles": [
+      "File:Audi A8 D5 (2021) 1X7A6342.jpg",
+      "File:Audi A8 L 50 TDI Quattro D5 Terra Gray (12).jpg",
+      "File:2018 Audi A8 50 TDi Quattro Automatic 3.0 Front.jpg",
+      "File:Audi A8 L 55 TFSI Quattro D5 Floret Silver Metallic (8).jpg",
+      "File:Audi A8 L 55 TFSI Quattro S Line Premium D5 FL Mythos Black Metallic (42).jpg"
+    ]
+  },
+  {
+    "query": "Audi A8 D5 interior",
+    "titles": [
+      "File:Audi A8 L D5 Black Valcona Interior with Piano Black Inlay (35).jpg",
+      "File:Audi A8 L D5 Black Valcona Interior with Piano Black Inlay (5).jpg",
+      "File:Audi A8 L D5 Black Valcona Interior with Piano Black Inlay (19).jpg",
+      "File:Audi A8 L D5 Black Valcona Interior with Piano Black Inlay (8).jpg",
+      "File:Audi A8 L D5 Black Valcona Interior with Piano Black Inlay (32).jpg"
+    ]
+  },
+  {
+    "query": "Mercedes-AMG GT C190",
+    "titles": [
+      "File:Mercedes-AMG C190 GT R IMG 7306.jpg",
+      "File:Mercedes-AMG C190 GT R 1X7A1632.jpg",
+      "File:Mercedes-AMG C190 GT R IMG 7304.jpg",
+      "File:Mercedes-AMG GT R, BAS 24, Brussels (P1170229-RR).jpg",
+      "File:Mercedes-AMG GT V8 Biturbo 2.jpg"
+    ]
+  },
+  {
+    "query": "Mercedes-AMG GT interior",
+    "titles": [
+      "File:The interior of Mercedes-AMG GT S (C190).jpg",
+      "File:The interior of Mercedes-AMG GT 43 4MATIC+ (X290).jpg",
+      "File:The interior of Mercedes-AMG GT Roadster (R190) with Christmas decolation.jpg",
+      "File:Mercedes-AMG GT Roadster (R190) interior.jpg",
+      "File:Mercedes-AMG GT 53 4MATIC+ (X290) interior.jpg"
+    ]
+  },
+  {
+    "query": "Nissan 350Z Z33",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  },
+  {
+    "query": "Nissan 350Z interior",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  },
+  {
+    "query": "Porsche 911 997",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  },
+  {
+    "query": "Maserati GranTurismo",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  },
+  {
+    "query": "Tesla Model 3",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  },
+  {
+    "query": "Tesla Model 3 interior",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  },
+  {
+    "query": "Toyota Highlander XU70",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  },
+  {
+    "query": "Toyota Highlander interior",
+    "error": "Expecting value: line 1 column 1 (char 0)",
+    "raw": "You are making too many requests to the API.\nPlease follow the best practices at <https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits>.\nIf you are unsure how to get the acces"
+  }
+]

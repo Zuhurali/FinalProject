@@ -1,0 +1,324 @@
+﻿1|Ferrari|California|2018|1|0|/assets/images/catalog/convertible/ferrari-california-t-front.jpg
+1|Ferrari|California|2018|0|1|/assets/images/catalog/convertible/ferrari-california-t-rear-quarter.jpg
+1|Ferrari|California|2018|0|2|/assets/images/catalog/convertible/ferrari-california-t-rear.jpg
+1|Ferrari|California|2018|0|3|/assets/images/catalog/convertible/ferrari-california-dashboard.jpg
+1|Ferrari|California|2018|0|4|/assets/images/catalog/convertible/ferrari-california-cabin.jpg
+1|Ferrari|California|2018|0|5|/assets/images/catalog/convertible/ferrari-california-t-side.jpg
+2|Mercedes-Benz|SL-Class|2019|1|0|/assets/images/catalog/convertible/mercedes-sl-class-black.jpg
+2|Mercedes-Benz|SL-Class|2019|0|1|/assets/images/catalog/convertible/mercedes-sl-r231-dashboard.jpg
+2|Mercedes-Benz|SL-Class|2019|0|2|/assets/images/catalog/convertible/mercedes-sl-r231-cabin.jpg
+3|Mercedes-Benz|SL-Class|2016|1|0|/assets/images/catalog/convertible/mercedes-sl-class-white.jpg
+3|Mercedes-Benz|SL-Class|2016|0|1|/assets/images/catalog/convertible/mercedes-sl-class-white-rear.jpg
+3|Mercedes-Benz|SL-Class|2016|0|2|/assets/images/catalog/convertible/mercedes-sl-r231-wheel.jpg
+3|Mercedes-Benz|SL-Class|2016|0|3|/assets/images/catalog/convertible/mercedes-sl-r231-console.jpg
+4|Nissan|350Z|2008|1|0|/assets/images/catalog/coupe/nissan-350z-z33-front.jpg
+4|Nissan|350Z|2008|0|1|/assets/images/catalog/coupe/nissan-350z-z33-rear.jpg
+4|Nissan|350Z|2008|0|2|/assets/images/catalog/coupe/nissan-350z-z33-interior.jpg
+4|Nissan|350Z|2008|0|3|/assets/images/catalog/coupe/nissan-350z-z33-cabin.jpg
+5|Lamborghini|Diablo|1998|1|0|/assets/images/catalog/sports-car/lamborghini-diablo-red.jpg
+6|Porsche|911 GT3 RS|2019|1|0|/assets/images/catalog/sports-car/porsche-911-gt3-rs-991-2-front.jpg
+7|Porsche|911|2011|1|0|/assets/images/catalog/coupe/porsche-911-997-front.jpg
+7|Porsche|911|2011|0|1|/assets/images/catalog/coupe/porsche-911-997-rear.jpg
+7|Porsche|911|2011|0|2|/assets/images/catalog/coupe/porsche-911-997-interior.jpg
+8|Mercedes-Benz|AMG GT|2018|1|0|/assets/images/catalog/coupe/mercedes-amg-gt-c190-front.jpg
+8|Mercedes-Benz|AMG GT|2018|0|1|/assets/images/catalog/coupe/mercedes-amg-gt-c190-rear.jpg
+8|Mercedes-Benz|AMG GT|2018|0|2|/assets/images/catalog/coupe/mercedes-amg-gt-c190-interior.jpg
+9|Maserati|GranTurismo|2017|1|0|/assets/images/catalog/luxury/maserati-granturismo-m145-front.jpg
+9|Maserati|GranTurismo|2017|0|1|/assets/images/catalog/luxury/maserati-granturismo-m145-rear.jpg
+9|Maserati|GranTurismo|2017|0|2|/assets/images/catalog/luxury/maserati-granturismo-m145-side.jpg
+10|Nissan|Leaf|2021|1|0|/assets/images/catalog/hatchback/nissan-leaf-ze1-red.jpg
+10|Nissan|Leaf|2021|0|1|/assets/images/catalog/hatchback/nissan-leaf-ze1-2019-rear.jpg
+11|Rolls-Royce|Phantom|2022|1|0|/assets/images/catalog/luxury/rolls-royce-phantom-viii-front.jpg
+11|Rolls-Royce|Phantom|2022|0|1|/assets/images/catalog/luxury/rolls-royce-phantom-viii-rear.jpg
+11|Rolls-Royce|Phantom|2022|0|2|/assets/images/catalog/luxury/rolls-royce-phantom-viii-interior.jpg
+12|Rolls-Royce|Wraith|2020|1|0|/assets/images/catalog/luxury/rolls-royce-wraith-white.jpg
+12|Rolls-Royce|Wraith|2020|0|1|/assets/images/catalog/luxury/rolls-royce-wraith-rear.jpg
+13|Tesla|Model 3|2023|1|0|/assets/images/catalog/electric/tesla-model-3-highland-2023-front.jpg
+13|Tesla|Model 3|2023|0|1|/assets/images/catalog/electric/tesla-model-3-highland-2023-rear-quarter.jpg
+13|Tesla|Model 3|2023|0|2|/assets/images/catalog/electric/tesla-model-3-highland-2023-rear.jpg
+13|Tesla|Model 3|2023|0|3|/assets/images/catalog/electric/tesla-model-3-highland-2023-interior.jpg
+14|Toyota|Highlander|2024|1|0|/assets/images/catalog/suv/toyota-highlander-xu70-front.jpg
+14|Toyota|Highlander|2024|0|1|/assets/images/catalog/suv/toyota-highlander-xu70-rear.jpg
+14|Toyota|Highlander|2024|0|2|/assets/images/catalog/suv/toyota-highlander-xu70-interior.jpg
+18|BMW|M340i|2022|1|0|/assets/images/catalog/bmw/m340i.jpg
+18|BMW|M340i|2022|0|1|/assets/images/catalog/bmw/bmw-g20-m340i-rear.jpg
+18|BMW|M340i|2022|0|2|/assets/images/catalog/bmw/bmw-g20-lci-interior.jpg
+19|BMW|M3 Competition|2022|1|0|/assets/images/catalog/bmw/m3-competition.jpg
+20|BMW|M440i|2022|1|0|/assets/images/catalog/bmw/m440i.jpg
+21|BMW|M4 Competition|2021|1|0|/assets/images/catalog/bmw/m4-competition.jpg
+21|BMW|M4 Competition|2021|0|1|/assets/images/catalog/bmw/bmw-m4-g82-2021-rear.jpg
+21|BMW|M4 Competition|2021|0|2|/assets/images/catalog/bmw/bmw-m4-g82-interior.jpg
+22|BMW|530i|2020|1|0|/assets/images/catalog/bmw/530i.jpg
+22|BMW|530i|2020|0|1|/assets/images/catalog/bmw/bmw-530i-g30-2019-rear.jpg
+22|BMW|530i|2020|0|2|/assets/images/catalog/bmw/bmw-g30-lci-interior.jpg
+23|BMW|M5 (F90)|2020|1|0|/assets/images/catalog/bmw/m5-f90.jpg
+24|BMW|740i|2023|1|0|/assets/images/catalog/bmw/740i.jpg
+24|BMW|740i|2023|0|1|/assets/images/catalog/bmw/bmw-g70-interior.jpg
+25|BMW|M850i|2019|1|0|/assets/images/catalog/bmw/m850i.jpg
+25|BMW|M850i|2019|0|1|/assets/images/catalog/bmw/bmw-m850i-g14-2019-rear.jpg
+25|BMW|M850i|2019|0|2|/assets/images/catalog/bmw/bmw-m850i-2019-interior.jpg
+26|BMW|X3 M40i|2023|1|0|/assets/images/catalog/bmw/x3-m40i.jpg
+26|BMW|X3 M40i|2023|0|1|/assets/images/catalog/bmw/bmw-x3-m40i-g01-rear.jpg
+26|BMW|X3 M40i|2023|0|2|/assets/images/catalog/bmw/bmw-x3-g01-interior.jpg
+27|BMW|X5 xDrive40i|2021|1|0|/assets/images/catalog/bmw/x5-xdrive40i.jpg
+27|BMW|X5 xDrive40i|2021|0|1|/assets/images/catalog/bmw/bmw-x5-g05-2020-interior.jpg
+28|BMW|X5 M Competition|2021|1|0|/assets/images/catalog/bmw/x5-m-competition.jpg
+28|BMW|X5 M Competition|2021|0|1|/assets/images/catalog/bmw/bmw-x5-m-competition-g05-rear.jpg
+29|BMW|X6 M Competition|2022|1|0|/assets/images/catalog/bmw/x6-m-competition.jpg
+30|BMW|Z4 M40i|2023|1|0|/assets/images/catalog/bmw/z4-m40i.jpg
+30|BMW|Z4 M40i|2023|0|1|/assets/images/catalog/bmw/bmw-z4-g29-m40i-rear.jpg
+30|BMW|Z4 M40i|2023|0|2|/assets/images/catalog/bmw/bmw-z4-m40i-g29-interior.jpg
+31|BMW|i4 M50|2022|1|0|/assets/images/catalog/bmw/i4-m50.jpg
+31|BMW|i4 M50|2022|0|1|/assets/images/catalog/bmw/bmw-i4-g26-rear.jpg
+31|BMW|i4 M50|2022|0|2|/assets/images/catalog/bmw/bmw-i4-g26-interior.jpg
+32|Nissan|Altima|2021|1|0|/assets/images/catalog/nissan/altima.jpg
+32|Nissan|Altima|2021|0|1|/assets/images/catalog/nissan/altima-l34-2019-rear.jpg
+32|Nissan|Altima|2021|0|2|/assets/images/catalog/nissan/altima-l34-interior.jpg
+33|Nissan|Maxima|2019|1|0|/assets/images/catalog/nissan/maxima.jpg
+33|Nissan|Maxima|2019|0|1|/assets/images/catalog/nissan/maxima-a36-2019-rear.jpg
+33|Nissan|Maxima|2019|0|2|/assets/images/catalog/nissan/maxima-a36-interior.jpg
+34|Nissan|Sentra|2014|1|0|/assets/images/catalog/nissan/sentra.jpg
+34|Nissan|Sentra|2014|0|1|/assets/images/catalog/nissan/sentra-b17-2015-rear.jpg
+35|Nissan|Rogue|2024|1|0|/assets/images/catalog/nissan/rogue.jpg
+35|Nissan|Rogue|2024|0|1|/assets/images/catalog/nissan/rogue-t33-2021-rear.jpg
+35|Nissan|Rogue|2024|0|2|/assets/images/catalog/nissan/rogue-t33-interior.jpg
+36|Nissan|Pathfinder|2023|1|0|/assets/images/catalog/nissan/pathfinder.jpg
+36|Nissan|Pathfinder|2023|0|1|/assets/images/catalog/nissan/pathfinder-r53-rear.jpg
+36|Nissan|Pathfinder|2023|0|2|/assets/images/catalog/nissan/pathfinder-r53-china-interior.jpg
+37|Nissan|Murano|2019|1|0|/assets/images/catalog/nissan/murano.jpg
+37|Nissan|Murano|2019|0|1|/assets/images/catalog/nissan/murano-z52-rear.jpg
+37|Nissan|Murano|2019|0|2|/assets/images/catalog/nissan/murano-z52-interior.jpg
+38|Nissan|Armada|2023|1|0|/assets/images/catalog/nissan/armada.jpg
+38|Nissan|Armada|2023|0|1|/assets/images/catalog/nissan/armada-y62-2021-rear.jpg
+38|Nissan|Armada|2023|0|2|/assets/images/catalog/nissan/armada-y62-2023-interior.jpg
+39|Nissan|GT-R|2008|1|0|/assets/images/catalog/nissan/gt-r.jpg
+39|Nissan|GT-R|2008|0|1|/assets/images/catalog/nissan/gt-r-r35-2009-rear.jpg
+39|Nissan|GT-R|2008|0|2|/assets/images/catalog/nissan/gt-r-r35-2014-interior.jpg
+40|Nissan|Z|2023|1|0|/assets/images/catalog/nissan/z.jpg
+40|Nissan|Z|2023|0|1|/assets/images/catalog/nissan/z-rz34-interior.jpg
+41|Nissan|Kicks|2024|1|0|/assets/images/catalog/nissan/kicks.jpg
+41|Nissan|Kicks|2024|0|1|/assets/images/catalog/nissan/kicks-p15-facelift-2021-rear.jpg
+42|Nissan|Frontier|2022|1|0|/assets/images/catalog/nissan/frontier.jpg
+42|Nissan|Frontier|2022|0|1|/assets/images/catalog/nissan/frontier-d41-2022-rear.jpg
+42|Nissan|Frontier|2022|0|2|/assets/images/catalog/nissan/frontier-d41-2022-interior.jpg
+43|Ford|Mustang GT|2018|1|0|/assets/images/catalog/ford/mustang-gt.jpg
+43|Ford|Mustang GT|2018|0|1|/assets/images/catalog/ford/mustang-gt-s550-2018-rear.jpg
+43|Ford|Mustang GT|2018|0|2|/assets/images/catalog/ford/mustang-gt-s550-2018-interior.jpg
+44|Ford|Mustang EcoBoost|2024|1|0|/assets/images/catalog/ford/mustang-ecoboost.jpg
+44|Ford|Mustang EcoBoost|2024|0|1|/assets/images/catalog/ford/mustang-s650-2024-rear.jpg
+44|Ford|Mustang EcoBoost|2024|0|2|/assets/images/catalog/convertible/ford-mustang-s650-interior.jpg
+45|Ford|Mustang Mach-E|2021|1|0|/assets/images/catalog/ford/mustang-mach-e.jpg
+45|Ford|Mustang Mach-E|2021|0|1|/assets/images/catalog/ford/mustang-mach-e-2021-rear.jpg
+45|Ford|Mustang Mach-E|2021|0|2|/assets/images/catalog/ford/mustang-mach-e-2021-interior.jpg
+46|Ford|F-150|2021|1|0|/assets/images/catalog/ford/f-150.jpg
+46|Ford|F-150|2021|0|1|/assets/images/catalog/ford/f-150-p702-2021-rear.jpg
+46|Ford|F-150|2021|0|2|/assets/images/catalog/ford/f-150-p702-2022-interior.jpg
+47|Ford|Ranger|2023|1|0|/assets/images/catalog/ford/ranger.jpg
+47|Ford|Ranger|2023|0|1|/assets/images/catalog/ford/ranger-p703-rear.jpg
+47|Ford|Ranger|2023|0|2|/assets/images/catalog/ford/ranger-p703-interior.jpg
+48|Ford|Bronco|2023|1|0|/assets/images/catalog/ford/bronco.jpg
+48|Ford|Bronco|2023|0|1|/assets/images/catalog/ford/bronco-u725-rear.jpg
+48|Ford|Bronco|2023|0|2|/assets/images/catalog/ford/bronco-u725-interior.jpg
+49|Ford|Explorer|2020|1|0|/assets/images/catalog/ford/explorer.jpg
+49|Ford|Explorer|2020|0|1|/assets/images/catalog/ford/explorer-u625-2020-rear.jpg
+49|Ford|Explorer|2020|0|2|/assets/images/catalog/ford/explorer-u625-2022-interior.jpg
+50|Ford|Escape|2023|1|0|/assets/images/catalog/ford/escape-2023-facelift-front.jpg
+50|Ford|Escape|2023|0|1|/assets/images/catalog/ford/escape-2023-facelift-rear.jpg
+50|Ford|Escape|2023|0|2|/assets/images/catalog/ford/escape-fourth-generation-interior.jpg
+51|Ford|Edge|2018|1|0|/assets/images/catalog/ford/edge.jpg
+51|Ford|Edge|2018|0|1|/assets/images/catalog/ford/edge-second-generation-2018-rear.jpg
+52|Ford|Focus|2019|1|0|/assets/images/catalog/ford/focus.jpg
+52|Ford|Focus|2019|0|1|/assets/images/catalog/ford/focus-mk4-sedan-2018-rear.jpg
+53|Ford|Fusion|2019|1|0|/assets/images/catalog/ford/fusion.jpg
+53|Ford|Fusion|2019|0|1|/assets/images/catalog/ford/fusion-second-generation-2019-rear.jpg
+54|Mazda|MX-5|2019|1|0|/assets/images/catalog/mazda/mx-5-1.jpg
+54|Mazda|MX-5|2019|0|1|/assets/images/catalog/mazda/mazda-mx5-nd-rear.jpg
+54|Mazda|MX-5|2019|0|2|/assets/images/catalog/mazda/mazda-mx5-nd-interior.jpg
+54|Mazda|MX-5|2019|0|3|/assets/images/catalog/mazda/mx-5-4.jpg
+55|Mazda|Mazda3|2021|1|0|/assets/images/catalog/mazda/mazda3-1.jpg
+55|Mazda|Mazda3|2021|0|1|/assets/images/catalog/mazda/mazda3-2.jpg
+55|Mazda|Mazda3|2021|0|2|/assets/images/catalog/mazda/mazda3-3.jpg
+55|Mazda|Mazda3|2021|0|3|/assets/images/catalog/mazda/mazda3-bp-sedan-rear.jpg
+56|Mazda|Mazda3 Hatchback|2020|1|0|/assets/images/catalog/mazda/mazda3h-2.jpg
+56|Mazda|Mazda3 Hatchback|2020|0|1|/assets/images/catalog/mazda/mazda3h-1.jpg
+56|Mazda|Mazda3 Hatchback|2020|0|2|/assets/images/catalog/mazda/mazda3-bp-hatch-rear.jpg
+56|Mazda|Mazda3 Hatchback|2020|0|3|/assets/images/catalog/mazda/mazda3h-4.jpg
+57|Mazda|Mazda6|2018|1|0|/assets/images/catalog/mazda/mazda6-1.jpg
+57|Mazda|Mazda6|2018|0|1|/assets/images/catalog/mazda/mazda6-2.jpg
+57|Mazda|Mazda6|2018|0|2|/assets/images/catalog/mazda/mazda6-3.jpg
+57|Mazda|Mazda6|2018|0|3|/assets/images/catalog/mazda/mazda6-4.jpg
+58|Mazda|CX-3|2018|1|0|/assets/images/catalog/mazda/cx3-1.jpg
+58|Mazda|CX-3|2018|0|1|/assets/images/catalog/mazda/cx3-2.jpg
+58|Mazda|CX-3|2018|0|2|/assets/images/catalog/mazda/cx3-3.jpg
+58|Mazda|CX-3|2018|0|3|/assets/images/catalog/mazda/cx3-4.jpg
+59|Mazda|CX-30|2021|1|0|/assets/images/catalog/mazda/cx30-1.jpg
+59|Mazda|CX-30|2021|0|1|/assets/images/catalog/mazda/cx30-2.jpg
+59|Mazda|CX-30|2021|0|2|/assets/images/catalog/mazda/cx30-3.jpg
+59|Mazda|CX-30|2021|0|3|/assets/images/catalog/mazda/cx30-4.jpg
+60|Mazda|CX-5|2022|1|0|/assets/images/catalog/mazda/cx5-1.jpg
+60|Mazda|CX-5|2022|0|1|/assets/images/catalog/mazda/cx5-2.jpg
+60|Mazda|CX-5|2022|0|2|/assets/images/catalog/mazda/mazda-cx5-kf-rear.jpg
+60|Mazda|CX-5|2022|0|3|/assets/images/catalog/mazda/cx5-4.jpg
+61|Mazda|CX-50|2024|1|0|/assets/images/catalog/mazda/cx50-1.jpg
+61|Mazda|CX-50|2024|0|1|/assets/images/catalog/mazda/cx50-2.jpg
+61|Mazda|CX-50|2024|0|2|/assets/images/catalog/mazda/cx50-3.jpg
+61|Mazda|CX-50|2024|0|3|/assets/images/catalog/mazda/cx50-4.jpg
+62|Mazda|CX-60|2023|1|0|/assets/images/catalog/mazda/cx60-1.jpg
+62|Mazda|CX-60|2023|0|1|/assets/images/catalog/mazda/cx60-2.jpg
+62|Mazda|CX-60|2023|0|2|/assets/images/catalog/mazda/cx60-3.jpg
+62|Mazda|CX-60|2023|0|3|/assets/images/catalog/mazda/cx60-4.jpg
+63|Mazda|CX-90|2024|1|0|/assets/images/catalog/mazda/cx90-1.jpg
+63|Mazda|CX-90|2024|0|1|/assets/images/catalog/mazda/cx90-2.jpg
+63|Mazda|CX-90|2024|0|2|/assets/images/catalog/mazda/cx90-3.jpg
+63|Mazda|CX-90|2024|0|3|/assets/images/catalog/mazda/cx90-4.jpg
+64|Mazda|RX-8|2008|1|0|/assets/images/catalog/mazda/rx8-1.jpg
+64|Mazda|RX-8|2008|0|1|/assets/images/catalog/mazda/rx8-2.jpg
+64|Mazda|RX-8|2008|0|2|/assets/images/catalog/mazda/mazda-rx8-interior.jpg
+64|Mazda|RX-8|2008|0|3|/assets/images/catalog/mazda/rx8-4.jpg
+65|Mazda|RX-7|2002|1|0|/assets/images/catalog/mazda/rx7-1.jpg
+65|Mazda|RX-7|2002|0|1|/assets/images/catalog/mazda/mazda-rx7-fd-rear.jpg
+65|Mazda|RX-7|2002|0|2|/assets/images/catalog/mazda/mazda-rx7-fd-interior.jpg
+65|Mazda|RX-7|2002|0|3|/assets/images/catalog/mazda/rx7-3.jpg
+66|Toyota|Sienna|2022|1|0|/assets/images/catalog/minivans/sienna.jpg
+66|Toyota|Sienna|2022|0|1|/assets/images/catalog/minivans/toyota-sienna-xl40-2021-rear.jpg
+67|Honda|Odyssey|2019|1|0|/assets/images/catalog/minivans/odyssey.jpg
+68|Kia|Carnival|2023|1|0|/assets/images/catalog/minivans/carnival.jpg
+69|Chrysler|Pacifica|2022|1|0|/assets/images/catalog/minivans/pacifica.jpg
+69|Chrysler|Pacifica|2022|0|1|/assets/images/catalog/minivans/chrysler-pacifica-ru-interior.jpg
+70|Chrysler|Voyager|2020|1|0|/assets/images/catalog/minivans/voyager.jpg
+71|Volkswagen|Multivan|2022|1|0|/assets/images/catalog/minivans/multivan.jpg
+72|Volkswagen|Caravelle|2019|1|0|/assets/images/catalog/minivans/caravelle.jpg
+73|Ford|Tourneo Custom|2023|1|0|/assets/images/catalog/minivans/tourneo-custom.jpg
+74|Hyundai|Staria|2023|1|0|/assets/images/catalog/minivans/staria.jpg
+75|Mercedes-Benz|V-Class|2023|1|0|/assets/images/catalog/minivans/v-class.jpg
+75|Mercedes-Benz|V-Class|2023|0|1|/assets/images/catalog/minivans/v-class-dashboard.jpg
+75|Mercedes-Benz|V-Class|2023|0|2|/assets/images/catalog/minivans/v-class-rear-cabin.jpg
+76|Volkswagen|Golf GTI|2024|1|0|/assets/images/catalog/hatchback/golf-gti-1.jpg
+76|Volkswagen|Golf GTI|2024|0|1|/assets/images/catalog/hatchback/golf-gti-2.jpg
+76|Volkswagen|Golf GTI|2024|0|2|/assets/images/catalog/hatchback/volkswagen-golf-gti-2023-interior.jpg
+77|Volkswagen|Golf R|2020|1|0|/assets/images/catalog/hatchback/golf-r-1.jpg
+77|Volkswagen|Golf R|2020|0|1|/assets/images/catalog/hatchback/volkswagen-golf-r-mk7-rear.jpg
+78|Honda|Civic Type R|2018|1|0|/assets/images/catalog/hatchback/civic-1.jpg
+78|Honda|Civic Type R|2018|0|1|/assets/images/catalog/hatchback/civic-2.jpg
+78|Honda|Civic Type R|2018|0|2|/assets/images/catalog/hatchback/honda-civic-type-r-fk8-interior.jpg
+79|Toyota|Corolla Hatchback|2023|1|0|/assets/images/catalog/hatchback/corolla-1.jpg
+79|Toyota|Corolla Hatchback|2023|0|1|/assets/images/catalog/hatchback/corolla-2.jpg
+79|Toyota|Corolla Hatchback|2023|0|2|/assets/images/catalog/hatchback/toyota-corolla-e210-interior.jpg
+80|Hyundai|i30|2024|1|0|/assets/images/catalog/hatchback/i30-1.jpg
+80|Hyundai|i30|2024|0|1|/assets/images/catalog/hatchback/i30-2.jpg
+80|Hyundai|i30|2024|0|2|/assets/images/catalog/hatchback/hyundai-i30-pd-interior.jpg
+81|Hyundai|Veloster|2012|1|0|/assets/images/catalog/hatchback/veloster-1.jpg
+81|Hyundai|Veloster|2012|0|1|/assets/images/catalog/hatchback/hyundai-veloster-2012-rear.jpg
+82|Ford|Focus ST|2014|1|0|/assets/images/catalog/hatchback/focus-1.jpg
+82|Ford|Focus ST|2014|0|1|/assets/images/catalog/hatchback/focus-2.jpg
+83|Peugeot|308|2022|1|0|/assets/images/catalog/hatchback/308-1.jpg
+83|Peugeot|308|2022|0|1|/assets/images/catalog/hatchback/308-2.jpg
+84|Renault|Megane|2018|1|0|/assets/images/catalog/hatchback/megane-1.jpg
+84|Renault|Megane|2018|0|1|/assets/images/catalog/hatchback/megane-2.jpg
+85|Audi|A3 Sportback|2017|1|0|/assets/images/catalog/hatchback/a3-1.jpg
+85|Audi|A3 Sportback|2017|0|1|/assets/images/catalog/hatchback/a3-2.jpg
+85|Audi|A3 Sportback|2017|0|2|/assets/images/catalog/hatchback/audi-a3-sportback-8v-facelift-interior.jpg
+86|Mercedes-Benz|S-Class|2021|1|0|/assets/images/catalog/luxury/sclass-1.jpg
+86|Mercedes-Benz|S-Class|2021|0|1|/assets/images/catalog/luxury/sclass-2.jpg
+86|Mercedes-Benz|S-Class|2021|0|2|/assets/images/catalog/luxury/sclass-w223-cabin.jpg
+87|Mercedes-Benz|Maybach S-Class|2023|1|0|/assets/images/catalog/luxury/maybach-1.jpg
+88|BMW|750Li|2019|1|0|/assets/images/catalog/luxury/750li-1.jpg
+88|BMW|750Li|2019|0|1|/assets/images/catalog/luxury/bmw-g11-750li-rear.jpg
+88|BMW|750Li|2019|0|2|/assets/images/catalog/luxury/bmw-g11-750li-interior.jpg
+88|BMW|750Li|2019|0|3|/assets/images/catalog/luxury/750li-2.jpg
+89|BMW|840i|2021|1|0|/assets/images/catalog/luxury/840i-1.jpg
+89|BMW|840i|2021|0|1|/assets/images/catalog/luxury/bmw-840i-g16-rear.jpg
+90|Audi|A8|2021|1|0|/assets/images/catalog/luxury/audi-a8-d5-front.jpg
+90|Audi|A8|2021|0|1|/assets/images/catalog/luxury/audi-a8-d5-rear.jpg
+90|Audi|A8|2021|0|2|/assets/images/catalog/luxury/audi-a8-d5-interior.jpg
+90|Audi|A8|2021|0|3|/assets/images/catalog/luxury/audi-a8-d5-rear-seats.jpg
+91|Bentley|Continental GT|2020|1|0|/assets/images/catalog/luxury/continental-1.jpg
+91|Bentley|Continental GT|2020|0|1|/assets/images/catalog/luxury/continental-2.jpg
+92|Bentley|Flying Spur|2024|1|0|/assets/images/catalog/luxury/spur-1.jpg
+92|Bentley|Flying Spur|2024|0|1|/assets/images/catalog/luxury/spur-2.jpg
+93|Porsche|Panamera|2019|1|0|/assets/images/catalog/luxury/panamera-1.jpg
+93|Porsche|Panamera|2019|0|1|/assets/images/catalog/luxury/panamera-2.jpg
+94|Lexus|LS|2018|1|0|/assets/images/catalog/luxury/ls-1.jpg
+94|Lexus|LS|2018|0|1|/assets/images/catalog/luxury/ls-2.jpg
+95|Genesis|G90|2024|1|0|/assets/images/catalog/luxury/g90-1.jpg
+96|Porsche|911 Cabriolet|2024|1|0|/assets/images/catalog/convertible/911cab-1.jpg
+96|Porsche|911 Cabriolet|2024|0|1|/assets/images/catalog/convertible/911cab-2.jpg
+96|Porsche|911 Cabriolet|2024|0|2|/assets/images/catalog/convertible/porsche-911-992-cabriolet-interior.jpg
+97|Audi|A5 Cabriolet|2021|1|0|/assets/images/catalog/convertible/a5-1.jpg
+97|Audi|A5 Cabriolet|2021|0|1|/assets/images/catalog/convertible/audi-a5-f5-cabriolet-rear.jpg
+97|Audi|A5 Cabriolet|2021|0|2|/assets/images/catalog/convertible/audi-a5-f5-cabriolet-interior.jpg
+98|Mercedes-Benz|E-Class Cabriolet|2019|1|0|/assets/images/catalog/convertible/eclass-1.jpg
+98|Mercedes-Benz|E-Class Cabriolet|2019|0|1|/assets/images/catalog/convertible/mercedes-e-class-a238-rear.jpg
+98|Mercedes-Benz|E-Class Cabriolet|2019|0|2|/assets/images/catalog/convertible/mercedes-e-class-a238-interior.jpg
+98|Mercedes-Benz|E-Class Cabriolet|2019|0|3|/assets/images/catalog/convertible/eclass-2.jpg
+99|Ford|Mustang Convertible|2024|1|0|/assets/images/catalog/convertible/mustang-cab-1.jpg
+99|Ford|Mustang Convertible|2024|0|1|/assets/images/catalog/convertible/mustang-cab-2.jpg
+99|Ford|Mustang Convertible|2024|0|2|/assets/images/catalog/convertible/ford-mustang-s650-interior.jpg
+100|Toyota|GR86|2023|1|0|/assets/images/catalog/coupe/gr86-1.jpg
+100|Toyota|GR86|2023|0|1|/assets/images/catalog/coupe/toyota-gr86-sz-rear.jpg
+100|Toyota|GR86|2023|0|2|/assets/images/catalog/coupe/toyota-gr86-rz-interior.jpg
+101|Audi|TT|2017|1|0|/assets/images/catalog/coupe/tt-1.jpg
+101|Audi|TT|2017|0|1|/assets/images/catalog/coupe/audi-tt-8s-rear.jpg
+101|Audi|TT|2017|0|2|/assets/images/catalog/coupe/audi-tt-8s-interior.jpg
+102|Porsche|718 Cayman|2019|1|0|/assets/images/catalog/coupe/porsche-718-cayman-front.jpg
+102|Porsche|718 Cayman|2019|0|1|/assets/images/catalog/coupe/cayman-1.jpg
+102|Porsche|718 Cayman|2019|0|2|/assets/images/catalog/coupe/porsche-718-cayman-interior.jpg
+103|Chevrolet|Camaro SS|2018|1|0|/assets/images/catalog/coupe/camaro-1.jpg
+103|Chevrolet|Camaro SS|2018|0|1|/assets/images/catalog/coupe/chevrolet-camaro-ss-interior.jpg
+104|Dodge|Challenger|2018|1|0|/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-front.jpg
+104|Dodge|Challenger|2018|0|1|/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-rear.jpg
+104|Dodge|Challenger|2018|0|2|/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-interior.jpg
+105|Nissan|370Z|2020|1|0|/assets/images/catalog/coupe/370z-1.jpg
+105|Nissan|370Z|2020|0|1|/assets/images/catalog/coupe/nissan-370z-rear.jpg
+105|Nissan|370Z|2020|0|2|/assets/images/catalog/coupe/nissan-370z-z34-interior.jpg
+106|Lexus|RC 350|2017|1|0|/assets/images/catalog/coupe/rc-1.jpg
+106|Lexus|RC 350|2017|0|1|/assets/images/catalog/coupe/rc-2.jpg
+106|Lexus|RC 350|2017|0|2|/assets/images/catalog/coupe/lexus-rc350-2018-interior.jpg
+107|Tesla|Model S|2021|1|0|/assets/images/catalog/electric/models-1.jpg
+107|Tesla|Model S|2021|0|1|/assets/images/catalog/electric/tesla-model-s-refresh-rear.jpg
+108|Porsche|Taycan|2024|1|0|/assets/images/catalog/electric/taycan-1.jpg
+108|Porsche|Taycan|2024|0|1|/assets/images/catalog/electric/porsche-taycan-gts-interior.jpg
+109|Audi|e-tron GT|2022|1|0|/assets/images/catalog/electric/etron-1.jpg
+109|Audi|e-tron GT|2022|0|1|/assets/images/catalog/electric/audi-etron-gt-rear.jpg
+109|Audi|e-tron GT|2022|0|2|/assets/images/catalog/electric/audi-etron-gt-2023-interior.jpg
+110|Hyundai|Ioniq 5|2023|1|0|/assets/images/catalog/electric/ioniq-1.jpg
+110|Hyundai|Ioniq 5|2023|0|1|/assets/images/catalog/electric/hyundai-ioniq-5-rear.jpg
+110|Hyundai|Ioniq 5|2023|0|2|/assets/images/catalog/electric/hyundai-ioniq-5-ne-interior.jpg
+111|Kia|EV6|2023|1|0|/assets/images/catalog/electric/ev6-1.jpg
+111|Kia|EV6|2023|0|1|/assets/images/catalog/electric/kia-ev6-first-gen-rear.jpg
+111|Kia|EV6|2023|0|2|/assets/images/catalog/electric/kia-ev6-gt-line-interior.jpg
+112|Nissan|Ariya|2023|1|0|/assets/images/catalog/electric/nissan-ariya-2023-front.jpg
+112|Nissan|Ariya|2023|0|1|/assets/images/catalog/electric/ariya-1.jpg
+112|Nissan|Ariya|2023|0|2|/assets/images/catalog/electric/nissan-ariya-2022-interior.jpg
+113|Volkswagen|ID.4|2022|1|0|/assets/images/catalog/electric/id4-1.jpg
+113|Volkswagen|ID.4|2022|0|1|/assets/images/catalog/electric/volkswagen-id4-2020-rear.jpg
+113|Volkswagen|ID.4|2022|0|2|/assets/images/catalog/electric/volkswagen-id4-pro-interior.jpg
+114|Mercedes-Benz|EQS|2022|1|0|/assets/images/catalog/electric/eqs-1.jpg
+114|Mercedes-Benz|EQS|2022|0|1|/assets/images/catalog/electric/mercedes-eqs-v297-rear.jpg
+114|Mercedes-Benz|EQS|2022|0|2|/assets/images/catalog/electric/mercedes-eqs-450plus-interior.jpg
+115|BMW|iX|2023|1|0|/assets/images/catalog/electric/ix-1.jpg
+115|BMW|iX|2023|0|1|/assets/images/catalog/electric/bmw-ix-xdrive40-interior.jpg
+116|Lamborghini|Huracán|2018|1|0|/assets/images/catalog/sports-car/huracan-1.jpg
+116|Lamborghini|Huracán|2018|0|1|/assets/images/catalog/sports-car/lamborghini-huracan-rear.jpg
+116|Lamborghini|Huracán|2018|0|2|/assets/images/catalog/sports-car/lamborghini-huracan-interior.jpg
+117|Lamborghini|Aventador|2015|1|0|/assets/images/catalog/sports-car/lamborghini-aventador-lp700-pirelli-front.jpg
+117|Lamborghini|Aventador|2015|0|1|/assets/images/catalog/sports-car/aventador-2.jpg
+117|Lamborghini|Aventador|2015|0|2|/assets/images/catalog/sports-car/aventador-1.jpg
+117|Lamborghini|Aventador|2015|0|3|/assets/images/catalog/sports-car/aventador-3.jpg
+118|Ferrari|488 GTB|2017|1|0|/assets/images/catalog/sports-car/488-1.jpg
+118|Ferrari|488 GTB|2017|0|1|/assets/images/catalog/sports-car/ferrari-488-rear.jpg
+118|Ferrari|488 GTB|2017|0|2|/assets/images/catalog/sports-car/488-3.jpg
+118|Ferrari|488 GTB|2017|0|3|/assets/images/catalog/sports-car/488-4.jpg
+119|Ferrari|F8 Tributo|2020|1|0|/assets/images/catalog/sports-car/f8-1.jpg
+119|Ferrari|F8 Tributo|2020|0|1|/assets/images/catalog/sports-car/ferrari-f8-rear.jpg
+119|Ferrari|F8 Tributo|2020|0|2|/assets/images/catalog/sports-car/f8-3.jpg
+120|McLaren|720S|2018|1|0|/assets/images/catalog/sports-car/720s-1.jpg
+120|McLaren|720S|2018|0|1|/assets/images/catalog/sports-car/mclaren-720s-rear.jpg
+120|McLaren|720S|2018|0|2|/assets/images/catalog/sports-car/720s-3.jpg
+121|Porsche|911 Turbo S|2021|1|0|/assets/images/catalog/sports-car/turbo-s-1.jpg
+121|Porsche|911 Turbo S|2021|0|1|/assets/images/catalog/sports-car/porsche-992-turbo-s-rear.jpg
+121|Porsche|911 Turbo S|2021|0|2|/assets/images/catalog/sports-car/turbo-s-3.jpg
+122|Chevrolet|Corvette C8|2021|1|0|/assets/images/catalog/sports-car/corvette-1.jpg
+122|Chevrolet|Corvette C8|2021|0|1|/assets/images/catalog/sports-car/chevrolet-corvette-c8-rear.jpg
+122|Chevrolet|Corvette C8|2021|0|2|/assets/images/catalog/sports-car/corvette-3.jpg
+122|Chevrolet|Corvette C8|2021|0|3|/assets/images/catalog/sports-car/corvette-2.jpg
