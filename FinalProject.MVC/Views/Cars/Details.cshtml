@@ -421,3 +421,14 @@
 </div>
 
 <style>.favorite-action{border:0;background:transparent;padding:0;color:inherit}</style>
+
+<div id="vehicle-lightbox" class="vehicle-lightbox" hidden>
+    <div class="vehicle-lightbox__backdrop" data-lightbox-close></div>
+    <button type="button" class="vehicle-lightbox__close" data-lightbox-close aria-label="Close">&times;</button>
+    <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__prev" data-lightbox-prev aria-label="Previous">&lsaquo;</button>
+    <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__next" data-lightbox-next aria-label="Next">&rsaquo;</button>
+    <figure class="vehicle-lightbox__stage">
+        <img class="vehicle-lightbox__image" alt="@Model.Name">
+        <figcaption class="vehicle-lightbox__caption"></figcaption>
+    </figure>
+</div>

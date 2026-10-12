@@ -1,0 +1,38 @@
+[
+  {
+    "car": "BMW 5 Series 530i",
+    "role": "front",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/bmw/bmw-530i-g30-white-front.jpg",
+    "title": "File:2019 BMW 530i M Sport (1).jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:2019_BMW_530i_M_Sport_(1).jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Bindydad123"
+  },
+  {
+    "car": "BMW 5 Series 530i",
+    "role": "rear",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/bmw/bmw-530i-g30-2019-rear.jpg",
+    "title": "File:2019 BMW 530i M Sport (40).jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:2019_BMW_530i_M_Sport_(40).jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Bindydad123"
+  },
+  {
+    "car": "BMW 7 Series 740i",
+    "role": "front",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/bmw/bmw-g70-740i-white-front.jpg",
+    "title": "File:BMW G70 740i sDrive M Sport Alpine White (1).jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:BMW_G70_740i_sDrive_M_Sport_Alpine_White_(1).jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Damian B Oh"
+  },
+  {
+    "car": "BMW 7 Series 740i",
+    "role": "rear",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/bmw/bmw-g70-740i-white-rear.jpg",
+    "title": "File:BMW G70 740i sDrive M Sport Alpine White (8).jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:BMW_G70_740i_sDrive_M_Sport_Alpine_White_(8).jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Damian B Oh"
+  }
+]

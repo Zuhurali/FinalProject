@@ -1,0 +1,29 @@
+[
+  {
+    "car": "McLaren 720S",
+    "role": "interior",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/sports-car/mclaren-720s-interior.jpg",
+    "title": "BetWithAJ McLaren 720S Cockpit",
+    "filePage": "https://www.flickr.com/photos/189273625@N03/50101358703",
+    "license": "CC BY 2.0",
+    "author": "betwithaj.lasvegas"
+  },
+  {
+    "car": "Chevrolet Corvette C8",
+    "role": "rear",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/sports-car/chevrolet-corvette-c8-rear.jpg",
+    "title": "File:Chevrolet Corvette C8 Stingray 3LT Coupe Z51 Torch Red 02.jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_C8_Stingray_3LT_Coupe_Z51_Torch_Red_02.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Ethan Llamas"
+  },
+  {
+    "car": "Chevrolet Corvette C8",
+    "role": "interior",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/sports-car/chevrolet-corvette-c8-interior.jpg",
+    "title": "File:Chevrolet Corvette C8 IAA 2021 1X7A0151.jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:Chevrolet_Corvette_C8_IAA_2021_1X7A0151.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Alexander Migl"
+  }
+]

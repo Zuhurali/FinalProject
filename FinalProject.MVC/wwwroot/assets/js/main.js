@@ -573,10 +573,8 @@
               }
 
               var imageRatio = image.naturalWidth / image.naturalHeight;
-              var frameRatio = frame.clientWidth / frame.clientHeight;
-              var visibleFraction = Math.min(imageRatio / frameRatio, frameRatio / imageRatio);
               var isInterior = /interior|cabin|dashboard|cockpit|console/i.test(image.getAttribute("src") || "");
-              var shouldContain = isInterior || imageRatio < 1.35 || visibleFraction < 0.88;
+              var shouldContain = isInterior || imageRatio < 1.12;
 
               image.classList.toggle("fit-contain", shouldContain);
               image.classList.toggle("fit-cover", !shouldContain);
@@ -596,6 +594,123 @@
           });
         }
 
+        function initVehicleLightbox(getMainSwiper) {
+          var overlay = document.getElementById("vehicle-lightbox");
+          if (!overlay || overlay.dataset.bound === "1") {
+            return;
+          }
+
+          overlay.dataset.bound = "1";
+          var imageEl = overlay.querySelector(".vehicle-lightbox__image");
+          var captionEl = overlay.querySelector(".vehicle-lightbox__caption");
+          var currentIndex = 0;
+          var touchStartX = null;
+
+          function slides() {
+            return Array.prototype.slice.call(document.querySelectorAll(".rts-heroSlider2 [data-gallery-image]"));
+          }
+
+          function syncSwiper(index) {
+            var main = typeof getMainSwiper === "function" ? getMainSwiper() : null;
+            if (main && typeof main.slideTo === "function") {
+              main.slideTo(index);
+            }
+          }
+
+          function show(index) {
+            var images = slides();
+            if (!images.length) {
+              return;
+            }
+
+            currentIndex = (index + images.length) % images.length;
+            var source = images[currentIndex];
+            imageEl.src = source.currentSrc || source.getAttribute("src");
+            imageEl.alt = source.getAttribute("alt") || "";
+            captionEl.textContent = currentIndex + 1 + " / " + images.length;
+            overlay.hidden = false;
+            document.body.classList.add("vehicle-lightbox-open");
+            syncSwiper(currentIndex);
+          }
+
+          function closeLightbox() {
+            overlay.hidden = true;
+            document.body.classList.remove("vehicle-lightbox-open");
+            touchStartX = null;
+          }
+
+          document.addEventListener("click", function (event) {
+            if (!overlay.hidden && event.target.closest("[data-lightbox-close]")) {
+              closeLightbox();
+              return;
+            }
+            if (!overlay.hidden && event.target.closest("[data-lightbox-prev]")) {
+              show(currentIndex - 1);
+              return;
+            }
+            if (!overlay.hidden && event.target.closest("[data-lightbox-next]")) {
+              show(currentIndex + 1);
+              return;
+            }
+
+            var gallery = event.target.closest(".portfolio-slider-area.vertical");
+            if (!gallery || event.target.closest(".thumb-controls")) {
+              return;
+            }
+
+            var thumbSlide = event.target.closest(".SlideThumb2 .swiper-slide");
+            if (thumbSlide) {
+              var thumbs = Array.prototype.slice.call(document.querySelectorAll(".SlideThumb2 .swiper-slide"));
+              var thumbIndex = thumbs.indexOf(thumbSlide);
+              if (thumbIndex >= 0) {
+                syncSwiper(thumbIndex);
+                window.setTimeout(function () {
+                  show(thumbIndex);
+                }, 60);
+              }
+              return;
+            }
+
+            var mainImage = event.target.closest(".rts-heroSlider2 [data-gallery-image]");
+            if (mainImage) {
+              var slideEls = Array.prototype.slice.call(document.querySelectorAll(".rts-heroSlider2 .swiper-slide"));
+              var slide = mainImage.closest(".swiper-slide");
+              show(Math.max(0, slideEls.indexOf(slide)));
+            }
+          });
+
+          document.addEventListener("keydown", function (event) {
+            if (overlay.hidden) {
+              return;
+            }
+            if (event.key === "Escape") {
+              closeLightbox();
+            } else if (event.key === "ArrowLeft") {
+              show(currentIndex - 1);
+            } else if (event.key === "ArrowRight") {
+              show(currentIndex + 1);
+            }
+          });
+
+          overlay.addEventListener("touchstart", function (event) {
+            if (event.changedTouches && event.changedTouches[0]) {
+              touchStartX = event.changedTouches[0].clientX;
+            }
+          }, { passive: true });
+
+          overlay.addEventListener("touchend", function (event) {
+            if (touchStartX == null || !event.changedTouches || !event.changedTouches[0]) {
+              return;
+            }
+            var delta = event.changedTouches[0].clientX - touchStartX;
+            touchStartX = null;
+            if (Math.abs(delta) < 50) {
+              return;
+            }
+            show(delta > 0 ? currentIndex - 1 : currentIndex + 1);
+          }, { passive: true });
+        }
+
         function initSwipers() {
           if (swiperthumb2) swiperthumb2.destroy(true, true);
           if (swiper2) swiper2.destroy(true, true);
@@ -605,7 +720,7 @@
           const thumbPerView = Math.max(1, Math.min(isMobile ? 4 : 6, thumbCount || 1));
           swiperthumb2 = new Swiper(".SlideThumb2", {
             direction: isMobile ? "horizontal" : "vertical",
-            spaceBetween: 0,
+            spaceBetween: 10,
             slidesPerView: thumbPerView,
             mousewheel: !isMobile,
             loop: false,
@@ -638,7 +753,7 @@
               swiper2.slideTo(this.clickedIndex);
             }
           });
-          applyAdaptiveImageFit(".portfolio-slider-area.vertical [data-gallery-image]");
+          applyAdaptiveImageFit(".portfolio-slider-area.vertical .rts-heroSlider2 [data-gallery-image]");
           applyAdaptiveImageFit(".project-wrapper2:not(.list-style) .image-area > a:first-child > img");
         }
 
@@ -648,6 +763,7 @@
         }
 
         initSwipers();
+        initVehicleLightbox(function () { return swiper2; });
 
         $(window).on("resize", function () {
           window.clearTimeout(resizeTimer);
@@ -660,7 +776,7 @@
 
             swiperthumb2.update();
             swiper2.update();
-            applyAdaptiveImageFit(".portfolio-slider-area.vertical [data-gallery-image]");
+            applyAdaptiveImageFit(".portfolio-slider-area.vertical .rts-heroSlider2 [data-gallery-image]");
           }, 150);
         });
       });

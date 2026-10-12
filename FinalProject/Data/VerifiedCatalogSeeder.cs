@@ -28,6 +28,21 @@ public static class VerifiedCatalogSeeder
                         && car.Color == vehicle.Color,
                     cancellationToken);
 
+            if (existing == null)
+            {
+                var sameModelYear = await db.Cars
+                    .Include(car => car.Images)
+                    .Where(car => car.BrandId == brand.Id
+                        && car.Model == vehicle.Model
+                        && car.Year == vehicle.Year)
+                    .ToListAsync(cancellationToken);
+                if (sameModelYear.Count == 1)
+                {
+                    existing = sameModelYear[0];
+                    existing.Color = vehicle.Color;
+                }
+            }
+
             var imageUrls = ImageUrls(vehicle);
             if (existing != null)
             {
@@ -241,10 +256,9 @@ public static class VerifiedCatalogSeeder
         [
             "/assets/images/catalog/luxury/rolls-royce-wraith-rear.jpg"
         ]),
-        new("Tesla", "Model 3", "Sedan", 2023, 42900m, 11200, "Electric", "Automatic", "Red", "Tesla Model 3", true, "/assets/images/catalog/electric/tesla-model-3-highland-2023-front.jpg",
+        new("Tesla", "Model 3", "Sedan", 2023, 42900m, 11200, "Electric", "Automatic", "White", "Tesla Model 3", true, "/assets/images/catalog/electric/tesla-model-3-highland-2023-front.jpg",
         [
             "/assets/images/catalog/electric/tesla-model-3-highland-2023-rear-quarter.jpg",
-            "/assets/images/catalog/electric/tesla-model-3-highland-2023-rear.jpg",
             "/assets/images/catalog/electric/tesla-model-3-highland-2023-interior.jpg"
         ]),
         new("Toyota", "Highlander", "SUV", 2024, 46500m, 4800, "Petrol", "Automatic", "Red", "Toyota Highlander", true, "/assets/images/catalog/suv/toyota-highlander-xu70-front.jpg",
@@ -256,9 +270,9 @@ public static class VerifiedCatalogSeeder
         new("BMW", "M3 Competition", "Sedan", 2022, 72900m, 12480, "Petrol", "Automatic", "Blue", "BMW M3 Competition. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/m3-competition.jpg"),
         new("BMW", "M440i", "Coupe", 2022, 46980m, 21360, "Petrol", "Automatic", "Grey", "BMW 4 Series M440i. 4 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m440i.jpg"),
         new("BMW", "M4 Competition", "Coupe", 2021, 74250m, 9860, "Petrol", "Automatic", "Yellow", "BMW M4 Competition. 4 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/m4-competition.jpg", new[] { "/assets/images/catalog/bmw/bmw-m4-g82-2021-rear.jpg", "/assets/images/catalog/bmw/bmw-m4-g82-interior.jpg" }),
-        new("BMW", "530i", "Sedan", 2020, 32480m, 34720, "Petrol", "Automatic", "Grey", "BMW 5 Series 530i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/530i.jpg", new[] { "/assets/images/catalog/bmw/bmw-530i-g30-2019-rear.jpg", "/assets/images/catalog/bmw/bmw-g30-lci-interior.jpg" }),
+        new("BMW", "530i", "Sedan", 2020, 32480m, 34720, "Petrol", "Automatic", "White", "BMW 5 Series 530i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/bmw-530i-g30-white-front.jpg", new[] { "/assets/images/catalog/bmw/bmw-530i-g30-2019-rear.jpg", "/assets/images/catalog/bmw/bmw-g30-lci-interior.jpg" }),
         new("BMW", "M5 (F90)", "Sedan", 2020, 79450m, 21860, "Petrol", "Automatic", "Grey", "BMW M5 (F90). 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m5-f90.jpg"),
-        new("BMW", "740i", "Sedan", 2023, 81250m, 8420, "Petrol", "Automatic", "Grey", "BMW 7 Series 740i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/740i.jpg", new[] { "/assets/images/catalog/bmw/bmw-g70-interior.jpg" }),
+        new("BMW", "740i", "Sedan", 2023, 81250m, 8420, "Petrol", "Automatic", "White", "BMW 7 Series 740i. 5 seats, rear-wheel drive.", false, "/assets/images/catalog/bmw/bmw-g70-740i-white-front.jpg", new[] { "/assets/images/catalog/bmw/bmw-g70-740i-white-rear.jpg", "/assets/images/catalog/bmw/bmw-g70-interior.jpg" }),
         new("BMW", "M850i", "Convertible", 2019, 62750m, 24180, "Petrol", "Automatic", "White", "BMW 8 Series M850i. 4 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/m850i.jpg", new[] { "/assets/images/catalog/bmw/bmw-m850i-g14-2019-rear.jpg", "/assets/images/catalog/bmw/bmw-m850i-2019-interior.jpg" }),
         new("BMW", "X3 M40i", "SUV", 2023, 49870m, 16240, "Petrol", "Automatic", "Blue", "BMW X3 M40i. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x3-m40i.jpg", new[] { "/assets/images/catalog/bmw/bmw-x3-m40i-g01-rear.jpg", "/assets/images/catalog/bmw/bmw-x3-g01-interior.jpg" }),
         new("BMW", "X5 xDrive40i", "SUV", 2021, 51940m, 29870, "Petrol", "Automatic", "Grey", "BMW X5 xDrive40i. 5 seats, xDrive all-wheel drive.", false, "/assets/images/catalog/bmw/x5-xdrive40i.jpg", new[] { "/assets/images/catalog/bmw/bmw-x5-g05-2020-interior.jpg" }),
@@ -355,7 +369,7 @@ public static class VerifiedCatalogSeeder
         new("Toyota", "GR86", "Coupe", 2023, 32480m, 8420, "Petrol", "Manual", "Red", "Toyota GR86. 4 seats, rear-wheel drive, 2.4L.", true, "/assets/images/catalog/coupe/gr86-1.jpg", new[] { "/assets/images/catalog/coupe/toyota-gr86-sz-rear.jpg", "/assets/images/catalog/coupe/toyota-gr86-rz-interior.jpg" }),
         new("Audi", "TT", "Coupe", 2017, 24860m, 41280, "Petrol", "Automatic", "Grey", "Audi TT. 4 seats, all-wheel drive, 2.0L turbo.", false, "/assets/images/catalog/coupe/tt-1.jpg", new[] { "/assets/images/catalog/coupe/audi-tt-8s-rear.jpg", "/assets/images/catalog/coupe/audi-tt-8s-interior.jpg" }),
         new("Porsche", "718 Cayman", "Coupe", 2019, 54860m, 22140, "Petrol", "Manual", "Red", "Porsche 718 Cayman S. 2 seats, rear-wheel drive, 2.5L turbo.", false, "/assets/images/catalog/coupe/porsche-718-cayman-front.jpg", new[] { "/assets/images/catalog/coupe/cayman-1.jpg", "/assets/images/catalog/coupe/porsche-718-cayman-interior.jpg" }),
-        new("Chevrolet", "Camaro SS", "Coupe", 2018, 32480m, 28640, "Petrol", "Automatic", "Black", "Chevrolet Camaro SS. 4 seats, rear-wheel drive, 6.2L V8.", false, "/assets/images/catalog/coupe/camaro-1.jpg", new[] { "/assets/images/catalog/coupe/chevrolet-camaro-ss-interior.jpg" }),
+        new("Chevrolet", "Camaro SS", "Coupe", 2018, 32480m, 28640, "Petrol", "Automatic", "Black", "Chevrolet Camaro SS. 4 seats, rear-wheel drive, 6.2L V8.", false, "/assets/images/catalog/coupe/chevrolet-camaro-ss-2018-front.jpg", new[] { "/assets/images/catalog/coupe/camaro-1.jpg", "/assets/images/catalog/coupe/chevrolet-camaro-ss-interior.jpg" }),
         new("Dodge", "Challenger", "Coupe", 2018, 42860m, 24180, "Petrol", "Automatic", "Blue", "Dodge Challenger SRT Hellcat. 4 seats, rear-wheel drive, 6.2L supercharged V8.", false, "/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-front.jpg", new[] { "/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-rear.jpg", "/assets/images/catalog/coupe/dodge-challenger-srt-hellcat-interior.jpg" }),
         new("Nissan", "370Z", "Coupe", 2020, 27480m, 18640, "Petrol", "Manual", "Grey", "Nissan 370Z. 2 seats, rear-wheel drive, 3.7L V6.", false, "/assets/images/catalog/coupe/370z-1.jpg", new[] { "/assets/images/catalog/coupe/nissan-370z-rear.jpg", "/assets/images/catalog/coupe/nissan-370z-z34-interior.jpg" }),
         new("Lexus", "RC 350", "Coupe", 2017, 29840m, 36420, "Petrol", "Automatic", "Silver", "Lexus RC 350. 4 seats, rear-wheel drive, 3.5L V6.", false, "/assets/images/catalog/coupe/rc-1.jpg", new[] { "/assets/images/catalog/coupe/rc-2.jpg", "/assets/images/catalog/coupe/lexus-rc350-2018-interior.jpg" }),
@@ -372,8 +386,8 @@ public static class VerifiedCatalogSeeder
         new("Lamborghini", "Aventador", "Sports Car", 2015, 389400m, 12640, "Petrol", "Automatic", "White", "Lamborghini Aventador LP700-4. 2 seats, all-wheel drive, 6.5L V12.", false, "/assets/images/catalog/sports-car/lamborghini-aventador-lp700-pirelli-front.jpg", new[] { "/assets/images/catalog/sports-car/aventador-2.jpg", "/assets/images/catalog/sports-car/aventador-1.jpg", "/assets/images/catalog/sports-car/aventador-3.jpg" }),
         new("Ferrari", "488 GTB", "Sports Car", 2017, 268900m, 14280, "Petrol", "Automatic", "Red", "Ferrari 488 GTB. 2 seats, rear-wheel drive, 3.9L twin-turbo V8.", false, "/assets/images/catalog/sports-car/488-1.jpg", new[] { "/assets/images/catalog/sports-car/ferrari-488-rear.jpg", "/assets/images/catalog/sports-car/488-3.jpg", "/assets/images/catalog/sports-car/488-4.jpg" }),
         new("Ferrari", "F8 Tributo", "Sports Car", 2020, 329500m, 8640, "Petrol", "Automatic", "Red", "Ferrari F8 Tributo. 2 seats, rear-wheel drive, 3.9L twin-turbo V8.", false, "/assets/images/catalog/sports-car/f8-1.jpg", new[] { "/assets/images/catalog/sports-car/ferrari-f8-rear.jpg", "/assets/images/catalog/sports-car/f8-3.jpg" }),
-        new("McLaren", "720S", "Sports Car", 2018, 248750m, 16850, "Petrol", "Automatic", "Silver", "McLaren 720S. 2 seats, rear-wheel drive, 4.0L twin-turbo V8.", false, "/assets/images/catalog/sports-car/720s-1.jpg", new[] { "/assets/images/catalog/sports-car/mclaren-720s-rear.jpg", "/assets/images/catalog/sports-car/720s-3.jpg" }),
+        new("McLaren", "720S", "Sports Car", 2018, 248750m, 16850, "Petrol", "Automatic", "Silver", "McLaren 720S. 2 seats, rear-wheel drive, 4.0L twin-turbo V8.", false, "/assets/images/catalog/sports-car/720s-1.jpg", new[] { "/assets/images/catalog/sports-car/mclaren-720s-rear.jpg", "/assets/images/catalog/sports-car/mclaren-720s-interior.jpg" }),
         new("Porsche", "911 Turbo S", "Coupe", 2021, 214500m, 11240, "Petrol", "Automatic", "White", "Porsche 911 Turbo S. 4 seats, all-wheel drive, 3.8L twin-turbo flat-six.", false, "/assets/images/catalog/sports-car/turbo-s-1.jpg", new[] { "/assets/images/catalog/sports-car/porsche-992-turbo-s-rear.jpg", "/assets/images/catalog/sports-car/turbo-s-3.jpg" }),
-        new("Chevrolet", "Corvette C8", "Sports Car", 2021, 78900m, 18640, "Petrol", "Automatic", "Red", "Chevrolet Corvette C8. 2 seats, rear-wheel drive, 6.2L V8.", false, "/assets/images/catalog/sports-car/corvette-1.jpg", new[] { "/assets/images/catalog/sports-car/chevrolet-corvette-c8-rear.jpg", "/assets/images/catalog/sports-car/corvette-3.jpg", "/assets/images/catalog/sports-car/corvette-2.jpg" })
+        new("Chevrolet", "Corvette C8", "Sports Car", 2021, 78900m, 18640, "Petrol", "Automatic", "Red", "Chevrolet Corvette C8. 2 seats, rear-wheel drive, 6.2L V8.", false, "/assets/images/catalog/sports-car/corvette-1.jpg", new[] { "/assets/images/catalog/sports-car/chevrolet-corvette-c8-rear.jpg", "/assets/images/catalog/sports-car/chevrolet-corvette-c8-interior.jpg" })
     };
 }
