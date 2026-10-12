@@ -1,0 +1,56 @@
+[
+  {
+    "car": "BMW X3 M40i",
+    "role": "front",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/bmw/bmw-x3-m40i-g01-lci-front.jpg",
+    "title": "File:BMW X3 M40i (G01) China.jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:BMW_X3_M40i_(G01)_China.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Dinkun Chen"
+  },
+  {
+    "car": "BMW X3 M40i",
+    "role": "rear",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/bmw/bmw-x3-m40i-g01-lci-rear.jpg",
+    "title": "File:BMW X3 M40i (G01) China (2).jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:BMW_X3_M40i_(G01)_China_(2).jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Dinkun Chen"
+  },
+  {
+    "car": "Tesla Model S",
+    "role": "front",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/electric/tesla-model-s-refresh-blue-front.jpg",
+    "title": "File:Tesla Model S Plaid Autofrühling Ulm IMG 9278.jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:Tesla_Model_S_Plaid_Autofr%C3%BChling_Ulm_IMG_9278.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Alexander-93"
+  },
+  {
+    "car": "Tesla Model S",
+    "role": "rear",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/electric/tesla-model-s-refresh-blue-rear.jpg",
+    "title": "File:Tesla Model S Plaid Autofrühling Ulm IMG 9321.jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:Tesla_Model_S_Plaid_Autofr%C3%BChling_Ulm_IMG_9321.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Alexander-93"
+  },
+  {
+    "car": "Tesla Model S",
+    "role": "interior",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/electric/tesla-model-s-interior.jpg",
+    "title": "File:Tesla Model S Interior.jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:Tesla_Model_S_Interior.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Peteratkins"
+  },
+  {
+    "car": "Homepage hero BMW X5",
+    "role": "hero",
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/bmw/bmw-x5-g05-m50d-hero.jpg",
+    "title": "File:2019 BMW X5 M50d 3.0 Front.jpg",
+    "filePage": "https://commons.wikimedia.org/wiki/File:2019_BMW_X5_M50d_3.0_Front.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Vauxford"
+  }
+]

@@ -38,6 +38,81 @@
 }
 
 <style>
+    .rts-banner-area.home-x5-hero {
+        height: calc(100vh - 132px);
+        min-height: 640px;
+        max-height: 980px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        clip-path: none;
+        background-color: #141820;
+        background-image: none;
+    }
+    .home-x5-hero__stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+    }
+    .home-x5-hero__photo {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 48% 58%;
+    }
+    .rts-banner-area.home-x5-hero::after {
+        z-index: 1;
+        background: linear-gradient(180deg, rgba(5, 11, 32, 0.34) 0%, rgba(5, 11, 32, 0.16) 46%, rgba(5, 11, 32, 0.36) 100%);
+    }
+    .rts-banner-area.home-x5-hero .container {
+        position: relative;
+        z-index: 2;
+    }
+    .home-x5-hero + .rts-category-area {
+        margin-top: 0;
+    }
+    @@media (max-width: 991px) {
+        .rts-banner-area.home-x5-hero {
+            height: auto;
+            min-height: 700px;
+            max-height: none;
+            padding: 80px 0 70px;
+        }
+        .home-x5-hero__photo {
+            object-position: 42% 55%;
+        }
+    }
+    @@media (max-width: 767px) {
+        .rts-banner-area.home-x5-hero {
+            min-height: 680px;
+            padding: 88px 0 72px;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .home-x5-hero__photo {
+            object-position: 38% 52%;
+        }
+        .rts-banner-area.home-x5-hero .banner-content-area .title {
+            font-size: 30px;
+            line-height: 1.25;
+        }
+        .rts-banner-area.home-x5-hero .select-area-down {
+            flex-direction: column;
+            align-items: stretch;
+            height: auto;
+            gap: 8px;
+        }
+        .rts-banner-area.home-x5-hero .select-area-down .hero-filter,
+        .rts-banner-area.home-x5-hero .banner-area-one .banner-content-area .select-area-down .rts-btn {
+            flex: 1 1 auto;
+            width: 100%;
+        }
+    }
     .rts-banner-area .banner-area-one .banner-content-area .title {
         margin-bottom: 32px;
     }
@@ -360,7 +435,10 @@
         padding: 40px 16px;
     }
 </style>
-            <section class="rts-banner-area bg_image_one">
+            <section class="rts-banner-area bg_image_one home-x5-hero">
+                <div class="home-x5-hero__stage">
+                    <img class="home-x5-hero__photo" src="~/assets/images/catalog/bmw/bmw-x5-g05-m50d-showroom-wide.jpg" alt="Dark BMW X5 M Sport in a showroom">
+                </div>
                 <div class="container">
                     <div class="row">
                         <div class="col-lg-12">

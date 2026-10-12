@@ -15382,10 +15382,7 @@ header.header-three .sub-dropdown .submenu.third-lvl.base {
 
 .bg_image_one {
   background-color: #10141c;
-  background-image: url(../images/catalog/bmw/bmw-x5-black-hero.jpg);
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image: none;
 }
 
 .bg_image_two {
@@ -23742,13 +23739,17 @@ li.has-dropdown:hover .submenu {
 
 .rts-contact-area2 .inner {
   display: flex;
+  justify-content: center;
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
   border-radius: 16px;
   border: 1px solid rgba(85, 85, 85, 0.11);
 }
 .rts-contact-area2 .inner .contact-wrapper {
   text-align: center;
-  padding: 58px 0;
-  width: 33%;
+  padding: 58px 24px;
+  width: 50%;
 }
 .rts-contact-area2 .inner .contact-wrapper .icon {
   width: 80px;
@@ -23764,10 +23765,8 @@ li.has-dropdown:hover .submenu {
 .rts-contact-area2 .inner .contact-wrapper ul li a {
   color: var(--color-body);
 }
-.rts-contact-area2 .inner .contact-wrapper:nth-child(2) {
-  border-width: 0 1px;
-  border-color: rgba(85, 85, 85, 0.11);
-  border-style: solid;
+.rts-contact-area2 .inner .contact-wrapper:first-child {
+  border-right: 1px solid rgba(85, 85, 85, 0.11);
 }
 
 .account-page-body {
