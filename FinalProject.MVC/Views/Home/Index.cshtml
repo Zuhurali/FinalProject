@@ -39,16 +39,18 @@
 
 <style>
     .rts-banner-area.home-x5-hero {
-        height: calc(100vh - 132px);
-        min-height: 640px;
-        max-height: 980px;
-        padding: 0;
+        height: clamp(560px, calc(100vh - 140px), 900px);
+        min-height: 560px;
+        max-height: 900px;
+        padding: 28px 0 24px;
         display: flex;
-        align-items: center;
-        overflow: hidden;
+        flex-direction: column;
+        align-items: stretch;
+        overflow: visible;
         clip-path: none;
-        background-color: #141820;
+        background-color: #10151f;
         background-image: none;
+        z-index: 4;
     }
     .home-x5-hero__stage {
         position: absolute;
@@ -63,39 +65,88 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: 48% 58%;
+        object-position: 46% 52%;
     }
     .rts-banner-area.home-x5-hero::after {
         z-index: 1;
-        background: linear-gradient(180deg, rgba(5, 11, 32, 0.34) 0%, rgba(5, 11, 32, 0.16) 46%, rgba(5, 11, 32, 0.36) 100%);
+        background: linear-gradient(180deg, rgba(6, 10, 22, 0.78) 0%, rgba(6, 10, 22, 0.42) 16%, rgba(6, 10, 22, 0.08) 40%, rgba(6, 10, 22, 0.06) 62%, rgba(6, 10, 22, 0.62) 100%);
     }
     .rts-banner-area.home-x5-hero .container {
         position: relative;
         z-index: 2;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .rts-banner-area.home-x5-hero .container > .row,
+    .rts-banner-area.home-x5-hero .container .col-lg-12,
+    .rts-banner-area.home-x5-hero .banner-area-one,
+    .rts-banner-area.home-x5-hero .banner-content-area {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .rts-banner-area.home-x5-hero .banner-content-area {
+        justify-content: flex-start;
+    }
+    .rts-banner-area.home-x5-hero .hero-search-form {
+        margin-top: auto;
+    }
+    .rts-banner-area.home-x5-hero .banner-content-area .title {
+        text-shadow: 0 2px 18px rgba(6, 10, 22, 0.55);
+    }
+    .rts-banner-area.home-x5-hero .nice-select .list {
+        z-index: 30;
     }
     .home-x5-hero + .rts-category-area {
         margin-top: 0;
+        position: relative;
+        z-index: 1;
     }
     @@media (max-width: 991px) {
         .rts-banner-area.home-x5-hero {
             height: auto;
-            min-height: 700px;
+            min-height: 0;
             max-height: none;
-            padding: 80px 0 70px;
+            display: block;
+            padding: 0 0 40px;
+        }
+        .home-x5-hero__stage {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            max-height: 480px;
         }
         .home-x5-hero__photo {
-            object-position: 42% 55%;
+            object-position: 46% 52%;
+        }
+        .rts-banner-area.home-x5-hero .container,
+        .rts-banner-area.home-x5-hero .container > .row,
+        .rts-banner-area.home-x5-hero .container .col-lg-12,
+        .rts-banner-area.home-x5-hero .banner-area-one,
+        .rts-banner-area.home-x5-hero .banner-content-area {
+            display: block;
+            flex: none;
+        }
+        .rts-banner-area.home-x5-hero .hero-search-form {
+            margin-top: 0;
+        }
+        .rts-banner-area.home-x5-hero .container {
+            padding-top: 32px;
         }
     }
     @@media (max-width: 767px) {
         .rts-banner-area.home-x5-hero {
-            min-height: 680px;
-            padding: 88px 0 72px;
+            padding: 0 0 28px;
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
+        .home-x5-hero__stage {
+            max-height: none;
+        }
         .home-x5-hero__photo {
-            object-position: 38% 52%;
+            object-position: 50% 48%;
         }
         .rts-banner-area.home-x5-hero .banner-content-area .title {
             font-size: 30px;
@@ -437,7 +488,8 @@
 </style>
             <section class="rts-banner-area bg_image_one home-x5-hero">
                 <div class="home-x5-hero__stage">
-                    <img class="home-x5-hero__photo" src="~/assets/images/catalog/bmw/bmw-x5-g05-m50d-showroom-wide.jpg" alt="Dark BMW X5 M Sport in a showroom">
+                    <!-- Photo: Alexander Migl, Bentley Flying Spur Hybrid at Autohaus Gohm. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Bentley_Flying_Spur_Hybrid_(2019)_1X7A0376.jpg -->
+                    <img class="home-x5-hero__photo" src="~/assets/images/catalog/hero/bentley-flying-spur-gohm-hero.jpg" alt="Black Bentley Flying Spur photographed outside a Bentley dealership showroom">
                 </div>
                 <div class="container">
                     <div class="row">
