@@ -1,4 +1,12 @@
 @model IReadOnlyList<ShopProduct>
+@functions {
+    private static string StockClass(string status) => status switch
+    {
+        "Out of Stock" => "stock-line--out",
+        "Low Stock" => "stock-line--low",
+        _ => "stock-line--in"
+    };
+}
 <div class="row g-5">
 @foreach (var product in Model)
 {
@@ -29,15 +37,15 @@
                 </ul>
                 <p class="product-rating-summary">@(product.RatingCount == 0 ? "No ratings" : $"{product.Rating:0.0} ({product.RatingCount} reviews)")</p>
                 <h6 class="title"><a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">@product.Name</a></h6>
-                <p class="stock-line">@product.StockStatus · @product.Quantity available</p>
+                <p class="stock-line @StockClass(product.StockStatus)">@product.StockStatus · @product.Quantity available</p>
                 <div class="button-area">
                     @if (product.HasOffer)
                     {
-                        <p class="price-line"><span style="text-decoration:line-through;color:#888;font-weight:500;">$@product.Price.ToString("0")</span> $@product.SalePrice.ToString("0")</p>
+                        <p class="price-line"><s class="price-was">$@product.Price.ToString("0.00")</s> $@product.SalePrice.ToString("0.00")</p>
                     }
                     else
                     {
-                        <p class="price-line">$@product.Price.ToString("0")</p>
+                        <p class="price-line">$@product.Price.ToString("0.00")</p>
                     }
                     <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id" asp-fragment="ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
                 </div>

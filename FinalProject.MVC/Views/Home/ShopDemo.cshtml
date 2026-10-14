@@ -7,64 +7,34 @@
     var campaign = ViewData["FeaturedCampaign"] as ProductCampaign;
 }
             <!-- Banner area start -->
-            <section class="rts-banner-slider-area">
-                <div class="swiper bannerSlider">
-                    <div class="swiper-wrapper">
-                        <div class="swiper-slide">
-                            <div class="rts-banner-wrapper showroom-slide">
-                                <img class="showroom-slide__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes.jpg" alt="Grey BMW coupe and black Mercedes sedan in the showroom">
-                                <div class="container">
-                                    <div class="banner-inner">
-                                        <h2 class="section-title cw">Used Cars and Parts <br> in Baku</h2>
-                                        <div class="button-area">
-                                            <a asp-controller="Shop" asp-action="Index" class="rts-btn btn-primary radius-big">Browse Parts</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="swiper-slide">
-                            <div class="rts-banner-wrapper bg bg-three">
-                                <div class="container">
-                                    <div class="banner-inner">
-                                        <h2 class="section-title cw">Oils, Filters, Tires, <br> and Spare Parts</h2>
-                                        <div class="button-area">
-                                            <a asp-controller="Cars" asp-action="Index" class="rts-btn btn-primary radius-big">Browse Used Cars</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="swiper-slide">
-                            <div class="rts-banner-wrapper bg bg-four">
-                                <div class="container">
-                                    <div class="banner-inner">
-                                        <h2 class="section-title cw">Inspect and Buy <br> at the Showroom</h2>
-                                        <div class="button-area">
-                                            <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-big">Visit Showroom</a>
-                                        </div>
-                                    </div>
-                                </div>
+            <section class="showroom-demo-hero">
+                <div class="container">
+                    <div class="showroom-hero">
+                        <img class="showroom-hero__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes-hero.jpg" width="2560" height="1440" fetchpriority="high" alt="Grey BMW coupe and black Mercedes sedan in the AutoVault showroom">
+                        <div class="showroom-hero__content">
+                            <p class="showroom-hero__eyebrow">Babek Prospekti 22–24, Baku</p>
+                            <h1 class="showroom-hero__title">Used Cars and Parts in Baku</h1>
+                            <p class="showroom-hero__text">Check prices and stock for oils, filters, tires, and spare parts online, then inspect and buy face to face at the showroom.</p>
+                            <div class="showroom-hero__actions">
+                                <a asp-controller="Shop" asp-action="Index" class="rts-btn btn-primary radius-big">Browse Parts</a>
+                                <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">Browse Used Cars</a>
+                                <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">Visit Showroom</a>
                             </div>
                         </div>
                     </div>
-                    <div class="swiper-btn-area">
-                        <div class="swiper-btn swiper-button-prev"><img src="~/assets/images/banner/arrow-left.svg" alt=""></div>
-                        <div class="swiper-btn swiper-button-next"><img src="~/assets/images/banner/arrow-right.svg" alt=""></div>
+                    <div class="showroom-search">
+                        <form asp-controller="Shop" asp-action="Index" method="get" class="showroom-search-form">
+                            <input type="search" name="search" class="form-control" placeholder="Search oils, filters, tires, parts" aria-label="Search parts" />
+                            <select name="category" aria-label="Category">
+                                <option value="">All categories</option>
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category">@category</option>
+                                }
+                            </select>
+                            <button type="submit" class="rts-btn radius-big btn-primary">Search</button>
+                        </form>
                     </div>
-                </div>
-                <div class="select-area-down showroom-search wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
-                    <form asp-controller="Shop" asp-action="Index" method="get" class="showroom-search-form">
-                        <input type="search" name="search" class="form-control" placeholder="Search oils, filters, tires, parts" aria-label="Search parts" />
-                        <select name="category" aria-label="Category">
-                            <option value="">All categories</option>
-                            @foreach (var category in categories)
-                            {
-                                <option value="@category">@category</option>
-                            }
-                        </select>
-                        <button type="submit" class="rts-btn radius-big icon btn-primary">Search</button>
-                    </form>
                 </div>
             </section>
             <!-- Banner area end -->

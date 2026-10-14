@@ -2,6 +2,14 @@
 @{
     ViewData["Title"] = "Shop - AutoVault";
 }
+@functions {
+    private static string StockClass(string status) => status switch
+    {
+        "Out of Stock" => "stock-line--out",
+        "Low Stock" => "stock-line--low",
+        _ => "stock-line--in"
+    };
+}
 
 <!-- Breadcrumb area start -->
 <div class="rts-breadcrumb-area service jarallax">
@@ -107,17 +115,17 @@
                             <h6 class="title">
                                 <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">@product.Name</a>
                             </h6>
-                            <p class="stock-line">@product.StockStatus · @product.Quantity available</p>
+                            <p class="stock-line @StockClass(product.StockStatus)">@product.StockStatus · @product.Quantity available</p>
                             <div class="button-area">
                                 <p class="price-line">
                                     @if (product.HasOffer)
                                     {
-                                        <span style="text-decoration:line-through;color:#888;font-weight:500;">$@product.Price</span>
-                                        <span>$@product.SalePrice</span>
+                                        <s class="price-was">$@product.Price.ToString("0.00")</s>
+                                        @:$@product.SalePrice.ToString("0.00")
                                     }
                                     else
                                     {
-                                        <span>$@product.Price</span>
+                                        @:$@product.Price.ToString("0.00")
                                     }
                                 </p>
                                 <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id" asp-fragment="ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
@@ -222,6 +230,10 @@
             }
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+        }
+
         // Function to generate product HTML
         function generateProductHtml(product) {
             let starsHtml = '';
@@ -234,6 +246,10 @@
                     starsHtml += '<li><i class="rt-icon-star" style="color: #ddd;"></i></li>';
                 }
             }
+            const stockClass = product.stockStatus === 'Out of Stock'
+                ? 'stock-line--out'
+                : product.stockStatus === 'Low Stock' ? 'stock-line--low' : 'stock-line--in';
+            const money = value => '$' + Number(value).toFixed(2);
             const ratingSummary = product.ratingCount === 0
                 ? 'No ratings'
                 : Number(product.rating).toFixed(1) + ' (' + product.ratingCount + ' reviews)';
@@ -248,15 +264,15 @@
                 <div class="col-lg-4 col-md-6 d-flex">
                     <div class="project-wrapper4 showroom-card">
                         <div class="image-area">
-                            <a href="/Shop/Details/${product.id}"><img src="${imagePath}" alt="${product.name}"></a>
+                            <a href="/Shop/Details/${product.id}"><img src="${imagePath}" alt="${escapeHtml(product.name)}"></a>
                         </div>
                         <div class="content-area">
                             <ul class="star-rating">${starsHtml}</ul>
                             <p class="product-rating-summary">${ratingSummary}</p>
-                            <h6 class="title"><a href="/Shop/Details/${product.id}">${product.name}</a></h6>
-                            <p class="stock-line">${product.stockStatus} · ${product.quantity} available</p>
+                            <h6 class="title"><a href="/Shop/Details/${product.id}">${escapeHtml(product.name)}</a></h6>
+                            <p class="stock-line ${stockClass}">${escapeHtml(product.stockStatus)} · ${product.quantity} available</p>
                             <div class="button-area">
-                                <p class="price-line">${product.hasOffer ? '<span style="text-decoration:line-through;color:#888;font-weight:500;">$' + product.price + '</span> $' + product.salePrice : '$' + product.price}</p>
+                                <p class="price-line">${product.hasOffer ? '<s class="price-was">' + money(product.price) + '</s> ' + money(product.salePrice) : money(product.price)}</p>
                                 <a href="/Shop/Details/${product.id}#ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
                             </div>
                         </div>
