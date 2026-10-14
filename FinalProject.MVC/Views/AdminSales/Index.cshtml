@@ -1,0 +1,54 @@
+@model IReadOnlyList<InPersonSale>
+@{
+    Layout = "_AdminLayout";
+    var products = (IReadOnlyList<ShopProduct>)ViewBag.Products;
+}
+<h1 class="h3 mb-4">In-person sales</h1>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+<form method="post" class="admin-card mb-4">
+    @Html.AntiForgeryToken()
+    <div class="row g-3">
+        <div class="col-md-5">
+            <label>Product</label>
+            <select name="productId" class="form-control">
+                @foreach (var product in products)
+                {
+                    <option value="@product.Id">@product.Name — @product.StockStatus (@product.Quantity)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label>Quantity</label>
+            <input name="quantity" type="number" min="1" value="1" class="form-control" required />
+        </div>
+        <div class="col-md-5">
+            <label>Note</label>
+            <input name="note" class="form-control" maxlength="500" />
+        </div>
+    </div>
+    <button class="btn btn-primary mt-3" type="submit">Record showroom sale</button>
+</form>
+<div class="admin-card">
+    <table class="table">
+        <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>Unit price</th><th>Note</th></tr></thead>
+        <tbody>
+        @foreach (var sale in Model)
+        {
+            <tr>
+                <td>@sale.SoldAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@(sale.Product?.Name ?? $"Product #{sale.ProductId}")</td>
+                <td>@sale.Quantity</td>
+                <td>@sale.UnitPrice.ToString("C")</td>
+                <td>@sale.Note</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

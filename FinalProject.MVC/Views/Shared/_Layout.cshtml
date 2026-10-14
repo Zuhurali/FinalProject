@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="~/assets/css/vendor/bootstrap.min.css">
     <link rel="stylesheet" href="~/assets/fonts/rt-icon.css">
     <link rel="stylesheet" href="~/assets/css/style.css">
+    <link rel="stylesheet" href="~/css/showroom-shop.css">
 </head>
 <body class="@ViewData["BodyClass"]">
     <div class="loader-wrapper">
@@ -80,7 +81,7 @@
                                             </div>
                                             <div class="text">
                                                 <p>Call Us Now</p>
-                                                <a href="call-to:+994505590606">+994505590606</a>
+                                                <a href="tel:+994503546767">+994 50 354 67 67</a>
                                             </div>
                                         </div>
                                         <div class="map-area">
@@ -201,11 +202,7 @@
                                                 <a class="main-menu" href="javascript:void(0)">Shop</a>
                                                 <ul class="submenu parent-nav">
                                                     <li><a asp-controller="Shop" asp-action="Index">Shop</a></li>
-                                                    <li><a asp-controller="Shop" asp-action="ShopTwo">Shop Two</a></li>
-                                                    <li><a asp-controller="Shop" asp-action="ShopThree">Shop Three</a></li>
-                                                    <li><a asp-controller="Shop" asp-action="Cart">Cart</a></li>
-                                                    <li><a asp-controller="Checkout" asp-action="Index">Checkout</a></li>
-                                                    <li><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Shop Single</a></li>
+                                                    <li><a asp-controller="Contact" asp-action="Index">Visit Showroom</a></li>
                                                 </ul>
                                             </li>
                                             <li class="main-nav"><a class="main-menu" asp-controller="Contact" asp-action="Index">Contact</a></li>
@@ -291,6 +288,7 @@
                                             <li><a asp-controller="Home" asp-action="Index">Home</a></li>
                                             <li><a asp-controller="About" asp-action="Index">About Us</a></li>
                                             <li><a asp-controller="Cars" asp-action="Index">Cars</a></li>
+                                            <li><a asp-controller="Shop" asp-action="Index">Parts</a></li>
                                             <li><a asp-controller="Services" asp-action="Index">Services</a></li>
                                             <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
                                         </ul>
@@ -305,14 +303,14 @@
                                             <div class="single-contact">
                                                 <i class="rt-icon-phone"></i>
                                                 <div class="content">
-                                                    <span>Call Us 24/7</span>
-                                            <a class="number" href="tel:994505590606">+994 50 354 67 67</a>
+                                                    <span>Call the showroom</span>
+                                            <a class="number" href="tel:+994503546767">+994 50 354 67 67</a>
                                                 </div>
                                             </div>
                                             <div class="single-contact">
                                                 <i class="rt-icon-mail"></i>
                                                 <div class="content">
-                                                    <span>Make a Quote</span>
+                                                    <span>Email</span>
                                                     <a class="number" href="mailto:info@autovault.com">info@autovault.com</a>
                                                 </div>
                                             </div>

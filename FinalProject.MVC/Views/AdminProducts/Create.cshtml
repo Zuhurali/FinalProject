@@ -10,10 +10,12 @@
     <div class="row g-3">
         <div class="col-md-6"><label>Name</label><input asp-for="Name" class="form-control" required></div>
         <div class="col-md-3"><label>Price</label><input asp-for="Price" class="form-control" required></div>
+        <div class="col-md-3"><label>Quantity</label><input asp-for="Quantity" class="form-control" min="0" required></div>
         <div class="col-md-3"><label>Category</label><input asp-for="Category" class="form-control" required></div>
-        <div class="col-md-4"><label>Car make</label><input asp-for="CarMake" class="form-control"></div>
-        <div class="col-md-4"><label>Car model</label><input asp-for="CarModel" class="form-control"></div>
-        <div class="col-md-4"><label class="d-block">In stock</label><input asp-for="InStock"></div>
+        <div class="col-md-3"><label>Brand</label><input asp-for="Brand" class="form-control"></div>
+        <div class="col-md-6"><label>Known compatibility</label><input asp-for="Compatibility" class="form-control" placeholder="Leave blank when fitment is not known"></div>
+        <div class="col-md-3"><label>Car make</label><input asp-for="CarMake" class="form-control"></div>
+        <div class="col-md-3"><label>Car model</label><input asp-for="CarModel" class="form-control"></div>
         <div class="col-12"><label>Image path</label><input asp-for="ImagePath" class="form-control" required></div>
         <div class="col-12"><label>Description</label><textarea asp-for="Description" class="form-control" rows="3"></textarea></div>
     </div>

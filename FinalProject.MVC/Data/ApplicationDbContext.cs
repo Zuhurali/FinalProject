@@ -15,6 +15,9 @@ namespace FinalProject.MVC.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<ShopCatalogProduct> ShopProducts { get; set; }
+        public DbSet<ProductCampaign> ProductCampaigns { get; set; }
+        public DbSet<InPersonSale> InPersonSales { get; set; }
+        public DbSet<ProductInquiry> ProductInquiries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -61,7 +64,9 @@ namespace FinalProject.MVC.Data
 
             builder.Entity<ShopCatalogProduct>(entity =>
             {
-                entity.ToTable("ShopProducts");
+                entity.ToTable("ShopProducts", table => table.HasCheckConstraint(
+                    "CK_ShopProducts_Quantity",
+                    "[Quantity] >= 0"));
                 entity.Property(product => product.Name).HasMaxLength(200).IsRequired();
                 entity.Property(product => product.Price).HasColumnType("decimal(18,2)");
                 entity.Property(product => product.Category).HasMaxLength(100).IsRequired();
@@ -72,6 +77,50 @@ namespace FinalProject.MVC.Data
                 entity.Property(product => product.Color).HasMaxLength(50);
                 entity.Property(product => product.Fuel).HasMaxLength(50);
                 entity.Property(product => product.SearchKeywords).HasMaxLength(500);
+                entity.Property(product => product.Brand).HasMaxLength(100);
+                entity.Property(product => product.Compatibility).HasMaxLength(300);
+            });
+
+            builder.Entity<ProductCampaign>(entity =>
+            {
+                entity.Property(campaign => campaign.Name).HasMaxLength(120).IsRequired();
+                entity.Property(campaign => campaign.DiscountedPrice).HasColumnType("decimal(18,2)");
+                entity.Property(campaign => campaign.DiscountPercent).HasColumnType("decimal(5,2)");
+                entity.HasOne(campaign => campaign.Product)
+                    .WithMany()
+                    .HasForeignKey(campaign => campaign.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(campaign => campaign.ProductId);
+            });
+
+            builder.Entity<InPersonSale>(entity =>
+            {
+                entity.Property(sale => sale.UnitPrice).HasColumnType("decimal(18,2)");
+                entity.Property(sale => sale.RecordedByUserId).HasMaxLength(450).IsRequired();
+                entity.Property(sale => sale.Note).HasMaxLength(500);
+                entity.HasOne(sale => sale.Product)
+                    .WithMany()
+                    .HasForeignKey(sale => sale.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.ToTable("InPersonSales", table => table.HasCheckConstraint(
+                    "CK_InPersonSales_Quantity",
+                    "[Quantity] >= 1"));
+            });
+
+            builder.Entity<ProductInquiry>(entity =>
+            {
+                entity.Property(inquiry => inquiry.CustomerName).HasMaxLength(80).IsRequired();
+                entity.Property(inquiry => inquiry.Email).HasMaxLength(200).IsRequired();
+                entity.Property(inquiry => inquiry.Phone).HasMaxLength(40);
+                entity.Property(inquiry => inquiry.Message).HasMaxLength(1000).IsRequired();
+                entity.HasOne(inquiry => inquiry.Product)
+                    .WithMany()
+                    .HasForeignKey(inquiry => inquiry.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(inquiry => inquiry.ProductId);
+                entity.ToTable("ProductInquiries", table => table.HasCheckConstraint(
+                    "CK_ProductInquiries_MessageLength",
+                    "LEN([Message]) >= 10 AND LEN([Message]) <= 1000"));
             });
         }
     }

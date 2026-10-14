@@ -11,6 +11,15 @@ public class ShopCatalogProduct
 
     public decimal Price { get; set; }
 
+    [Range(0, int.MaxValue)]
+    public int Quantity { get; set; }
+
+    [MaxLength(100)]
+    public string Brand { get; set; } = string.Empty;
+
+    [MaxLength(300)]
+    public string Compatibility { get; set; } = string.Empty;
+
     [Required, MaxLength(100)]
     public string Category { get; set; } = string.Empty;
 

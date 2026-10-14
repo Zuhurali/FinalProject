@@ -1,17 +1,23 @@
 @{
-    ViewData["Title"] = "Shop Demo - AutoVault";
+    ViewData["Title"] = "Shop - AutoVault";
+    var products = ViewData["ShopProducts"] as IReadOnlyList<ShopProduct> ?? Array.Empty<ShopProduct>();
+    var latest = products.OrderByDescending(product => product.Id).Take(6).ToList();
+    var popular = products.OrderByDescending(product => product.RatingCount).ThenByDescending(product => product.Rating).Take(6).ToList();
+    var categories = products.Select(product => product.Category).Where(category => !string.IsNullOrWhiteSpace(category)).Distinct().OrderBy(category => category).ToList();
+    var campaign = ViewData["FeaturedCampaign"] as ProductCampaign;
 }
             <!-- Banner area start -->
             <section class="rts-banner-slider-area">
                 <div class="swiper bannerSlider">
                     <div class="swiper-wrapper">
                         <div class="swiper-slide">
-                            <div class="rts-banner-wrapper bg bg-one">
+                            <div class="rts-banner-wrapper showroom-slide">
+                                <img class="showroom-slide__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes.jpg" alt="Grey BMW coupe and black Mercedes sedan in the showroom">
                                 <div class="container">
                                     <div class="banner-inner">
-                                        <h2 class="section-title cw">Shop for Quality <br> Car Parts</h2>
+                                        <h2 class="section-title cw">Used Cars and Parts <br> in Baku</h2>
                                         <div class="button-area">
-                                            <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-big">Get Started Now</a>
+                                            <a asp-controller="Shop" asp-action="Index" class="rts-btn btn-primary radius-big">Browse Parts</a>
                                         </div>
                                     </div>
                                 </div>
@@ -21,9 +27,9 @@
                             <div class="rts-banner-wrapper bg bg-three">
                                 <div class="container">
                                     <div class="banner-inner">
-                                        <h2 class="section-title cw">Shop for Quality <br> Car Parts</h2>
+                                        <h2 class="section-title cw">Oils, Filters, Tires, <br> and Spare Parts</h2>
                                         <div class="button-area">
-                                            <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-big">Get Started Now</a>
+                                            <a asp-controller="Cars" asp-action="Index" class="rts-btn btn-primary radius-big">Browse Used Cars</a>
                                         </div>
                                     </div>
                                 </div>
@@ -33,9 +39,9 @@
                             <div class="rts-banner-wrapper bg bg-four">
                                 <div class="container">
                                     <div class="banner-inner">
-                                        <h2 class="section-title cw">Shop for Quality <br> Car Parts</h2>
+                                        <h2 class="section-title cw">Inspect and Buy <br> at the Showroom</h2>
                                         <div class="button-area">
-                                            <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-big">Get Started Now</a>
+                                            <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-big">Visit Showroom</a>
                                         </div>
                                     </div>
                                 </div>
@@ -47,43 +53,18 @@
                         <div class="swiper-btn swiper-button-next"><img src="~/assets/images/banner/arrow-right.svg" alt=""></div>
                     </div>
                 </div>
-                <div class="select-area-down wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
-                    <form action="#" method="get" accept-charset="utf-8">
-                        <select name="my_select" class="mySelect">
-                            <option value="2" selected>Car Make</option>
-                            <option value="10">Mazda</option>
-                            <option value="1">Citroen</option>
-                            <option value="13">Honda</option>
-                            <option value="14">Mitsubishi</option>
-                            <option value="15">Peugeot</option>
+                <div class="select-area-down showroom-search wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
+                    <form asp-controller="Shop" asp-action="Index" method="get" class="showroom-search-form">
+                        <input type="search" name="search" class="form-control" placeholder="Search oils, filters, tires, parts" aria-label="Search parts" />
+                        <select name="category" aria-label="Category">
+                            <option value="">All categories</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
                         </select>
+                        <button type="submit" class="rts-btn radius-big icon btn-primary">Search</button>
                     </form>
-                    <form class="select-2" action="#" method="get" accept-charset="utf-8">
-                        <select name="my_select2" class="my_select2">
-                            <option value="2" selected>Car Model</option>
-                            <option value="10">155</option>
-                            <option value="1">151</option>
-                            <option value="13">150</option>
-                            <option value="14">152</option>
-                            <option value="15">156</option>
-                        </select>
-                    </form>
-                    <form class="select-2" action="#" method="get" accept-charset="utf-8">
-                        <select name="my_select2" class="my_select2">
-                            <option value="2" selected>Price</option>
-                            <option value="10">22,000$</option>
-                            <option value="1">27,000$</option>
-                            <option value="13">30,000$</option>
-                            <option value="14">32,000$</option>
-                            <option value="15">38,000$</option>
-                        </select>
-                    </form>
-                    <button type="submit" class="rts-btn radius-big icon btn-primary">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M10.69 10.69L13 13M12.3333 6.68575C12.3333 9.826 9.796 12.3715 6.667 12.3715C3.53725 12.3715 1 9.826 1 6.6865C1 3.54475 3.53725 1 6.66625 1C9.796 1 12.3333 3.5455 12.3333 6.68575Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        Search
-                    </button>
                 </div>
             </section>
             <!-- Banner area end -->
@@ -98,42 +79,18 @@
                     <div class="section-inner wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
                         <div class="swiper categorySlider2">
                             <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/13.svg" alt="">
+                                @foreach (var category in categories)
+                                {
+                                    <div class="swiper-slide">
+                                        <div class="category-wrapper">
+                                            <div class="icon">
+                                                <img src="~/assets/images/category/13.svg" alt="">
+                                            </div>
+                                            <h6 class="title"><a asp-controller="Shop" asp-action="Index" asp-route-category="@category">@category</a></h6>
+                                            <p class="desc">@products.Count(product => product.Category == category) on the floor</p>
                                         </div>
-                                        <h6 class="title"><a href="#">Engine Oils</a></h6>
-                                        <p class="desc"><a asp-controller="Shop" asp-action="Index">Shop Now</a></p>
                                     </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/14.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a href="#">Electrical Parts</a></h6>
-                                        <p class="desc"><a asp-controller="Shop" asp-action="Index">Shop Now</a></p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/15.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a href="#">Car Tyre</a></h6>
-                                        <p class="desc"><a asp-controller="Shop" asp-action="Index">Shop Now</a></p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/16.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a href="#">Body Parts</a></h6>
-                                        <p class="desc"><a asp-controller="Shop" asp-action="Index">Shop Now</a></p>
-                                    </div>
-                                </div>
+                                }
                             </div>
                             <div class="swiper-pagination"></div>
                         </div>
@@ -147,9 +104,9 @@
                 <div class="container">
                     <div class="section-top d-flex justify-content-between align-items-end">
                         <div class="section-title-area">
-                            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Select Car
+                            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Showroom stock
                             </p>
-                            <h2 class="section-title wow move-right">Our Amazing <span>Parts</span></h2>
+                            <h2 class="section-title wow move-right">Parts in the <span>Showroom</span></h2>
                         </div>
                         <div class="tab-area">
                             <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -165,449 +122,13 @@
                     <div class="section-inner mt--80 wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
                         <div class=" tab-content" id="myTabContent">
                             <div class="tab-pane fade show active" id="new-cars" role="tabpanel" aria-labelledby="new-cars-tab">
-                                <div class="row g-5">
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/11.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Car Parts Gears and Equipment</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$400</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/12.webp" alt=""></a>
-                                            </div>
-                                            <span class="price">14,000$</span>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Power Steering Pump</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$599</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/13.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">High-Performance Tires</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$399</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/14.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Micrometer with check ring</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$790</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/15.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Car Parts Mufflers And Pipes</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$270</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/16.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Car Gears Machine part</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$699</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <partial name="_ShopDemoCards" model="latest" />
                             </div>
                             <div class="tab-pane fade" id="used" role="tabpanel" aria-labelledby="used-tab">
-                                <div class="row g-5">
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/14.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Micrometer with check ring</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$790</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/15.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Car Parts Mufflers And Pipes</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$270</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/16.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Car Gears Machine part</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$699</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/11.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Car Parts Gears and Equipment</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$400</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/12.webp" alt=""></a>
-                                            </div>
-                                            <span class="price">14,000$</span>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">Power Steering Pump</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$599</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="project-wrapper4">
-                                            <div class="image-area">
-                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="1"><img src="~/assets/images/portfolio/13.webp" alt=""></a>
-                                            </div>
-                                            <div class="content-area">
-                                                <ul class="star-rating">
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star"></i></li>
-                                                    <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                                </ul>
-                                                <h6 class="title "><a asp-controller="Shop" asp-action="Details" asp-route-id="1">High-Performance Tires</a>
-                                                </h6>
-                                                <div class="button-area">
-                                                    <p class="">$399</p>
-                                                    <a asp-controller="Shop" asp-action="Cart" class="rts-btn btn-primary radius-big icon">
-                                                        Add To Cart
-                                                        <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <g clip-path="url(#clip0_1201_1501)">
-                                                                <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                                                <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                                                <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath>
-                                                                    <rect width="10" height="10" fill="white" />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <partial name="_ShopDemoCards" model="popular" />
                             </div>
                         </div>
-                        <a href="#" class="rts-btn radius-big btn-border load-more-btn">Load More</a>
+                        <a asp-controller="Shop" asp-action="Index" class="rts-btn radius-big btn-border load-more-btn">View all parts</a>
                     </div>
                 </div>
             </section>
@@ -617,8 +138,8 @@
             <section class="rts-brand-area rts-section-gapBottom">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
-                        <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Showroom</p>
+                        <h2 class="section-title wow move-right">Collected in <span>Baku</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <ul>
@@ -646,8 +167,21 @@
                                         <img src="~/assets/images/cta/01.webp" class="jarallax-img" alt="">
                                     </div>
                                     <div class="content">
-                                        <span class="tag radius-big">30% Off</span>
-                                        <h4 class="title cw">For Online Order</h4>
+                                        @if (campaign != null && campaign.DiscountPercent.HasValue)
+                                        {
+                                            <span class="tag radius-big">@campaign.DiscountPercent.Value.ToString("0")% off</span>
+                                            <h4 class="title cw">@campaign.Name</h4>
+                                        }
+                                        else if (campaign != null)
+                                        {
+                                            <span class="tag radius-big">Showroom offer</span>
+                                            <h4 class="title cw">@campaign.Name</h4>
+                                        }
+                                        else
+                                        {
+                                            <span class="tag radius-big">No delivery</span>
+                                            <h4 class="title cw">Collect at the showroom</h4>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -657,8 +191,8 @@
                                         <img src="~/assets/images/cta/02.webp" class="jarallax-img" alt="">
                                     </div>
                                     <div class="content">
-                                        <span class="tag radius-big">30% Off</span>
-                                        <h4 class="title cw">Our Trending Product</h4>
+                                        <span class="tag radius-big">In person</span>
+                                        <h4 class="title cw"><a asp-controller="Cars" asp-action="Index" class="cw">Used cars on the floor</a></h4>
                                     </div>
                                 </div>
                             </div>
@@ -679,8 +213,8 @@
                         <div class="row g-5">
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Competitive pricing</h6>
-                                    <p class="desc">Daily, weekly, and long-term and rentals available With multiple locations across</p>
+                                    <h6 class="title">Showroom prices</h6>
+                                    <p class="desc">Prices and stock on this page are the quantities held at Babek Prospekti.</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-05.svg" alt="">
                                         <div class="left"></div>
@@ -690,8 +224,8 @@
                             </div>
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Easy Online Booking</h6>
-                                    <p class="desc">Simple online booking process with quick pickup and drop-off at multiple locations.</p>
+                                    <h6 class="title">Inspect before you buy</h6>
+                                    <p class="desc">Check a part or car online, then inspect it in the showroom before you pay.</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-06.svg" alt="">
                                         <div class="left"></div>
@@ -701,8 +235,8 @@
                             </div>
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Free Delivery</h6>
-                                    <p class="desc">With multiple locations across dropping off your rental car at multiple locations.</p>
+                                    <h6 class="title">Showroom collection</h6>
+                                    <p class="desc">There is no shipping or courier. Purchases are collected in Baku.</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-07.svg" alt="">
                                         <div class="left"></div>
@@ -712,8 +246,8 @@
                             </div>
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Top-Notch Customer</h6>
-                                    <p class="desc">Our professional and friendly staff is dedicated to making your rental experience</p>
+                                    <h6 class="title">Staff on site</h6>
+                                    <p class="desc">Ask the showroom team about fitment. Compatibility is listed only when it is known.</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-08.svg" alt="">
                                         <div class="left"></div>
@@ -740,8 +274,8 @@
                                                 <img src="~/assets/images/testimonials/04.webp" width="512" alt="">
                                                 <div class="author-content">
                                                     <div class="inner">
-                                                        <h5 class="title">Jonathon Doe</h5>
-                                                        <p class="desc">COO At Mazda</p>
+                                                        <h5 class="title">Check stock</h5>
+                                                        <p class="desc">Babek Prospekti</p>
                                                     </div>
                                                     <div class="top-right"></div>
                                                     <div class="bottom-left"></div>
@@ -753,8 +287,8 @@
                                                 <img src="~/assets/images/testimonials/05.webp" width="512" alt="">
                                                 <div class="author-content">
                                                     <div class="inner">
-                                                        <h5 class="title">Nathan Macks</h5>
-                                                        <p class="desc">COO At Mazda</p>
+                                                        <h5 class="title">Visit Baku</h5>
+                                                        <p class="desc">Babek Prospekti</p>
                                                     </div>
                                                     <div class="top-right"></div>
                                                     <div class="bottom-left"></div>
@@ -771,13 +305,13 @@
                                             <div class="review-wrapper3">
                                                 <div class="section-title-area">
                                                     <p class="sub-title cw wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Testimonial</p>
-                                                    <h2 class="section-title cw wow move-right">What Our Customers Are Saying</h2>
+                                                    <h2 class="section-title cw wow move-right">How a showroom visit works</h2>
                                                 </div>
                                                 <div class="inner d-flex align-items-start">
                                                     <div class="quote"><img src="~/assets/images/testimonials/quote-sm.svg" alt=""></div>
                                                     <div class="content">
                                                         <p class="desc cw">
-                                                            I had an amazing experience with [Your Company Name]. The booking process was so simple, and the car was in excellent condition. The staff was friendly and helpful, making for it buy everything I needed. I will definitely use their again!
+                                                            Browse prices and availability here. When a part is in stock, come to the showroom, inspect it, and complete the purchase face to face.
                                                         </p>
                                                         <ul class="star-rating">
                                                             <li class="cw"><i class="rt-icon-star"></i></li>
@@ -797,13 +331,13 @@
                                             <div class="review-wrapper3">
                                                 <div class="section-title-area">
                                                     <p class="sub-title cw wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Testimonial</p>
-                                                    <h2 class="section-title cw wow move-right">What Our Customers Are Saying</h2>
+                                                    <h2 class="section-title cw wow move-right">How a showroom visit works</h2>
                                                 </div>
                                                 <div class="inner d-flex align-items-start">
                                                     <div class="quote"><img src="~/assets/images/testimonials/quote-sm.svg" alt=""></div>
                                                     <div class="content">
                                                         <p class="desc cw">
-                                                            I had an amazing experience with [Your Company Name]. The booking process was so simple, and the car was in excellent condition. The staff was friendly and helpful, making for it buy everything I needed. I will definitely use their again!
+                                                            Used cars and parts are sold in person. AutoVault does not take online payment or hold items through the website.
                                                         </p>
                                                         <ul class="star-rating">
                                                             <li class="cw"><i class="rt-icon-star"></i></li>
@@ -836,19 +370,19 @@
             <section class="rts-blog-area rts-section-gap">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Latest Blog</p>
-                        <h2 class="section-title wow move-right">Our Latest <span>Blog</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Before you visit</p>
+                        <h2 class="section-title wow move-right">Plan your <span>visit</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <div class="row g-5">
                             <div class="col-lg-6">
                                 <div class="blog-wrapper">
                                     <div class="image-area">
-                                        <a asp-controller="Blog" asp-action="Details" asp-route-id="1"><img src="~/assets/images/blog/05.webp" alt=""></a>
+                                        <a asp-controller="Shop" asp-action="Index"><img src="~/assets/images/blog/05.webp" alt=""></a>
                                     </div>
                                     <div class="content">
-                                        <p class="blog-meta">March 26, 2024</p>
-                                        <h5><a asp-controller="Blog" asp-action="Details" asp-route-id="1">Braking It Down Understanding the Key Parts of Your Car's Brake Parts System </a></h5>
+                                        <p class="blog-meta">Baku showroom</p>
+                                        <h5><a asp-controller="Shop" asp-action="Index">See which oils, filters, tires, and spare parts are on the floor</a></h5>
                                     </div>
                                 </div>
                             </div>
@@ -856,22 +390,22 @@
                                 <div class="blog-list-style mb--30">
                                     <div class="blog-wrapper d-flex align-items-center">
                                         <div class="image-area">
-                                            <a asp-controller="Blog" asp-action="Details" asp-route-id="1"><img src="~/assets/images/blog/03.webp" width="263" alt=""></a>
+                                            <a asp-controller="Shop" asp-action="Index"><img src="~/assets/images/blog/03.webp" width="263" alt=""></a>
                                         </div>
                                         <div class="content mt-0">
-                                            <p class="blog-meta">March 26, 2024</p>
-                                            <h6><a asp-controller="Blog" asp-action="Details" asp-route-id="1">A Beginner's Guide to Understanding Your Car's Engine Components</a></h6>
+                                            <p class="blog-meta">Baku showroom</p>
+                                            <h6><a asp-controller="Shop" asp-action="Index">Stock labels come from the quantity in the showroom</a></h6>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="blog-list-style">
                                     <div class="blog-wrapper d-flex align-items-center">
                                         <div class="image-area">
-                                            <a asp-controller="Blog" asp-action="Details" asp-route-id="1"><img src="~/assets/images/blog/04.webp" width="263" alt=""></a>
+                                            <a asp-controller="Cars" asp-action="Index"><img src="~/assets/images/blog/04.webp" width="263" alt=""></a>
                                         </div>
                                         <div class="content mt-0">
-                                            <p class="blog-meta">March 26, 2024</p>
-                                            <h6><a asp-controller="Blog" asp-action="Details" asp-route-id="1">The Ultimate Guide to Car Suspension: What You Need to Know</a></h6>
+                                            <p class="blog-meta">Baku showroom</p>
+                                            <h6><a asp-controller="Cars" asp-action="Index">Used cars are listed separately and are also sold in person</a></h6>
                                         </div>
                                     </div>
                                 </div>
@@ -897,36 +431,36 @@
                                         <div class="accordion-item active">
                                             <div class="accordion-header" id="first">
                                                 <h4 class="accordion-button collapse show" data-bs-toggle="collapse" data-bs-target="#item__one" aria-expanded="false" aria-controls="item__one">
-                                                    Are there mileage limits on the rental?
+                                                    Do you deliver parts or cars?
                                                 </h4>
                                             </div>
                                             <div id="item__one" class="accordion-collapse collapse collapse show" aria-labelledby="first" data-bs-parent="#rts-accordion">
                                                 <div class="accordion-body">
-                                                    Nullam varius luctus pharetra ultrices volpat facilisis donec tortor, nibhkisys abitant curabitur at nunc nisl magna ac rhoncus vehicula sociis tortor nist hendrerit molestie integer.Nullam varius luctus.
+                                                    No. AutoVault does not ship or offer courier delivery. You collect the car or part from the Baku showroom.
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="accordion-item">
                                             <div class="accordion-header" id="two">
                                                 <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__two" aria-expanded="false" aria-controls="item__two">
-                                                    Can I get an estimate before you start the work?
+                                                    Can I pay on the website?
                                                 </h4>
                                             </div>
                                             <div id="item__two" class="accordion-collapse collapse" aria-labelledby="two" data-bs-parent="#rts-accordion">
                                                 <div class="accordion-body">
-                                                    Nullam varius luctus pharetra ultrices volpat facilisis donec tortor, nibhkisys abitant curabitur at nunc nisl magna ac rhoncus vehicula sociis tortor nist hendrerit molestie integer.Nullam varius luctus.
+                                                    No. There is no online checkout. You pay when you buy the item in person.
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="accordion-item">
                                             <div class="accordion-header" id="three">
                                                 <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__three" aria-expanded="false" aria-controls="item__three">
-                                                    What should I do if the rental car breaks down?
+                                                    How do I know a part is available?
                                                 </h4>
                                             </div>
                                             <div id="item__three" class="accordion-collapse collapse" aria-labelledby="three" data-bs-parent="#rts-accordion">
                                                 <div class="accordion-body">
-                                                    Nullam varius luctus pharetra ultrices volpat facilisis donec tortor, nibhkisys abitant curabitur at nunc nisl magna ac rhoncus vehicula sociis tortor nist hendrerit molestie integer.Nullam varius luctus.
+                                                    Each product shows In Stock, Low Stock, or Out of Stock from the quantity stored for the showroom.
                                                 </div>
                                             </div>
                                         </div>
@@ -934,24 +468,24 @@
                                         <div class="accordion-item">
                                             <div class="accordion-header" id="four">
                                                 <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__four" aria-expanded="false" aria-controls="item__four">
-                                                    How do I modify or cancel my reservation?
+                                                    Do you reserve items online?
                                                 </h4>
                                             </div>
                                             <div id="item__four" class="accordion-collapse collapse" aria-labelledby="four" data-bs-parent="#rts-accordion">
                                                 <div class="accordion-body">
-                                                    Nullam varius luctus pharetra ultrices volpat facilisis donec tortor, nibhkisys abitant curabitur at nunc nisl magna ac rhoncus vehicula sociis tortor nist hendrerit molestie integer.Nullam varius luctus.
+                                                    No. The site is for browsing prices and availability. A sale is completed at the showroom.
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="accordion-item">
                                             <div class="accordion-header" id="five">
                                                 <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__five" aria-expanded="false" aria-controls="item__four">
-                                                    Can I pick up a car in one location and drop it off in another?
+                                                    Where is the showroom?
                                                 </h4>
                                             </div>
                                             <div id="item__five" class="accordion-collapse collapse" aria-labelledby="five" data-bs-parent="#rts-accordion">
                                                 <div class="accordion-body">
-                                                    Nullam varius luctus pharetra ultrices volpat facilisis donec tortor, nibhkisys abitant curabitur at nunc nisl magna ac rhoncus vehicula sociis tortor nist hendrerit molestie integer.Nullam varius luctus.
+                                                    Babek Prospekti 22–24, Baku. Call +994 50 354 67 67 before you travel if you want the team to confirm an item is still on the floor.
                                                 </div>
                                             </div>
                                         </div>
@@ -961,7 +495,7 @@
                             <div class="col-xl-5 col-lg-6">
                                 <div class="contact-form">
                                     <h5>Get In Touch</h5>
-                                    <form class="form__content" method="post" action="mailer.php" id="contact-form">
+                                    <form class="form__content" asp-controller="Contact" asp-action="Index" method="get" id="contact-form">
                                         <div class="form__control">
                                             <span class="icon">
                                                 <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1000,7 +534,7 @@
                                                     <path d="M12.0824 7.27578C12.2536 7.27578 12.3923 7.11719 12.3923 6.92158C12.3923 6.72597 12.2536 6.56738 12.0824 6.56738H8.64489C8.47372 6.56738 8.33496 6.72597 8.33496 6.92158C8.33496 7.11719 8.47372 7.27578 8.64489 7.27578H12.0824Z" fill="#555555"/>
                                                 </svg>                                                    
                                             </span>
-                                            <input type="text" class="input-form" name="car" id="car" placeholder="Car Type" required>
+                                            <input type="text" class="input-form" name="car" id="car" placeholder="Part or car of interest" required>
                                         </div>
                                         <div class="form__control">
                                             <span class="icon">
@@ -1013,7 +547,7 @@
                                             <textarea name="message" id="message" cols="30" rows="10" placeholder="Message" required></textarea>
                                         </div>
                                         <div class="form__control">
-                                            <button type="submit" class="submit__btn">Submit Now</button>
+                                            <button type="submit" class="submit__btn">Open the contact page</button>
                                         </div>
                                     </form>
                                     <div id="form-messages"></div>
@@ -1030,7 +564,7 @@
                     <div class="cta-inner">
                         <h2 class="title">If you have any questions Please Call.</h2>
                         <div class="contact">
-                <a href="call-to:+994 50 354 67 67">
+                <a href="tel:+994503546767">
                                 <img src="~/assets/images/cta/call.svg" alt="">
                                 +994 50 354 67 67</a>
                         </div>

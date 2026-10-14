@@ -11,7 +11,7 @@
 </div>
 <div class="admin-card">
     <table class="table">
-        <thead><tr><th>Name</th><th>Category</th><th>Price</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr></thead>
         <tbody>
         @foreach (var product in Model)
         {
@@ -19,6 +19,7 @@
                 <td>@product.Name</td>
                 <td>@product.Category</td>
                 <td>@product.Price.ToString("C0")</td>
+                <td>@product.StockStatus (@product.Quantity)</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@product.Id">Edit</a>
                     <form asp-action="Delete" asp-route-id="@product.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this product?');">

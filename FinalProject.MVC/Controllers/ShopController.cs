@@ -18,19 +18,22 @@ namespace FinalProject.MVC.Controllers
         private readonly IApiAccessTokenService _tokenService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IShopCatalogService _shopCatalog;
+        private readonly IProductReviewApiService _reviewApiService;
 
         public ShopController(
             ApplicationDbContext context,
             IProductRatingApiService ratingApiService,
             IApiAccessTokenService tokenService,
             UserManager<ApplicationUser> userManager,
-            IShopCatalogService shopCatalog)
+            IShopCatalogService shopCatalog,
+            IProductReviewApiService reviewApiService)
         {
             _context = context;
             _ratingApiService = ratingApiService;
             _tokenService = tokenService;
             _userManager = userManager;
             _shopCatalog = shopCatalog;
+            _reviewApiService = reviewApiService;
         }
 
         private static ShopProduct CopyPart(ShopProduct product)
@@ -48,6 +51,15 @@ namespace FinalProject.MVC.Controllers
                 RatingCount = product.RatingCount,
                 Description = product.Description,
                 InStock = product.InStock,
+                Quantity = product.Quantity,
+                StockStatus = product.StockStatus,
+                Brand = product.Brand,
+                Compatibility = product.Compatibility,
+                HasOffer = product.HasOffer,
+                SalePrice = product.SalePrice,
+                DiscountPercent = product.DiscountPercent,
+                OfferEndsAt = product.OfferEndsAt,
+                OfferName = product.OfferName,
                 Color = product.Color,
                 Fuel = product.Fuel,
                 SearchKeywords = product.SearchKeywords
@@ -89,6 +101,12 @@ namespace FinalProject.MVC.Controllers
                 .GroupBy(p => p.CarModel)
                 .OrderBy(group => group.Key)
                 .ToDictionary(group => group.Key, group => group.Count());
+            ViewBag.Categories = _allProducts
+                .Select(product => product.Category)
+                .Where(category => !string.IsNullOrWhiteSpace(category))
+                .Distinct()
+                .OrderBy(category => category)
+                .ToList();
         }
 
         private async Task ApplyRatingsAsync(
@@ -123,26 +141,43 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(string? search, string? category, CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop - AutoVault";
             await EnsureCatalogAsync(cancellationToken);
-            
-            // Initial load - show first 6 products (matching original template)
-            var initialProducts = _allProducts.Take(6).ToList();
+            IEnumerable<ShopProduct> source = _allProducts;
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                source = source.Where(product =>
+                    product.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    product.Category.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    product.Description.Contains(term, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                source = source.Where(product => string.Equals(product.Category, category, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var matched = source.ToList();
+            var initialProducts = matched.Take(6).ToList();
             await ApplyRatingsAsync(initialProducts, cancellationToken);
             var response = new ShopFilterResponse
             {
                 Products = initialProducts,
-                TotalProducts = _allProducts.Count,
+                TotalProducts = matched.Count,
                 CurrentPage = 1,
-                TotalPages = (int)Math.Ceiling(_allProducts.Count / 6.0),
-                HasMorePages = _allProducts.Count > 6,
-                ResultsText = $"Showing 1-{Math.Min(6, _allProducts.Count)} of {_allProducts.Count} results"
+                TotalPages = (int)Math.Ceiling(matched.Count / 6.0),
+                HasMorePages = matched.Count > 6,
+                ResultsText = matched.Count == 0
+                    ? "No matching parts"
+                    : $"Showing 1-{Math.Min(6, matched.Count)} of {matched.Count} results"
             };
 
             SetShopFilters();
-
+            ViewData["Search"] = search;
+            ViewData["Category"] = category;
             return View(response);
         }
 
@@ -202,16 +237,16 @@ namespace FinalProject.MVC.Controllers
                 switch (request.PriceRange)
                 {
                     case "Under $200":
-                        filteredProducts = filteredProducts.Where(p => p.Price < 200);
+                        filteredProducts = filteredProducts.Where(p => p.EffectivePrice < 200);
                         break;
                     case "Under $400":
-                        filteredProducts = filteredProducts.Where(p => p.Price < 400);
+                        filteredProducts = filteredProducts.Where(p => p.EffectivePrice < 400);
                         break;
                     case "Under $600":
-                        filteredProducts = filteredProducts.Where(p => p.Price < 600);
+                        filteredProducts = filteredProducts.Where(p => p.EffectivePrice < 600);
                         break;
                     case "Under $800":
-                        filteredProducts = filteredProducts.Where(p => p.Price < 800);
+                        filteredProducts = filteredProducts.Where(p => p.EffectivePrice < 800);
                         break;
                     case "All Prices":
                         // No filter applied
@@ -222,12 +257,12 @@ namespace FinalProject.MVC.Controllers
             // Apply min/max price filter (slider from ShopTwo)
             if (request.MinPrice.HasValue)
             {
-                filteredProducts = filteredProducts.Where(p => p.Price >= request.MinPrice.Value);
+                filteredProducts = filteredProducts.Where(p => p.EffectivePrice >= request.MinPrice.Value);
             }
 
             if (request.MaxPrice.HasValue)
             {
-                filteredProducts = filteredProducts.Where(p => p.Price <= request.MaxPrice.Value);
+                filteredProducts = filteredProducts.Where(p => p.EffectivePrice <= request.MaxPrice.Value);
             }
 
             // Apply sorting
@@ -236,10 +271,10 @@ namespace FinalProject.MVC.Controllers
                 switch (request.SortBy)
                 {
                     case "Price Low to High":
-                        filteredProducts = filteredProducts.OrderBy(p => p.Price);
+                        filteredProducts = filteredProducts.OrderBy(p => p.EffectivePrice);
                         break;
                     case "Price High to Low":
-                        filteredProducts = filteredProducts.OrderByDescending(p => p.Price);
+                        filteredProducts = filteredProducts.OrderByDescending(p => p.EffectivePrice);
                         break;
                     case "Name A-Z":
                         filteredProducts = filteredProducts.OrderBy(p => p.Name);
@@ -295,6 +330,7 @@ namespace FinalProject.MVC.Controllers
             await ApplyRatingsAsync(products, cancellationToken);
 
             var totalPages = (int)Math.Ceiling(_allProducts.Count / (double)pageSize);
+            var endItem = Math.Min(page * pageSize, _allProducts.Count);
 
             var response = new ShopFilterResponse
             {
@@ -303,7 +339,9 @@ namespace FinalProject.MVC.Controllers
                 CurrentPage = page,
                 TotalPages = totalPages,
                 HasMorePages = page < totalPages,
-                ResultsText = ""
+                ResultsText = _allProducts.Count > 0
+                    ? $"Showing 1-{endItem} of {_allProducts.Count} results"
+                    : "No products found"
             };
 
             return Json(response);
@@ -404,6 +442,27 @@ namespace FinalProject.MVC.Controllers
                 ViewData["RatingServiceUnavailable"] = true;
             }
 
+            try
+            {
+                string? accessToken = null;
+                if (User.Identity?.IsAuthenticated == true)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    if (user != null)
+                    {
+                        var roles = await _userManager.GetRolesAsync(user);
+                        accessToken = _tokenService.CreateToken(User, roles);
+                    }
+                }
+
+                ViewBag.Reviews = await _reviewApiService.GetReviewsAsync(product.Id, accessToken, cancellationToken);
+            }
+            catch (CarApiException)
+            {
+                ViewBag.Reviews = Array.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
+                ViewData["ReviewServiceUnavailable"] = true;
+            }
+
             return View(product);
         }
 
@@ -466,14 +525,77 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveReview(
+            int productId,
+            int? reviewId,
+            string content,
+            CancellationToken cancellationToken)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var accessToken = _tokenService.CreateToken(User, roles);
+                await _reviewApiService.SaveReviewAsync(productId, reviewId, content, accessToken, cancellationToken);
+                TempData["Success"] = reviewId.HasValue ? "Your review was updated." : "Your review was saved.";
+            }
+            catch (CarApiException exception)
+            {
+                TempData["Error"] = exception.Message;
+            }
+
+            return RedirectToAction(nameof(Details), new { id = productId });
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteReview(int productId, int reviewId, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var accessToken = _tokenService.CreateToken(User, roles);
+                await _reviewApiService.DeleteReviewAsync(reviewId, accessToken, cancellationToken);
+                TempData["Success"] = "Your review was deleted.";
+            }
+            catch (CarApiException exception)
+            {
+                TempData["Error"] = exception.Message;
+            }
+
+            return RedirectToAction(nameof(Details), new { id = productId });
+        }
+
         public IActionResult Cart()
         {
-            ViewData["Title"] = "Cart - AutoVault";
-            
-            // Get cart from session
-            var cart = GetCartFromSession();
-            
-            return View(cart);
+            TempData["Success"] = "Questions about a part are sent from that product page. The showroom reads them in the admin panel.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Ask(ProductInquiry inquiry, CancellationToken cancellationToken)
+        {
+            var (ok, error) = await _shopCatalog.SaveInquiryAsync(inquiry, cancellationToken);
+            TempData[ok ? "Success" : "Error"] = ok
+                ? "Your question was sent to the showroom. Visit Babek Prospekti to inspect the item before you buy."
+                : error;
+            return RedirectToAction(nameof(Details), new { id = inquiry.ProductId });
         }
 
         [HttpPost]
@@ -486,12 +608,23 @@ namespace FinalProject.MVC.Controllers
                 return Json(new { success = false, message = "Product not found" });
             }
 
+            if (product.Quantity <= 0)
+            {
+                return Json(new { success = false, message = "This product is out of stock." });
+            }
+
             var cart = GetCartFromSession();
             var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
+            var nextQuantity = (existingItem?.Quantity ?? 0) + request.Quantity;
+            if (request.Quantity < 1 || nextQuantity > product.Quantity)
+            {
+                return Json(new { success = false, message = "That quantity is not available." });
+            }
 
             if (existingItem != null)
             {
-                existingItem.Quantity += request.Quantity;
+                existingItem.Quantity = nextQuantity;
+                existingItem.Price = product.EffectivePrice;
             }
             else
             {
@@ -499,7 +632,7 @@ namespace FinalProject.MVC.Controllers
                 {
                     ProductId = product.Id,
                     ProductName = product.Name,
-                    Price = product.Price,
+                    Price = product.EffectivePrice,
                     Quantity = request.Quantity,
                     ImagePath = product.ImagePath
                 });
@@ -510,7 +643,7 @@ namespace FinalProject.MVC.Controllers
             return Json(new
             {
                 success = true,
-                message = "Product added to cart",
+                message = "Added to your inquiry list. Collect it at the Baku showroom.",
                 cartCount = cart.Items.Sum(i => i.Quantity),
                 cartTotal = cart.Total
             });
@@ -703,8 +836,8 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult Checkout()
         {
-            ViewData["Title"] = "Checkout - AutoVault";
-            return View();
+            TempData["Success"] = "Online checkout is not available. Visit the Baku showroom to buy in person.";
+            return RedirectToAction("Index", "Contact");
         }
     }
 }

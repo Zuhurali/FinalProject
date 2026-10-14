@@ -72,6 +72,16 @@ builder.Services.AddHttpClient<IProductRatingApiService, ProductRatingApiService
     PooledConnectionLifetime = TimeSpan.FromSeconds(30),
     ConnectTimeout = TimeSpan.FromSeconds(5)
 });
+builder.Services.AddHttpClient<IProductReviewApiService, ProductReviewApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(20);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromSeconds(30),
+    ConnectTimeout = TimeSpan.FromSeconds(5)
+});
 builder.Services.AddHttpClient<IMarketplaceApiService, MarketplaceApiService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);

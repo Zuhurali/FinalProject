@@ -25,11 +25,19 @@ namespace FinalProject.MVC.Controllers
 
         private readonly ILogger<HomeController> _logger;
         private readonly ICarApiService _carApi;
+        private readonly IShopCatalogService _shopCatalog;
+        private readonly IProductRatingApiService _ratingApi;
 
-        public HomeController(ILogger<HomeController> logger, ICarApiService carApi)
+        public HomeController(
+            ILogger<HomeController> logger,
+            ICarApiService carApi,
+            IShopCatalogService shopCatalog,
+            IProductRatingApiService ratingApi)
         {
             _logger = logger;
             _carApi = carApi;
+            _shopCatalog = shopCatalog;
+            _ratingApi = ratingApi;
         }
 
         public async Task<IActionResult> Index()
@@ -158,10 +166,34 @@ namespace FinalProject.MVC.Controllers
             return View();
         }
 
-        public IActionResult ShopDemo()
+        public async Task<IActionResult> ShopDemo(CancellationToken cancellationToken)
         {
-            ViewData["Title"] = "Shop Demo - AutoVault";
+            ViewData["Title"] = "Shop - AutoVault";
             ViewData["BodyClass"] = "home-four";
+            var products = (await _shopCatalog.GetAllAsync(cancellationToken)).ToList();
+            try
+            {
+                var summaries = await _ratingApi.GetSummariesAsync(products.Select(product => product.Id), cancellationToken);
+                var byProduct = summaries.ToDictionary(summary => summary.ProductId);
+                foreach (var product in products)
+                {
+                    if (byProduct.TryGetValue(product.Id, out var summary))
+                    {
+                        product.Rating = summary.AverageRating;
+                        product.RatingCount = summary.TotalCount;
+                    }
+                }
+            }
+            catch (CarApiException)
+            {
+                ViewData["RatingServiceUnavailable"] = true;
+            }
+
+            var now = DateTime.UtcNow;
+            var campaigns = await _shopCatalog.GetCampaignsAsync(cancellationToken);
+            ViewData["ShopProducts"] = products;
+            ViewData["FeaturedCampaign"] = campaigns.FirstOrDefault(campaign =>
+                campaign.IsActive && campaign.StartsAt <= now && campaign.EndsAt > now);
             return View();
         }
 

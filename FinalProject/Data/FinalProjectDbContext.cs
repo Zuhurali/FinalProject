@@ -22,6 +22,8 @@ public class FinalProjectDbContext : DbContext
 
     public DbSet<ProductRating> ProductRatings => Set<ProductRating>();
 
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+
     public DbSet<IdentityUserReference> IdentityUsers => Set<IdentityUserReference>();
 
     public DbSet<Favorite> Favorites => Set<Favorite>();
@@ -100,6 +102,20 @@ public class FinalProjectDbContext : DbContext
                 .HasDatabaseName("UX_ProductRatings_UserId_ProductId");
             entity.HasIndex(rating => rating.ProductId)
                 .HasDatabaseName("IX_ProductRatings_ProductId");
+        });
+
+        modelBuilder.Entity<ProductReview>(entity =>
+        {
+            entity.ToTable("ProductReviews", table => table.HasCheckConstraint(
+                "CK_ProductReviews_ContentLength",
+                "LEN([Content]) >= 10 AND LEN([Content]) <= 1000"));
+            entity.Property(review => review.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(review => review.Content).IsRequired().HasMaxLength(1000);
+            entity.HasIndex(review => review.ProductId)
+                .HasDatabaseName("IX_ProductReviews_ProductId");
+            entity.HasIndex(review => new { review.UserId, review.ProductId })
+                .IsUnique()
+                .HasDatabaseName("UX_ProductReviews_UserId_ProductId");
         });
 
         modelBuilder.Entity<IdentityUserReference>(entity =>

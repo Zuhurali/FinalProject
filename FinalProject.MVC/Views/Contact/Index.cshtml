@@ -15,6 +15,12 @@
     </div>
 </div>
 <!-- rts breadcrumb area end -->
+@if (TempData["Success"] != null)
+{
+    <div class="container" style="padding-top:24px;">
+        <div class="alert alert-info">@TempData["Success"]</div>
+    </div>
+}
 
 <!-- Contact Start -->
 <section class="rts-contact-area inner rts-section-gap">

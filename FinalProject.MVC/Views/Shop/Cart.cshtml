@@ -1,16 +1,16 @@
 @model FinalProject.MVC.Models.CartViewModel
 @{
-    ViewData["Title"] = "Cart - AutoVault";
+    ViewData["Title"] = "Inquiry List - AutoVault";
 }
 
 <!-- Breadcrumb area start -->
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Cart</h1>
+            <h1 class="title">Inquiry List</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Cart</a>
+                <a href="#" class="current">Inquiry List</a>
             </div>
         </div>
     </div>
@@ -119,7 +119,7 @@
                                 <div class="col-md-5 offset-md-7">
                                     <div class="ms-cart-collaterals cart-collaterals">
                                         <div class="ms-cart-totals cart_totals ">
-                                            <h3>Cart totals</h3>
+                                            <h3>Inquiry totals</h3>
                                             <table class="shop_table shop_table_responsive">
                                                 <tbody>
                                                     <tr class="cart-subtotal">
@@ -152,7 +152,7 @@
                                                 </tbody>
                                             </table>
                                             <div class="ms-proceed-to-checkout wc-proceed-to-checkout">
-                                                <a asp-controller="Checkout" asp-action="Index" class="rts-btn btn-primary">Proceed to checkout</a>
+                                                <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary">Contact the Showroom</a>
                                             </div>
                                         </div>
                                     </div>

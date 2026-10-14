@@ -19,29 +19,37 @@
 
 <div class="rts-shop-area inner rts-section-gapTop">
     <div class="container">
-        <div class="shop-filter-area">
-            <p id="results-text">@Model.ResultsText</p>
+        <p class="mb-4">The shop lists photographed automotive parts and workshop supplies for collection at the Baku showroom. Engine oils, filters, brake parts, plugs, wipers, and fluids can be added by the showroom when a matching product photo is on file. Fitment is shown only when it is stored for that product.</p>
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        <div class="shop-filter-area showroom-filters">
+            <p id="results-text" class="results-text">@Model.ResultsText</p>
             <div class="select-area">
+                <input type="search" id="searchText" class="form-control showroom-search-input" value="@ViewData["Search"]" placeholder="Search parts" aria-label="Search parts" />
                 <form class="filter-form">
-                    <select name="carMake" id="carMake" class="mySelect">
-                        <option value="">Car Make</option>
-                        @foreach (var make in ViewBag.CarMakes)
+                    <select name="category" id="category" class="mySelect">
+                        <option value="">All categories</option>
+                        @foreach (var category in (IEnumerable<string>)ViewBag.Categories)
                         {
-                            <option value="@make">@make</option>
+                            if (string.Equals(category, ViewData["Category"] as string, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@category" selected>@category</option>
+                            }
+                            else
+                            {
+                                <option value="@category">@category</option>
+                            }
                         }
                     </select>
                 </form>
-                <form class="select-2 filter-form">
-                    <select name="carModel" id="carModel" class="my_select2">
-                        <option value="">Car Model</option>
-                        @foreach (var carModel in ViewBag.CarModels)
-                        {
-                            <option value="@carModel">@carModel</option>
-                        }
-                    </select>
-                </form>
-                <form class="select-2 filter-form">
-                    <select name="priceRange" id="priceRange" class="my_select2">
+                <form class="filter-form">
+                    <select name="priceRange" id="priceRange" class="mySelect">
                         <option value="">Price</option>
                         <option value="Under $200">Under $200</option>
                         <option value="Under $400">Under $400</option>
@@ -50,8 +58,8 @@
                         <option value="All Prices">All Prices</option>
                     </select>
                 </form>
-                <form class="select-2 filter-form">
-                    <select name="sortBy" id="sortBy" class="my_select2">
+                <form class="filter-form">
+                    <select name="sortBy" id="sortBy" class="mySelect">
                         <option value="">Sort By</option>
                         <option value="Price Low to High">Price Low to High</option>
                         <option value="Price High to Low">Price High to Low</option>
@@ -60,13 +68,14 @@
                         <option value="Rating">Rating</option>
                     </select>
                 </form>
+                <button type="button" class="rts-btn btn-primary radius-big" id="apply-search">Search</button>
             </div>
         </div>
         <div class="row g-5" id="products-container">
             @foreach (var product in Model.Products)
             {
-                <div class="col-lg-4 col-md-6">
-                    <div class="project-wrapper4">
+                <div class="col-lg-4 col-md-6 d-flex">
+                    <div class="project-wrapper4 showroom-card">
                         <div class="image-area">
                             <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">
                                 <img src="@Url.Content(product.ImagePath)" alt="@product.Name">
@@ -90,31 +99,28 @@
                                     }
                                 }
                             </ul>
-                            <small class="product-rating-summary">
+                            <p class="product-rating-summary">
                                 @(product.RatingCount == 0
                                     ? "No ratings"
-                                    : $"{product.Rating:0.0} ({product.RatingCount})")
-                            </small>
+                                    : $"{product.Rating:0.0} ({product.RatingCount} reviews)")
+                            </p>
                             <h6 class="title">
                                 <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">@product.Name</a>
                             </h6>
+                            <p class="stock-line">@product.StockStatus · @product.Quantity available</p>
                             <div class="button-area">
-                                <p class="">$@product.Price</p>
-                                <a href="#" class="rts-btn btn-primary radius-big icon add-to-cart-btn" data-product-id="@product.Id">
-                                    Add To Cart
-                                    <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <g clip-path="url(#clip0_1201_1501)">
-                                            <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                            <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                            <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                        </g>
-                                        <defs>
-                                            <clipPath id="clip0_1201_1501">
-                                                <rect width="10" height="10" fill="white" />
-                                            </clipPath>
-                                        </defs>
-                                    </svg>
-                                </a>
+                                <p class="price-line">
+                                    @if (product.HasOffer)
+                                    {
+                                        <span style="text-decoration:line-through;color:#888;font-weight:500;">$@product.Price</span>
+                                        <span>$@product.SalePrice</span>
+                                    }
+                                    else
+                                    {
+                                        <span>$@product.Price</span>
+                                    }
+                                </p>
+                                <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id" asp-fragment="ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
                             </div>
                         </div>
                     </div>
@@ -134,27 +140,27 @@
 <script>
     $(document).ready(function() {
         let currentPage = @Model.CurrentPage;
-        let isFiltering = false;
+        let isFiltering = @((!string.IsNullOrWhiteSpace(ViewData["Search"] as string) || !string.IsNullOrWhiteSpace(ViewData["Category"] as string)).ToString().ToLower());
 
-        // Function to apply filters
+        function filterPayload(page) {
+            return {
+                searchText: $('#searchText').val(),
+                category: $('#category').val(),
+                priceRange: $('#priceRange').val(),
+                sortBy: $('#sortBy').val(),
+                page: page,
+                pageSize: 6
+            };
+        }
+
         function applyFilters() {
             isFiltering = true;
             currentPage = 1;
-            
-            const filterData = {
-                carMake: $('#carMake').val(),
-                carModel: $('#carModel').val(),
-                priceRange: $('#priceRange').val(),
-                sortBy: $('#sortBy').val(),
-                page: currentPage,
-                pageSize: 6
-            };
-
             $.ajax({
                 url: '@Url.Action("FilterProducts", "Shop")',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify(filterData),
+                data: JSON.stringify(filterPayload(currentPage)),
                 success: function(response) {
                     updateProductsContainer(response, false);
                     updateResultsText(response.resultsText);
@@ -167,26 +173,16 @@
             });
         }
 
-        // Function to load more products
         function loadMoreProducts() {
             if (isFiltering) {
-                // Load more with current filters
-                const filterData = {
-                    carMake: $('#carMake').val(),
-                    carModel: $('#carModel').val(),
-                    priceRange: $('#priceRange').val(),
-                    sortBy: $('#sortBy').val(),
-                    page: currentPage + 1,
-                    pageSize: 6
-                };
-
                 $.ajax({
                     url: '@Url.Action("FilterProducts", "Shop")',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify(filterData),
+                    data: JSON.stringify(filterPayload(currentPage + 1)),
                     success: function(response) {
                         updateProductsContainer(response, true);
+                        if (response.resultsText) updateResultsText(response.resultsText);
                         updateLoadMoreButton(response.hasMorePages);
                         currentPage = response.currentPage;
                     },
@@ -195,13 +191,13 @@
                     }
                 });
             } else {
-                // Load more without filters
                 $.ajax({
                     url: '@Url.Action("LoadMore", "Shop")',
                     type: 'POST',
                     data: { page: currentPage + 1, pageSize: 6 },
                     success: function(response) {
                         updateProductsContainer(response, true);
+                        if (response.resultsText) updateResultsText(response.resultsText);
                         updateLoadMoreButton(response.hasMorePages);
                         currentPage = response.currentPage;
                     },
@@ -240,7 +236,7 @@
             }
             const ratingSummary = product.ratingCount === 0
                 ? 'No ratings'
-                : Number(product.rating).toFixed(1) + ' (' + product.ratingCount + ')';
+                : Number(product.rating).toFixed(1) + ' (' + product.ratingCount + ' reviews)';
 
             // Convert ~ path to relative path for client-side use
             let imagePath = product.imagePath;
@@ -249,38 +245,19 @@
             }
 
             return `
-                <div class="col-lg-4 col-md-6">
-                    <div class="project-wrapper4">
+                <div class="col-lg-4 col-md-6 d-flex">
+                    <div class="project-wrapper4 showroom-card">
                         <div class="image-area">
-                            <a href="/Shop/Details/${product.id}">
-                                <img src="${imagePath}" alt="${product.name}">
-                            </a>
+                            <a href="/Shop/Details/${product.id}"><img src="${imagePath}" alt="${product.name}"></a>
                         </div>
                         <div class="content-area">
-                            <ul class="star-rating">
-                                ${starsHtml}
-                            </ul>
-                            <small class="product-rating-summary">${ratingSummary}</small>
-                            <h6 class="title">
-                                <a href="/Shop/Details/${product.id}">${product.name}</a>
-                            </h6>
+                            <ul class="star-rating">${starsHtml}</ul>
+                            <p class="product-rating-summary">${ratingSummary}</p>
+                            <h6 class="title"><a href="/Shop/Details/${product.id}">${product.name}</a></h6>
+                            <p class="stock-line">${product.stockStatus} · ${product.quantity} available</p>
                             <div class="button-area">
-                                <p class="">$${product.price}</p>
-                                <a href="#" class="rts-btn btn-primary radius-big icon add-to-cart-btn" data-product-id="${product.id}">
-                                    Add To Cart
-                                    <svg width="14" height="14" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <g clip-path="url(#clip0_1201_1501)">
-                                            <path d="M3.22189 6.46492H3.22235C3.22273 6.46492 3.22311 6.46484 3.22349 6.46484H8.53515C8.66592 6.46484 8.78089 6.37809 8.81683 6.25236L9.9887 2.1508C10.014 2.06238 9.99625 1.96731 9.94094 1.89392C9.88555 1.82053 9.79896 1.77734 9.70702 1.77734H2.54623L2.33681 0.834885C2.30697 0.700836 2.18811 0.605469 2.05078 0.605469H0.292969C0.131149 0.605469 0 0.736618 0 0.898437C0 1.06026 0.131149 1.19141 0.292969 1.19141H1.81579C1.85287 1.35841 2.81799 5.70152 2.87353 5.95138C2.56218 6.08673 2.34375 6.39717 2.34375 6.75781C2.34375 7.24243 2.73804 7.63671 3.22265 7.63671H8.53515C8.69697 7.63671 8.82812 7.50557 8.82812 7.34375C8.82812 7.18193 8.69697 7.05078 8.53515 7.05078H3.22265C3.06114 7.05078 2.92969 6.91932 2.92969 6.75781C2.92969 6.59652 3.06068 6.4653 3.22189 6.46492ZM9.31861 2.36328L8.31413 5.8789H3.45764L2.67639 2.36328H9.31861Z" fill="white" />
-                                            <path d="M2.92969 8.51562C2.92969 9.00024 3.32397 9.39453 3.80859 9.39453C4.29321 9.39453 4.6875 9.00024 4.6875 8.51562C4.6875 8.03101 4.29321 7.63672 3.80859 7.63672C3.32397 7.63672 2.92969 8.03101 2.92969 8.51562ZM3.80859 8.22266C3.97011 8.22266 4.10156 8.35411 4.10156 8.51562C4.10156 8.67714 3.97011 8.80859 3.80859 8.80859C3.64708 8.80859 3.51562 8.67714 3.51562 8.51562C3.51562 8.35411 3.64708 8.22266 3.80859 8.22266Z" fill="white" />
-                                            <path d="M7.07031 8.51562C7.07031 9.00024 7.4646 9.39453 7.94922 9.39453C8.43384 9.39453 8.82812 9.00024 8.82812 8.51562C8.82812 8.03101 8.43384 7.63672 7.94922 7.63672C7.4646 7.63672 7.07031 8.03101 7.07031 8.51562ZM7.94922 8.22266C8.11073 8.22266 8.24219 8.35411 8.24219 8.51562C8.24219 8.67714 8.11073 8.80859 7.94922 8.80859C7.7877 8.80859 7.65625 8.67714 7.65625 8.51562C7.65625 8.35411 7.7877 8.22266 7.94922 8.22266Z" fill="white" />
-                                        </g>
-                                        <defs>
-                                            <clipPath id="clip0_1201_1501">
-                                                <rect width="10" height="10" fill="white" />
-                                            </clipPath>
-                                        </defs>
-                                    </svg>
-                                </a>
+                                <p class="price-line">${product.hasOffer ? '<span style="text-decoration:line-through;color:#888;font-weight:500;">$' + product.price + '</span> $' + product.salePrice : '$' + product.price}</p>
+                                <a href="/Shop/Details/${product.id}#ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
                             </div>
                         </div>
                     </div>
@@ -303,70 +280,23 @@
         }
 
         // Event handlers for filters
-        $('#carMake, #carModel, #priceRange, #sortBy').on('change', function() {
+        $('#category, #priceRange, #sortBy').on('change', function() {
             applyFilters();
+        });
+        $('#apply-search').on('click', function() {
+            applyFilters();
+        });
+        $('#searchText').on('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                applyFilters();
+            }
         });
 
         // Event handler for Load More button
         $(document).on('click', '#load-more-btn', function(e) {
             e.preventDefault();
             loadMoreProducts();
-        });
-
-        // Reset filters functionality
-        function resetFilters() {
-            $('#carMake, #carModel, #priceRange, #sortBy').val('');
-            isFiltering = false;
-            currentPage = 1;
-            location.reload();
-        }
-
-        // Optional: Add reset button (you can uncomment this if you want a reset button)
-        /*
-        $('.shop-filter-area').append('<button type="button" class="rts-btn btn-secondary" id="reset-filters">Reset Filters</button>');
-        $(document).on('click', '#reset-filters', function() {
-            resetFilters();
-        });
-        */
-
-        // Add To Cart functionality
-        $(document).on('click', '.add-to-cart-btn', function(e) {
-            e.preventDefault();
-            
-            const productId = $(this).data('product-id');
-            const button = $(this);
-            const originalText = button.html();
-            
-            // Disable button and show loading state
-            button.prop('disabled', true).html('Adding...');
-            
-            $.ajax({
-                url: '@Url.Action("AddToCart", "Shop")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ productId: productId, quantity: 1 }),
-                success: function(response) {
-                    if (response.success) {
-                        // Show success feedback
-                        button.html('✓ Added!');
-                        setTimeout(function() {
-                            button.html(originalText).prop('disabled', false);
-                        }, 1500);
-                        
-                        // Optional: Show notification
-                        if (typeof toastr !== 'undefined') {
-                            toastr.success('Product added to cart!');
-                        }
-                    } else {
-                        button.html(originalText).prop('disabled', false);
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    button.html(originalText).prop('disabled', false);
-                    alert('Failed to add product to cart. Please try again.');
-                }
-            });
         });
     });
 </script>

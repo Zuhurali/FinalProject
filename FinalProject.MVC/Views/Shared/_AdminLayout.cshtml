@@ -25,9 +25,13 @@
                 <a asp-controller="Admin" asp-action="Index">Dashboard</a>
                 <a asp-controller="AdminCars" asp-action="Index">Cars</a>
                 <a asp-controller="AdminProducts" asp-action="Index">Products</a>
+                <a asp-controller="AdminCampaigns" asp-action="Index">Campaigns</a>
+                <a asp-controller="AdminSales" asp-action="Index">Showroom Sales</a>
                 <a asp-controller="AdminBrands" asp-action="Index">Brands</a>
                 <a asp-controller="AdminCategories" asp-action="Index">Categories</a>
                 <a asp-controller="AdminRatings" asp-action="Index">Ratings</a>
+                <a asp-controller="AdminReviews" asp-action="Index">Reviews</a>
+                <a asp-controller="AdminInquiries" asp-action="Index">Questions</a>
                 @if (User.IsInRole("SuperAdmin"))
                 {
                     <a asp-controller="Admin" asp-action="Users">Users</a>

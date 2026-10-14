@@ -17,4 +17,25 @@ public interface IShopCatalogService
     Task<int> CountAsync(CancellationToken cancellationToken = default);
 
     Task EnsureSeedAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ProductCampaign>> GetCampaignsAsync(CancellationToken cancellationToken = default);
+
+    Task<(bool Ok, string? Error)> SaveCampaignAsync(ProductCampaign campaign, CancellationToken cancellationToken = default);
+
+    Task<bool> SetCampaignActiveAsync(int id, bool isActive, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<InPersonSale>> GetSalesAsync(CancellationToken cancellationToken = default);
+
+    Task<(bool Ok, string? Error)> RecordSaleAsync(
+        int productId,
+        int quantity,
+        string recordedByUserId,
+        string? note,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ProductInquiry>> GetInquiriesAsync(CancellationToken cancellationToken = default);
+
+    Task<(bool Ok, string? Error)> SaveInquiryAsync(ProductInquiry inquiry, CancellationToken cancellationToken = default);
+
+    Task<bool> SetInquiryHandledAsync(int id, bool handled, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,49 @@
+@model IReadOnlyList<ProductInquiry>
+@{
+    Layout = "_AdminLayout";
+}
+<div class="d-flex justify-content-between mb-4">
+    <h1 class="h3">Product questions</h1>
+</div>
+<div class="admin-card">
+    <p>Customers send these from a product page. They are questions about availability or fitment, not orders or payments.</p>
+    @if (Model.Count == 0)
+    {
+        <p>No questions yet.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>When</th><th>Product</th><th>Customer</th><th>Message</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var inquiry in Model)
+            {
+                <tr>
+                    <td>@inquiry.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                    <td>@(inquiry.Product?.Name ?? $"Product {inquiry.ProductId}")</td>
+                    <td>
+                        @inquiry.CustomerName<br />
+                        <a href="mailto:@inquiry.Email">@inquiry.Email</a>
+                        @if (!string.IsNullOrWhiteSpace(inquiry.Phone))
+                        {
+                            <br /><a href="tel:@inquiry.Phone">@inquiry.Phone</a>
+                        }
+                    </td>
+                    <td style="max-width:360px;white-space:pre-wrap;">@inquiry.Message</td>
+                    <td>@(inquiry.IsHandled ? "Handled" : "New")</td>
+                    <td>
+                        <form asp-action="Handled" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@inquiry.Id" />
+                            <input type="hidden" name="handled" value="@(!inquiry.IsHandled ? "true" : "false")" />
+                            <button type="submit" class="btn btn-sm btn-outline-dark">@(inquiry.IsHandled ? "Mark new" : "Mark handled")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

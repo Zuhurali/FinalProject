@@ -5,6 +5,16 @@ namespace FinalProject.MVC.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public string StockStatus { get; set; } = string.Empty;
+        public string Brand { get; set; } = string.Empty;
+        public string Compatibility { get; set; } = string.Empty;
+        public bool HasOffer { get; set; }
+        public decimal SalePrice { get; set; }
+        public int? DiscountPercent { get; set; }
+        public DateTime? OfferEndsAt { get; set; }
+        public string OfferName { get; set; } = string.Empty;
+        public decimal EffectivePrice => HasOffer ? SalePrice : Price;
         public string Category { get; set; } = string.Empty;
         public string CarMake { get; set; } = string.Empty;
         public string CarModel { get; set; } = string.Empty;

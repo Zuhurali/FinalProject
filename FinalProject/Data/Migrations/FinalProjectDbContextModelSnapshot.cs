@@ -427,6 +427,67 @@ namespace FinalProject.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FinalProject.Models.Entities.ProductReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("IX_ProductReviews_ProductId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProductReviews_UserId_ProductId");
+
+                    b.ToTable("ProductReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductReviews_ContentLength", "LEN([Content]) >= 10 AND LEN([Content]) <= 1000");
+                        });
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.ShopProductReference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShopProducts", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
             modelBuilder.Entity("FinalProject.Models.Entities.Car", b =>
                 {
                     b.HasOne("FinalProject.Models.Entities.Brand", "Brand")

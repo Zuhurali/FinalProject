@@ -129,6 +129,46 @@ namespace FinalProject.MVC.Migrations
                     b.ToTable("CouponUsages");
                 });
 
+            modelBuilder.Entity("FinalProject.MVC.Models.InPersonSale", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RecordedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SoldAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("InPersonSales", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_InPersonSales_Quantity", "[Quantity] >= 1");
+                        });
+                });
+
             modelBuilder.Entity("FinalProject.MVC.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -253,6 +293,90 @@ namespace FinalProject.MVC.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("FinalProject.MVC.Models.ProductCampaign", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal?>("DiscountedPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductCampaigns");
+                });
+
+            modelBuilder.Entity("FinalProject.MVC.Models.ProductInquiry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsHandled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductInquiries", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductInquiries_MessageLength", "LEN([Message]) >= 10 AND LEN([Message]) <= 1000");
+                        });
+                });
+
             modelBuilder.Entity("FinalProject.MVC.Models.ShopCatalogProduct", b =>
                 {
                     b.Property<int>("Id")
@@ -260,6 +384,11 @@ namespace FinalProject.MVC.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("CarMake")
                         .IsRequired()
@@ -280,6 +409,11 @@ namespace FinalProject.MVC.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Compatibility")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -307,6 +441,9 @@ namespace FinalProject.MVC.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
                     b.Property<string>("SearchKeywords")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -314,7 +451,10 @@ namespace FinalProject.MVC.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ShopProducts", (string)null);
+                    b.ToTable("ShopProducts", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ShopProducts_Quantity", "[Quantity] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -461,6 +601,17 @@ namespace FinalProject.MVC.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("FinalProject.MVC.Models.InPersonSale", b =>
+                {
+                    b.HasOne("FinalProject.MVC.Models.ShopCatalogProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("FinalProject.MVC.Models.Order", b =>
                 {
                     b.HasOne("FinalProject.MVC.Models.ApplicationUser", "User")
@@ -480,6 +631,28 @@ namespace FinalProject.MVC.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("FinalProject.MVC.Models.ProductCampaign", b =>
+                {
+                    b.HasOne("FinalProject.MVC.Models.ShopCatalogProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("FinalProject.MVC.Models.ProductInquiry", b =>
+                {
+                    b.HasOne("FinalProject.MVC.Models.ShopCatalogProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

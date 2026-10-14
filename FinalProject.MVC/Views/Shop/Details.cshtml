@@ -113,67 +113,52 @@
                         }
                     </div>
                     
-                    <!-- Price -->
-                    <div class="pricing-section">
-                        <div class="unit-price">
-                            <span class="label">Unit Price:</span>
-                            <span class="price-value">$@Model.Price.ToString("0.00")</span>
-                        </div>
-                        <div class="woocommerce-Price-amount amount">
-                            <span class="label">Total Price:</span>
-                            <bdi>
-                                <span class="woocommerce-Price-currencySymbol">$</span>
-                                <span id="totalPrice">@Model.Price.ToString("0.00")</span>
-                            </bdi>
-                        </div>
-                    </div>
-                    <input type="hidden" id="unitPrice" value="@Model.Price" />
-                    
-                    <!-- Stock Status -->
-                    @if (Model.InStock)
-                    {
-                        <p class="stock in-stock" style="color: #28a745; font-weight: 600;">
-                            <i class="fa-solid fa-circle-check"></i> In Stock
-                        </p>
-                    }
-                    else
-                    {
-                        <p class="stock out-of-stock" style="color: #dc3545; font-weight: 600;">
-                            <i class="fa-solid fa-circle-xmark"></i> Out of Stock
-                        </p>
-                    }
-                    
-                    <!-- Quantity and Add to Cart -->
-                    <div class="quantity-area">
-                        <div class="cart-edit">
-                            <div class="quantity-edit">
-                                <button class="button decrement" type="button"><i class="fal fa-minus minus"></i></button>
-                                <input type="text" class="input" id="quantity" value="1" min="1">
-                                <button class="button increment" type="button"><i class="fa-sharp fa-solid fa-plus"></i></button>
-                            </div>
-                        </div>
-                        @if (Model.InStock)
+                    <p class="price-line" style="font-size:28px;font-weight:700;margin:12px 0;">
+                        @if (Model.HasOffer)
                         {
-                            <button type="button" class="rts-btn btn-primary radius-small" id="addToCartBtn" data-product-id="@Model.Id">
-                                Add to cart
-                            </button>
+                            <span style="text-decoration:line-through;color:#888;font-size:18px;font-weight:500;">$@Model.Price.ToString("0.00")</span>
+                            <span>$@Model.SalePrice.ToString("0.00")</span>
+                            <span style="font-size:16px;font-weight:600;">@(Model.DiscountPercent)% off@(Model.OfferEndsAt.HasValue ? $" until {Model.OfferEndsAt.Value.ToLocalTime():dd MMM yyyy}" : "")</span>
                         }
                         else
                         {
-                            <button type="button" class="rts-btn btn-primary radius-small" disabled>
-                                Out of Stock
-                            </button>
+                            <span>$@Model.Price.ToString("0.00")</span>
                         }
+                    </p>
+                    <p class="stock" style="font-weight: 600; font-size: 16px;">
+                        @Model.StockStatus · @Model.Quantity available
+                    </p>
+
+                    <div class="ask-showroom" id="ask-showroom">
+                        <h3>Ask about this product</h3>
+                        <p>Ask whether it is available or whether it fits your car. The showroom reads the message. There is no online payment or delivery.</p>
+                        <form asp-controller="Shop" asp-action="Ask" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ProductId" value="@Model.Id" />
+                            <input class="form-control" type="text" name="CustomerName" maxlength="80" placeholder="Your name" required />
+                            <input class="form-control" type="email" name="Email" maxlength="200" placeholder="Email address" value="@(User.Identity?.IsAuthenticated == true ? User.Identity.Name : "")" required />
+                            <input class="form-control" type="tel" name="Phone" maxlength="40" placeholder="Phone (optional)" />
+                            <textarea class="form-control" name="Message" minlength="10" maxlength="1000" placeholder="Ask about availability or compatibility" required></textarea>
+                            <button type="submit" class="rts-btn btn-primary radius-small">Ask About Product</button>
+                        </form>
+                    </div>
+                    <div class="showroom-actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+                        <a class="rts-btn btn-border radius-small" href="tel:+994503546767">Call to Check Availability</a>
+                        <a class="rts-btn btn-border radius-small" asp-controller="Contact" asp-action="Index">Contact the Showroom</a>
+                        <a class="rts-btn btn-border radius-small" asp-controller="Contact" asp-action="Index">Visit Showroom</a>
                     </div>
                     
                     <!-- Product Meta -->
                     <div class="product_meta">
                         <ul>
                             <li class="posted_in">Category: <span>@Model.Category</span></li>
-                            <li class="sku_wrapper">Brand: <span>@Model.CarMake</span></li>
-                            @if (!string.IsNullOrEmpty(Model.CarModel))
+                            @if (!string.IsNullOrWhiteSpace(Model.Brand))
                             {
-                                <li class="sku_wrapper">Model: <span>@Model.CarModel</span></li>
+                                <li class="sku_wrapper">Brand: <span>@Model.Brand</span></li>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Compatibility))
+                            {
+                                <li class="sku_wrapper">Compatibility: <span>@Model.Compatibility</span></li>
                             }
                             @if (!string.IsNullOrEmpty(Model.Color))
                             {
@@ -205,21 +190,7 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                         <p>@Model.Description</p>
-                        <br>
-                        <p>
-                            Welcome to your trusted destination for quality automotive parts and accessories. 
-                            We pride ourselves on offering an extensive inventory of products from top brands, 
-                            tailored to fit every vehicle and budget. Whether you're looking for replacement parts 
-                            or performance upgrades, our friendly and knowledgeable team is here to help you find 
-                            exactly what you need.
-                        </p>
-                        <br>
-                        <p>
-                            At AutoVault, we understand that your vehicle is an important investment. That's why we 
-                            only stock high-quality products that meet or exceed OEM specifications. From brake pads 
-                            to air filters, suspension components to lighting systems, we have everything you need 
-                            to keep your vehicle running smoothly and safely.
-                        </p>
+                        <p>Collect this item at the AutoVault showroom, Babek Prospekti 22–24, Baku. Compatibility is listed only when it is known for this product.</p>
                     </div>
                     <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
                         <div class="ms-section-title">
@@ -227,10 +198,10 @@
                             <ul>
                                 <li><i class="fa-regular fa-circle-check"></i> <strong>Product Name:</strong> @Model.Name</li>
                                 <li><i class="fa-regular fa-circle-check"></i> <strong>Category:</strong> @Model.Category</li>
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Brand:</strong> @Model.CarMake</li>
-                                @if (!string.IsNullOrEmpty(Model.CarModel))
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Brand:</strong> @(string.IsNullOrWhiteSpace(Model.Brand) ? "Not stated" : Model.Brand)</li>
+                                @if (!string.IsNullOrWhiteSpace(Model.Compatibility))
                                 {
-                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Compatible Model:</strong> @Model.CarModel</li>
+                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Compatibility:</strong> @Model.Compatibility</li>
                                 }
                                 @if (!string.IsNullOrEmpty(Model.Color))
                                 {
@@ -241,59 +212,68 @@
                                     <li><i class="fa-regular fa-circle-check"></i> <strong>Fuel Type Compatibility:</strong> @Model.Fuel</li>
                                 }
                                 <li><i class="fa-regular fa-circle-check"></i> <strong>Price:</strong> $@Model.Price.ToString("0.00")</li>
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Availability:</strong> @(Model.InStock ? "In Stock" : "Out of Stock")</li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Availability:</strong> @Model.StockStatus (@Model.Quantity available)</li>
                                 <li><i class="fa-regular fa-circle-check"></i> <strong>Rating:</strong> @Model.Rating.ToString("0.0") / 5.0</li>
                             </ul>
                         </div>
                     </div>
                     <div class="tab-pane" id="messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
                         <div id="reviews" class="woocommerce-Reviews">
-                            <div class="reveiw">
-                                <h2>Customer Reviews</h2>
+                            @{
+                                var reviews = ViewBag.Reviews as IEnumerable<FinalProject.MVC.Models.Api.ProductReviewDto>
+                                    ?? Enumerable.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
+                                var editingId = Context.Request.Query["edit"].ToString();
+                            }
+                            @if (ViewData["ReviewServiceUnavailable"] as bool? == true)
+                            {
+                                <p>Reviews are temporarily unavailable.</p>
+                            }
+                            @foreach (var review in reviews)
+                            {
                                 <div class="reveiw-box mb--30">
-                                    <div class="author">
-                                        <div class="image"><img src="~/assets/images/testimonials/author-01.svg" alt=""></div>
-                                        <div class="content">
-                                            <h6>John Mitchell</h6>
-                                            <p>2 Weeks Ago</p>
-                                        </div>
-                                    </div>
-                                    <p>Excellent product! Exactly what I needed for my @Model.CarMake. The quality is outstanding and installation was straightforward. Highly recommend this product to anyone looking for reliable automotive parts.</p>
-                                    <ul class="star-rating">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            <li><i class="fa-sharp fa-solid fa-star"></i></li>
-                                        }
-                                    </ul>
+                                    <h6>@review.UserDisplayName</h6>
+                                    <p>@review.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                    @if (review.IsHidden)
+                                    {
+                                        <p><em>Hidden from the shop.</em></p>
+                                    }
+                                    <p>@review.Content</p>
+                                    @if (review.CanEdit && User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <a href="@Url.Action("Details", "Shop", new { id = Model.Id, edit = review.Id })#reviews">Edit</a>
+                                        <form asp-controller="Shop" asp-action="DeleteReview" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@Model.Id" />
+                                            <input type="hidden" name="reviewId" value="@review.Id" />
+                                            <button type="submit" class="btn btn-link p-0">Delete</button>
+                                        </form>
+                                    }
                                 </div>
-                                <div class="reveiw-box">
-                                    <div class="author">
-                                        <div class="image"><img src="~/assets/images/testimonials/author-02.svg" alt=""></div>
-                                        <div class="content">
-                                            <h6>Sarah Anderson</h6>
-                                            <p>1 Month Ago</p>
-                                        </div>
-                                    </div>
-                                    <p>Great value for money. The product arrived quickly and was exactly as described. Very satisfied with my purchase and the overall shopping experience at AutoVault.</p>
-                                    <ul class="star-rating">
-                                        @for (int i = 1; i <= 4; i++)
-                                        {
-                                            <li><i class="fa-sharp fa-solid fa-star"></i></li>
-                                        }
-                                        <li><i class="fa-light fa-star"></i></li>
-                                    </ul>
-                                </div>
-                            </div>
+                            }
+                            @if (!reviews.Any())
+                            {
+                                <p>No written reviews yet.</p>
+                            }
                             <div class="reveiw-form">
-                                <h2 class="mb--30">Add a Review</h2>
-                                <form action="#" method="post">
-                                    <div class="single-wrapper">
-                                        <input type="text" name="name" placeholder="Your Name" required>
-                                        <input type="email" name="email" placeholder="Your Email" required>
-                                    </div>
-                                    <textarea name="review" placeholder="Write your review here..." required></textarea>
-                                    <button type="submit" class="rts-btn btn-primary">Submit Review</button>
-                                </form>
+                                <h2 class="mb--30">Write a review</h2>
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    var editing = reviews.FirstOrDefault(review => review.Id.ToString() == editingId && review.CanEdit);
+                                    <form asp-controller="Shop" asp-action="SaveReview" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@Model.Id" />
+                                        @if (editing != null)
+                                        {
+                                            <input type="hidden" name="reviewId" value="@editing.Id" />
+                                        }
+                                        <textarea name="content" minlength="10" maxlength="1000" required placeholder="Write 10 to 1000 characters.">@(editing?.Content)</textarea>
+                                        <button type="submit" class="rts-btn btn-primary">@(editing == null ? "Submit Review" : "Update Review")</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <p><a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path">Sign in to write a review.</a></p>
+                                }
                             </div>
                         </div>
                     </div>
@@ -535,8 +515,11 @@
         $('.increment').on('click', function() {
             const input = $(this).siblings('.input');
             let value = parseInt(input.val()) || 1;
-            input.val(value + 1);
-            updateTotalPrice();
+            const max = parseInt(input.data('max')) || value;
+            if (value < max) {
+                input.val(value + 1);
+                updateTotalPrice();
+            }
         });
         
         // Quantity decrement

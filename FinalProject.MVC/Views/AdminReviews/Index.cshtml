@@ -1,0 +1,45 @@
+@model IReadOnlyList<ProductReviewDto>
+@{
+    Layout = "_AdminLayout";
+    var names = ViewBag.ProductNames as IReadOnlyDictionary<int, string> ?? new Dictionary<int, string>();
+}
+<h1 class="h3 mb-4">Reviews</h1>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (ViewData["ReviewServiceUnavailable"] as bool? == true)
+{
+    <div class="alert alert-warning">The review service is unavailable.</div>
+}
+<div class="admin-card">
+    <table class="table">
+        <thead><tr><th>Product</th><th>Customer</th><th>Review</th><th>Hidden</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var review in Model)
+        {
+            <tr>
+                <td>@names.GetValueOrDefault(review.ProductId, $"Product #{review.ProductId}")</td>
+                <td>@review.UserDisplayName</td>
+                <td>@review.Content</td>
+                <td>@(review.IsHidden ? "Yes" : "No")</td>
+                <td>
+                    <form asp-action="Hide" asp-route-id="@review.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="hidden" value="@(!review.IsHidden)" />
+                        <button class="btn btn-link p-0" type="submit">@(review.IsHidden ? "Show" : "Hide")</button>
+                    </form>
+                    <form asp-action="Delete" asp-route-id="@review.Id" method="post" class="d-inline" onsubmit="return confirm('Remove this review?');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-link text-danger p-0" type="submit">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

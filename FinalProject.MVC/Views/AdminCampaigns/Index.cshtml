@@ -1,0 +1,41 @@
+@model IReadOnlyList<ProductCampaign>
+@{
+    Layout = "_AdminLayout";
+}
+<div class="d-flex justify-content-between mb-4">
+    <h1 class="h3">Campaigns</h1>
+    <a class="btn btn-primary" asp-action="Create">New campaign</a>
+</div>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+<div class="admin-card">
+    <p>A campaign is shown only while it is active and the current time is inside its start and end dates. Regular product prices stay unchanged.</p>
+    <table class="table">
+        <thead>
+            <tr><th>Name</th><th>Product</th><th>Offer</th><th>Window (UTC)</th><th>Active</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var campaign in Model)
+        {
+            var visible = campaign.IsActive && DateTime.UtcNow >= campaign.StartsAt && DateTime.UtcNow < campaign.EndsAt;
+            <tr>
+                <td>@campaign.Name @(visible ? "(showing)" : "")</td>
+                <td>@(campaign.Product?.Name ?? $"Product #{campaign.ProductId}")</td>
+                <td>@(campaign.DiscountedPrice.HasValue ? campaign.DiscountedPrice.Value.ToString("C") : campaign.DiscountPercent + "%")</td>
+                <td>@campaign.StartsAt.ToString("yyyy-MM-dd") – @campaign.EndsAt.ToString("yyyy-MM-dd")</td>
+                <td>@(campaign.IsActive ? "Yes" : "No")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@campaign.Id">Edit</a>
+                    <form asp-action="Active" asp-route-id="@campaign.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="isActive" value="@(!campaign.IsActive)" />
+                        <button class="btn btn-link p-0" type="submit">@(campaign.IsActive ? "Deactivate" : "Activate")</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
