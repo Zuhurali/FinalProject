@@ -1,8 +1,8 @@
-@{
+﻿@{
     ViewData["Title"] = "Shop - AutoVault";
     var products = ViewData["ShopProducts"] as IReadOnlyList<ShopProduct> ?? Array.Empty<ShopProduct>();
-    var latest = products.OrderByDescending(product => product.Id).Take(6).ToList();
-    var popular = products.OrderByDescending(product => product.RatingCount).ThenByDescending(product => product.Rating).Take(6).ToList();
+    var latest = products.OrderByDescending(product => product.Id).Take(8).ToList();
+    var popular = products.OrderByDescending(product => product.RatingCount).ThenByDescending(product => product.Rating).Take(8).ToList();
     var categories = products.Select(product => product.Category).Where(category => !string.IsNullOrWhiteSpace(category)).Distinct().OrderBy(category => category).ToList();
     var campaign = ViewData["FeaturedCampaign"] as ProductCampaign;
 }
@@ -10,7 +10,7 @@
             <section class="showroom-demo-hero">
                 <div class="container">
                     <div class="showroom-hero">
-                        <img class="showroom-hero__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes-hero.jpg" width="2560" height="1440" fetchpriority="high" alt="Grey BMW coupe and black Mercedes sedan in the AutoVault showroom">
+                        <img class="showroom-hero__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes-hero.jpg" width="2048" height="1364" fetchpriority="high" alt="Grey BMW coupe and black Mercedes sedan in the AutoVault showroom">
                         <div class="showroom-hero__content">
                             <p class="showroom-hero__eyebrow">Babek Prospekti 22–24, Baku</p>
                             <h1 class="showroom-hero__title">Used Cars and Parts in Baku</h1>
@@ -443,7 +443,7 @@
                                             </div>
                                             <div id="item__four" class="accordion-collapse collapse" aria-labelledby="four" data-bs-parent="#rts-accordion">
                                                 <div class="accordion-body">
-                                                    No. The site is for browsing prices and availability. A sale is completed at the showroom.
+                                                    No. You can send a purchase request from a product page, and the showroom will contact you to confirm availability. The item is not held, and the sale is completed at the showroom.
                                                 </div>
                                             </div>
                                         </div>

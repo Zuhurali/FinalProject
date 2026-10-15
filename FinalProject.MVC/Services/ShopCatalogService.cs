@@ -168,21 +168,21 @@ public sealed class ShopCatalogService : IShopCatalogService
             Part(4, "Micrometer with Check Ring", 790, 3, "14.webp", "Workshop Tools", "Outside micrometer, bore gauges, and check ring."),
             Part(5, "Exhaust Mufflers and Pipes", 270, 0, "15.webp", "Accessories", "Exhaust mufflers, pipes, and a turbo assembly. Fitment is not stated."),
             Part(6, "Machine Gear and Bearing", 699, 42, "16.webp", "Accessories", "Machine gear and bearing."),
-            Part(7, "Engine Assembly", 2490, 12, "parts/engine-assembly.webp", "Accessories", "Complete engine assembly. Vehicle application is not stated."),
-            Part(8, "Brake Caliper and Rotor", 549, 4, "parts/brake-caliper.webp", "Brakes", "Red brake caliper on a drilled rotor. Pad and vehicle fitment are not stated."),
-            Part(9, "Coilover Shock Absorber", 429, 31, "parts/coilover-shock.webp", "Accessories", "Coilover shock absorber with a red spring. Vehicle fitment is not stated."),
-            Part(10, "Pleated Engine Air Filter", 49, 16, "parts/air-filter.webp", "Air Filters", "Pleated engine air filter. Vehicle fitment is not stated."),
-            Part(11, "Spin-On Oil Filter", 28, 2, "parts/oil-filter.webp", "Oil Filters", "Spin-on oil filter. Vehicle fitment is not stated."),
-            Part(12, "Timing Belt", 89, 9, "parts/timing-belt.webp", "Accessories", "Engine timing belt. Vehicle fitment is not stated."),
-            Part(13, "Ball Bearing", 64, 1, "parts/ball-bearing.webp", "Accessories", "Ball bearing. Application is not stated."),
-            Part(14, "Bore Gauge Set", 340, 55, "parts/bore-gauge.webp", "Workshop Tools", "Bore gauge set for engine measurement."),
-            Part(15, "Precision Check Ring", 155, 0, "parts/check-ring.webp", "Workshop Tools", "Precision check ring for gauge setup."),
-            Part(16, "Turbocharger Assembly", 1290, 22, "parts/turbocharger.webp", "Accessories", "Turbocharger and exhaust housing. Vehicle fitment is not stated."),
-            Part(17, "Exhaust Muffler", 320, 6, "parts/exhaust-muffler.webp", "Accessories", "Exhaust muffler. Vehicle fitment is not stated."),
-            Part(18, "Exhaust Tip", 180, 5, "parts/exhaust-tip.webp", "Accessories", "Exhaust tip. Vehicle fitment is not stated."),
-            Part(19, "Splined Driveshaft", 260, 11, "parts/splined-shaft.webp", "Accessories", "Splined driveshaft. Vehicle fitment is not stated."),
-            Part(20, "Gear Shaft and Fastener Kit", 175, 0, "parts/gear-shaft.webp", "Accessories", "Gear shafts, nuts, and fasteners."),
-            Part(21, "Outside Micrometer", 220, 38, "parts/outside-micrometer.webp", "Workshop Tools", "Outside micrometer.")
+            Part(7, "Engine Assembly", 2490, 12, "parts/hd/engine-assembly.webp", "Accessories", "Complete engine assembly. Vehicle application is not stated."),
+            Part(8, "Brake Caliper and Rotor", 549, 4, "parts/hd/brake-caliper.webp", "Brakes", "Red brake caliper on a drilled rotor. Pad and vehicle fitment are not stated."),
+            Part(9, "Coilover Shock Absorber", 429, 31, "parts/hd/coilover-shock.webp", "Accessories", "Coilover shock absorber. Vehicle fitment is not stated."),
+            Part(10, "Pleated Engine Air Filter", 49, 16, "parts/hd/air-filter.webp", "Air Filters", "Pleated engine air filter. Vehicle fitment is not stated."),
+            Part(11, "Spin-On Oil Filter", 28, 2, "parts/hd/oil-filter.webp", "Oil Filters", "Spin-on oil filter. Vehicle fitment is not stated."),
+            Part(12, "Timing Belt", 89, 9, "parts/hd/timing-belt.webp", "Accessories", "Engine timing belt. Vehicle fitment is not stated."),
+            Part(13, "Ball Bearing", 64, 1, "parts/hd/ball-bearing.webp", "Accessories", "Ball bearing. Application is not stated."),
+            Part(14, "Bore Gauge Set", 340, 55, "parts/hd/bore-gauge.webp", "Workshop Tools", "Inside micrometer set for measuring engine bores."),
+            Part(15, "Precision Check Ring", 155, 0, "parts/hd/check-ring.webp", "Workshop Tools", "Precision ring gauge for checking threads and setting gauges."),
+            Part(16, "Turbocharger Assembly", 1290, 22, "parts/hd/turbocharger.webp", "Accessories", "Turbocharger and exhaust housing. Vehicle fitment is not stated."),
+            Part(17, "Exhaust Muffler", 320, 6, "parts/hd/exhaust-muffler.webp", "Accessories", "Exhaust muffler. Vehicle fitment is not stated."),
+            Part(18, "Exhaust Tip", 180, 5, "parts/hd/exhaust-tip.webp", "Accessories", "Exhaust tip. Vehicle fitment is not stated."),
+            Part(19, "Splined Driveshaft", 260, 11, "parts/hd/splined-shaft.webp", "Accessories", "Splined driveshaft. Vehicle fitment is not stated."),
+            Part(20, "Gear Shaft and Fastener Kit", 175, 0, "parts/hd/gear-shaft-fastener-kit.webp", "Accessories", "Gear shafts, nuts, and fasteners."),
+            Part(21, "Outside Micrometer", 220, 38, "parts/hd/outside-micrometer.webp", "Workshop Tools", "Outside micrometer.")
         ];
     }
 
@@ -380,6 +380,100 @@ public sealed class ShopCatalogService : IShopCatalogService
         }
 
         inquiry.IsHandled = handled;
+        await _db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _db.ShowroomPurchaseRequests.AsNoTracking()
+            .Include(request => request.Product)
+            .OrderBy(request => request.Status == ShowroomRequestStatus.New ? 0 : request.Status == ShowroomRequestStatus.Contacted ? 1 : 2)
+            .ThenByDescending(request => request.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PurchaseRequestResult> SavePurchaseRequestAsync(
+        ShowroomPurchaseRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.SubmissionKey != Guid.Empty)
+        {
+            var existing = await _db.ShowroomPurchaseRequests.AsNoTracking()
+                .FirstOrDefaultAsync(item => item.SubmissionKey == request.SubmissionKey, cancellationToken);
+            if (existing != null)
+            {
+                return PurchaseRequestResult.AlreadyReceived(existing.Id);
+            }
+        }
+
+        var product = await _db.ShopProducts.AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == request.ProductId, cancellationToken);
+        if (product == null)
+        {
+            return PurchaseRequestResult.Failed("Product not found.");
+        }
+
+        var error = ShowroomRequestRules.Validate(request, product.Quantity, DateTime.Now);
+        if (error != null)
+        {
+            return PurchaseRequestResult.Failed(error);
+        }
+
+        var email = request.Email.ToLower();
+        var openRequest = await _db.ShowroomPurchaseRequests.AsNoTracking()
+            .Where(item => item.ProductId == request.ProductId &&
+                           item.Email.ToLower() == email &&
+                           (item.Status == ShowroomRequestStatus.New || item.Status == ShowroomRequestStatus.Contacted))
+            .OrderByDescending(item => item.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (openRequest != null)
+        {
+            return PurchaseRequestResult.Failed(
+                $"You already have an open request (#{openRequest.Id}) for this product. The showroom will contact you about it.");
+        }
+
+        request.Id = 0;
+        request.Product = null;
+        request.Status = ShowroomRequestStatus.New;
+        request.CreatedAt = DateTime.UtcNow;
+        request.UpdatedAt = null;
+        _db.ShowroomPurchaseRequests.Add(request);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            _db.ChangeTracker.Clear();
+            var saved = await _db.ShowroomPurchaseRequests.AsNoTracking()
+                .FirstOrDefaultAsync(item => item.SubmissionKey == request.SubmissionKey, cancellationToken);
+            if (saved != null)
+            {
+                return PurchaseRequestResult.AlreadyReceived(saved.Id);
+            }
+
+            throw;
+        }
+
+        return PurchaseRequestResult.Created(request.Id);
+    }
+
+    public async Task<bool> SetPurchaseRequestStatusAsync(int id, string status, CancellationToken cancellationToken = default)
+    {
+        if (!ShowroomRequestStatus.All.Contains(status))
+        {
+            return false;
+        }
+
+        var request = await _db.ShowroomPurchaseRequests.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (request == null)
+        {
+            return false;
+        }
+
+        request.Status = status;
+        request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
         return true;
     }

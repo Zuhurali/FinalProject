@@ -2,15 +2,6 @@
 @{
     ViewData["Title"] = "Shop - AutoVault";
 }
-@functions {
-    private static string StockClass(string status) => status switch
-    {
-        "Out of Stock" => "stock-line--out",
-        "Low Stock" => "stock-line--low",
-        _ => "stock-line--in"
-    };
-}
-
 <!-- Breadcrumb area start -->
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
@@ -79,76 +70,27 @@
                 <button type="button" class="rts-btn btn-primary radius-big" id="apply-search">Search</button>
             </div>
         </div>
-        <div class="row g-5" id="products-container">
+        <div class="av-grid" id="products-container">
             @foreach (var product in Model.Products)
             {
-                <div class="col-lg-4 col-md-6 d-flex">
-                    <div class="project-wrapper4 showroom-card">
-                        <div class="image-area">
-                            <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">
-                                <img src="@Url.Content(product.ImagePath)" alt="@product.Name">
-                            </a>
-                        </div>
-                        <div class="content-area">
-                            <ul class="star-rating">
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    if (i <= Math.Floor(product.Rating))
-                                    {
-                                        <li><i class="rt-icon-star"></i></li>
-                                    }
-                                    else if (i <= product.Rating)
-                                    {
-                                        <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
-                                    }
-                                    else
-                                    {
-                                        <li><i class="rt-icon-star" style="color: #ddd;"></i></li>
-                                    }
-                                }
-                            </ul>
-                            <p class="product-rating-summary">
-                                @(product.RatingCount == 0
-                                    ? "No ratings"
-                                    : $"{product.Rating:0.0} ({product.RatingCount} reviews)")
-                            </p>
-                            <h6 class="title">
-                                <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id">@product.Name</a>
-                            </h6>
-                            <p class="stock-line @StockClass(product.StockStatus)">@product.StockStatus · @product.Quantity available</p>
-                            <div class="button-area">
-                                <p class="price-line">
-                                    @if (product.HasOffer)
-                                    {
-                                        <s class="price-was">$@product.Price.ToString("0.00")</s>
-                                        @:$@product.SalePrice.ToString("0.00")
-                                    }
-                                    else
-                                    {
-                                        @:$@product.Price.ToString("0.00")
-                                    }
-                                </p>
-                                <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id" asp-fragment="ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <partial name="_ProductCard" model="product" />
             }
         </div>
-        @if (Model.HasMorePages)
-        {
-            <div class="load-more-container" style="text-align: center; margin-top: 50px;">
-                <a href="#" class="rts-btn load-more-btn btn-border" id="load-more-btn">Load More</a>
-            </div>
-        }
+        <p class="av-empty" id="products-empty" @(Model.TotalProducts == 0 ? "" : "hidden")>No parts match this search. Try another word or clear the filters.</p>
+        <div class="load-more-container av-load-more" @(Model.HasMorePages ? "" : "hidden")>
+            <button type="button" class="rts-btn btn-border radius-big" id="load-more-btn">Load more parts</button>
+        </div>
     </div>
 </div>
 
 @section Scripts {
 <script>
     $(document).ready(function() {
+        const pageSize = @FinalProject.MVC.Controllers.ShopController.CatalogPageSize;
+        const initialSearch = @Json.Serialize(ViewData["Search"] as string ?? "");
+        const initialCategory = @Json.Serialize(ViewData["Category"] as string ?? "");
         let currentPage = @Model.CurrentPage;
-        let isFiltering = @((!string.IsNullOrWhiteSpace(ViewData["Search"] as string) || !string.IsNullOrWhiteSpace(ViewData["Category"] as string)).ToString().ToLower());
+        let isFiltering = false;
 
         function filterPayload(page) {
             return {
@@ -157,7 +99,7 @@
                 priceRange: $('#priceRange').val(),
                 sortBy: $('#sortBy').val(),
                 page: page,
-                pageSize: 6
+                pageSize: pageSize
             };
         }
 
@@ -202,7 +144,12 @@
                 $.ajax({
                     url: '@Url.Action("LoadMore", "Shop")',
                     type: 'POST',
-                    data: { page: currentPage + 1, pageSize: 6 },
+                    data: {
+                        page: currentPage + 1,
+                        pageSize: pageSize,
+                        search: initialSearch,
+                        category: initialCategory
+                    },
                     success: function(response) {
                         updateProductsContainer(response, true);
                         if (response.resultsText) updateResultsText(response.resultsText);
@@ -228,6 +175,7 @@
             } else {
                 $('#products-container').html(html);
             }
+            $('#products-empty').prop('hidden', response.totalProducts !== 0);
         }
 
         function escapeHtml(value) {
@@ -235,49 +183,59 @@
         }
 
         // Function to generate product HTML
+        // Mirrors Views/Shared/_ProductCard.cshtml.
         function generateProductHtml(product) {
+            const rating = Number(product.rating) || 0;
             let starsHtml = '';
             for (let i = 1; i <= 5; i++) {
-                if (i <= Math.floor(product.rating)) {
+                if (i <= Math.floor(rating)) {
                     starsHtml += '<li><i class="rt-icon-star"></i></li>';
-                } else if (i <= product.rating) {
+                } else if (i <= rating + 0.5) {
                     starsHtml += '<li><i class="rt-icon-star-sharp-half-stroke"></i></li>';
                 } else {
-                    starsHtml += '<li><i class="rt-icon-star" style="color: #ddd;"></i></li>';
+                    starsHtml += '<li class="is-empty"><i class="rt-icon-star"></i></li>';
                 }
             }
-            const stockClass = product.stockStatus === 'Out of Stock'
-                ? 'stock-line--out'
-                : product.stockStatus === 'Low Stock' ? 'stock-line--low' : 'stock-line--in';
+            const quantity = Number(product.quantity) || 0;
+            const stockModifier = product.stockStatus === 'Out of Stock' ? 'out' : product.stockStatus === 'Low Stock' ? 'low' : 'in';
+            const stockText = quantity <= 0
+                ? 'Out of stock'
+                : product.stockStatus === 'Low Stock' ? `Low stock · ${quantity} left` : `In stock · ${quantity} available`;
             const money = value => '$' + Number(value).toFixed(2);
-            const ratingSummary = product.ratingCount === 0
-                ? 'No ratings'
-                : Number(product.rating).toFixed(1) + ' (' + product.ratingCount + ' reviews)';
-
-            // Convert ~ path to relative path for client-side use
-            let imagePath = product.imagePath;
-            if (imagePath.startsWith('~/')) {
-                imagePath = imagePath.substring(1); // Remove the ~ and keep /assets/...
-            }
+            const ratingText = product.ratingCount === 0 ? 'No ratings yet' : `${rating.toFixed(1)} (${product.ratingCount})`;
+            const ratingLabel = product.ratingCount === 0 ? 'No ratings yet' : `Rated ${rating.toFixed(1)} out of 5 from ${product.ratingCount} ratings`;
+            const detailsUrl = '/Shop/Details/' + encodeURIComponent(product.id);
+            const imagePath = String(product.imagePath || '').replace(/^~\//, '/');
+            const badge = quantity <= 0
+                ? '<span class="av-card__badge av-card__badge--out">Out of stock</span>'
+                : product.hasOffer ? `<span class="av-card__badge av-card__badge--offer">${Number(product.discountPercent)}% off</span>` : '';
+            const price = product.hasOffer
+                ? `<s>${money(product.price)}</s> <span>${money(product.salePrice)}</span>`
+                : `<span>${money(product.price)}</span>`;
+            const cta = quantity > 0
+                ? `<a class="av-card__cta" href="${detailsUrl}#request-to-buy">Request to Buy</a>`
+                : `<a class="av-card__cta av-card__cta--ghost" href="${detailsUrl}">View details</a>`;
 
             return `
-                <div class="col-lg-4 col-md-6 d-flex">
-                    <div class="project-wrapper4 showroom-card">
-                        <div class="image-area">
-                            <a href="/Shop/Details/${product.id}"><img src="${imagePath}" alt="${escapeHtml(product.name)}"></a>
+                <article class="av-card">
+                    <a class="av-card__media" href="${detailsUrl}" tabindex="-1" aria-hidden="true">
+                        <img src="${escapeHtml(imagePath)}" alt="" width="800" height="600" loading="lazy" decoding="async">
+                        ${badge}
+                    </a>
+                    <div class="av-card__body">
+                        <p class="av-card__category">${escapeHtml(product.category)}</p>
+                        <h3 class="av-card__title"><a href="${detailsUrl}">${escapeHtml(product.name)}</a></h3>
+                        <div class="av-card__rating" aria-label="${ratingLabel}">
+                            <ul class="av-card__stars" aria-hidden="true">${starsHtml}</ul>
+                            <span>${ratingText}</span>
                         </div>
-                        <div class="content-area">
-                            <ul class="star-rating">${starsHtml}</ul>
-                            <p class="product-rating-summary">${ratingSummary}</p>
-                            <h6 class="title"><a href="/Shop/Details/${product.id}">${escapeHtml(product.name)}</a></h6>
-                            <p class="stock-line ${stockClass}">${escapeHtml(product.stockStatus)} · ${product.quantity} available</p>
-                            <div class="button-area">
-                                <p class="price-line">${product.hasOffer ? '<s class="price-was">' + money(product.price) + '</s> ' + money(product.salePrice) : money(product.price)}</p>
-                                <a href="/Shop/Details/${product.id}#ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
-                            </div>
+                        <p class="av-card__stock av-card__stock--${stockModifier}">${stockText}</p>
+                        <div class="av-card__footer">
+                            <p class="av-card__price">${price}</p>
+                            ${cta}
                         </div>
                     </div>
-                </div>
+                </article>
             `;
         }
 
@@ -288,11 +246,7 @@
 
         // Function to update load more button
         function updateLoadMoreButton(hasMorePages) {
-            if (hasMorePages) {
-                $('.load-more-container').show();
-            } else {
-                $('.load-more-container').hide();
-            }
+            $('.load-more-container').prop('hidden', !hasMorePages);
         }
 
         // Event handlers for filters

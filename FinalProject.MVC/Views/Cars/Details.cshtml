@@ -11,7 +11,41 @@
     var relatedCars = ViewData["RelatedCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     var isOwner = !string.IsNullOrWhiteSpace(Model.OwnerId) && Model.OwnerId == currentUserId;
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+    var favoriteUnavailable = ViewData["FavoriteServiceUnavailable"] as bool? == true;
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var mileageText = $"{Model.Mileage:N0} Miles";
+    var isElectric = string.Equals(Model.Fuel, "Electric", StringComparison.OrdinalIgnoreCase);
+    var engineLabel = isElectric ? "Motor" : "Engine";
+    var listedOn = Model.CreatedAt.Year >= 2000 ? Model.CreatedAt.ToString("MMM dd, yyyy") : string.Empty;
+
+    var overview = new List<(string Icon, string Label, string Value)>();
+    if (!string.IsNullOrWhiteSpace(Model.Category)) overview.Add(("09", "Car Type", Model.Category));
+    overview.Add(("10", "Mileage", mileageText));
+    if (!string.IsNullOrWhiteSpace(Model.Fuel)) overview.Add(("11", "Fuel Type", Model.Fuel));
+    if (!string.IsNullOrWhiteSpace(Model.Transmission)) overview.Add(("12", "Transmission", Model.Transmission));
+    if (Model.Seats > 0) overview.Add(("13", "Seating Capacity", $"{Model.Seats} seats"));
+    if (!string.IsNullOrWhiteSpace(Model.DriveType)) overview.Add(("14", "Drive Type", Model.DriveType));
+    if (!string.IsNullOrWhiteSpace(Model.Engine)) overview.Add(("15", engineLabel, Model.Engine));
+    if (!string.IsNullOrWhiteSpace(Model.Color)) overview.Add(("16", "Color", Model.Color));
+
+    var keySpecs = new List<(string Value, string Label)>();
+    if (!string.IsNullOrWhiteSpace(Model.Transmission)) keySpecs.Add((Model.Transmission, "Transmission"));
+    if (Model.Year > 0) keySpecs.Add((Model.Year.ToString(), "Model Year"));
+    if (!string.IsNullOrWhiteSpace(Model.Fuel)) keySpecs.Add((Model.Fuel, "Fuel Type"));
+    keySpecs.Add((mileageText, "Mileage"));
+    if (Model.Seats > 0) keySpecs.Add(($"{Model.Seats} seats", "Seating"));
+    if (!string.IsNullOrWhiteSpace(Model.Color)) keySpecs.Add((Model.Color, "Exterior Color"));
+
+    var engineRows = new List<(string Label, string Value)>();
+    if (!string.IsNullOrWhiteSpace(Model.Make)) engineRows.Add(("Make", Model.Make));
+    if (!string.IsNullOrWhiteSpace(Model.Model)) engineRows.Add(("Model", Model.Model));
+    if (!string.IsNullOrWhiteSpace(Model.Category)) engineRows.Add(("Category", Model.Category));
+    if (!string.IsNullOrWhiteSpace(Model.Engine)) engineRows.Add((engineLabel, Model.Engine));
+    if (!string.IsNullOrWhiteSpace(Model.DriveType)) engineRows.Add(("Drive Type", Model.DriveType));
 }
+
+<link rel="stylesheet" href="~/css/car-details.css" asp-append-version="true">
 
 <div class="rts-breadcrumb-area portfolio details vehicle-details-hero" style="--vehicle-image: url('@Url.Content(Model.ImagePath)');">
     <div class="container">
@@ -21,69 +55,76 @@
                 <ul class="feature-area">
                     <li>
                         <img src="~/assets/images/portfolio/feature-icon/05.svg" alt="">
-                        @Model.Mileage.ToString("N0") Miles
+                        @mileageText
                     </li>
-                    <li>
-                        <img src="~/assets/images/portfolio/feature-icon/06.svg" alt="">
-                        @Model.Fuel
-                    </li>
-                    <li>
-                        <img src="~/assets/images/portfolio/feature-icon/07.svg" alt="">
-                        @Model.Transmission
-                    </li>
-                    <li>
-                        <img src="~/assets/images/portfolio/feature-icon/08.svg" alt="">
-                        @(Model.Seats > 0 ? $"{Model.Seats} Person" : "—")
-                    </li>
+                    @if (!string.IsNullOrWhiteSpace(Model.Fuel))
+                    {
+                        <li>
+                            <img src="~/assets/images/portfolio/feature-icon/06.svg" alt="">
+                            @Model.Fuel
+                        </li>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Transmission))
+                    {
+                        <li>
+                            <img src="~/assets/images/portfolio/feature-icon/07.svg" alt="">
+                            @Model.Transmission
+                        </li>
+                    }
+                    @if (Model.Seats > 0)
+                    {
+                        <li>
+                            <img src="~/assets/images/portfolio/feature-icon/08.svg" alt="">
+                            @Model.Seats seats
+                        </li>
+                    }
                 </ul>
             </div>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Cars</a>
+                <a asp-controller="Cars" asp-action="Index" class="current">Cars</a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="rts-portfolio-area inner rts-section-gapNew">
+<div class="rts-portfolio-area inner rts-section-gapNew av-car-details">
     <div class="container">
         <div class="row g-5">
             <div class="col-lg-8">
                 <div class="portfolio-details-area">
-                    <div class="portfolio-slider-area vertical details mb--40">
-                        <div class="swiper rts-heroSlider2">
-                            <div class="swiper-wrapper">
-                                @foreach (var slide in slides)
-                                {
-                                    <div class="swiper-slide">
-                                        <div class="image"><img src="@Url.Content(slide)" alt="@Model.Name" data-gallery-image></div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                        <div class="pagination-area mt_md--30 mt_sm--30">
-                            <div class="swiper SlideThumb2">
-                                <div class="swiper-wrapper">
-                                    @foreach (var slide in slides)
+                    @if (slides.Count > 0)
+                    {
+                        <section class="portfolio-slider-area vertical details av-gallery" data-car-gallery aria-label="@Model.Name photos">
+                            <button type="button" class="av-gallery__main" data-gallery-open aria-label="Open photo 1 of @slides.Count full size">
+                                <img src="@Url.Content(slides[0])" alt="@Model.Name, photo 1 of @slides.Count" data-gallery-main>
+                            </button>
+                            @if (slides.Count > 1)
+                            {
+                                <div class="av-gallery__thumbs">
+                                    @for (var index = 0; index < slides.Count; index++)
                                     {
-                                        <div class="swiper-slide">
-                                            <div class="single-thumb">
-                                                <div class="thumbnail">
-                                                    <img src="@Url.Content(slide)" alt="@Model.Name" data-gallery-image>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <button type="button"
+                                                class="av-gallery__thumb@(index == 0 ? " is-active" : string.Empty)"
+                                                data-gallery-thumb
+                                                data-index="@index"
+                                                data-src="@Url.Content(slides[index])"
+                                                aria-label="Show photo @(index + 1) of @slides.Count"
+                                                aria-pressed="@(index == 0 ? "true" : "false")">
+                                            <img src="@Url.Content(slides[index])" alt="">
+                                        </button>
                                     }
                                 </div>
-                            </div>
-                            <div class="thumb-controls">
-                                <button class="thumb-prev"><i class="fa-solid fa-chevron-up"></i></button>
-                                <button class="thumb-next"><i class="fa-solid fa-chevron-down"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <h2 class="mb--30">Car Description</h2>
-                    <p class="mb--30">@Model.Description</p>
+                            }
+                        </section>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Description))
+                    {
+                        <h2 class="mb--30">Car Description</h2>
+                        <p class="mb--30">@Model.Description</p>
+                    }
+
                     <h2 class="mb--30">Car Features</h2>
                     <ul class="feature-list mb--40">
                         <li><i class="fa-regular fa-circle-check"></i> Engine Type</li>
@@ -94,99 +135,43 @@
                         <li><i class="fa-regular fa-circle-check"></i> Fog Lights</li>
                         <li><i class="fa-regular fa-circle-check"></i> Start-Stop Technology</li>
                         <li><i class="fa-regular fa-circle-check"></i> Automatic Headlights</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Navigation System</li>
                     </ul>
-                    <h2 class="mb--30">Key Specs</h2>
-                    <ul class="specs-list mb--40">
-                        <li>
-                            <span class="number">1</span>
-                            <div class="text">
-                                <h6>@Model.Transmission</h6>
-                                <p>Transmission</p>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="number">2</span>
-                            <div class="text">
-                                <h6>@Model.Year</h6>
-                                <p>Model Year</p>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="number">3</span>
-                            <div class="text">
-                                <h6>@Model.Fuel</h6>
-                                <p>Fuel Type</p>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="number">4</span>
-                            <div class="text">
-                                <h6>@Model.Mileage.ToString("N0") Miles</h6>
-                                <p>Mileage</p>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="number">5</span>
-                            <div class="text">
-                                <h6>@(Model.Seats > 0 ? $"{Model.Seats} Person" : "—")</h6>
-                                <p>Seating</p>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="number">6</span>
-                            <div class="text">
-                                <h6>@Model.Color</h6>
-                                <p>Exterior Color</p>
-                            </div>
-                        </li>
-                    </ul>
-                    <h2 class="mb--30">Car Engine </h2>
-                    <ul class="feature-list2 mb--30">
-                        <li>
-                            <i class="fa-regular fa-circle-check"></i>
-                            <div class="text">
-                                <p>Make</p>
-                                <p>@Model.Make</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fa-regular fa-circle-check"></i>
-                            <div class="text">
-                                <p>Model</p>
-                                <p>@Model.Model</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fa-regular fa-circle-check"></i>
-                            <div class="text">
-                                <p>Category</p>
-                                <p>@Model.Category</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fa-regular fa-circle-check"></i>
-                            <div class="text">
-                                <p>Drive Type</p>
-                                <p>@(string.IsNullOrWhiteSpace(Model.DriveType) ? "—" : Model.DriveType)</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fa-regular fa-circle-check"></i>
-                            <div class="text">
-                                <p>Year</p>
-                                <p>@Model.Year</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fa-regular fa-circle-check"></i>
-                            <div class="text">
-                                <p>Fuel</p>
-                                <p>@Model.Fuel</p>
-                            </div>
-                        </li>
-                    </ul>
-                    <div class="message-form mb--100" id="carMessageForm">
+
+                    @if (keySpecs.Count > 0)
+                    {
+                        <h2 class="mb--30">Key Specs</h2>
+                        <ul class="specs-list mb--40">
+                            @for (var index = 0; index < keySpecs.Count; index++)
+                            {
+                                <li>
+                                    <span class="number">@(index + 1)</span>
+                                    <div class="text">
+                                        <h6>@keySpecs[index].Value</h6>
+                                        <p>@keySpecs[index].Label</p>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    @if (engineRows.Count > 0)
+                    {
+                        <h2 class="mb--30">Car Engine</h2>
+                        <ul class="feature-list2 mb--40">
+                            @foreach (var row in engineRows)
+                            {
+                                <li>
+                                    <i class="fa-regular fa-circle-check"></i>
+                                    <div class="text">
+                                        <p>@row.Label</p>
+                                        <p>@row.Value</p>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <div class="message-form mb--60" id="carMessageForm">
                         <h2>Contact Seller</h2>
                         @if (TempData["Error"] != null)
                         {
@@ -194,20 +179,20 @@
                         }
                         @if (string.IsNullOrWhiteSpace(Model.OwnerId))
                         {
-                            <p>This vehicle is offered by the AutoVault showroom. Call or email the showroom for availability and pricing.</p>
+                            <p>This vehicle is offered by the AutoVault showroom in Baku. Call or email the showroom for availability and pricing.</p>
                             <div class="contact-button-area">
                                 <a href="tel:+994503546767" class="rts-btn radius-small telegram"><img src="~/assets/images/cta/call.svg" alt=""> +994 50 354 67 67</a>
-                                <a href="mailto:info@autovault.com" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> info@autovault.com</a>
+                                <a href="mailto:Autovault@gmail.com" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Autovault@gmail.com</a>
                             </div>
                         }
                         else if (isOwner)
                         {
                             <div class="alert alert-info">This is your listing. Messages from buyers will appear in your account.</div>
                         }
-                        else if (User.Identity?.IsAuthenticated != true)
+                        else if (!isSignedIn)
                         {
                             <p>Please sign in to contact the seller.</p>
-                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path" class="rts-btn btn-primary radius-small">Sign In</a>
+                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@returnUrl" class="rts-btn btn-primary radius-small">Sign In</a>
                         }
                         else
                         {
@@ -219,74 +204,95 @@
                             </form>
                         }
                     </div>
-                    <div class="related-project">
-                        <h3 class="mb--40 text-center">Related listings</h3>
-                        <div class="row g-5">
-                            @foreach (var relatedCar in relatedCars)
-                            {
-                                <div class="col-lg-6">
-                                    <div class="project-wrapper2">
-                                        <div class="image-area">
-                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id"><img src="@Url.Content(relatedCar.ImagePath)" alt="@relatedCar.Name"></a>
-                                            <span class="tag">@relatedCar.Badge</span>
-                                            <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                            <a href="@Url.Content(relatedCar.ImagePath)" class="gallery-image">
-                                                <img src="~/assets/images/icon/image.svg" alt="">
-                                                @relatedCar.ImageCount
-                                            </a>
-                                        </div>
-                                        <span class="price">$@relatedCar.Price.ToString("N0")</span>
-                                        <div class="content-area">
-                                            <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id">@relatedCar.Name</a></h6>
-                                            <ul class="feature-area">
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                    @relatedCar.Mileage.ToString("N0") Miles
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                    @relatedCar.Fuel
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                    @relatedCar.Transmission
-                                                </li>
-                                            </ul>
-                                            <div class="button-area">
-                                                <p class="">$@relatedCar.Price.ToString("N0")</p>
-                                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id" class="rts-btn btn-primary radius-small">View Details</a>
+
+                    @if (relatedCars.Count > 0)
+                    {
+                        <div class="related-project">
+                            <h3 class="mb--40 text-center">Related listings</h3>
+                            <div class="row g-5">
+                                @foreach (var relatedCar in relatedCars)
+                                {
+                                    <div class="col-md-6">
+                                        <div class="project-wrapper2">
+                                            <div class="image-area">
+                                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id"><img src="@Url.Content(relatedCar.ImagePath)" alt="@relatedCar.Name"></a>
+                                                <span class="tag">@relatedCar.Badge</span>
+                                            </div>
+                                            <span class="price">$@relatedCar.Price.ToString("N0")</span>
+                                            <div class="content-area">
+                                                <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id">@relatedCar.Name</a></h6>
+                                                <ul class="feature-area">
+                                                    <li>
+                                                        <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                                        @relatedCar.Mileage.ToString("N0") Miles
+                                                    </li>
+                                                    <li>
+                                                        <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                                        @relatedCar.Fuel
+                                                    </li>
+                                                    <li>
+                                                        <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                                        @relatedCar.Transmission
+                                                    </li>
+                                                </ul>
+                                                <div class="button-area">
+                                                    <p class="">$@relatedCar.Price.ToString("N0")</p>
+                                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@relatedCar.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            }
+                                }
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="sticky-top">
+                <div class="sticky-top av-sidebar">
                     <div class="left-side-bar">
                         <div class="price-area side-box">
                             <h5>$@Model.Price.ToString("N0")</h5>
                             <ul class="price-meta">
-                                <li><img src="~/assets/images/portfolio/calender.svg" alt=""> Feb 23, 2025</li>
-                                <li><img src="~/assets/images/portfolio/view.svg" alt=""> View</li>
+                                @if (!string.IsNullOrWhiteSpace(listedOn))
+                                {
+                                    <li><img src="~/assets/images/portfolio/calender.svg" alt=""> @listedOn</li>
+                                }
                                 <li>
-                                    @if (User.Identity?.IsAuthenticated == true)
+                                    @if (isSignedIn)
                                     {
-                                        <form asp-action="@(Model.IsFavorite ? "RemoveFavorite" : "AddFavorite")" asp-route-id="@Model.Id" method="post">
+                                        <form method="post"
+                                              class="av-favorite"
+                                              asp-action="@(Model.IsFavorite ? "RemoveFavorite" : "AddFavorite")"
+                                              asp-route-id="@Model.Id"
+                                              data-favorite-form
+                                              data-add-url="@Url.Action("AddFavorite", "Cars", new { id = Model.Id })"
+                                              data-remove-url="@Url.Action("RemoveFavorite", "Cars", new { id = Model.Id })">
                                             @Html.AntiForgeryToken()
-                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path">
-                                            <button type="submit" class="favorite-action"><i class="@(Model.IsFavorite ? "fa-solid" : "fa-regular") fa-heart"></i> @(Model.IsFavorite ? "Saved" : "Favourite")</button>
+                                            <input type="hidden" name="returnUrl" value="@returnUrl">
+                                            <button type="submit"
+                                                    class="av-favorite__button@(Model.IsFavorite ? " is-active" : string.Empty)"
+                                                    aria-pressed="@(Model.IsFavorite ? "true" : "false")"
+                                                    title="@(Model.IsFavorite ? "Remove this car from your favourites" : "Save this car to your favourites")"
+                                                    data-favorite-button
+                                                    @(favoriteUnavailable ? "disabled" : null)>
+                                                <i class="@(Model.IsFavorite ? "fa-solid" : "fa-regular") fa-heart" aria-hidden="true" data-favorite-icon></i>
+                                                <span data-favorite-label>@(Model.IsFavorite ? "Saved" : "Favourite")</span>
+                                            </button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path">Favourite</a>
+                                        <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@returnUrl"
+                                           class="av-favorite__button"
+                                           title="Sign in to save this car to your favourites">
+                                            <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                                            <span>Favourite</span>
+                                        </a>
                                     }
                                 </li>
                             </ul>
+                            <p class="av-favorite__status" role="status" aria-live="polite" data-favorite-status>@(favoriteUnavailable ? "Favourites are temporarily unavailable." : TempData["FavoriteError"])</p>
                             <div class="price-btn">
                                 @if (string.IsNullOrWhiteSpace(Model.OwnerId))
                                 {
@@ -300,63 +306,17 @@
                         </div>
                         <div class="overview side-box">
                             <h2>Car Overview</h2>
-                            <ul class="feature-list2">
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/09.svg" alt="">
-                                    <div class="text">
-                                        <p>Car Type</p>
-                                        <p>@Model.Category</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/10.svg" alt="">
-                                    <div class="text">
-                                        <p>Mileage</p>
-                                        <p>@Model.Mileage.ToString("N0") Miles</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/11.svg" alt="">
-                                    <div class="text">
-                                        <p>Fuel Type</p>
-                                        <p>@Model.Fuel</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/12.svg" alt="">
-                                    <div class="text">
-                                        <p>Transmission</p>
-                                        <p>@Model.Transmission</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/13.svg" alt="">
-                                    <div class="text">
-                                        <p>Person</p>
-                                        <p>@(Model.Seats > 0 ? $"{Model.Seats} Person" : "—")</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/14.svg" alt="">
-                                    <div class="text">
-                                        <p>Drive Type</p>
-                                        <p>@(string.IsNullOrWhiteSpace(Model.DriveType) ? "—" : Model.DriveType)</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/15.svg" alt="">
-                                    <div class="text">
-                                        <p>Engine</p>
-                                        <p>@Model.Model</p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <img src="~/assets/images/portfolio/feature-icon/16.svg" alt="">
-                                    <div class="text">
-                                        <p>Color</p>
-                                        <p>@Model.Color</p>
-                                    </div>
-                                </li>
+                            <ul>
+                                @foreach (var row in overview)
+                                {
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/@(row.Icon).svg" alt="">
+                                        <div class="text">
+                                            <p>@row.Label</p>
+                                            <p>@row.Value</p>
+                                        </div>
+                                    </li>
+                                }
                             </ul>
                         </div>
                         <div class="map-area side-box">
@@ -369,9 +329,9 @@
                                 @if (string.IsNullOrWhiteSpace(Model.OwnerId))
                                 {
                                     <h5>AutoVault Showroom</h5>
-                                    <p>Catalog listing. Contact the Baku showroom.</p>
+                                    <p>Babek Prospekti 22–24, Baku, Azerbaijan</p>
                                     <p><a href="tel:+994503546767">+994 50 354 67 67</a></p>
-                                    <p><a href="mailto:info@autovault.com">info@autovault.com</a></p>
+                                    <p><a href="mailto:Autovault@gmail.com">Autovault@gmail.com</a></p>
                                     <div class="contact-button-area">
                                         <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-small telegram">Contact showroom</a>
                                     </div>
@@ -388,14 +348,6 @@
                                     }
                                 }
                             </div>
-                        </div>
-                        <div class="social-area side-box">
-                            <h2>Share</h2>
-                            <ul>
-                                <li><i class="fa-brands fa-facebook-f"></i></li>
-                                <li><i class="fa-brands fa-twitter"></i></li>
-                                <li><i class="fa-brands fa-instagram"></i></li>
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -420,15 +372,23 @@
     </div>
 </div>
 
-<style>.favorite-action{border:0;background:transparent;padding:0;color:inherit}</style>
+@if (slides.Count > 0)
+{
+    <div id="vehicle-lightbox" class="vehicle-lightbox" role="dialog" aria-modal="true" aria-label="@Model.Name photos" hidden>
+        <div class="vehicle-lightbox__backdrop" data-lightbox-close></div>
+        <button type="button" class="vehicle-lightbox__close" data-lightbox-close aria-label="Close photo viewer">&times;</button>
+        @if (slides.Count > 1)
+        {
+            <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__prev" data-lightbox-prev aria-label="Previous photo">&lsaquo;</button>
+            <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__next" data-lightbox-next aria-label="Next photo">&rsaquo;</button>
+        }
+        <figure class="vehicle-lightbox__stage">
+            <img class="vehicle-lightbox__image" alt="@Model.Name">
+            <figcaption class="vehicle-lightbox__caption"></figcaption>
+        </figure>
+    </div>
+}
 
-<div id="vehicle-lightbox" class="vehicle-lightbox" hidden>
-    <div class="vehicle-lightbox__backdrop" data-lightbox-close></div>
-    <button type="button" class="vehicle-lightbox__close" data-lightbox-close aria-label="Close">&times;</button>
-    <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__prev" data-lightbox-prev aria-label="Previous">&lsaquo;</button>
-    <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__next" data-lightbox-next aria-label="Next">&rsaquo;</button>
-    <figure class="vehicle-lightbox__stage">
-        <img class="vehicle-lightbox__image" alt="@Model.Name">
-        <figcaption class="vehicle-lightbox__caption"></figcaption>
-    </figure>
-</div>
+@section Scripts {
+    <script src="~/js/car-details.js" asp-append-version="true"></script>
+}

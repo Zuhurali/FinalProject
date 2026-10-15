@@ -1,6 +1,35 @@
 @model FinalProject.MVC.Models.ShopProduct
+@using System.Text.Json
+@using FinalProject.MVC.Commerce
 @{
     ViewData["Title"] = $"{Model.Name} - AutoVault";
+    var stockModifier = Model.StockStatus switch
+    {
+        "Out of Stock" => "out",
+        "Low Stock" => "low",
+        _ => "in"
+    };
+    var stockText = Model.Quantity <= 0
+        ? "Out of stock"
+        : Model.StockStatus == "Low Stock"
+            ? $"Low stock · {Model.Quantity} left"
+            : $"In stock · {Model.Quantity} available";
+    var related = ViewBag.RelatedProducts as IReadOnlyList<ShopProduct> ?? Array.Empty<ShopProduct>();
+    var credits = ProductImageCredits.For(Model.ImagePath);
+    var signedInName = User.Identity?.IsAuthenticated == true ? User.Identity.Name : "";
+
+    var form = new Dictionary<string, string?>();
+    if (TempData["RequestForm"] is string formJson)
+    {
+        foreach (var property in JsonDocument.Parse(formJson).RootElement.EnumerateObject())
+        {
+            form[property.Name] = property.Value.ValueKind == JsonValueKind.Null ? null : property.Value.ToString();
+        }
+    }
+    string? Field(string name, string? fallback = null) => form.TryGetValue(name, out var value) ? value : fallback;
+
+    var maxRequestQuantity = Math.Min(Model.Quantity, ShowroomRequestRules.MaxQuantityPerRequest);
+    var today = DateTime.Now.Date;
 }
 
 <!-- Breadcrumb area start -->
@@ -18,7 +47,7 @@
 </div>
 <!-- Breadcrumb area end -->
 
-<div class="rts-portfolio-area shop-single inner rts-section-gapTop">
+<div class="av-detail-page rts-section-gapTop">
     <div class="container">
         @if (TempData["Success"] != null)
         {
@@ -34,414 +63,353 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
-        
-        <div class="row">
-            <div class="col-lg-7">
-                <div class="portfolio-slider-area2 mb--40">
-                    <!-- Main Product Image -->
-                    <div class="main-product-image">
-                        <div class="image">
-                            <img src="@Url.Content(Model.ImagePath)" alt="@Model.Name" id="mainImage" class="img-fluid" style="width: 100%; height: auto; object-fit: cover;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <div class="ms-single-product__content">
-                    <p class="sub-title">
-                        <a asp-controller="Home" asp-action="Index">Home</a> / 
-                        <a asp-controller="Shop" asp-action="Index">@Model.Category</a>
-                    </p>
-                    <h3 class="ms-single-product_title">@Model.Name</h3>
-                    
-                    <div class="woocommerce-product-details__short-description">
-                        <p>@Model.Description</p>
-                    </div>
-                    
-                    <!-- Rating -->
-                    <div class="ms-woocommerce-product-rating woocommerce-product-rating">
-                        <ul class="ms-rating-icon" id="averageRatingStars">
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                <li><i class="@(i <= Math.Round(Model.Rating) ? "fa-sharp fa-solid fa-star" : "fa-light fa-star")"></i></li>
-                            }
-                        </ul>
-                        <a href="#reviews" class="woocommerce-review-link" id="averageRatingText" rel="nofollow">
-                            @if (Model.RatingCount == 0)
-                            {
-                                <text>No ratings</text>
-                            }
-                            else
-                            {
-                                <text>@Model.Rating.ToString("0.0") (@Model.RatingCount @(Model.RatingCount == 1 ? "Rating" : "Ratings"))</text>
-                            }
-                        </a>
-                    </div>
 
-                    <div class="product-user-rating">
-                        <h6>Your Rating</h6>
-                        @if (User.Identity?.IsAuthenticated == true)
+        <div class="av-detail">
+            <div class="av-detail__media">
+                <figure class="av-detail__figure">
+                    <a href="@Url.Content(Model.ImagePath)" target="_blank" rel="noopener" class="av-detail__frame" title="Open full-size photo">
+                        <img src="@Url.Content(Model.ImagePath)" alt="@Model.Name" width="1600" height="1200" fetchpriority="high">
+                        @if (Model.Quantity <= 0)
                         {
-                            <form id="productRatingForm">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" id="selectedRating" value="@((int?)ViewBag.UserRating ?? 0)" />
-                                <div class="user-rating-stars" role="radiogroup" aria-label="Your rating">
-                                    @for (var i = 1; i <= 5; i++)
-                                    {
-                                        <button type="button"
-                                                class="rating-star @(i <= ((int?)ViewBag.UserRating ?? 0) ? "selected" : "")"
-                                                data-rating="@i"
-                                                aria-label="@i star rating"
-                                                aria-pressed="@(i <= ((int?)ViewBag.UserRating ?? 0) ? "true" : "false")">
-                                            <i class="fa-solid fa-star"></i>
-                                        </button>
-                                    }
-                                </div>
-                                <button type="submit" class="rts-btn btn-primary radius-small" id="submitRatingBtn">
-                                    Submit Rating
-                                </button>
-                                <p id="ratingMessage" class="mt--10" aria-live="polite"></p>
-                            </form>
+                            <span class="av-card__badge av-card__badge--out">Out of stock</span>
+                        }
+                    </a>
+                    @if (credits.Count > 0)
+                    {
+                        <figcaption class="av-detail__credit">
+                            @(credits.Count == 1 ? "Photo" : "Photos"):
+                            @foreach (var photoCredit in credits)
+                            {
+                                <span class="av-detail__credit-item">@photoCredit.Author, <a href="@photoCredit.SourceUrl" target="_blank" rel="noopener">@photoCredit.License</a></span>
+                            }
+                            via Wikimedia Commons
+                        </figcaption>
+                    }
+                </figure>
+            </div>
+
+            <div class="av-detail__info">
+                <p class="av-detail__eyebrow">
+                    <a asp-controller="Shop" asp-action="Index" asp-route-category="@Model.Category">@Model.Category</a>
+                </p>
+                <h2 class="av-detail__title">@Model.Name</h2>
+
+                <div class="av-detail__rating">
+                    <ul class="ms-rating-icon" id="averageRatingStars" aria-hidden="true">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <li><i class="@(i <= Math.Round(Model.Rating) ? "fa-sharp fa-solid fa-star" : "fa-light fa-star")"></i></li>
+                        }
+                    </ul>
+                    <a href="#reviews" id="averageRatingText" rel="nofollow">
+                        @if (Model.RatingCount == 0)
+                        {
+                            <text>No ratings</text>
                         }
                         else
                         {
-                            <p>
-                                <a asp-controller="Account"
-                                   asp-action="SignIn"
-                                   asp-route-returnUrl="@Context.Request.Path">Please sign in to rate this product.</a>
-                            </p>
+                            <text>@Model.Rating.ToString("0.0") (@Model.RatingCount @(Model.RatingCount == 1 ? "Rating" : "Ratings"))</text>
                         }
-                    </div>
-                    
-                    <p class="price-line" style="font-size:28px;font-weight:700;margin:12px 0;">
+                    </a>
+                </div>
+
+                <div class="av-detail__price-row">
+                    <p class="av-detail__price">
                         @if (Model.HasOffer)
                         {
-                            <span style="text-decoration:line-through;color:#888;font-size:18px;font-weight:500;">$@Model.Price.ToString("0.00")</span>
+                            <s>$@Model.Price.ToString("0.00")</s>
                             <span>$@Model.SalePrice.ToString("0.00")</span>
-                            <span style="font-size:16px;font-weight:600;">@(Model.DiscountPercent)% off@(Model.OfferEndsAt.HasValue ? $" until {Model.OfferEndsAt.Value.ToLocalTime():dd MMM yyyy}" : "")</span>
                         }
                         else
                         {
                             <span>$@Model.Price.ToString("0.00")</span>
                         }
                     </p>
-                    <p class="stock" style="font-weight: 600; font-size: 16px;">
-                        @Model.StockStatus · @Model.Quantity available
-                    </p>
+                    <p class="av-detail__stock av-card__stock av-detail__stock--@stockModifier">@stockText</p>
+                </div>
+                @if (Model.HasOffer)
+                {
+                    <p class="av-detail__offer">@(Model.DiscountPercent)% off@(Model.OfferEndsAt.HasValue ? $" until {Model.OfferEndsAt.Value.ToLocalTime():dd MMM yyyy}" : "")</p>
+                }
 
-                    <div class="ask-showroom" id="ask-showroom">
-                        <h3>Ask about this product</h3>
-                        <p>Ask whether it is available or whether it fits your car. The showroom reads the message. There is no online payment or delivery.</p>
-                        <form asp-controller="Shop" asp-action="Ask" method="post">
+                <p class="av-detail__description">@Model.Description</p>
+
+                <dl class="av-detail__meta">
+                    <div><dt>Category</dt><dd>@Model.Category</dd></div>
+                    <div><dt>Availability</dt><dd>@Model.StockStatus</dd></div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Brand))
+                    {
+                        <div><dt>Brand</dt><dd>@Model.Brand</dd></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Compatibility))
+                    {
+                        <div><dt>Compatibility</dt><dd>@Model.Compatibility</dd></div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Color))
+                    {
+                        <div><dt>Color</dt><dd>@Model.Color</dd></div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Fuel))
+                    {
+                        <div><dt>Fuel type</dt><dd>@Model.Fuel</dd></div>
+                    }
+                </dl>
+
+                <section class="av-request" id="request-to-buy" aria-labelledby="request-to-buy-title">
+                    <h3 id="request-to-buy-title">Request to Buy</h3>
+                    <p class="av-request__lead">Send a request and the showroom will contact you to confirm availability. You pay and collect in person at the showroom. Nothing is charged online, the request is not a confirmed purchase, and stock is not held.</p>
+
+                    @if (TempData["RequestSuccess"] != null)
+                    {
+                        <div class="alert alert-success" role="status">@TempData["RequestSuccess"]</div>
+                    }
+                    @if (TempData["RequestError"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">@TempData["RequestError"]</div>
+                    }
+
+                    @if (Model.Quantity > 0)
+                    {
+                        <form asp-controller="Shop" asp-action="RequestToBuy" method="post" class="av-request__form" id="request-form">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="ProductId" value="@Model.Id" />
-                            <input class="form-control" type="text" name="CustomerName" maxlength="80" placeholder="Your name" required />
-                            <input class="form-control" type="email" name="Email" maxlength="200" placeholder="Email address" value="@(User.Identity?.IsAuthenticated == true ? User.Identity.Name : "")" required />
-                            <input class="form-control" type="tel" name="Phone" maxlength="40" placeholder="Phone (optional)" />
-                            <textarea class="form-control" name="Message" minlength="10" maxlength="1000" placeholder="Ask about availability or compatibility" required></textarea>
-                            <button type="submit" class="rts-btn btn-primary radius-small">Ask About Product</button>
+                            <input type="hidden" name="SubmissionKey" value="@ViewBag.SubmissionKey" />
+                            <div class="av-form-grid">
+                                <label>
+                                    <span>Name</span>
+                                    <input class="form-control" type="text" name="CustomerName" minlength="2" maxlength="80" autocomplete="name" value="@Field("CustomerName")" required />
+                                </label>
+                                <label>
+                                    <span>Phone</span>
+                                    <input class="form-control" type="tel" name="Phone" maxlength="40" autocomplete="tel" placeholder="+994 ..." value="@Field("Phone")" required />
+                                </label>
+                                <label class="av-form-grid__wide">
+                                    <span>Email</span>
+                                    <input class="form-control" type="email" name="Email" maxlength="200" autocomplete="email" value="@Field("Email", signedInName)" required />
+                                </label>
+                                <label>
+                                    <span>Quantity (max @maxRequestQuantity)</span>
+                                    <input class="form-control" type="number" name="Quantity" min="1" max="@maxRequestQuantity" step="1" value="@Field("Quantity", "1")" required />
+                                </label>
+                                <label>
+                                    <span>Preferred visit date <em>(optional)</em></span>
+                                    <input class="form-control" type="date" name="PreferredVisitDate" min="@today.ToString("yyyy-MM-dd")" max="@today.AddDays(ShowroomRequestRules.MaxVisitDaysAhead).ToString("yyyy-MM-dd")" value="@Field("PreferredVisitDate")" />
+                                </label>
+                                <label class="av-form-grid__wide">
+                                    <span>Note <em>(optional)</em></span>
+                                    <textarea class="form-control" name="Note" maxlength="@ShowroomRequestRules.MaxNoteLength" rows="2">@Field("Note")</textarea>
+                                </label>
+                            </div>
+                            <button type="submit" class="av-btn av-btn--primary" id="request-submit">Send Purchase Request</button>
                         </form>
-                    </div>
-                    <div class="showroom-actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
-                        <a class="rts-btn btn-border radius-small" href="tel:+994503546767">Call to Check Availability</a>
-                        <a class="rts-btn btn-border radius-small" asp-controller="Contact" asp-action="Index">Contact the Showroom</a>
-                        <a class="rts-btn btn-border radius-small" asp-controller="Contact" asp-action="Index">Visit Showroom</a>
-                    </div>
-                    
-                    <!-- Product Meta -->
-                    <div class="product_meta">
+                    }
+                    else
+                    {
+                        <div class="av-request__closed" role="note">
+                            <strong>This item is out of stock.</strong>
+                            Purchase requests are closed until the showroom has it again. You can ask a question below or call the showroom.
+                        </div>
+                    }
+
+                    <ul class="av-request__contact">
+                        <li><i class="fa-regular fa-location-dot" aria-hidden="true"></i> Babek Prospekti 22–24, Baku, Azerbaijan</li>
+                        <li><i class="fa-regular fa-phone" aria-hidden="true"></i> <a href="tel:+994503546767">+994 50 354 67 67</a></li>
+                        <li><i class="fa-regular fa-envelope" aria-hidden="true"></i> <a href="mailto:Autovault@gmail.com">Autovault@gmail.com</a></li>
+                    </ul>
+                </section>
+
+                <details class="av-ask" id="ask-question">
+                    <summary>Ask a question about this product</summary>
+                    <span id="ask-showroom"></span>
+                    <form asp-controller="Shop" asp-action="Ask" method="post" class="av-ask__form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ProductId" value="@Model.Id" />
+                        <div class="av-form-grid">
+                            <input class="form-control" type="text" name="CustomerName" maxlength="80" placeholder="Your name" aria-label="Your name" required />
+                            <input class="form-control" type="email" name="Email" maxlength="200" placeholder="Email address" aria-label="Email address" value="@signedInName" required />
+                            <textarea class="form-control av-form-grid__wide" name="Message" minlength="10" maxlength="1000" rows="3" placeholder="Ask about availability or fitment" aria-label="Your question" required></textarea>
+                        </div>
+                        <button type="submit" class="av-btn av-btn--ghost">Send Question</button>
+                    </form>
+                </details>
+
+                <div class="product-user-rating">
+                    <h6>Your Rating</h6>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form id="productRatingForm">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="selectedRating" value="@((int?)ViewBag.UserRating ?? 0)" />
+                            <div class="user-rating-stars" role="radiogroup" aria-label="Your rating">
+                                @for (var i = 1; i <= 5; i++)
+                                {
+                                    <button type="button"
+                                            class="rating-star @(i <= ((int?)ViewBag.UserRating ?? 0) ? "selected" : "")"
+                                            data-rating="@i"
+                                            aria-label="@i star rating"
+                                            aria-pressed="@(i <= ((int?)ViewBag.UserRating ?? 0) ? "true" : "false")">
+                                        <i class="fa-solid fa-star"></i>
+                                    </button>
+                                }
+                            </div>
+                            <button type="submit" class="av-btn av-btn--ghost av-btn--small" id="submitRatingBtn">Submit Rating</button>
+                            <p id="ratingMessage" class="mt--10" aria-live="polite"></p>
+                        </form>
+                    }
+                    else
+                    {
+                        <p>
+                            <a asp-controller="Account"
+                               asp-action="SignIn"
+                               asp-route-returnUrl="@Context.Request.Path">Please sign in to rate this product.</a>
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="av-detail-tabs tab-area">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Description</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Specifications</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab" aria-controls="messages" aria-selected="false">Reviews</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+                    <p>@Model.Description</p>
+                    <p>Buy and collect this item at the AutoVault showroom, Babek Prospekti 22–24, Baku. Compatibility is listed only when it is known for this product.</p>
+                </div>
+                <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                    <div class="ms-section-title">
+                        <h3 class="ms-heading-title">Product Specifications</h3>
                         <ul>
-                            <li class="posted_in">Category: <span>@Model.Category</span></li>
-                            @if (!string.IsNullOrWhiteSpace(Model.Brand))
-                            {
-                                <li class="sku_wrapper">Brand: <span>@Model.Brand</span></li>
-                            }
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Product Name:</strong> @Model.Name</li>
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Category:</strong> @Model.Category</li>
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Brand:</strong> @(string.IsNullOrWhiteSpace(Model.Brand) ? "Not stated" : Model.Brand)</li>
                             @if (!string.IsNullOrWhiteSpace(Model.Compatibility))
                             {
-                                <li class="sku_wrapper">Compatibility: <span>@Model.Compatibility</span></li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Compatibility:</strong> @Model.Compatibility</li>
                             }
                             @if (!string.IsNullOrEmpty(Model.Color))
                             {
-                                <li class="sku_wrapper">Color: <span>@Model.Color</span></li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Color:</strong> @Model.Color</li>
                             }
                             @if (!string.IsNullOrEmpty(Model.Fuel))
                             {
-                                <li class="sku_wrapper">Fuel Type: <span>@Model.Fuel</span></li>
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Fuel Type Compatibility:</strong> @Model.Fuel</li>
                             }
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Price:</strong> $@Model.Price.ToString("0.00")</li>
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Availability:</strong> @stockText</li>
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Rating:</strong> @Model.Rating.ToString("0.0") / 5.0</li>
                         </ul>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Tabs Section -->
-            <div class="col-md-12 tab-area">
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Description</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Specifications</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab" aria-controls="messages" aria-selected="false">Reviews</button>
-                    </li>
-                </ul>
-                
-                <div class="tab-content">
-                    <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                        <p>@Model.Description</p>
-                        <p>Collect this item at the AutoVault showroom, Babek Prospekti 22–24, Baku. Compatibility is listed only when it is known for this product.</p>
-                    </div>
-                    <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                        <div class="ms-section-title">
-                            <h3 class="ms-heading-title">Product Specifications</h3>
-                            <ul>
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Product Name:</strong> @Model.Name</li>
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Category:</strong> @Model.Category</li>
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Brand:</strong> @(string.IsNullOrWhiteSpace(Model.Brand) ? "Not stated" : Model.Brand)</li>
-                                @if (!string.IsNullOrWhiteSpace(Model.Compatibility))
+                <div class="tab-pane" id="messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
+                    <div id="reviews" class="woocommerce-Reviews">
+                        @{
+                            var reviews = ViewBag.Reviews as IEnumerable<FinalProject.MVC.Models.Api.ProductReviewDto>
+                                ?? Enumerable.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
+                            var editingId = Context.Request.Query["edit"].ToString();
+                        }
+                        @if (ViewData["ReviewServiceUnavailable"] as bool? == true)
+                        {
+                            <p>Reviews are temporarily unavailable.</p>
+                        }
+                        @foreach (var review in reviews)
+                        {
+                            <div class="reveiw-box mb--30">
+                                <h6>@review.UserDisplayName</h6>
+                                <p>@review.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                @if (review.IsHidden)
                                 {
-                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Compatibility:</strong> @Model.Compatibility</li>
+                                    <p><em>Hidden from the shop.</em></p>
                                 }
-                                @if (!string.IsNullOrEmpty(Model.Color))
+                                <p>@review.Content</p>
+                                @if (review.CanEdit && User.Identity?.IsAuthenticated == true)
                                 {
-                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Color:</strong> @Model.Color</li>
-                                }
-                                @if (!string.IsNullOrEmpty(Model.Fuel))
-                                {
-                                    <li><i class="fa-regular fa-circle-check"></i> <strong>Fuel Type Compatibility:</strong> @Model.Fuel</li>
-                                }
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Price:</strong> $@Model.Price.ToString("0.00")</li>
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Availability:</strong> @Model.StockStatus (@Model.Quantity available)</li>
-                                <li><i class="fa-regular fa-circle-check"></i> <strong>Rating:</strong> @Model.Rating.ToString("0.0") / 5.0</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="tab-pane" id="messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
-                        <div id="reviews" class="woocommerce-Reviews">
-                            @{
-                                var reviews = ViewBag.Reviews as IEnumerable<FinalProject.MVC.Models.Api.ProductReviewDto>
-                                    ?? Enumerable.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
-                                var editingId = Context.Request.Query["edit"].ToString();
-                            }
-                            @if (ViewData["ReviewServiceUnavailable"] as bool? == true)
-                            {
-                                <p>Reviews are temporarily unavailable.</p>
-                            }
-                            @foreach (var review in reviews)
-                            {
-                                <div class="reveiw-box mb--30">
-                                    <h6>@review.UserDisplayName</h6>
-                                    <p>@review.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
-                                    @if (review.IsHidden)
-                                    {
-                                        <p><em>Hidden from the shop.</em></p>
-                                    }
-                                    <p>@review.Content</p>
-                                    @if (review.CanEdit && User.Identity?.IsAuthenticated == true)
-                                    {
-                                        <a href="@Url.Action("Details", "Shop", new { id = Model.Id, edit = review.Id })#reviews">Edit</a>
-                                        <form asp-controller="Shop" asp-action="DeleteReview" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="productId" value="@Model.Id" />
-                                            <input type="hidden" name="reviewId" value="@review.Id" />
-                                            <button type="submit" class="btn btn-link p-0">Delete</button>
-                                        </form>
-                                    }
-                                </div>
-                            }
-                            @if (!reviews.Any())
-                            {
-                                <p>No written reviews yet.</p>
-                            }
-                            <div class="reveiw-form">
-                                <h2 class="mb--30">Write a review</h2>
-                                @if (User.Identity?.IsAuthenticated == true)
-                                {
-                                    var editing = reviews.FirstOrDefault(review => review.Id.ToString() == editingId && review.CanEdit);
-                                    <form asp-controller="Shop" asp-action="SaveReview" method="post">
+                                    <a href="@Url.Action("Details", "Shop", new { id = Model.Id, edit = review.Id })#reviews">Edit</a>
+                                    <form asp-controller="Shop" asp-action="DeleteReview" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productId" value="@Model.Id" />
-                                        @if (editing != null)
-                                        {
-                                            <input type="hidden" name="reviewId" value="@editing.Id" />
-                                        }
-                                        <textarea name="content" minlength="10" maxlength="1000" required placeholder="Write 10 to 1000 characters.">@(editing?.Content)</textarea>
-                                        <button type="submit" class="rts-btn btn-primary">@(editing == null ? "Submit Review" : "Update Review")</button>
+                                        <input type="hidden" name="reviewId" value="@review.Id" />
+                                        <button type="submit" class="btn btn-link p-0">Delete</button>
                                     </form>
                                 }
-                                else
-                                {
-                                    <p><a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path">Sign in to write a review.</a></p>
-                                }
                             </div>
+                        }
+                        @if (!reviews.Any())
+                        {
+                            <p>No written reviews yet.</p>
+                        }
+                        <div class="reveiw-form">
+                            <h2 class="mb--30">Write a review</h2>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                var editing = reviews.FirstOrDefault(review => review.Id.ToString() == editingId && review.CanEdit);
+                                <form asp-controller="Shop" asp-action="SaveReview" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@Model.Id" />
+                                    @if (editing != null)
+                                    {
+                                        <input type="hidden" name="reviewId" value="@editing.Id" />
+                                    }
+                                    <textarea name="content" minlength="10" maxlength="1000" required placeholder="Write 10 to 1000 characters.">@(editing?.Content)</textarea>
+                                    <button type="submit" class="rts-btn btn-primary">@(editing == null ? "Submit Review" : "Update Review")</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <p><a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path">Sign in to write a review.</a></p>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        @if (related.Count > 0)
+        {
+            <section class="av-related" aria-labelledby="related-title">
+                <div class="av-related__head">
+                    <h2 id="related-title">More parts in the showroom</h2>
+                    <a asp-controller="Shop" asp-action="Index">View all parts</a>
+                </div>
+                <div class="av-grid">
+                    @foreach (var product in related)
+                    {
+                        <partial name="_ProductCard" model="product" />
+                    }
+                </div>
+            </section>
+        }
     </div>
 </div>
 
 @section Scripts {
-<style>
-    .quantity-edit {
-        display: flex;
-        align-items: center;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        overflow: hidden;
-        width: fit-content;
-    }
-    
-    .quantity-edit .button {
-        background: #f5f5f5;
-        border: none;
-        padding: 10px 15px;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-    
-    .quantity-edit .button:hover {
-        background: #e0e0e0;
-    }
-    
-    /* Override global style.css rule that sets width: 10px */
-    .ms-single-product__content .quantity-area .cart-edit .quantity-edit .input {
-        border: none;
-        text-align: center;
-        width: 70px !important;
-        min-width: 70px;
-        max-width: 70px;
-        padding: 10px 5px !important;
-        font-size: 16px;
-        font-weight: 600;
-        box-sizing: border-box;
-    }
-    
-    .cart-edit {
-        display: inline-block;
-        margin-right: 15px;
-    }
-    
-    .quantity-area {
-        display: flex;
-        align-items: center;
-        margin: 25px 0;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    
-    .product_meta {
-        margin-top: 30px;
-        padding-top: 30px;
-        border-top: 1px solid #e0e0e0;
-    }
-    
-    .product_meta ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .product_meta ul li {
-        padding: 8px 0;
-        font-size: 15px;
-        color: #666;
-    }
-    
-    .product_meta ul li span {
-        color: #333;
-        font-weight: 600;
-        margin-left: 5px;
-    }
-    
-    .main-product-image {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-    
-    .main-product-image img {
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .pricing-section {
-        margin: 20px 0;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border-left: 4px solid #FF4500;
-    }
-    
-    .pricing-section .unit-price {
-        margin-bottom: 10px;
-        font-size: 15px;
-        color: #666;
-    }
-    
-    .pricing-section .unit-price .label {
-        font-weight: 500;
-    }
-    
-    .pricing-section .unit-price .price-value {
-        font-weight: 600;
-        color: #333;
-        margin-left: 8px;
-    }
-    
-    .pricing-section .woocommerce-Price-amount {
-        font-size: 28px;
-        font-weight: 700;
-        color: #FF4500;
-    }
-    
-    .pricing-section .woocommerce-Price-amount .label {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        display: block;
-        margin-bottom: 5px;
-    }
-
-    .product-user-rating {
-        margin: 24px 0;
-        padding: 20px;
-        border: 1px solid rgba(85, 85, 85, 0.15);
-        border-radius: 12px;
-    }
-
-    .product-user-rating h6 {
-        margin-bottom: 10px;
-    }
-
-    .user-rating-stars {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 15px;
-    }
-
-    .rating-star {
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: #c9c9c9;
-        font-size: 25px;
-        line-height: 1;
-        cursor: pointer;
-    }
-
-    .rating-star.selected,
-    .rating-star:hover {
-        color: var(--color-primary);
-    }
-</style>
-
 <script>
     $(document).ready(function() {
-        const unitPrice = parseFloat($('#unitPrice').val());
+        if (location.hash === '#ask-question' || location.hash === '#ask-showroom') {
+            const ask = document.getElementById('ask-question');
+            ask.open = true;
+            ask.scrollIntoView({ block: 'start' });
+        }
+
+        $('#request-form').on('submit', function(event) {
+            const button = $('#request-submit');
+            if (button.prop('disabled')) {
+                event.preventDefault();
+                return;
+            }
+            button.prop('disabled', true).text('Sending...');
+        });
 
         function paintUserRating(value) {
             $('.rating-star').each(function() {
@@ -502,115 +470,6 @@
                     button.prop('disabled', false).text('Submit Rating');
                 }
             });
-        });
-        
-        // Function to update total price
-        function updateTotalPrice() {
-            const quantity = parseInt($('#quantity').val()) || 1;
-            const totalPrice = (unitPrice * quantity).toFixed(2);
-            $('#totalPrice').text(totalPrice);
-        }
-        
-        // Quantity increment
-        $('.increment').on('click', function() {
-            const input = $(this).siblings('.input');
-            let value = parseInt(input.val()) || 1;
-            const max = parseInt(input.data('max')) || value;
-            if (value < max) {
-                input.val(value + 1);
-                updateTotalPrice();
-            }
-        });
-        
-        // Quantity decrement
-        $('.decrement').on('click', function() {
-            const input = $(this).siblings('.input');
-            let value = parseInt(input.val()) || 1;
-            if (value > 1) {
-                input.val(value - 1);
-                updateTotalPrice();
-            }
-        });
-        
-        // Manual quantity input change
-        $('#quantity').on('input', function() {
-            let value = parseInt($(this).val());
-            if (!isNaN(value) && value >= 1) {
-                updateTotalPrice();
-            }
-        });
-        
-        // Add to Cart
-        $('#addToCartBtn').on('click', function() {
-            const productId = $(this).data('product-id');
-            const quantity = parseInt($('#quantity').val()) || 1;
-            const button = $(this);
-            const originalText = button.html();
-            
-            // Validate quantity
-            if (quantity < 1) {
-                alert('Please select a valid quantity (minimum 1).');
-                $('#quantity').val(1);
-                updateTotalPrice();
-                return;
-            }
-            
-            // Disable button
-            button.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
-            
-            $.ajax({
-                url: '@Url.Action("AddToCart", "Shop")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ 
-                    productId: productId, 
-                    quantity: quantity 
-                }),
-                success: function(response) {
-                    if (response.success) {
-                        button.html('<i class="fa fa-check"></i> Added to Cart!');
-                        
-                        // Show success alert
-                        const alert = $('<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-                            '<i class="fa fa-check-circle"></i> ' + quantity + ' item(s) added to cart successfully! ' +
-                            '<a href="@Url.Action("Cart", "Shop")" class="alert-link">View Cart</a>' +
-                            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
-                            '</div>');
-                        $('.container').first().prepend(alert);
-                        
-                        // Scroll to top
-                        $('html, body').animate({ scrollTop: 0 }, 'slow');
-                        
-                        // Reset button after 3 seconds
-                        setTimeout(function() {
-                            button.html(originalText).prop('disabled', false);
-                        }, 3000);
-                    } else {
-                        button.html(originalText).prop('disabled', false);
-                        alert('Error: ' + response.message);
-                    }
-                },
-                error: function() {
-                    button.html(originalText).prop('disabled', false);
-                    alert('Failed to add product to cart. Please try again.');
-                }
-            });
-        });
-        
-        // Prevent non-numeric input in quantity field
-        $('#quantity').on('keypress', function(e) {
-            if (e.which < 48 || e.which > 57) {
-                e.preventDefault();
-            }
-        });
-        
-        // Validate quantity on blur
-        $('#quantity').on('blur', function() {
-            let value = parseInt($(this).val());
-            if (isNaN(value) || value < 1) {
-                $(this).val(1);
-                updateTotalPrice();
-            }
         });
     });
 </script>

@@ -38,4 +38,19 @@ public interface IShopCatalogService
     Task<(bool Ok, string? Error)> SaveInquiryAsync(ProductInquiry inquiry, CancellationToken cancellationToken = default);
 
     Task<bool> SetInquiryHandledAsync(int id, bool handled, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default);
+
+    Task<PurchaseRequestResult> SavePurchaseRequestAsync(ShowroomPurchaseRequest request, CancellationToken cancellationToken = default);
+
+    Task<bool> SetPurchaseRequestStatusAsync(int id, string status, CancellationToken cancellationToken = default);
+}
+
+public sealed record PurchaseRequestResult(bool Ok, bool Duplicate, int? RequestId, string? Error)
+{
+    public static PurchaseRequestResult Created(int id) => new(true, false, id, null);
+
+    public static PurchaseRequestResult AlreadyReceived(int id) => new(true, true, id, null);
+
+    public static PurchaseRequestResult Failed(string error) => new(false, false, null, error);
 }

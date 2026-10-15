@@ -1,0 +1,15 @@
+[
+  {
+    "carId": 105,
+    "localPath": "FinalProject.MVC/wwwroot/assets/images/catalog/coupe/nissan-370z-z34-manual-interior.jpg",
+    "replaces": "/assets/images/catalog/coupe/nissan-370z-z34-interior.jpg",
+    "reason": "Previous photo showed the automatic selector; listing is a manual 370Z.",
+    "sourceTitle": "File:NISSAN 370Z (3106421295).jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:NISSAN_370Z_(3106421295).jpg",
+    "originalSize": "3264x2176",
+    "savedSize": "1920x1280",
+    "author": "MIKI Yoshihito from Sapporo",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  }
+]

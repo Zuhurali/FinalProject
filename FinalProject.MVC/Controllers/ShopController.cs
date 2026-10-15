@@ -141,10 +141,10 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
-        public async Task<IActionResult> Index(string? search, string? category, CancellationToken cancellationToken)
+        public const int CatalogPageSize = 8;
+
+        private List<ShopProduct> MatchCatalog(string? search, string? category)
         {
-            ViewData["Title"] = "Shop - AutoVault";
-            await EnsureCatalogAsync(cancellationToken);
             IEnumerable<ShopProduct> source = _allProducts;
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -160,19 +160,26 @@ namespace FinalProject.MVC.Controllers
                 source = source.Where(product => string.Equals(product.Category, category, StringComparison.OrdinalIgnoreCase));
             }
 
-            var matched = source.ToList();
-            var initialProducts = matched.Take(6).ToList();
+            return source.ToList();
+        }
+
+        public async Task<IActionResult> Index(string? search, string? category, CancellationToken cancellationToken)
+        {
+            ViewData["Title"] = "Shop - AutoVault";
+            await EnsureCatalogAsync(cancellationToken);
+            var matched = MatchCatalog(search, category);
+            var initialProducts = matched.Take(CatalogPageSize).ToList();
             await ApplyRatingsAsync(initialProducts, cancellationToken);
             var response = new ShopFilterResponse
             {
                 Products = initialProducts,
                 TotalProducts = matched.Count,
                 CurrentPage = 1,
-                TotalPages = (int)Math.Ceiling(matched.Count / 6.0),
-                HasMorePages = matched.Count > 6,
+                TotalPages = (int)Math.Ceiling(matched.Count / (double)CatalogPageSize),
+                HasMorePages = matched.Count > CatalogPageSize,
                 ResultsText = matched.Count == 0
                     ? "No matching parts"
-                    : $"Showing 1-{Math.Min(6, matched.Count)} of {matched.Count} results"
+                    : $"Showing 1-{Math.Min(CatalogPageSize, matched.Count)} of {matched.Count} results"
             };
 
             SetShopFilters();
@@ -319,28 +326,33 @@ namespace FinalProject.MVC.Controllers
         [HttpPost]
         public async Task<JsonResult> LoadMore(
             int page = 1,
-            int pageSize = 6,
+            int pageSize = CatalogPageSize,
+            string? search = null,
+            string? category = null,
             CancellationToken cancellationToken = default)
         {
             await EnsureCatalogAsync(cancellationToken);
-            var products = _allProducts
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 48);
+            var matched = MatchCatalog(search, category);
+            var products = matched
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
             await ApplyRatingsAsync(products, cancellationToken);
 
-            var totalPages = (int)Math.Ceiling(_allProducts.Count / (double)pageSize);
-            var endItem = Math.Min(page * pageSize, _allProducts.Count);
+            var totalPages = (int)Math.Ceiling(matched.Count / (double)pageSize);
+            var endItem = Math.Min(page * pageSize, matched.Count);
 
             var response = new ShopFilterResponse
             {
                 Products = products,
-                TotalProducts = _allProducts.Count,
+                TotalProducts = matched.Count,
                 CurrentPage = page,
                 TotalPages = totalPages,
                 HasMorePages = page < totalPages,
-                ResultsText = _allProducts.Count > 0
-                    ? $"Showing 1-{endItem} of {_allProducts.Count} results"
+                ResultsText = matched.Count > 0
+                    ? $"Showing 1-{endItem} of {matched.Count} results"
                     : "No products found"
             };
 
@@ -462,6 +474,16 @@ namespace FinalProject.MVC.Controllers
                 ViewBag.Reviews = Array.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
                 ViewData["ReviewServiceUnavailable"] = true;
             }
+
+            var related = _allProducts
+                .Where(item => item.Id != product.Id && item.Category == product.Category)
+                .Concat(_allProducts.Where(item => item.Id != product.Id && item.Category != product.Category))
+                .Take(4)
+                .Select(CopyPart)
+                .ToList();
+            await ApplyRatingsAsync(related, cancellationToken);
+            ViewBag.RelatedProducts = related;
+            ViewBag.SubmissionKey = Guid.NewGuid();
 
             return View(product);
         }
@@ -595,7 +617,35 @@ namespace FinalProject.MVC.Controllers
             TempData[ok ? "Success" : "Error"] = ok
                 ? "Your question was sent to the showroom. Visit Babek Prospekti to inspect the item before you buy."
                 : error;
-            return RedirectToAction(nameof(Details), new { id = inquiry.ProductId });
+            return RedirectToAction(nameof(Details), "Shop", new { id = inquiry.ProductId }, "ask-question");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestToBuy(ShowroomPurchaseRequest request, CancellationToken cancellationToken)
+        {
+            var result = await _shopCatalog.SavePurchaseRequestAsync(request, cancellationToken);
+            if (result.Ok)
+            {
+                TempData["RequestSuccess"] = result.Duplicate
+                    ? $"We already received this request (#{result.RequestId}). It was not sent twice."
+                    : $"Request #{result.RequestId} sent. This is not a confirmed purchase. The showroom will contact you to confirm availability, and you complete the purchase in person at Babek Prospekti 22-24, Baku.";
+            }
+            else
+            {
+                TempData["RequestError"] = result.Error;
+                TempData["RequestForm"] = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    request.CustomerName,
+                    request.Email,
+                    request.Phone,
+                    request.Quantity,
+                    PreferredVisitDate = request.PreferredVisitDate?.ToString("yyyy-MM-dd"),
+                    request.Note
+                });
+            }
+
+            return RedirectToAction(nameof(Details), "Shop", new { id = request.ProductId }, "request-to-buy");
         }
 
         [HttpPost]

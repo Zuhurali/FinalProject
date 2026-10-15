@@ -219,37 +219,58 @@ namespace FinalProject.MVC.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddFavorite(int id, string? returnUrl = null)
+        public Task<IActionResult> AddFavorite(int id, string? returnUrl = null)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return Challenge();
-            }
-
-            await _marketplaceApi.AddFavoriteAsync(
-                id,
-                await CreateAccessTokenAsync(user),
-                HttpContext.RequestAborted);
-            return SafeReturn(returnUrl, id);
+            return SetFavoriteAsync(id, true, returnUrl);
         }
 
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveFavorite(int id, string? returnUrl = null)
+        public Task<IActionResult> RemoveFavorite(int id, string? returnUrl = null)
         {
+            return SetFavoriteAsync(id, false, returnUrl);
+        }
+
+        private async Task<IActionResult> SetFavoriteAsync(int id, bool favorite, string? returnUrl)
+        {
+            var wantsJson = Request.Headers.Accept.Any(value => value?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true);
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return Challenge();
+                return wantsJson
+                    ? Unauthorized(new { message = "Sign in to save favourites." })
+                    : Challenge();
             }
 
-            await _marketplaceApi.RemoveFavoriteAsync(
-                id,
-                await CreateAccessTokenAsync(user),
-                HttpContext.RequestAborted);
-            return SafeReturn(returnUrl, id);
+            try
+            {
+                var token = await CreateAccessTokenAsync(user);
+                if (favorite)
+                {
+                    await _marketplaceApi.AddFavoriteAsync(id, token, HttpContext.RequestAborted);
+                }
+                else
+                {
+                    await _marketplaceApi.RemoveFavoriteAsync(id, token, HttpContext.RequestAborted);
+                }
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Favourite for car {CarId} could not be updated.", id);
+                const string message = "Favourites are temporarily unavailable. Please try again.";
+                if (wantsJson)
+                {
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message });
+                }
+
+                TempData["FavoriteError"] = message;
+                return SafeReturn(returnUrl, id);
+            }
+
+            return wantsJson
+                ? Json(new { carId = id, isFavorite = favorite })
+                : SafeReturn(returnUrl, id);
         }
 
         [Authorize]

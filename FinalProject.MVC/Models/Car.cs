@@ -23,6 +23,8 @@ namespace FinalProject.MVC.Models
         public bool InStock { get; set; } = true;
         public decimal MonthlyPayment { get; set; } // For financing
         public string DriveType { get; set; } = string.Empty;
+        public string Engine { get; set; } = string.Empty;
+        public bool DescriptionIsSpecSummary { get; set; }
         public string? OwnerId { get; set; }
         public string? OwnerDisplayName { get; set; }
         public string Status { get; set; } = "Active";

@@ -1,0 +1,74 @@
+@model ShopProduct
+@{
+    var stockModifier = Model.StockStatus switch
+    {
+        "Out of Stock" => "out",
+        "Low Stock" => "low",
+        _ => "in"
+    };
+    var stockText = Model.Quantity <= 0
+        ? "Out of stock"
+        : Model.StockStatus == "Low Stock"
+            ? $"Low stock · {Model.Quantity} left"
+            : $"In stock · {Model.Quantity} available";
+    var detailsUrl = Url.Action("Details", "Shop", new { id = Model.Id });
+}
+<article class="av-card">
+    <a class="av-card__media" href="@detailsUrl" tabindex="-1" aria-hidden="true">
+        <img src="@Url.Content(Model.ImagePath)" alt="" width="800" height="600" loading="lazy" decoding="async">
+        @if (Model.Quantity <= 0)
+        {
+            <span class="av-card__badge av-card__badge--out">Out of stock</span>
+        }
+        else if (Model.HasOffer)
+        {
+            <span class="av-card__badge av-card__badge--offer">@Model.DiscountPercent% off</span>
+        }
+    </a>
+    <div class="av-card__body">
+        <p class="av-card__category">@Model.Category</p>
+        <h3 class="av-card__title"><a href="@detailsUrl">@Model.Name</a></h3>
+        <div class="av-card__rating" aria-label="@(Model.RatingCount == 0 ? "No ratings yet" : $"Rated {Model.Rating:0.0} out of 5 from {Model.RatingCount} ratings")">
+            <ul class="av-card__stars" aria-hidden="true">
+                @for (var star = 1; star <= 5; star++)
+                {
+                    if (star <= Math.Floor(Model.Rating))
+                    {
+                        <li><i class="rt-icon-star"></i></li>
+                    }
+                    else if (star <= Model.Rating + 0.5)
+                    {
+                        <li><i class="rt-icon-star-sharp-half-stroke"></i></li>
+                    }
+                    else
+                    {
+                        <li class="is-empty"><i class="rt-icon-star"></i></li>
+                    }
+                }
+            </ul>
+            <span>@(Model.RatingCount == 0 ? "No ratings yet" : $"{Model.Rating:0.0} ({Model.RatingCount})")</span>
+        </div>
+        <p class="av-card__stock av-card__stock--@stockModifier">@stockText</p>
+        <div class="av-card__footer">
+            <p class="av-card__price">
+                @if (Model.HasOffer)
+                {
+                    <s>$@Model.Price.ToString("0.00")</s>
+                    <span>$@Model.SalePrice.ToString("0.00")</span>
+                }
+                else
+                {
+                    <span>$@Model.Price.ToString("0.00")</span>
+                }
+            </p>
+            @if (Model.Quantity > 0)
+            {
+                <a class="av-card__cta" href="@(detailsUrl)#request-to-buy">Request to Buy</a>
+            }
+            else
+            {
+                <a class="av-card__cta av-card__cta--ghost" href="@detailsUrl">View details</a>
+            }
+        </div>
+    </div>
+</article>

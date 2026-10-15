@@ -18,6 +18,7 @@ namespace FinalProject.MVC.Data
         public DbSet<ProductCampaign> ProductCampaigns { get; set; }
         public DbSet<InPersonSale> InPersonSales { get; set; }
         public DbSet<ProductInquiry> ProductInquiries { get; set; }
+        public DbSet<ShowroomPurchaseRequest> ShowroomPurchaseRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -121,6 +122,28 @@ namespace FinalProject.MVC.Data
                 entity.ToTable("ProductInquiries", table => table.HasCheckConstraint(
                     "CK_ProductInquiries_MessageLength",
                     "LEN([Message]) >= 10 AND LEN([Message]) <= 1000"));
+            });
+
+            builder.Entity<ShowroomPurchaseRequest>(entity =>
+            {
+                entity.Property(request => request.CustomerName).HasMaxLength(80).IsRequired();
+                entity.Property(request => request.Email).HasMaxLength(200).IsRequired();
+                entity.Property(request => request.Phone).HasMaxLength(40).IsRequired();
+                entity.Property(request => request.Note).HasMaxLength(500);
+                entity.Property(request => request.Status).HasMaxLength(20).IsRequired();
+                entity.Property(request => request.PreferredVisitDate).HasColumnType("date");
+                entity.HasOne(request => request.Product)
+                    .WithMany()
+                    .HasForeignKey(request => request.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(request => request.ProductId);
+                entity.HasIndex(request => request.SubmissionKey).IsUnique();
+                entity.HasIndex(request => new { request.Email, request.ProductId, request.Status });
+                entity.ToTable("ShowroomPurchaseRequests", table =>
+                {
+                    table.HasCheckConstraint("CK_ShowroomPurchaseRequests_Quantity", "[Quantity] >= 1 AND [Quantity] <= 10");
+                    table.HasCheckConstraint("CK_ShowroomPurchaseRequests_Status", "[Status] IN (N'New', N'Contacted', N'Completed', N'Cancelled')");
+                });
             });
         }
     }

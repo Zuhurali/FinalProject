@@ -118,4 +118,72 @@ public class ShowroomRuleTests
         inquiry.Message = "Does this oil filter fit a 2019 BMW 3 Series?";
         Assert.Null(FinalProject.MVC.Commerce.ProductInquiryRules.Validate(inquiry));
     }
+
+    private static FinalProject.MVC.Models.ShowroomPurchaseRequest ValidPurchaseRequest() => new()
+    {
+        ProductId = 9,
+        CustomerName = "Nigar Aliyeva",
+        Email = "nigar@example.com",
+        Phone = "+994 50 123 45 67",
+        Quantity = 2,
+        SubmissionKey = Guid.NewGuid()
+    };
+
+    [Fact]
+    public void Purchase_request_is_valid_for_an_in_stock_product()
+    {
+        var today = new DateTime(2026, 10, 15);
+        var request = ValidPurchaseRequest();
+        request.PreferredVisitDate = today.AddDays(3);
+        Assert.Null(ShowroomRequestRules.Validate(request, 31, today));
+    }
+
+    [Fact]
+    public void Purchase_request_is_refused_for_out_of_stock_products()
+    {
+        Assert.NotNull(ShowroomRequestRules.Validate(ValidPurchaseRequest(), 0, DateTime.Today));
+    }
+
+    [Theory]
+    [InlineData(0, 31)]
+    [InlineData(11, 31)]
+    [InlineData(3, 2)]
+    public void Purchase_request_quantity_must_fit_the_limit_and_the_stock(int quantity, int available)
+    {
+        var request = ValidPurchaseRequest();
+        request.Quantity = quantity;
+        Assert.NotNull(ShowroomRequestRules.Validate(request, available, DateTime.Today));
+    }
+
+    [Fact]
+    public void Purchase_request_needs_contact_details_a_key_and_a_sensible_date()
+    {
+        var today = new DateTime(2026, 10, 15);
+        var noPhone = ValidPurchaseRequest();
+        noPhone.Phone = "12";
+        var badEmail = ValidPurchaseRequest();
+        badEmail.Email = "nigar";
+        var noKey = ValidPurchaseRequest();
+        noKey.SubmissionKey = Guid.Empty;
+        var past = ValidPurchaseRequest();
+        past.PreferredVisitDate = today.AddDays(-1);
+        var tooFar = ValidPurchaseRequest();
+        tooFar.PreferredVisitDate = today.AddDays(ShowroomRequestRules.MaxVisitDaysAhead + 1);
+
+        Assert.NotNull(ShowroomRequestRules.Validate(noPhone, 31, today));
+        Assert.NotNull(ShowroomRequestRules.Validate(badEmail, 31, today));
+        Assert.NotNull(ShowroomRequestRules.Validate(noKey, 31, today));
+        Assert.NotNull(ShowroomRequestRules.Validate(past, 31, today));
+        Assert.NotNull(ShowroomRequestRules.Validate(tooFar, 31, today));
+    }
+
+    [Fact]
+    public void Purchase_requests_are_reviewed_only_by_admins()
+    {
+        var controller = typeof(FinalProject.MVC.Controllers.AdminRequestsController);
+        Assert.Equal("Admin,SuperAdmin", controller.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        var requestToBuy = typeof(FinalProject.MVC.Controllers.ShopController)
+            .GetMethod(nameof(FinalProject.MVC.Controllers.ShopController.RequestToBuy))!;
+        Assert.NotNull(requestToBuy.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
+    }
 }

@@ -1,0 +1,122 @@
+{
+ "engine-assembly": {
+  "file": "~/assets/images/portfolio/parts/hd/engine-assembly.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:1963_Impala_283_engine_underhood.jpg",
+  "original": "5472x3648",
+  "license": "CC BY-SA 3.0",
+  "author": "Mr.choppers"
+ },
+ "brake-caliper": {
+  "file": "~/assets/images/portfolio/parts/hd/brake-caliper.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:Red_Hot_Brakes_(5893323749).jpg",
+  "original": "3024x4032",
+  "license": "CC BY-SA 2.0",
+  "author": "Adam Russell from England"
+ },
+ "coilover-shock": {
+  "file": "~/assets/images/portfolio/parts/hd/coilover-shock.webp",
+  "size": "1536x1152",
+  "source": "https://commons.wikimedia.org/wiki/File:Demper_ducati_01.jpg",
+  "original": "1536x2048",
+  "license": "Public domain",
+  "author": "Piero at Dutch Wikipedia"
+ },
+ "air-filter": {
+  "file": "~/assets/images/portfolio/parts/hd/air-filter.webp",
+  "size": "1435x1076",
+  "source": "https://commons.wikimedia.org/wiki/File:K%26NAirFilterAndRechargerKit.jpg",
+  "original": "1614x1076",
+  "license": "CC BY-SA 2.5",
+  "author": "User:Royalbroil"
+ },
+ "oil-filter": {
+  "file": "~/assets/images/portfolio/parts/hd/oil-filter.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:Spin-on-conversion.jpg",
+  "original": "2048x1536",
+  "license": "CC BY-SA 3.0",
+  "author": "Liftarn"
+ },
+ "timing-belt": {
+  "file": "~/assets/images/portfolio/parts/hd/timing-belt.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:2001_honda_accord_timing_belt-terabass.jpg",
+  "original": "3888x2592",
+  "license": "CC BY-SA 3.0",
+  "author": "Terabass"
+ },
+ "ball-bearing": {
+  "file": "~/assets/images/portfolio/parts/hd/ball-bearing.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:1970_or_earlier_ball_bearing_330_V4_MTY_Hoffmann_Manufacturing_Company_England.jpg",
+  "original": "2900x2868",
+  "license": "CC BY 4.0",
+  "author": "R. Henrik Nilsson"
+ },
+ "bore-gauge": {
+  "file": "~/assets/images/portfolio/parts/hd/bore-gauge.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:MicrometerInside5-30_25-50.jpg",
+  "original": "1616x1296",
+  "license": "CC BY-SA 2.0",
+  "author": "Photograph taken by Glenn McKechnie"
+ },
+ "check-ring": {
+  "file": "~/assets/images/portfolio/parts/hd/check-ring.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:20th_century_thread_ring_gauge_for_left_hand_threads_marked_Links_Gew.jpg",
+  "original": "3602x2494",
+  "license": "CC BY 4.0",
+  "author": "R. Henrik Nilsson"
+ },
+ "turbocharger": {
+  "file": "~/assets/images/portfolio/parts/hd/turbocharger.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:Turbo_Mini_GT_(cropped).jpg",
+  "original": "2011x1864",
+  "license": "CC BY-SA 4.0",
+  "author": "Micool K"
+ },
+ "exhaust-muffler": {
+  "file": "~/assets/images/portfolio/parts/hd/exhaust-muffler.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:CRX_OEM_Muffler_c.JPG",
+  "original": "1920x1440",
+  "license": "CC BY-SA 4.0",
+  "author": "CrowzRSA"
+ },
+ "exhaust-tip": {
+  "file": "~/assets/images/portfolio/parts/hd/exhaust-tip.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:2019_Mercedes-Benz_E_300_Exclusive_Line_(44).jpg",
+  "original": "1920x1440",
+  "license": "CC BY-SA 4.0",
+  "author": "Bindydad123"
+ },
+ "splined-shaft": {
+  "file": "~/assets/images/portfolio/parts/hd/splined-shaft.webp",
+  "size": "1600x1200",
+  "source": "https://commons.wikimedia.org/wiki/File:Keilprofil-6K.JPG",
+  "original": "1920x1280",
+  "license": "CC BY-SA 3.0",
+  "author": "Hugo4"
+ },
+ "gear-shaft": {
+  "file": "~/assets/images/portfolio/parts/hd/gear-shaft.webp",
+  "size": "1096x822",
+  "source": "https://commons.wikimedia.org/wiki/File:Cambio_innesti_frontali.jpg",
+  "original": "1920x822",
+  "license": "CC BY-SA 4.0",
+  "author": "A7N8X"
+ },
+ "outside-micrometer": {
+  "file": "~/assets/images/portfolio/parts/hd/outside-micrometer.webp",
+  "size": "1440x1080",
+  "source": "https://commons.wikimedia.org/wiki/File:Micrometer_Caliper.jpg",
+  "original": "1920x1080",
+  "license": "CC BY-SA 2.0",
+  "author": "Nathanael Burton"
+ }
+}
