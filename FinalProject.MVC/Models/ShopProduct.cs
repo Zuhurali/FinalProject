@@ -21,6 +21,17 @@ namespace FinalProject.MVC.Models
         public string ImagePath { get; set; } = string.Empty;
         public double Rating { get; set; }
         public int RatingCount { get; set; }
+        public int ReviewCount { get; set; }
+        public int RealSalesCount { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int DemoSalesCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public double PopularityScore { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int SalesCount => RealSalesCount + DemoSalesCount;
         public string Description { get; set; } = string.Empty;
         public bool InStock { get; set; } = true;
         public string Color { get; set; } = string.Empty;

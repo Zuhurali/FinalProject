@@ -1,5 +1,10 @@
 @model ShopProduct
 @{
+    var opinionCount = Model.ReviewCount > 0 ? Model.ReviewCount : Model.RatingCount;
+    var opinionLabel = Model.ReviewCount > 0
+        ? (opinionCount == 1 ? "review" : "reviews")
+        : (opinionCount == 1 ? "rating" : "ratings");
+    var ratingText = opinionCount == 0 ? "No ratings yet" : $"{Model.Rating:0.0} ({opinionCount} {opinionLabel})";
     var stockModifier = Model.StockStatus switch
     {
         "Out of Stock" => "out",
@@ -28,7 +33,7 @@
     <div class="av-card__body">
         <p class="av-card__category">@Model.Category</p>
         <h3 class="av-card__title"><a href="@detailsUrl">@Model.Name</a></h3>
-        <div class="av-card__rating" aria-label="@(Model.RatingCount == 0 ? "No ratings yet" : $"Rated {Model.Rating:0.0} out of 5 from {Model.RatingCount} ratings")">
+        <div class="av-card__rating" aria-label="@ratingText">
             <ul class="av-card__stars" aria-hidden="true">
                 @for (var star = 1; star <= 5; star++)
                 {
@@ -46,8 +51,12 @@
                     }
                 }
             </ul>
-            <span>@(Model.RatingCount == 0 ? "No ratings yet" : $"{Model.Rating:0.0} ({Model.RatingCount})")</span>
+            <span>@ratingText</span>
         </div>
+        @if (Model.RealSalesCount > 0)
+        {
+            <p class="av-card__sales">In-Store Sales: @Model.RealSalesCount</p>
+        }
         <p class="av-card__stock av-card__stock--@stockModifier">@stockText</p>
         <div class="av-card__footer">
             <p class="av-card__price">

@@ -12,7 +12,7 @@ namespace FinalProject.MVC.Data
                 Name = "Amelia Scot",
                 Position = "Office Executive",
                 ImagePath = "~/assets/images/team/05.webp",
-                Biography = "Amelia welcomes buyers at the front desk and keeps showroom appointments on schedule. She coordinates test-drive bookings and makes sure every guest leaves with a clear next step.",
+                Biography = "Amelia welcomes buyers at the front desk and keeps store appointments on schedule. She coordinates test-drive bookings and makes sure every guest leaves with a clear next step.",
                 Experience = "6 years in dealership guest services",
                 Department = "Client Relations",
                 Phone = "+994503546767",

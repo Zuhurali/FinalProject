@@ -14,7 +14,7 @@ public static class ShowroomRules
             return "Out of Stock";
         }
 
-        return quantity <= 5 ? "Low Stock" : "In Stock";
+        return quantity <= 7 ? "Low Stock" : "In Stock";
     }
 
     public static string? ValidateSaleQuantity(int requested, int available)

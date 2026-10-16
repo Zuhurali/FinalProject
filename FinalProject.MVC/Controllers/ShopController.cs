@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Exceptions;
@@ -19,6 +20,7 @@ namespace FinalProject.MVC.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IShopCatalogService _shopCatalog;
         private readonly IProductReviewApiService _reviewApiService;
+        private readonly IProductPopularityService _popularity;
 
         public ShopController(
             ApplicationDbContext context,
@@ -26,7 +28,8 @@ namespace FinalProject.MVC.Controllers
             IApiAccessTokenService tokenService,
             UserManager<ApplicationUser> userManager,
             IShopCatalogService shopCatalog,
-            IProductReviewApiService reviewApiService)
+            IProductReviewApiService reviewApiService,
+            IProductPopularityService popularity)
         {
             _context = context;
             _ratingApiService = ratingApiService;
@@ -34,6 +37,7 @@ namespace FinalProject.MVC.Controllers
             _userManager = userManager;
             _shopCatalog = shopCatalog;
             _reviewApiService = reviewApiService;
+            _popularity = popularity;
         }
 
         private static ShopProduct CopyPart(ShopProduct product)
@@ -49,6 +53,11 @@ namespace FinalProject.MVC.Controllers
                 ImagePath = product.ImagePath,
                 Rating = product.Rating,
                 RatingCount = product.RatingCount,
+                ReviewCount = product.ReviewCount,
+                RealSalesCount = product.RealSalesCount,
+                DemoSalesCount = product.DemoSalesCount,
+                CreatedAt = product.CreatedAt,
+                PopularityScore = product.PopularityScore,
                 Description = product.Description,
                 InStock = product.InStock,
                 Quantity = product.Quantity,
@@ -74,6 +83,7 @@ namespace FinalProject.MVC.Controllers
             }
 
             _allProducts = (await _shopCatalog.GetAllAsync(cancellationToken)).ToList();
+            await _popularity.ApplyAsync(_allProducts, cancellationToken);
             _catalogLoaded = true;
         }
 
@@ -163,11 +173,29 @@ namespace FinalProject.MVC.Controllers
             return source.ToList();
         }
 
+        private static List<ShopProduct> OrderCatalog(List<ShopProduct> products, string? sortBy)
+        {
+            return sortBy switch
+            {
+                "Popular" => PopularityRanking.ByPopularity(
+                    products,
+                    product => product.PopularityScore,
+                    product => product.SalesCount,
+                    product => product.Id).ToList(),
+                "Price Low to High" => products.OrderBy(product => product.EffectivePrice).ThenBy(product => product.Id).ToList(),
+                "Price High to Low" => products.OrderByDescending(product => product.EffectivePrice).ThenBy(product => product.Id).ToList(),
+                "Name A-Z" => products.OrderBy(product => product.Name).ThenBy(product => product.Id).ToList(),
+                "Name Z-A" => products.OrderByDescending(product => product.Name).ThenBy(product => product.Id).ToList(),
+                "Rating" => products.OrderByDescending(product => product.Rating).ThenByDescending(product => product.RatingCount).ThenBy(product => product.Id).ToList(),
+                _ => PopularityRanking.ByLatest(products, product => product.CreatedAt, product => product.Id).ToList()
+            };
+        }
+
         public async Task<IActionResult> Index(string? search, string? category, CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop - AutoVault";
             await EnsureCatalogAsync(cancellationToken);
-            var matched = MatchCatalog(search, category);
+            var matched = OrderCatalog(MatchCatalog(search, category), "Latest");
             var initialProducts = matched.Take(CatalogPageSize).ToList();
             await ApplyRatingsAsync(initialProducts, cancellationToken);
             var response = new ShopFilterResponse
@@ -183,6 +211,15 @@ namespace FinalProject.MVC.Controllers
             };
 
             SetShopFilters();
+            ViewBag.CategoryCounts = _allProducts
+                .Where(product => !string.IsNullOrWhiteSpace(product.Category))
+                .GroupBy(product => product.Category)
+                .ToDictionary(group => group.Key, group => group.Count());
+            var now = DateTime.UtcNow;
+            var campaigns = await _shopCatalog.GetCampaignsAsync(cancellationToken);
+            ViewData["FeaturedCampaign"] = campaigns.FirstOrDefault(campaign =>
+                campaign.IsActive && campaign.StartsAt <= now && campaign.EndsAt > now);
+            ViewData["BodyClass"] = "home-four";
             ViewData["Search"] = search;
             ViewData["Category"] = category;
             return View(response);
@@ -290,12 +327,25 @@ namespace FinalProject.MVC.Controllers
                         filteredProducts = filteredProducts.OrderByDescending(p => p.Name);
                         break;
                     case "Rating":
-                        filteredProducts = filteredProducts.OrderByDescending(p => p.Rating);
+                        filteredProducts = filteredProducts.OrderByDescending(p => p.Rating).ThenByDescending(p => p.RatingCount).ThenBy(p => p.Id);
+                        break;
+                    case "Popular":
+                        filteredProducts = filteredProducts
+                            .OrderByDescending(p => p.PopularityScore)
+                            .ThenByDescending(p => p.SalesCount)
+                            .ThenBy(p => p.Id);
+                        break;
+                    case "Latest":
+                        filteredProducts = filteredProducts.OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id);
                         break;
                     default:
-                        filteredProducts = filteredProducts.OrderBy(p => p.Id);
+                        filteredProducts = filteredProducts.OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id);
                         break;
                 }
+            }
+            else
+            {
+                filteredProducts = filteredProducts.OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id);
             }
 
             var totalFilteredProducts = filteredProducts.Count();
@@ -329,12 +379,13 @@ namespace FinalProject.MVC.Controllers
             int pageSize = CatalogPageSize,
             string? search = null,
             string? category = null,
+            string? sortBy = null,
             CancellationToken cancellationToken = default)
         {
             await EnsureCatalogAsync(cancellationToken);
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 48);
-            var matched = MatchCatalog(search, category);
+            var matched = OrderCatalog(MatchCatalog(search, category), sortBy);
             var products = matched
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -605,7 +656,7 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult Cart()
         {
-            TempData["Success"] = "Questions about a part are sent from that product page. The showroom reads them in the admin panel.";
+            TempData["Success"] = "Questions about a part are sent from that product page. Our team reads them in the admin panel.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -615,7 +666,7 @@ namespace FinalProject.MVC.Controllers
         {
             var (ok, error) = await _shopCatalog.SaveInquiryAsync(inquiry, cancellationToken);
             TempData[ok ? "Success" : "Error"] = ok
-                ? "Your question was sent to the showroom. Visit Babek Prospekti to inspect the item before you buy."
+                ? "Your question was sent to the store. Visit Babek Prospekti to inspect the item before you buy."
                 : error;
             return RedirectToAction(nameof(Details), "Shop", new { id = inquiry.ProductId }, "ask-question");
         }
@@ -629,7 +680,7 @@ namespace FinalProject.MVC.Controllers
             {
                 TempData["RequestSuccess"] = result.Duplicate
                     ? $"We already received this request (#{result.RequestId}). It was not sent twice."
-                    : $"Request #{result.RequestId} sent. This is not a confirmed purchase. The showroom will contact you to confirm availability, and you complete the purchase in person at Babek Prospekti 22-24, Baku.";
+                    : $"Request #{result.RequestId} sent. This is not a confirmed purchase. Our team will contact you to confirm availability, and you complete the purchase in person at Babek Prospekti 22-24, Baku.";
             }
             else
             {
@@ -693,7 +744,7 @@ namespace FinalProject.MVC.Controllers
             return Json(new
             {
                 success = true,
-                message = "Added to your inquiry list. Collect it at the Baku showroom.",
+                message = "Added to your inquiry list. Collect it at the Baku store.",
                 cartCount = cart.Items.Sum(i => i.Quantity),
                 cartTotal = cart.Total
             });
@@ -886,7 +937,7 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult Checkout()
         {
-            TempData["Success"] = "Online checkout is not available. Visit the Baku showroom to buy in person.";
+            TempData["Success"] = "Online checkout is not available. Visit the Baku store to buy in person.";
             return RedirectToAction("Index", "Contact");
         }
     }

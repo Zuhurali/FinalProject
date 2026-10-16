@@ -137,6 +137,9 @@ namespace FinalProject.MVC.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("IsDemo")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Note")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -414,6 +417,9 @@ namespace FinalProject.MVC.Migrations
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()

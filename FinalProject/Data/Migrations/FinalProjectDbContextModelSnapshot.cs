@@ -398,6 +398,9 @@ namespace FinalProject.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsDemo")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
@@ -442,6 +445,9 @@ namespace FinalProject.Data.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDemo")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("bit");

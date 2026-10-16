@@ -169,7 +169,9 @@ public sealed class ProductReviewService : IProductReviewService
                 review.Id,
                 review.ProductId,
                 review.UserId,
-                user.Email ?? user.UserName ?? "Customer",
+                (user.FirstName != null && user.FirstName != "") || (user.LastName != null && user.LastName != "")
+                    ? ((user.FirstName ?? "") + " " + (user.LastName ?? "")).Trim()
+                    : user.Email ?? user.UserName ?? "Customer",
                 review.Content,
                 review.IsHidden,
                 review.CreatedAt,

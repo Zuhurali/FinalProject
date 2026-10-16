@@ -6,8 +6,7 @@ namespace FinalProject.MVC.Controllers
     {
         public IActionResult Index()
         {
-            ViewData["Title"] = "Services - AutoVault";
-            return View();
+            return RedirectToActionPermanent("Index", "Contact");
         }
     }
 }

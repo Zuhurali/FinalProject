@@ -15,7 +15,9 @@
             ? $"Low stock · {Model.Quantity} left"
             : $"In stock · {Model.Quantity} available";
     var related = ViewBag.RelatedProducts as IReadOnlyList<ShopProduct> ?? Array.Empty<ShopProduct>();
-    var credits = ProductImageCredits.For(Model.ImagePath);
+    var photos = ProductImageCredits.Gallery(Model.ImagePath);
+    var hasPhoto = photos.Count > 0;
+    var hasGallery = photos.Count > 1;
     var signedInName = User.Identity?.IsAuthenticated == true ? User.Identity.Name : "";
 
     var form = new Dictionary<string, string?>();
@@ -66,24 +68,30 @@
 
         <div class="av-detail">
             <div class="av-detail__media">
-                <figure class="av-detail__figure">
-                    <a href="@Url.Content(Model.ImagePath)" target="_blank" rel="noopener" class="av-detail__frame" title="Open full-size photo">
-                        <img src="@Url.Content(Model.ImagePath)" alt="@Model.Name" width="1600" height="1200" fetchpriority="high">
+                <figure class="av-detail__figure" @(hasPhoto ? "data-car-gallery" : "")>
+                    <a href="@Url.Content(Model.ImagePath)" class="av-detail__frame" data-gallery-open aria-label="Open photo 1 of @photos.Count full size">
+                        <img src="@Url.Content(Model.ImagePath)" alt="@Model.Name, photo 1 of @photos.Count" width="1600" height="1200" fetchpriority="high" data-gallery-main>
                         @if (Model.Quantity <= 0)
                         {
                             <span class="av-card__badge av-card__badge--out">Out of stock</span>
                         }
                     </a>
-                    @if (credits.Count > 0)
+                    @if (hasGallery)
                     {
-                        <figcaption class="av-detail__credit">
-                            @(credits.Count == 1 ? "Photo" : "Photos"):
-                            @foreach (var photoCredit in credits)
+                        <div class="av-detail__thumbs">
+                            @for (var index = 0; index < photos.Count; index++)
                             {
-                                <span class="av-detail__credit-item">@photoCredit.Author, <a href="@photoCredit.SourceUrl" target="_blank" rel="noopener">@photoCredit.License</a></span>
+                                <button type="button"
+                                        class="av-detail__thumb@(index == 0 ? " is-active" : string.Empty)"
+                                        data-gallery-thumb
+                                        data-index="@index"
+                                        data-src="@Url.Content(photos[index])"
+                                        aria-label="Show photo @(index + 1) of @photos.Count"
+                                        aria-pressed="@(index == 0 ? "true" : "false")">
+                                    <img src="@Url.Content(photos[index])" alt="" loading="lazy">
+                                </button>
                             }
-                            via Wikimedia Commons
-                        </figcaption>
+                        </div>
                     }
                 </figure>
             </div>
@@ -108,10 +116,14 @@
                         }
                         else
                         {
-                            <text>@Model.Rating.ToString("0.0") (@Model.RatingCount @(Model.RatingCount == 1 ? "Rating" : "Ratings"))</text>
+                            <text>@Model.Rating.ToString("0.0") (@(Model.ReviewCount > 0 ? Model.ReviewCount : Model.RatingCount) @(Model.ReviewCount == 1 ? "Review" : Model.ReviewCount > 1 ? "Reviews" : Model.RatingCount == 1 ? "Rating" : "Ratings"))</text>
                         }
                     </a>
                 </div>
+                @if (Model.RealSalesCount > 0)
+                {
+                    <p class="av-detail__sales">In-Store Sales: @Model.RealSalesCount</p>
+                }
 
                 <div class="av-detail__price-row">
                     <p class="av-detail__price">
@@ -156,20 +168,27 @@
                 </dl>
 
                 <section class="av-request" id="request-to-buy" aria-labelledby="request-to-buy-title">
-                    <h3 id="request-to-buy-title">Request to Buy</h3>
-                    <p class="av-request__lead">Send a request and the showroom will contact you to confirm availability. You pay and collect in person at the showroom. Nothing is charged online, the request is not a confirmed purchase, and stock is not held.</p>
+                    <div class="av-request__head">
+                        <div>
+                            <h3 id="request-to-buy-title">Buy in Store</h3>
+                            <p class="av-request__lead">No online payment. Send a request and our team will contact you. You pay and collect in person.</p>
+                        </div>
+                    </div>
 
                     @if (TempData["RequestSuccess"] != null)
                     {
-                        <div class="alert alert-success" role="status">@TempData["RequestSuccess"]</div>
-                    }
-                    @if (TempData["RequestError"] != null)
-                    {
-                        <div class="alert alert-danger" role="alert">@TempData["RequestError"]</div>
+                        <div class="alert alert-success" role="status" id="request-success">@TempData["RequestSuccess"]</div>
                     }
 
                     @if (Model.Quantity > 0)
                     {
+                        var requestError = TempData["RequestError"] as string;
+                        <button type="button" class="av-btn av-btn--primary av-request__toggle" id="request-toggle" aria-expanded="@(requestError != null ? "true" : "false")" aria-controls="request-panel" @(requestError != null ? "hidden" : "")>Request to Buy</button>
+                        <div class="av-request__panel" id="request-panel" @(requestError == null ? "hidden" : "")>
+                        @if (requestError != null)
+                        {
+                            <div class="alert alert-danger" role="alert">@requestError</div>
+                        }
                         <form asp-controller="Shop" asp-action="RequestToBuy" method="post" class="av-request__form" id="request-form">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="ProductId" value="@Model.Id" />
@@ -200,14 +219,23 @@
                                     <textarea class="form-control" name="Note" maxlength="@ShowroomRequestRules.MaxNoteLength" rows="2">@Field("Note")</textarea>
                                 </label>
                             </div>
-                            <button type="submit" class="av-btn av-btn--primary" id="request-submit">Send Purchase Request</button>
+                            <p class="av-request__fine">A request is not a confirmed purchase, and stock is not held until our team confirms.</p>
+                            <div class="av-request__actions">
+                                <button type="submit" class="av-btn av-btn--primary" id="request-submit">Send Request</button>
+                                <button type="button" class="av-btn av-btn--ghost" id="request-cancel">Cancel</button>
+                            </div>
                         </form>
+                        </div>
                     }
                     else
                     {
+                        if (TempData["RequestError"] is string closedError)
+                        {
+                            <div class="alert alert-danger" role="alert">@closedError</div>
+                        }
                         <div class="av-request__closed" role="note">
-                            <strong>This item is out of stock.</strong>
-                            Purchase requests are closed until the showroom has it again. You can ask a question below or call the showroom.
+                            <strong>Out of stock.</strong>
+                            Purchase requests reopen when the store has this item again. You can ask a question below or call the store.
                         </div>
                     }
 
@@ -285,7 +313,7 @@
             <div class="tab-content">
                 <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                     <p>@Model.Description</p>
-                    <p>Buy and collect this item at the AutoVault showroom, Babek Prospekti 22–24, Baku. Compatibility is listed only when it is known for this product.</p>
+                    <p>Buy and collect this item at the AutoVault store, Babek Prospekti 22–24, Baku. Compatibility is listed only when it is known for this product.</p>
                 </div>
                 <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
                     <div class="ms-section-title">
@@ -293,7 +321,10 @@
                         <ul>
                             <li><i class="fa-regular fa-circle-check"></i> <strong>Product Name:</strong> @Model.Name</li>
                             <li><i class="fa-regular fa-circle-check"></i> <strong>Category:</strong> @Model.Category</li>
-                            <li><i class="fa-regular fa-circle-check"></i> <strong>Brand:</strong> @(string.IsNullOrWhiteSpace(Model.Brand) ? "Not stated" : Model.Brand)</li>
+                            @if (!string.IsNullOrWhiteSpace(Model.Brand))
+                            {
+                                <li><i class="fa-regular fa-circle-check"></i> <strong>Brand:</strong> @Model.Brand</li>
+                            }
                             @if (!string.IsNullOrWhiteSpace(Model.Compatibility))
                             {
                                 <li><i class="fa-regular fa-circle-check"></i> <strong>Compatibility:</strong> @Model.Compatibility</li>
@@ -308,7 +339,7 @@
                             }
                             <li><i class="fa-regular fa-circle-check"></i> <strong>Price:</strong> $@Model.Price.ToString("0.00")</li>
                             <li><i class="fa-regular fa-circle-check"></i> <strong>Availability:</strong> @stockText</li>
-                            <li><i class="fa-regular fa-circle-check"></i> <strong>Rating:</strong> @Model.Rating.ToString("0.0") / 5.0</li>
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Rating:</strong> @(Model.RatingCount > 0 ? $"{Model.Rating:0.0} / 5.0" : "No ratings yet")</li>
                         </ul>
                     </div>
                 </div>
@@ -379,7 +410,7 @@
         {
             <section class="av-related" aria-labelledby="related-title">
                 <div class="av-related__head">
-                    <h2 id="related-title">More parts in the showroom</h2>
+                    <h2 id="related-title">More parts in the shop</h2>
                     <a asp-controller="Shop" asp-action="Index">View all parts</a>
                 </div>
                 <div class="av-grid">
@@ -393,13 +424,57 @@
     </div>
 </div>
 
+@if (hasPhoto)
+{
+    <div id="vehicle-lightbox" class="vehicle-lightbox" role="dialog" aria-modal="true" aria-label="@Model.Name photos" hidden>
+        <div class="vehicle-lightbox__backdrop" data-lightbox-close></div>
+        <button type="button" class="vehicle-lightbox__close" data-lightbox-close aria-label="Close photo viewer">&times;</button>
+        @if (hasGallery)
+        {
+            <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__prev" data-lightbox-prev aria-label="Previous photo">&lsaquo;</button>
+            <button type="button" class="vehicle-lightbox__nav vehicle-lightbox__next" data-lightbox-next aria-label="Next photo">&rsaquo;</button>
+        }
+        <figure class="vehicle-lightbox__stage">
+            <img class="vehicle-lightbox__image" alt="@Model.Name">
+            <figcaption class="vehicle-lightbox__caption" @(hasGallery ? "" : "hidden")></figcaption>
+        </figure>
+    </div>
+}
+
 @section Scripts {
+@if (hasPhoto)
+{
+    <script src="~/js/car-details.js" asp-append-version="true"></script>
+}
 <script>
     $(document).ready(function() {
         if (location.hash === '#ask-question' || location.hash === '#ask-showroom') {
             const ask = document.getElementById('ask-question');
             ask.open = true;
             ask.scrollIntoView({ block: 'start' });
+        }
+
+        function openRequestPanel(focus) {
+            const panel = document.getElementById('request-panel');
+            if (!panel) {
+                return;
+            }
+            panel.hidden = false;
+            $('#request-toggle').attr('aria-expanded', 'true').prop('hidden', true);
+            if (focus) {
+                panel.querySelector('input[name="CustomerName"]').focus();
+            }
+        }
+
+        $('#request-toggle').on('click', function() {
+            openRequestPanel(true);
+        });
+        $('#request-cancel').on('click', function() {
+            document.getElementById('request-panel').hidden = true;
+            $('#request-toggle').attr('aria-expanded', 'false').prop('hidden', false).trigger('focus');
+        });
+        if (location.hash === '#request-to-buy' && !document.getElementById('request-success')) {
+            openRequestPanel(false);
         }
 
         $('#request-form').on('submit', function(event) {
@@ -409,6 +484,11 @@
                 return;
             }
             button.prop('disabled', true).text('Sending...');
+            $('#request-cancel').prop('disabled', true);
+        });
+        window.addEventListener('pageshow', function() {
+            $('#request-submit').prop('disabled', false).text('Send Request');
+            $('#request-cancel').prop('disabled', false);
         });
 
         function paintUserRating(value) {

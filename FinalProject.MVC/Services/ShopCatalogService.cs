@@ -41,6 +41,10 @@ public sealed class ShopCatalogService : IShopCatalogService
         }
 
         product.InStock = product.Quantity > 0;
+        if (product.CreatedAt == default)
+        {
+            product.CreatedAt = DateTime.UtcNow;
+        }
         product.Brand = product.Brand.Trim();
         product.Compatibility = product.Compatibility.Trim();
         product.SearchKeywords = Keywords(product);
@@ -129,7 +133,8 @@ public sealed class ShopCatalogService : IShopCatalogService
             InStock = product.Quantity > 0,
             Color = product.Color,
             Fuel = product.Fuel,
-            SearchKeywords = product.SearchKeywords
+            SearchKeywords = product.SearchKeywords,
+            CreatedAt = product.CreatedAt
         };
 
         if (offer != null &&
@@ -162,7 +167,7 @@ public sealed class ShopCatalogService : IShopCatalogService
     {
         return
         [
-            Part(1, "Gear and Workshop Equipment Set", 400, 24, "11.webp", "Accessories", "Gear, shaft, and workshop equipment photographed for the showroom counter."),
+            Part(1, "Gear and Workshop Equipment Set", 400, 24, "11.webp", "Accessories", "Gear, shaft, and workshop equipment photographed for the store counter."),
             Part(2, "Brake and Suspension Parts Kit", 599, 18, "12.webp", "Brakes", "Brake, suspension, and filter parts shown together. Fitment is not stated."),
             Part(3, "Performance Tire", 399, 7, "13.webp", "Accessories", "A performance tire. Vehicle fitment is not stated."),
             Part(4, "Micrometer with Check Ring", 790, 3, "14.webp", "Workshop Tools", "Outside micrometer, bore gauges, and check ring."),
@@ -177,7 +182,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             Part(13, "Ball Bearing", 64, 1, "parts/hd/ball-bearing.webp", "Accessories", "Ball bearing. Application is not stated."),
             Part(14, "Bore Gauge Set", 340, 55, "parts/hd/bore-gauge.webp", "Workshop Tools", "Inside micrometer set for measuring engine bores."),
             Part(15, "Precision Check Ring", 155, 0, "parts/hd/check-ring.webp", "Workshop Tools", "Precision ring gauge for checking threads and setting gauges."),
-            Part(16, "Turbocharger Assembly", 1290, 22, "parts/hd/turbocharger.webp", "Accessories", "Turbocharger and exhaust housing. Vehicle fitment is not stated."),
+            Part(16, "Turbocharger Assembly", 1290, 7, "parts/hd/turbocharger.webp", "Accessories", "Turbocharger and exhaust housing. Vehicle fitment is not stated."),
             Part(17, "Exhaust Muffler", 320, 6, "parts/hd/exhaust-muffler.webp", "Accessories", "Exhaust muffler. Vehicle fitment is not stated."),
             Part(18, "Exhaust Tip", 180, 5, "parts/hd/exhaust-tip.webp", "Accessories", "Exhaust tip. Vehicle fitment is not stated."),
             Part(19, "Splined Driveshaft", 260, 11, "parts/hd/splined-shaft.webp", "Accessories", "Splined driveshaft. Vehicle fitment is not stated."),
@@ -285,7 +290,7 @@ public sealed class ShopCatalogService : IShopCatalogService
         return await _db.InPersonSales.AsNoTracking()
             .Include(sale => sale.Product)
             .OrderByDescending(sale => sale.SoldAt)
-            .Take(100)
+            .Take(200)
             .ToListAsync(cancellationToken);
     }
 
@@ -331,7 +336,8 @@ public sealed class ShopCatalogService : IShopCatalogService
             UnitPrice = priced.EffectivePrice,
             RecordedByUserId = recordedByUserId,
             Note = (note ?? string.Empty).Trim(),
-            SoldAt = DateTime.UtcNow
+            SoldAt = DateTime.UtcNow,
+            IsDemo = false
         });
         await _db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -430,7 +436,7 @@ public sealed class ShopCatalogService : IShopCatalogService
         if (openRequest != null)
         {
             return PurchaseRequestResult.Failed(
-                $"You already have an open request (#{openRequest.Id}) for this product. The showroom will contact you about it.");
+                $"You already have an open request (#{openRequest.Id}) for this product. Our team will contact you about it.");
         }
 
         request.Id = 0;

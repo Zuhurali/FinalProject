@@ -37,6 +37,8 @@ public class ShopCatalogProduct
 
     public bool InStock { get; set; } = true;
 
+    public DateTime CreatedAt { get; set; }
+
     [MaxLength(50)]
     public string Color { get; set; } = string.Empty;
 

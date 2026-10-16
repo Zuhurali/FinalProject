@@ -102,6 +102,8 @@ public class FinalProjectDbContext : DbContext
                 .HasDatabaseName("UX_ProductRatings_UserId_ProductId");
             entity.HasIndex(rating => rating.ProductId)
                 .HasDatabaseName("IX_ProductRatings_ProductId");
+            // Presentation rows are not customer feedback and must never reach averages or counts.
+            entity.HasQueryFilter(rating => !rating.IsDemo);
         });
 
         modelBuilder.Entity<ProductReview>(entity =>
@@ -116,6 +118,7 @@ public class FinalProjectDbContext : DbContext
             entity.HasIndex(review => new { review.UserId, review.ProductId })
                 .IsUnique()
                 .HasDatabaseName("UX_ProductReviews_UserId_ProductId");
+            entity.HasQueryFilter(review => !review.IsDemo);
         });
 
         modelBuilder.Entity<IdentityUserReference>(entity =>

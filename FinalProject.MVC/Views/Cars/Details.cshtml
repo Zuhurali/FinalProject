@@ -179,7 +179,7 @@
                         }
                         @if (string.IsNullOrWhiteSpace(Model.OwnerId))
                         {
-                            <p>This vehicle is offered by the AutoVault showroom in Baku. Call or email the showroom for availability and pricing.</p>
+                            <p>This vehicle is offered by the AutoVault store in Baku. Call or email the store for availability and pricing.</p>
                             <div class="contact-button-area">
                                 <a href="tel:+994503546767" class="rts-btn radius-small telegram"><img src="~/assets/images/cta/call.svg" alt=""> +994 50 354 67 67</a>
                                 <a href="mailto:Autovault@gmail.com" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Autovault@gmail.com</a>
@@ -328,12 +328,12 @@
                             <div class="contact-inner">
                                 @if (string.IsNullOrWhiteSpace(Model.OwnerId))
                                 {
-                                    <h5>AutoVault Showroom</h5>
+                                    <h5>AutoVault Store</h5>
                                     <p>Babek Prospekti 22–24, Baku, Azerbaijan</p>
                                     <p><a href="tel:+994503546767">+994 50 354 67 67</a></p>
                                     <p><a href="mailto:Autovault@gmail.com">Autovault@gmail.com</a></p>
                                     <div class="contact-button-area">
-                                        <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-small telegram">Contact showroom</a>
+                                        <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-small telegram">Contact the store</a>
                                     </div>
                                 }
                                 else

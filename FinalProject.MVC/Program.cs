@@ -113,6 +113,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
+builder.Services.AddScoped<IProductPopularityService, ProductPopularityService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
 // Add session support
@@ -168,4 +169,5 @@ static async Task SeedApplicationAsync(WebApplication app)
 
     await using var identityScope = app.Services.CreateAsyncScope();
     await IdentityRoleSeeder.SeedAsync(identityScope.ServiceProvider, app.Configuration);
+    await PopularityDemoSeeder.SeedAsync(identityScope.ServiceProvider);
 }

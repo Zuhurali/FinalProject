@@ -33,11 +33,11 @@
             <input name="note" class="form-control" maxlength="500" />
         </div>
     </div>
-    <button class="btn btn-primary mt-3" type="submit">Record showroom sale</button>
+    <button class="btn btn-primary mt-3" type="submit">Record in-store sale</button>
 </form>
 <div class="admin-card">
     <table class="table">
-        <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>Unit price</th><th>Note</th></tr></thead>
+        <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>Unit price</th><th>Source</th><th>Note</th></tr></thead>
         <tbody>
         @foreach (var sale in Model)
         {
@@ -46,8 +46,49 @@
                 <td>@(sale.Product?.Name ?? $"Product #{sale.ProductId}")</td>
                 <td>@sale.Quantity</td>
                 <td>@sale.UnitPrice.ToString("C")</td>
+                <td>@(sale.IsDemo ? "Demo (simulated)" : "Recorded sale")</td>
                 <td>@sale.Note</td>
             </tr>
+        }
+        </tbody>
+    </table>
+</div>
+<div class="admin-card mt-4">
+    <h2 class="h4">Popular Items ranking</h2>
+    <p>@ViewBag.Formula The ranking score is this formula's result. It is shown here so the order can be checked. Customers do not see it.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Part</th>
+                <th>Added (UTC)</th>
+                <th>Average</th>
+                <th>Ratings</th>
+                <th>Reviews</th>
+                <th>Recorded sales</th>
+                <th>Demo sales (simulated)</th>
+                <th>Ranking score</th>
+            </tr>
+        </thead>
+        <tbody>
+        @{
+            var rank = 1;
+            var ranking = (IReadOnlyList<ShopProduct>)ViewBag.Ranking;
+        }
+        @foreach (var product in ranking)
+        {
+            <tr>
+                <td>@rank</td>
+                <td>@product.Name</td>
+                <td>@product.CreatedAt.ToString("yyyy-MM-dd")</td>
+                <td>@product.Rating.ToString("0.00")</td>
+                <td>@product.RatingCount</td>
+                <td>@product.ReviewCount</td>
+                <td>@product.RealSalesCount</td>
+                <td>@product.DemoSalesCount</td>
+                <td>@product.PopularityScore.ToString("0.000")</td>
+            </tr>
+            rank++;
         }
         </tbody>
     </table>

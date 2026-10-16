@@ -22,4 +22,6 @@ public class InPersonSale
     public string Note { get; set; } = string.Empty;
 
     public DateTime SoldAt { get; set; }
+
+    public bool IsDemo { get; set; }
 }

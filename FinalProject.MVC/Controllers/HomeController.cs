@@ -25,19 +25,13 @@ namespace FinalProject.MVC.Controllers
 
         private readonly ILogger<HomeController> _logger;
         private readonly ICarApiService _carApi;
-        private readonly IShopCatalogService _shopCatalog;
-        private readonly IProductRatingApiService _ratingApi;
 
         public HomeController(
             ILogger<HomeController> logger,
-            ICarApiService carApi,
-            IShopCatalogService shopCatalog,
-            IProductRatingApiService ratingApi)
+            ICarApiService carApi)
         {
             _logger = logger;
             _carApi = carApi;
-            _shopCatalog = shopCatalog;
-            _ratingApi = ratingApi;
         }
 
         public async Task<IActionResult> Index()
@@ -94,133 +88,39 @@ namespace FinalProject.MVC.Controllers
             return View();
         }
 
-        public async Task<IActionResult> DealerTwo()
+        public IActionResult DealerTwo()
         {
-            IReadOnlyList<Car> cars;
-            try
-            {
-                cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
-                lock (CatalogLock)
-                {
-                    CatalogCache = cars;
-                }
-            }
-            catch (CarApiException exception)
-            {
-                _logger.LogWarning(exception, "Dealer Two catalog could not be loaded.");
-                lock (CatalogLock)
-                {
-                    cars = CatalogCache ?? Array.Empty<Car>();
-                }
-            }
-
-            var makes = cars.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList();
-            var modelsByMake = cars
-                .Where(car => !string.IsNullOrWhiteSpace(car.Make) && !string.IsNullOrWhiteSpace(car.Model))
-                .GroupBy(car => car.Make)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(car => car.Model).Distinct().OrderBy(model => model).ToArray());
-
-            ViewData["Title"] = "Dealer Two - AutoVault";
-            ViewData["BodyClass"] = "home-two";
-            ViewData["DealerCars"] = cars;
-            ViewData["SearchMakes"] = makes;
-            ViewData["ModelsByMake"] = modelsByMake;
-            return View();
+            return RedirectToActionPermanent(nameof(Index));
         }
 
-        public async Task<IActionResult> DealerThree()
+        public IActionResult DealerThree()
         {
-            IReadOnlyList<Car> cars;
-            try
-            {
-                cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
-                lock (CatalogLock)
-                {
-                    CatalogCache = cars;
-                }
-            }
-            catch (CarApiException exception)
-            {
-                _logger.LogWarning(exception, "Dealer Three catalog could not be loaded.");
-                lock (CatalogLock)
-                {
-                    cars = CatalogCache ?? Array.Empty<Car>();
-                }
-            }
-
-            var makes = cars.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList();
-            var modelsByMake = cars
-                .Where(car => !string.IsNullOrWhiteSpace(car.Make) && !string.IsNullOrWhiteSpace(car.Model))
-                .GroupBy(car => car.Make)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(car => car.Model).Distinct().OrderBy(model => model).ToArray());
-
-            ViewData["Title"] = "Dealer Three - AutoVault";
-            ViewData["HeaderStyle"] = "three";
-            ViewData["DealerCars"] = cars;
-            ViewData["SearchMakes"] = makes;
-            ViewData["ModelsByMake"] = modelsByMake;
-            return View();
+            return RedirectToActionPermanent(nameof(Index));
         }
 
-        public async Task<IActionResult> ShopDemo(CancellationToken cancellationToken)
+        public IActionResult ShopDemo()
         {
-            ViewData["Title"] = "Shop - AutoVault";
-            ViewData["BodyClass"] = "home-four";
-            var products = (await _shopCatalog.GetAllAsync(cancellationToken)).ToList();
-            try
-            {
-                var summaries = await _ratingApi.GetSummariesAsync(products.Select(product => product.Id), cancellationToken);
-                var byProduct = summaries.ToDictionary(summary => summary.ProductId);
-                foreach (var product in products)
-                {
-                    if (byProduct.TryGetValue(product.Id, out var summary))
-                    {
-                        product.Rating = summary.AverageRating;
-                        product.RatingCount = summary.TotalCount;
-                    }
-                }
-            }
-            catch (CarApiException)
-            {
-                ViewData["RatingServiceUnavailable"] = true;
-            }
-
-            var now = DateTime.UtcNow;
-            var campaigns = await _shopCatalog.GetCampaignsAsync(cancellationToken);
-            ViewData["ShopProducts"] = products;
-            ViewData["FeaturedCampaign"] = campaigns.FirstOrDefault(campaign =>
-                campaign.IsActive && campaign.StartsAt <= now && campaign.EndsAt > now);
-            return View();
+            return RedirectToActionPermanent("Index", "Shop");
         }
 
         public IActionResult DealerSlider()
         {
-            return RedirectToAction(nameof(Index));
+            return RedirectToActionPermanent(nameof(Index));
         }
 
         public IActionResult DealerVideo()
         {
-            return RedirectToAction(nameof(Index));
+            return RedirectToActionPermanent(nameof(Index));
         }
 
         public IActionResult WashDemo()
         {
-            ViewData["Title"] = "Wash Demo - AutoVault";
-            ViewData["HeaderStyle"] = "five";
-            ViewData["FooterStyle"] = "wash";
-            return View();
+            return RedirectToActionPermanent("Index", "Contact");
         }
 
         public IActionResult RepairDemo()
         {
-            ViewData["Title"] = "Repair Demo - AutoVault";
-            ViewData["HeaderStyle"] = "six";
-            ViewData["FooterStyle"] = "repair";
-            return View();
+            return RedirectToActionPermanent("Index", "Contact");
         }
 
         public IActionResult Privacy()

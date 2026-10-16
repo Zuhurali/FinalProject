@@ -28,7 +28,7 @@ public static class ShowroomRequestRules
 
         if (availableQuantity <= 0)
         {
-            return "This product is out of stock, so it cannot be requested. Ask a question or call the showroom instead.";
+            return "This product is out of stock, so it cannot be requested. Ask a question or call the store instead.";
         }
 
         if (request.Quantity < 1 || request.Quantity > MaxQuantityPerRequest)
@@ -54,7 +54,7 @@ public static class ShowroomRequestRules
         var digits = request.Phone.Count(char.IsDigit);
         if (request.Phone.Length > 40 || digits < 7)
         {
-            return "Enter a phone number the showroom can call.";
+            return "Enter a phone number our team can call.";
         }
 
         if (request.PreferredVisitDate.HasValue)

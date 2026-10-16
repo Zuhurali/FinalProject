@@ -15,7 +15,8 @@ public class ShowroomRuleTests
     [InlineData(0, "Out of Stock")]
     [InlineData(1, "Low Stock")]
     [InlineData(5, "Low Stock")]
-    [InlineData(6, "In Stock")]
+    [InlineData(7, "Low Stock")]
+    [InlineData(8, "In Stock")]
     [InlineData(60, "In Stock")]
     public void StockStatus_follows_quantity_boundaries(int quantity, string expected)
     {

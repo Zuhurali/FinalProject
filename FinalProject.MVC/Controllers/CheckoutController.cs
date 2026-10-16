@@ -15,7 +15,7 @@ namespace FinalProject.MVC.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            TempData["Success"] = "AutoVault does not take online payment. Call the showroom, send an inquiry, or visit Babek Prospekti 22–24 in Baku.";
+            TempData["Success"] = "AutoVault does not take online payment. Call the store, send an inquiry, or visit Babek Prospekti 22–24 in Baku.";
             return RedirectToAction("Index", "Contact");
         }
 
@@ -23,7 +23,7 @@ namespace FinalProject.MVC.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult PlaceOrder()
         {
-            TempData["Success"] = "Online checkout is not available. Visit the Baku showroom to buy in person.";
+            TempData["Success"] = "Online checkout is not available. Visit the Baku store to buy in person.";
             return RedirectToAction("Index", "Contact");
         }
 
