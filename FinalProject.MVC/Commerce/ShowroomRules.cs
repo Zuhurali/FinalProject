@@ -2,6 +2,8 @@ namespace FinalProject.MVC.Commerce;
 
 public static class ShowroomRules
 {
+    public const int LowStockMaximum = 10;
+
     public static string StockStatus(int quantity)
     {
         if (quantity < 0)
@@ -14,7 +16,7 @@ public static class ShowroomRules
             return "Out of Stock";
         }
 
-        return quantity <= 7 ? "Low Stock" : "In Stock";
+        return quantity <= LowStockMaximum ? "Low Stock" : "In Stock";
     }
 
     public static string? ValidateSaleQuantity(int requested, int available)
@@ -44,11 +46,31 @@ public static class ShowroomRules
         DateTime startsAt,
         DateTime endsAt)
     {
+        var windowError = ValidateCampaignWindowAndPercent(discountPercent, discountedPrice, startsAt, endsAt);
+        if (windowError != null)
+        {
+            return windowError;
+        }
+
         if (originalPrice <= 0)
         {
             return "The original price must be greater than zero.";
         }
 
+        if (discountedPrice is decimal salePrice && (salePrice <= 0 || salePrice >= originalPrice))
+        {
+            return "The discounted price must be greater than zero and lower than the original price.";
+        }
+
+        return null;
+    }
+
+    public static string? ValidateCampaignWindowAndPercent(
+        decimal? discountPercent,
+        decimal? discountedPrice,
+        DateTime startsAt,
+        DateTime endsAt)
+    {
         var hasPrice = discountedPrice.HasValue;
         var hasPercent = discountPercent.HasValue;
         if (hasPrice == hasPercent)
@@ -56,14 +78,9 @@ public static class ShowroomRules
             return "Enter either a discounted price or a discount percentage.";
         }
 
-        if (discountedPrice is <= 0 || discountedPrice >= originalPrice)
+        if (discountPercent is <= 0 or > 100)
         {
-            return "The discounted price must be greater than zero and lower than the original price.";
-        }
-
-        if (discountPercent is < 1 or > 90)
-        {
-            return "The discount percentage must be from 1 to 90.";
+            return "The discount percentage must be greater than 0 and at most 100.";
         }
 
         if (endsAt <= startsAt)
@@ -74,9 +91,60 @@ public static class ShowroomRules
         return null;
     }
 
+    public static bool CampaignsConflict(
+        bool aAppliesToAllParts,
+        int? aProductId,
+        bool bAppliesToAllParts,
+        int? bProductId)
+    {
+        if (aAppliesToAllParts || bAppliesToAllParts)
+        {
+            return true;
+        }
+
+        return aProductId.HasValue
+            && bProductId.HasValue
+            && aProductId.Value == bProductId.Value;
+    }
+
     public static bool OfferIsVisible(bool isActive, DateTime startsAt, DateTime endsAt, DateTime utcNow)
     {
         return isActive && utcNow >= startsAt && utcNow < endsAt;
+    }
+
+    public static bool CampaignWindowsOverlap(DateTime aStartsAt, DateTime aEndsAt, DateTime bStartsAt, DateTime bEndsAt)
+    {
+        return aStartsAt < bEndsAt && bStartsAt < aEndsAt;
+    }
+
+    public static string CampaignPublicStatus(bool isActive, DateTime startsAt, DateTime endsAt, DateTime utcNow)
+    {
+        if (!isActive)
+        {
+            return "Inactive";
+        }
+
+        if (utcNow < startsAt)
+        {
+            return "Scheduled";
+        }
+
+        if (utcNow >= endsAt)
+        {
+            return "Expired";
+        }
+
+        return "Live";
+    }
+
+    public static DateTime InclusiveEndUtc(DateTime exclusiveEndsAt)
+    {
+        return DateTime.SpecifyKind(exclusiveEndsAt.Date, DateTimeKind.Utc).AddDays(-1);
+    }
+
+    public static string InclusiveEndLabel(DateTime exclusiveEndsAt)
+    {
+        return InclusiveEndUtc(exclusiveEndsAt).ToString("MMM d", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public static decimal DiscountedPrice(decimal originalPrice, decimal? discountedPrice, decimal? discountPercent)

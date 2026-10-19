@@ -37,7 +37,8 @@
                     <form asp-controller="Account" asp-action="SignIn" method="post">
                         <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
                         <div class="form__control mb-3">
-                            <input type="email" name="email" class="input-form" placeholder="Email Address" required>
+                            <label for="identifier">Email or Username</label>
+                            <input type="text" id="identifier" name="identifier" class="input-form" placeholder="Email or Username" autocomplete="username" required>
                         </div>
                         <div class="form__control mb-3">
                             <input type="password" name="password" class="input-form" placeholder="Password" required>
@@ -72,6 +73,7 @@
 <style>
     .sign-in-remember { display:flex; align-items:center; gap:8px; }
     .sign-in-remember input[type=checkbox] { opacity:1 !important; position:static !important; width:18px !important; height:18px !important; margin:0; }
+    .contact-form label { display:block; margin-bottom:8px; }
     .sign-in-remember label { padding-left:0 !important; margin:0; }
     .sign-in-remember label::before,
     .sign-in-remember label::after { display:none !important; content:none !important; }

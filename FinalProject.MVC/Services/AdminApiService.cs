@@ -38,6 +38,44 @@ public sealed class AdminApiService : IAdminApiService
     public Task DeleteCategoryAsync(int id, string accessToken, CancellationToken cancellationToken = default) =>
         DeleteAsync($"api/admin/categories/{id}", accessToken, cancellationToken);
 
+    public Task<PartAdminListDto> GetPartsAsync(
+        string? search,
+        string? category,
+        int page,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new List<string> { $"page={page}" };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add("search=" + Uri.EscapeDataString(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            query.Add("category=" + Uri.EscapeDataString(category));
+        }
+
+        return GetAsync<PartAdminListDto>("api/admin/parts?" + string.Join("&", query), accessToken, cancellationToken);
+    }
+
+    public Task<PartAdminItemDto> GetPartAsync(int id, string accessToken, CancellationToken cancellationToken = default) =>
+        GetAsync<PartAdminItemDto>($"api/admin/parts/{id}", accessToken, cancellationToken);
+
+    public Task<PartAdminItemDto> CreatePartAsync(SavePartDto part, string accessToken, CancellationToken cancellationToken = default) =>
+        SendAsync<PartAdminItemDto>(HttpMethod.Post, "api/admin/parts", part, accessToken, cancellationToken);
+
+    public Task<PartAdminItemDto> UpdatePartAsync(int id, SavePartDto part, string accessToken, CancellationToken cancellationToken = default) =>
+        SendAsync<PartAdminItemDto>(HttpMethod.Put, $"api/admin/parts/{id}", part, accessToken, cancellationToken);
+
+    public async Task<PartDeleteDto> DeletePartAsync(int id, string accessToken, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Delete, $"api/admin/parts/{id}", accessToken, null, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<PartDeleteDto>(JsonOptions, cancellationToken)
+            ?? new PartDeleteDto { Outcome = "deleted", Message = "The part was deleted." };
+    }
+
     private async Task<T> GetAsync<T>(string url, string accessToken, CancellationToken cancellationToken)
     {
         using var response = await SendAsync(HttpMethod.Get, url, accessToken, null, cancellationToken);
@@ -62,6 +100,19 @@ public sealed class AdminApiService : IAdminApiService
         await EnsureSuccessAsync(response, cancellationToken);
         return await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken)
             ?? throw new CarApiException("The API returned an unreadable lookup.");
+    }
+
+    private async Task<T> SendAsync<T>(
+        HttpMethod method,
+        string url,
+        SavePartDto part,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        using var response = await SendAsync(method, url, accessToken, JsonContent.Create(part), cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken)
+            ?? throw new CarApiException("The API returned an unreadable part.");
     }
 
     private async Task DeleteAsync(string url, string accessToken, CancellationToken cancellationToken)

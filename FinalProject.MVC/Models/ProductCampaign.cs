@@ -6,11 +6,16 @@ public class ProductCampaign
 {
     public int Id { get; set; }
 
-    public int ProductId { get; set; }
+    /// <summary>
+    /// Set for single-product campaigns. Null when <see cref="AppliesToAllParts"/> is true.
+    /// </summary>
+    public int? ProductId { get; set; }
 
     public ShopCatalogProduct? Product { get; set; }
 
-    [Required, MaxLength(120)]
+    public bool AppliesToAllParts { get; set; }
+
+    [MaxLength(120)]
     public string Name { get; set; } = string.Empty;
 
     public decimal? DiscountedPrice { get; set; }

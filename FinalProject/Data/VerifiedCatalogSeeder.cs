@@ -43,24 +43,14 @@ public static class VerifiedCatalogSeeder
                 }
             }
 
-            var imageUrls = ImageUrls(vehicle);
+            // Never overwrite an existing car. Admins may have changed price, color,
+            // description, images, or status, and those edits must survive API restarts.
             if (existing != null)
             {
-                if (existing.CategoryId != category.Id)
-                {
-                    existing.CategoryId = category.Id;
-                }
-
-                if (string.Equals(vehicle.Brand, "Ford", StringComparison.Ordinal)
-                    && existing.IsNew != vehicle.IsNew)
-                {
-                    existing.IsNew = vehicle.IsNew;
-                }
-
-                SyncImageSet(db, existing, imageUrls);
                 continue;
             }
 
+            var imageUrls = ImageUrls(vehicle);
             db.Cars.Add(new Car
             {
                 Brand = brand,
@@ -150,41 +140,6 @@ public static class VerifiedCatalogSeeder
         }
 
         return urls;
-    }
-
-    private static void SyncImageSet(FinalProjectDbContext db, Car existing, IReadOnlyList<string> imageUrls)
-    {
-        var desired = imageUrls
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var extras = existing.Images
-            .Where(image => !desired.Contains(image.ImageUrl, StringComparer.OrdinalIgnoreCase))
-            .ToList();
-        if (extras.Count > 0)
-        {
-            db.RemoveRange(extras);
-            foreach (var extra in extras)
-            {
-                existing.Images.Remove(extra);
-            }
-        }
-
-        for (var index = 0; index < desired.Count; index++)
-        {
-            var url = desired[index];
-            var image = existing.Images.FirstOrDefault(item =>
-                string.Equals(item.ImageUrl, url, StringComparison.OrdinalIgnoreCase));
-            if (image == null)
-            {
-                image = new CarImage { ImageUrl = url };
-                existing.Images.Add(image);
-            }
-
-            image.IsMain = index == 0;
-            image.DisplayOrder = index;
-        }
     }
 
     private sealed record VehicleSeed(

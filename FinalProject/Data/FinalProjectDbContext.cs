@@ -136,6 +136,19 @@ public class FinalProjectDbContext : DbContext
         {
             entity.ToTable("ShopProducts", table => table.ExcludeFromMigrations());
             entity.HasKey(product => product.Id);
+            entity.Property(product => product.Id).ValueGeneratedOnAdd();
+            entity.Property(product => product.Name).HasMaxLength(200).IsRequired();
+            entity.Property(product => product.Price).HasColumnType("decimal(18,2)");
+            entity.Property(product => product.Brand).HasMaxLength(100);
+            entity.Property(product => product.Compatibility).HasMaxLength(300);
+            entity.Property(product => product.Category).HasMaxLength(100).IsRequired();
+            entity.Property(product => product.CarMake).HasMaxLength(100);
+            entity.Property(product => product.CarModel).HasMaxLength(100);
+            entity.Property(product => product.ImagePath).HasMaxLength(500).IsRequired();
+            entity.Property(product => product.Description).HasMaxLength(2000);
+            entity.Property(product => product.Color).HasMaxLength(50);
+            entity.Property(product => product.Fuel).HasMaxLength(50);
+            entity.Property(product => product.SearchKeywords).HasMaxLength(500);
         });
 
         modelBuilder.Entity<Favorite>(entity =>

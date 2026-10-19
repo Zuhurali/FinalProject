@@ -13,6 +13,7 @@ namespace FinalProject.MVC.Models
         public decimal SalePrice { get; set; }
         public int? DiscountPercent { get; set; }
         public DateTime? OfferEndsAt { get; set; }
+        public string OfferEndLabel { get; set; } = string.Empty;
         public string OfferName { get; set; } = string.Empty;
         public decimal EffectivePrice => HasOffer ? SalePrice : Price;
         public string Category { get; set; } = string.Empty;

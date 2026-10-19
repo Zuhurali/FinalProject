@@ -13,7 +13,17 @@ public class InPersonSale
     [Range(1, int.MaxValue)]
     public int Quantity { get; set; }
 
+    /// <summary>Unit price charged in the store (campaign price when a live offer applied).</summary>
     public decimal UnitPrice { get; set; }
+
+    /// <summary>Catalog list price at the time of sale (unchanged base price).</summary>
+    public decimal ListUnitPrice { get; set; }
+
+    public int? CampaignId { get; set; }
+
+    public ProductCampaign? Campaign { get; set; }
+
+    public decimal? CampaignDiscountPercent { get; set; }
 
     [Required, MaxLength(450)]
     public string RecordedByUserId { get; set; } = string.Empty;

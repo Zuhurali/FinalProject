@@ -1,0 +1,107 @@
+@using FinalProject.MVC.Commerce
+@model PartAdminListDto
+@{
+    Layout = "_AdminLayout";
+    var search = ViewData["Search"] as string;
+    var category = ViewData["Category"] as string;
+    var pages = Model.PageSize == 0 ? 1 : (int)Math.Ceiling(Model.Total / (double)Model.PageSize);
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Parts</h1>
+    @if (User.IsInRole("SuperAdmin"))
+    {
+        <a class="btn btn-primary" asp-action="Create">Add New Part</a>
+    }
+</div>
+<form method="get" class="admin-card mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Name, brand, or category" />
+        </div>
+        <div class="col-md-4">
+            <label for="category">Category</label>
+            <select id="category" name="category" class="form-select">
+                <option value="">All categories</option>
+                @foreach (var name in Model.Categories)
+                {
+                    <option value="@name" selected="@(name == category)">@name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-primary" type="submit">Filter</button>
+            <a class="btn btn-link" asp-action="Index">Clear</a>
+        </div>
+    </div>
+</form>
+<div class="admin-card">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Brand</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Rating</th>
+                <th>Active</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var part in Model.Items)
+        {
+            var status = ShowroomRules.StockStatus(part.Quantity);
+            var stockText = part.Quantity <= 0
+                ? "Out of Stock"
+                : status == "Low Stock"
+                    ? $"Low Stock · {part.Quantity} left"
+                    : $"In Stock · {part.Quantity} available";
+            <tr>
+                <td style="width:72px">
+                    @if (!string.IsNullOrWhiteSpace(part.ImagePath))
+                    {
+                        <img src="@Url.Content(part.ImagePath)" alt="" width="64" height="48" style="object-fit:cover" />
+                    }
+                </td>
+                <td>@part.Name</td>
+                <td>@part.Category</td>
+                <td>@(string.IsNullOrWhiteSpace(part.Brand) ? "—" : part.Brand)</td>
+                <td>@part.Price.ToString("C")</td>
+                <td>@part.Quantity</td>
+                <td>@stockText</td>
+                <td>@(part.RatingCount == 0 ? "No ratings" : $"{part.Rating:0.0} ({part.RatingCount})")</td>
+                <td>@(part.IsActive ? "Active" : "Inactive")</td>
+                <td class="text-nowrap">
+                    <a asp-action="Details" asp-route-id="@part.Id">View</a>
+                    <a asp-action="Edit" asp-route-id="@part.Id">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@part.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this part? Related records keep the part inactive instead of removing history.');">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-link text-danger p-0" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.Total == 0)
+    {
+        <p class="mb-0">No parts match this filter.</p>
+    }
+    else
+    {
+        <p class="mb-2">Showing @Model.Items.Count of @Model.Total</p>
+    }
+    @if (pages > 1)
+    {
+        <nav>
+            @for (var number = 1; number <= pages; number++)
+            {
+                <a class="btn btn-sm @(number == Model.Page ? "btn-primary" : "btn-outline-secondary") me-1" asp-action="Index" asp-route-page="@number" asp-route-search="@search" asp-route-category="@category">@number</a>
+            }
+        </nav>
+    }
+</div>

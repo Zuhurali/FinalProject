@@ -182,7 +182,7 @@
                                     <div class="content">
                                         @if (campaign != null && campaign.DiscountPercent.HasValue)
                                         {
-                                            <span class="tag radius-big">@campaign.DiscountPercent.Value.ToString("0")% off</span>
+                                            <span class="tag radius-big">@($"{campaign.DiscountPercent.Value:0}% OFF")</span>
                                             <h4 class="title cw">@campaign.Name</h4>
                                         }
                                         else if (campaign != null)
@@ -709,9 +709,12 @@
             const imagePath = String(product.imagePath || '').replace(/^~\//, '/');
             const badge = quantity <= 0
                 ? '<span class="av-card__badge av-card__badge--out">Out of stock</span>'
-                : product.hasOffer ? `<span class="av-card__badge av-card__badge--offer">${Number(product.discountPercent)}% off</span>` : '';
+                : product.hasOffer ? `<span class="av-card__badge av-card__badge--offer">${Number(product.discountPercent)}% OFF</span>` : '';
+            const offerEnd = product.hasOffer && product.offerEndLabel
+                ? `<span class="av-card__offer-end">Ends ${escapeHtml(String(product.offerEndLabel))}</span>`
+                : '';
             const price = product.hasOffer
-                ? `<s>${money(product.price)}</s> <span>${money(product.salePrice)}</span>`
+                ? `<s>${money(product.price)}</s> <strong>${money(product.salePrice)}</strong>${offerEnd}`
                 : `<span>${money(product.price)}</span>`;
             const cta = quantity > 0
                 ? `<a class="av-card__cta" href="${detailsUrl}#request-to-buy">Request to Buy</a>`

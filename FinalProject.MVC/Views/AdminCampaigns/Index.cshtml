@@ -1,41 +1,110 @@
-@model IReadOnlyList<ProductCampaign>
+@model AdminCampaignsIndexViewModel
 @{
     Layout = "_AdminLayout";
 }
-<div class="d-flex justify-content-between mb-4">
-    <h1 class="h3">Campaigns</h1>
-    <a class="btn btn-primary" asp-action="Create">New campaign</a>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Spare Parts Campaigns</h1>
+    <p class="text-muted mb-0">Advertise temporary in-store discounts for shop parts. Customers see the offer online and buy at the store — there is no online checkout. Car prices are never changed.</p>
 </div>
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
+<form method="get" class="admin-card mb-3" asp-action="Index">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Product, scope, or campaign name" />
+        </div>
+        <div class="col-md-3">
+            <label for="status">Status</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">All statuses</option>
+                @foreach (var option in new[] { "Live", "Scheduled", "Expired", "Inactive" })
+                {
+                    if (string.Equals(Model.Status, option, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@option" selected>@option</option>
+                    }
+                    else
+                    {
+                        <option value="@option">@option</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-primary" type="submit">Filter</button>
+            <a class="btn btn-link" asp-action="Index">Clear</a>
+        </div>
+    </div>
+</form>
 <div class="admin-card">
-    <p>A campaign is shown only while it is active and the current time is inside its start and end dates. Regular product prices stay unchanged.</p>
-    <table class="table">
-        <thead>
-            <tr><th>Name</th><th>Product</th><th>Offer</th><th>Window (UTC)</th><th>Active</th><th></th></tr>
-        </thead>
-        <tbody>
-        @foreach (var campaign in Model)
-        {
-            var visible = campaign.IsActive && DateTime.UtcNow >= campaign.StartsAt && DateTime.UtcNow < campaign.EndsAt;
-            <tr>
-                <td>@campaign.Name @(visible ? "(showing)" : "")</td>
-                <td>@(campaign.Product?.Name ?? $"Product #{campaign.ProductId}")</td>
-                <td>@(campaign.DiscountedPrice.HasValue ? campaign.DiscountedPrice.Value.ToString("C") : campaign.DiscountPercent + "%")</td>
-                <td>@campaign.StartsAt.ToString("yyyy-MM-dd") – @campaign.EndsAt.ToString("yyyy-MM-dd")</td>
-                <td>@(campaign.IsActive ? "Yes" : "No")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@campaign.Id">Edit</a>
-                    <form asp-action="Active" asp-route-id="@campaign.Id" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="isActive" value="@(!campaign.IsActive)" />
-                        <button class="btn btn-link p-0" type="submit">@(campaign.IsActive ? "Deactivate" : "Activate")</button>
-                    </form>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    <p class="mb-3">A campaign is <strong>Live</strong> only while it is active and the current UTC time is inside its date window. Stored product prices and stock stay unchanged.</p>
+    @if (Model.Items.Count == 0)
+    {
+        <div class="text-center py-5">
+            <p class="mb-3 text-muted">@(string.IsNullOrWhiteSpace(Model.Search) && string.IsNullOrWhiteSpace(Model.Status)
+                ? "No campaigns yet. Create one to advertise a temporary spare-parts discount in the Shop."
+                : "No campaigns match this search. Clear filters to see all campaigns.")</p>
+            @if (string.IsNullOrWhiteSpace(Model.Search) && string.IsNullOrWhiteSpace(Model.Status))
+            {
+                <a class="btn btn-primary" asp-action="Create">Create Campaign</a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <p class="text-muted mb-0">@Model.TotalCount campaign@(Model.TotalCount == 1 ? "" : "s") · dates shown in UTC</p>
+            <a class="btn btn-primary" asp-action="Create">Create Campaign</a>
+        </div>
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Scope</th>
+                    <th>Applies to</th>
+                    <th>Discount</th>
+                    <th>Window (UTC)</th>
+                    <th>Active</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var campaign in Model.Items)
+            {
+                <tr>
+                    <td>@campaign.Name</td>
+                    <td>@campaign.ScopeLabel</td>
+                    <td>@campaign.ProductName</td>
+                    <td>
+                        @(campaign.DiscountPercent.HasValue ? $"{campaign.DiscountPercent}% OFF" : "—")
+                        @if (campaign.OriginalPrice.HasValue && campaign.DiscountedPrice.HasValue)
+                        {
+                            <div class="small text-muted">@campaign.OriginalPrice.Value.ToString("C") → @campaign.DiscountedPrice.Value.ToString("C")</div>
+                        }
+                        else if (campaign.AppliesToAllParts)
+                        {
+                            <div class="small text-muted">Per-part sale price</div>
+                        }
+                    </td>
+                    <td>@campaign.StartsAt.ToString("yyyy-MM-dd") – @campaign.EndsAtInclusive.ToString("yyyy-MM-dd")</td>
+                    <td>@(campaign.IsActive ? "Yes" : "No")</td>
+                    <td>@campaign.Status</td>
+                    <td class="text-nowrap">
+                        <a asp-action="Details" asp-route-id="@campaign.Id">View</a>
+                        <a asp-action="Edit" asp-route-id="@campaign.Id">Edit</a>
+                        <form asp-action="Active" asp-route-id="@campaign.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="isActive" value="@(!campaign.IsActive)" />
+                            <button class="btn btn-link p-0" type="submit">@(campaign.IsActive ? "Deactivate" : "Activate")</button>
+                        </form>
+                        <form asp-action="Delete" asp-route-id="@campaign.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this campaign? Product prices and stock stay the same.');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-link text-danger p-0" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
 </div>

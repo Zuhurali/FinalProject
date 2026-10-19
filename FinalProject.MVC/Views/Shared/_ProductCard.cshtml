@@ -27,7 +27,7 @@
         }
         else if (Model.HasOffer)
         {
-            <span class="av-card__badge av-card__badge--offer">@Model.DiscountPercent% off</span>
+            <span class="av-card__badge av-card__badge--offer">@Model.DiscountPercent% OFF</span>
         }
     </a>
     <div class="av-card__body">
@@ -63,7 +63,11 @@
                 @if (Model.HasOffer)
                 {
                     <s>$@Model.Price.ToString("0.00")</s>
-                    <span>$@Model.SalePrice.ToString("0.00")</span>
+                    <strong>$@Model.SalePrice.ToString("0.00")</strong>
+                    @if (!string.IsNullOrWhiteSpace(Model.OfferEndLabel))
+                    {
+                        <span class="av-card__offer-end">Ends @Model.OfferEndLabel</span>
+                    }
                 }
                 else
                 {

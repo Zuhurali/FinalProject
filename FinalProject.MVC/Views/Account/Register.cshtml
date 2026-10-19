@@ -36,7 +36,12 @@
                             <input type="text" name="lastName" class="input-form" placeholder="Last Name (Optional)">
                         </div>
                         <div class="form__control mb-3">
-                            <input type="email" name="email" class="input-form" placeholder="Email Address" required>
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" class="input-form" placeholder="Username" autocomplete="username" minlength="3" maxlength="32" required>
+                        </div>
+                        <div class="form__control mb-3">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" class="input-form" placeholder="Email Address" autocomplete="email" required>
                         </div>
                         <div class="form__control mb-3">
                             <input type="password" name="password" class="input-form" placeholder="Password (min 6 characters)" required>
@@ -57,3 +62,7 @@
         </div>
     </div>
 </section>
+
+<style>
+    .contact-form label { display:block; margin-bottom:8px; }
+</style>

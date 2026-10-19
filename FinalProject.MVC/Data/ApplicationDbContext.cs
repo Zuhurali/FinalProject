@@ -80,6 +80,7 @@ namespace FinalProject.MVC.Data
                 entity.Property(product => product.SearchKeywords).HasMaxLength(500);
                 entity.Property(product => product.Brand).HasMaxLength(100);
                 entity.Property(product => product.Compatibility).HasMaxLength(300);
+                entity.Property(product => product.IsActive).HasDefaultValue(true);
             });
 
             builder.Entity<ProductCampaign>(entity =>
@@ -90,19 +91,31 @@ namespace FinalProject.MVC.Data
                 entity.HasOne(campaign => campaign.Product)
                     .WithMany()
                     .HasForeignKey(campaign => campaign.ProductId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired(false);
                 entity.HasIndex(campaign => campaign.ProductId);
+                entity.HasIndex(campaign => campaign.AppliesToAllParts);
+                entity.ToTable("ProductCampaigns", table => table.HasCheckConstraint(
+                    "CK_ProductCampaigns_Scope",
+                    "([AppliesToAllParts] = 1 AND [ProductId] IS NULL) OR ([AppliesToAllParts] = 0 AND [ProductId] IS NOT NULL)"));
             });
 
             builder.Entity<InPersonSale>(entity =>
             {
                 entity.Property(sale => sale.UnitPrice).HasColumnType("decimal(18,2)");
+                entity.Property(sale => sale.ListUnitPrice).HasColumnType("decimal(18,2)");
+                entity.Property(sale => sale.CampaignDiscountPercent).HasColumnType("decimal(5,2)");
                 entity.Property(sale => sale.RecordedByUserId).HasMaxLength(450).IsRequired();
                 entity.Property(sale => sale.Note).HasMaxLength(500);
                 entity.HasOne(sale => sale.Product)
                     .WithMany()
                     .HasForeignKey(sale => sale.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(sale => sale.Campaign)
+                    .WithMany()
+                    .HasForeignKey(sale => sale.CampaignId)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .IsRequired(false);
                 entity.ToTable("InPersonSales", table => table.HasCheckConstraint(
                     "CK_InPersonSales_Quantity",
                     "[Quantity] >= 1"));

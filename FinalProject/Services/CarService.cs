@@ -27,7 +27,10 @@ public class CarService : ICarService
         if (totalCount > 0 && query.Page <= totalPages)
         {
             var cars = await filtered
-                .OrderByDescending(car => car.CreatedAt)
+                .OrderBy(car => car.Brand.Name)
+                .ThenBy(car => car.Model)
+                .ThenByDescending(car => car.Year)
+                .ThenByDescending(car => car.CreatedAt)
                 .ThenBy(car => car.Id)
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
@@ -370,6 +373,12 @@ public class CarService : ICarService
         if (query.IsNew is bool isNew)
         {
             cars = cars.Where(car => car.IsNew == isNew);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Status))
+        {
+            var status = query.Status.Trim().ToLower();
+            cars = cars.Where(car => car.Status.ToLower() == status);
         }
 
         return cars;

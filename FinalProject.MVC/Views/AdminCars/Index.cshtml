@@ -1,24 +1,98 @@
-@model IReadOnlyList<CarApiDto>
+@model AdminCarsIndexViewModel
 @{
     Layout = "_AdminLayout";
     var canCreate = User.IsInRole("SuperAdmin");
+    var pages = Model.PageSize == 0 ? 1 : Math.Max(1, Model.TotalPages);
 }
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Cars</h1>
+    <div>
+        <h1 class="h3 mb-1">Cars</h1>
+        <p class="text-muted mb-0">@Model.TotalCount car@(Model.TotalCount == 1 ? "" : "s") in the catalog</p>
+    </div>
     @if (canCreate)
     {
         <a class="btn btn-primary" asp-action="Create">Add Car</a>
     }
 </div>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
 @if (ViewData["ServiceUnavailable"] != null)
 {
     <div class="alert alert-warning">The car service is temporarily unavailable.</div>
 }
+<form method="get" class="admin-card mb-3" asp-action="Index">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@Model.Search" class="form-control"
+                   placeholder="Brand or model, e.g." autofocus />
+        </div>
+        <div class="col-md-3">
+            <label for="brandId">Brand</label>
+            <select id="brandId" name="brandId" class="form-select">
+                <option value="">All brands</option>
+                @foreach (var brand in Model.Brands)
+                {
+                    if (Model.BrandId == brand.Id)
+                    {
+                        <option value="@brand.Id" selected>@brand.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@brand.Id">@brand.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="status">Status</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">All</option>
+                @foreach (var option in new[] { "Active", "Sold", "Draft" })
+                {
+                    if (string.Equals(Model.Status, option, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@option" selected>@option</option>
+                    }
+                    else
+                    {
+                        <option value="@option">@option</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary" type="submit">Filter</button>
+            <a class="btn btn-link" asp-action="Index">Clear</a>
+        </div>
+    </div>
+</form>
 <div class="admin-card">
-    <table class="table">
-        <thead><tr><th>Car</th><th>Year</th><th>Price</th><th>Status</th><th>Owner</th><th></th></tr></thead>
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Car</th>
+                <th>Year</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th></th>
+            </tr>
+        </thead>
         <tbody>
-        @foreach (var car in Model)
+        @if (Model.Items.Count == 0)
+        {
+            <tr>
+                <td colspan="6" class="text-muted">No cars match this search. Clear filters to see the full catalog.</td>
+            </tr>
+        }
+        @foreach (var car in Model.Items)
         {
             <tr>
                 <td>@car.Brand?.Name @car.Model</td>
@@ -27,6 +101,7 @@
                 <td>@car.Status</td>
                 <td>@(string.IsNullOrWhiteSpace(car.OwnerDisplayName) ? "Catalog" : car.OwnerDisplayName)</td>
                 <td class="text-nowrap">
+                    <a asp-action="Details" asp-route-id="@car.Id">View</a>
                     <a asp-action="Edit" asp-route-id="@car.Id">Edit</a>
                     <form asp-action="Delete" asp-route-id="@car.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this car?');">
                         @Html.AntiForgeryToken()
@@ -37,4 +112,30 @@
         }
         </tbody>
     </table>
+    @if (pages > 1)
+    {
+        <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Cars pages">
+            <span class="text-muted">Page @Model.Page of @pages</span>
+            <div class="btn-group">
+                @if (Model.Page > 1)
+                {
+                    <a class="btn btn-outline-secondary btn-sm"
+                       asp-action="Index"
+                       asp-route-search="@Model.Search"
+                       asp-route-brandId="@Model.BrandId"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@(Model.Page - 1)">Previous</a>
+                }
+                @if (Model.Page < pages)
+                {
+                    <a class="btn btn-outline-secondary btn-sm"
+                       asp-action="Index"
+                       asp-route-search="@Model.Search"
+                       asp-route-brandId="@Model.BrandId"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@(Model.Page + 1)">Next</a>
+                }
+            </div>
+        </nav>
+    }
 </div>

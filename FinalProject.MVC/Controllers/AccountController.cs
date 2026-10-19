@@ -93,7 +93,7 @@ namespace FinalProject.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignIn(string email, string password, bool rememberMe = true, string? returnUrl = null, bool fromAccount = false)
+        public async Task<IActionResult> SignIn(string? identifier, string password, bool rememberMe = true, string? returnUrl = null, bool fromAccount = false, string? email = null)
         {
             ViewData["Title"] = "Sign In - AutoVault";
 
@@ -113,22 +113,19 @@ namespace FinalProject.MVC.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
+            identifier = string.IsNullOrWhiteSpace(identifier) ? email : identifier;
 
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(password))
             {
-                TempData["Error"] = "Please enter both email and password.";
+                TempData["Error"] = "Enter your email or username and your password.";
                 return InvalidLogin();
             }
 
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                user = await _userManager.FindByNameAsync(email);
-            }
+            var user = await FindByIdentifierAsync(identifier);
 
             if (user == null)
             {
-                TempData["Error"] = "Invalid email or password.";
+                TempData["Error"] = "The email, username, or password is incorrect.";
                 return InvalidLogin();
             }
 
@@ -158,7 +155,7 @@ namespace FinalProject.MVC.Controllers
                 return InvalidLogin();
             }
             
-            TempData["Error"] = "Invalid email or password.";
+            TempData["Error"] = "The email, username, or password is incorrect.";
             return InvalidLogin();
         }
 
@@ -176,7 +173,7 @@ namespace FinalProject.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string email, string password, string confirmPassword, string? firstName = null, string? lastName = null, bool fromAccount = false)
+        public async Task<IActionResult> Register(string email, string username, string password, string confirmPassword, string? firstName = null, string? lastName = null, bool fromAccount = false)
         {
             ViewData["Title"] = "Register - AutoVault";
 
@@ -201,6 +198,13 @@ namespace FinalProject.MVC.Controllers
                 return InvalidRegistration();
             }
 
+            var usernameError = AccountNameRules.ValidateUsername(username);
+            if (usernameError != null)
+            {
+                TempData["Error"] = usernameError;
+                return InvalidRegistration();
+            }
+
             if (password != confirmPassword)
             {
                 TempData["Error"] = "Passwords do not match.";
@@ -209,8 +213,8 @@ namespace FinalProject.MVC.Controllers
 
             var user = new ApplicationUser
             {
-                UserName = email,
-                Email = email,
+                UserName = username.Trim(),
+                Email = email.Trim(),
                 FirstName = firstName,
                 LastName = lastName,
                 CreatedAt = DateTime.UtcNow
@@ -239,7 +243,7 @@ namespace FinalProject.MVC.Controllers
                 return RedirectToAction(nameof(CheckEmail), new { email = user.Email });
             }
 
-            TempData["Error"] = string.Join(", ", result.Errors.Select(e => e.Description));
+            TempData["Error"] = string.Join(" ", result.Errors.Select(RegistrationMessage));
             return InvalidRegistration();
         }
 
@@ -667,6 +671,34 @@ namespace FinalProject.MVC.Controllers
         {
             ViewData["Title"] = "Access Denied - AutoVault";
             return View();
+        }
+
+        private async Task<ApplicationUser?> FindByIdentifierAsync(string identifier)
+        {
+            var value = identifier.Trim();
+            if (value.Contains('@'))
+            {
+                return await _userManager.FindByEmailAsync(value)
+                    ?? await _userManager.FindByNameAsync(value);
+            }
+
+            return await _userManager.FindByNameAsync(value)
+                ?? await _userManager.FindByEmailAsync(value);
+        }
+
+        private static string RegistrationMessage(IdentityError error)
+        {
+            return error.Code switch
+            {
+                "DuplicateUserName" => "That username is already taken.",
+                "DuplicateEmail" => "That email address is already registered.",
+                "InvalidUserName" => "Use 3 to 32 characters: letters, numbers, dots, underscores, or hyphens.",
+                "PasswordTooShort" => "Password must be at least 6 characters.",
+                "PasswordRequiresDigit" => "Password must include a number.",
+                "PasswordRequiresLower" => "Password must include a lowercase letter.",
+                "PasswordRequiresUpper" => "Password must include an uppercase letter.",
+                _ => "The account could not be created. Check the username, email, and password."
+            };
         }
 
         private async Task SendConfirmationAsync(ApplicationUser user)

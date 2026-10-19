@@ -22,6 +22,7 @@ builder.Services.AddScoped<IProductRatingService, ProductRatingService>();
 builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
 builder.Services.AddScoped<IMarketplaceService, MarketplaceService>();
 builder.Services.AddScoped<ICatalogAdminService, CatalogAdminService>();
+builder.Services.AddScoped<IPartsAdminService, PartsAdminService>();
 builder.Services.AddAuthorization();
 var jwtKey = builder.Configuration["ApiAuthentication:SigningKey"];
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)

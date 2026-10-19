@@ -319,7 +319,9 @@
                                 <a href="/Shop/Details/${product.id}">${product.name}</a>
                             </h6>
                             <div class="button-area">
-                                <p class="">$${product.price}</p>
+                                <p class="">${product.hasOffer
+                                    ? `<s>$${Number(product.price).toFixed(2)}</s> <strong>$${Number(product.salePrice).toFixed(2)}</strong> <span class="badge">${Number(product.discountPercent)}% OFF</span>${product.offerEndLabel ? ` <span class="av-card__offer-end">Ends ${product.offerEndLabel}</span>` : ''}`
+                                    : `$${Number(product.price).toFixed(2)}`}</p>
                                 <a href="/Shop/Details/${product.id}#ask-showroom" class="rts-btn btn-primary radius-big">Ask About Product</a>
                             </div>
                         </div>

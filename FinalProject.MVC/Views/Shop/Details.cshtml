@@ -75,6 +75,10 @@
                         {
                             <span class="av-card__badge av-card__badge--out">Out of stock</span>
                         }
+                        else if (Model.HasOffer)
+                        {
+                            <span class="av-card__badge av-card__badge--offer">@Model.DiscountPercent% OFF</span>
+                        }
                     </a>
                     @if (hasGallery)
                     {
@@ -130,7 +134,7 @@
                         @if (Model.HasOffer)
                         {
                             <s>$@Model.Price.ToString("0.00")</s>
-                            <span>$@Model.SalePrice.ToString("0.00")</span>
+                            <strong>$@Model.SalePrice.ToString("0.00")</strong>
                         }
                         else
                         {
@@ -141,7 +145,7 @@
                 </div>
                 @if (Model.HasOffer)
                 {
-                    <p class="av-detail__offer">@(Model.DiscountPercent)% off@(Model.OfferEndsAt.HasValue ? $" until {Model.OfferEndsAt.Value.ToLocalTime():dd MMM yyyy}" : "")</p>
+                    <p class="av-detail__offer">@($"{Model.DiscountPercent}% OFF")@(string.IsNullOrWhiteSpace(Model.OfferEndLabel) ? "" : $" · Ends {Model.OfferEndLabel}")</p>
                 }
 
                 <p class="av-detail__description">@Model.Description</p>
@@ -337,7 +341,18 @@
                             {
                                 <li><i class="fa-regular fa-circle-check"></i> <strong>Fuel Type Compatibility:</strong> @Model.Fuel</li>
                             }
-                            <li><i class="fa-regular fa-circle-check"></i> <strong>Price:</strong> $@Model.Price.ToString("0.00")</li>
+                            <li><i class="fa-regular fa-circle-check"></i> <strong>Price:</strong>
+                                @if (Model.HasOffer)
+                                {
+                                    <s>$@Model.Price.ToString("0.00")</s>
+                                    <strong>$@Model.SalePrice.ToString("0.00")</strong>
+                                    <text>(@($"{Model.DiscountPercent}% OFF"))</text>
+                                }
+                                else
+                                {
+                                    <text>$@Model.Price.ToString("0.00")</text>
+                                }
+                            </li>
                             <li><i class="fa-regular fa-circle-check"></i> <strong>Availability:</strong> @stockText</li>
                             <li><i class="fa-regular fa-circle-check"></i> <strong>Rating:</strong> @(Model.RatingCount > 0 ? $"{Model.Rating:0.0} / 5.0" : "No ratings yet")</li>
                         </ul>

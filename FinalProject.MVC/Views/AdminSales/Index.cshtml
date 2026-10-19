@@ -12,15 +12,25 @@
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
-<form method="post" class="admin-card mb-4">
+<p class="text-muted">If a spare-parts campaign is Live, the unit price below uses the campaign discount automatically. Car sales are not recorded here.</p>
+<form method="post" class="admin-card mb-4" id="sale-form">
     @Html.AntiForgeryToken()
     <div class="row g-3">
         <div class="col-md-5">
             <label>Product</label>
-            <select name="productId" class="form-control">
+            <select name="productId" id="sale-product" class="form-control">
                 @foreach (var product in products)
                 {
-                    <option value="@product.Id">@product.Name — @product.StockStatus (@product.Quantity)</option>
+                    var priceLabel = product.HasOffer
+                        ? $"{product.Price:C} → {product.SalePrice:C} ({product.DiscountPercent}% OFF)"
+                        : product.Price.ToString("C");
+                    <option value="@product.Id"
+                            data-list="@product.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                            data-sale="@product.EffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                            data-offer="@(product.HasOffer ? "1" : "0")"
+                            data-percent="@(product.DiscountPercent?.ToString() ?? "")">
+                        @product.Name — @priceLabel — @product.StockStatus (@product.Quantity)
+                    </option>
                 }
             </select>
         </div>
@@ -32,12 +42,15 @@
             <label>Note</label>
             <input name="note" class="form-control" maxlength="500" />
         </div>
+        <div class="col-12">
+            <div class="alert alert-light border mb-0" id="sale-price-preview">Select a part to see the unit price that will be recorded.</div>
+        </div>
     </div>
     <button class="btn btn-primary mt-3" type="submit">Record in-store sale</button>
 </form>
 <div class="admin-card">
     <table class="table">
-        <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>Unit price</th><th>Source</th><th>Note</th></tr></thead>
+        <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>List</th><th>Unit charged</th><th>Campaign</th><th>Source</th><th>Note</th></tr></thead>
         <tbody>
         @foreach (var sale in Model)
         {
@@ -45,7 +58,22 @@
                 <td>@sale.SoldAt.ToString("yyyy-MM-dd HH:mm")</td>
                 <td>@(sale.Product?.Name ?? $"Product #{sale.ProductId}")</td>
                 <td>@sale.Quantity</td>
+                <td>@(sale.ListUnitPrice > 0 ? sale.ListUnitPrice.ToString("C") : "—")</td>
                 <td>@sale.UnitPrice.ToString("C")</td>
+                <td>
+                    @if (sale.CampaignDiscountPercent.HasValue)
+                    {
+                        <text>@($"{sale.CampaignDiscountPercent:0.#}% OFF")</text>
+                        @if (!string.IsNullOrWhiteSpace(sale.Campaign?.Name))
+                        {
+                            <div class="small text-muted">@sale.Campaign.Name</div>
+                        }
+                    }
+                    else
+                    {
+                        <text>—</text>
+                    }
+                </td>
                 <td>@(sale.IsDemo ? "Demo (simulated)" : "Recorded sale")</td>
                 <td>@sale.Note</td>
             </tr>
@@ -53,6 +81,26 @@
         </tbody>
     </table>
 </div>
+<script>
+(() => {
+    const select = document.getElementById('sale-product');
+    const preview = document.getElementById('sale-price-preview');
+    const money = (value) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(value);
+    const update = () => {
+        const option = select?.selectedOptions?.[0];
+        if (!option) return;
+        const list = Number(option.dataset.list || 0);
+        const sale = Number(option.dataset.sale || 0);
+        const offer = option.dataset.offer === '1';
+        const percent = option.dataset.percent;
+        preview.innerHTML = offer
+            ? `Live campaign: list ${money(list)} → charged <strong>${money(sale)}</strong> (${percent}% OFF). Stock will decrease by the quantity entered.`
+            : `No live campaign. Charged unit price: <strong>${money(sale)}</strong>.`;
+    };
+    select?.addEventListener('change', update);
+    update();
+})();
+</script>
 <div class="admin-card mt-4">
     <h2 class="h4">Popular Items ranking</h2>
     <p>@ViewBag.Formula The ranking score is this formula's result. It is shown here so the order can be checked. Customers do not see it.</p>

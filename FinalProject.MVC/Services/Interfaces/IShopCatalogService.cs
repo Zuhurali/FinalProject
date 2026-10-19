@@ -20,9 +20,13 @@ public interface IShopCatalogService
 
     Task<IReadOnlyList<ProductCampaign>> GetCampaignsAsync(CancellationToken cancellationToken = default);
 
+    Task<ProductCampaign?> GetCampaignAsync(int id, CancellationToken cancellationToken = default);
+
     Task<(bool Ok, string? Error)> SaveCampaignAsync(ProductCampaign campaign, CancellationToken cancellationToken = default);
 
-    Task<bool> SetCampaignActiveAsync(int id, bool isActive, CancellationToken cancellationToken = default);
+    Task<(bool Ok, string? Error)> SetCampaignActiveAsync(int id, bool isActive, CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteCampaignAsync(int id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<InPersonSale>> GetSalesAsync(CancellationToken cancellationToken = default);
 

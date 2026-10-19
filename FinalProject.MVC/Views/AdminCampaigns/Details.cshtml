@@ -1,0 +1,51 @@
+@model CampaignListItem
+@{
+    Layout = "_AdminLayout";
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@Model.Name</h1>
+        <p class="text-muted mb-0">In-store spare-parts discount · no online checkout · dates in UTC</p>
+    </div>
+    <div>
+        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn btn-link" asp-action="Index">Back</a>
+    </div>
+</div>
+<div class="admin-card">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Status</dt><dd class="col-sm-9">@Model.Status</dd>
+        <dt class="col-sm-3">Scope</dt><dd class="col-sm-9">@Model.ScopeLabel</dd>
+        <dt class="col-sm-3">Applies to</dt><dd class="col-sm-9">@Model.ProductName</dd>
+        <dt class="col-sm-3">Discount</dt>
+        <dd class="col-sm-9">@(Model.DiscountPercent.HasValue ? $"{Model.DiscountPercent}% OFF" : "—")</dd>
+        @if (Model.OriginalPrice.HasValue && Model.DiscountedPrice.HasValue)
+        {
+            <dt class="col-sm-3">List → sale</dt>
+            <dd class="col-sm-9">@Model.OriginalPrice.Value.ToString("C") → @Model.DiscountedPrice.Value.ToString("C")</dd>
+        }
+        else
+        {
+            <dt class="col-sm-3">Sale price</dt>
+            <dd class="col-sm-9">Calculated per part from each part’s stored price</dd>
+        }
+        <dt class="col-sm-3">Window (UTC)</dt>
+        <dd class="col-sm-9">@Model.StartsAt.ToString("yyyy-MM-dd") – @Model.EndsAtInclusive.ToString("yyyy-MM-dd") (inclusive)</dd>
+        <dt class="col-sm-3">Active flag</dt><dd class="col-sm-9">@(Model.IsActive ? "Yes" : "No")</dd>
+    </dl>
+</div>
+<div class="mt-3">
+    <form asp-action="Active" asp-route-id="@Model.Id" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="isActive" value="@(!Model.IsActive)" />
+        <button class="btn btn-outline-secondary" type="submit">@(Model.IsActive ? "Deactivate" : "Activate")</button>
+    </form>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this campaign? Product prices and stock stay the same.');">
+        @Html.AntiForgeryToken()
+        <button class="btn btn-outline-danger" type="submit">Delete</button>
+    </form>
+</div>

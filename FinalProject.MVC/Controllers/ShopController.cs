@@ -68,6 +68,7 @@ namespace FinalProject.MVC.Controllers
                 SalePrice = product.SalePrice,
                 DiscountPercent = product.DiscountPercent,
                 OfferEndsAt = product.OfferEndsAt,
+                OfferEndLabel = product.OfferEndLabel,
                 OfferName = product.OfferName,
                 Color = product.Color,
                 Fuel = product.Fuel,
@@ -227,9 +228,20 @@ namespace FinalProject.MVC.Controllers
 
         [HttpPost]
         public async Task<JsonResult> FilterProducts(
-            [FromBody] ShopFilterRequest request,
+            [FromBody] ShopFilterRequest? request,
             CancellationToken cancellationToken)
         {
+            request ??= new ShopFilterRequest();
+            if (request.Page < 1)
+            {
+                request.Page = 1;
+            }
+
+            if (request.PageSize < 1)
+            {
+                request.PageSize = 6;
+            }
+
             await EnsureCatalogAsync(cancellationToken);
             await ApplyRatingsAsync(_allProducts, cancellationToken);
             var filteredProducts = _allProducts.AsQueryable();

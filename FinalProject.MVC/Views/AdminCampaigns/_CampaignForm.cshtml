@@ -1,0 +1,145 @@
+@using System.Globalization
+@model ProductCampaign
+@{
+    var products = (IReadOnlyList<ShopProduct>)(ViewBag.Products ?? Array.Empty<ShopProduct>());
+    var isCreate = Model.Id == 0;
+    const string savePath = "/Admin/Campaigns/Save";
+}
+<h1 class="h3 mb-2">@(isCreate ? "Create Campaign" : "Edit Campaign")</h1>
+<p class="text-muted mb-4">
+    Spare-parts in-store discount only. Customers see it on the Shop and pay at the store.
+    Original product prices and stock are not changed. Dates are <strong>UTC</strong>.
+    A campaign is <strong>Live</strong> only while Active is checked and the current UTC time is on or after the start date and on or before the inclusive end date.
+</p>
+<form action="@savePath" method="post" class="admin-card" id="campaign-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    <div class="row g-3">
+        <div class="col-12">
+            <label class="d-block mb-2">Campaign scope</label>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="AppliesToAllParts" id="scopeSingle" value="false"
+                       @(Model.AppliesToAllParts ? null : "checked") />
+                <label class="form-check-label" for="scopeSingle">Single spare part</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="AppliesToAllParts" id="scopeAll" value="true"
+                       @(Model.AppliesToAllParts ? "checked" : null) />
+                <label class="form-check-label" for="scopeAll">All spare parts</label>
+            </div>
+        </div>
+        <div class="col-md-8" id="product-field">
+            <label for="ProductId">Spare part</label>
+            <select name="ProductId" id="ProductId" class="form-select">
+                <option value="">Select a spare part</option>
+                @foreach (var product in products)
+                {
+                    if (Model.ProductId == product.Id)
+                    {
+                        <option value="@product.Id" selected data-price="@product.Price.ToString(CultureInfo.InvariantCulture)">@product.Name (@product.Price.ToString("C"))</option>
+                    }
+                    else
+                    {
+                        <option value="@product.Id" data-price="@product.Price.ToString(CultureInfo.InvariantCulture)">@product.Name (@product.Price.ToString("C"))</option>
+                    }
+                }
+            </select>
+            @if (ViewData.ModelState["ProductId"]?.Errors.Count > 0)
+            {
+                <span class="text-danger">@ViewData.ModelState["ProductId"]!.Errors[0].ErrorMessage</span>
+            }
+        </div>
+        <div class="col-md-4">
+            <label for="DiscountPercent">Discount %</label>
+            <input name="DiscountPercent" id="DiscountPercent" class="form-control" type="number" min="0.01" max="100" step="any"
+                   value="@(Model.DiscountPercent?.ToString(CultureInfo.InvariantCulture))" />
+            <div class="form-text">Greater than 0, up to 100.</div>
+            @if (ViewData.ModelState["DiscountPercent"]?.Errors.Count > 0)
+            {
+                <span class="text-danger">@ViewData.ModelState["DiscountPercent"]!.Errors[0].ErrorMessage</span>
+            }
+        </div>
+        <div class="col-md-6">
+            <label for="StartsAt">Start date (UTC)</label>
+            <input name="StartsAt" id="StartsAt" class="form-control" type="date" value="@Model.StartsAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+            @if (ViewData.ModelState["StartsAt"]?.Errors.Count > 0)
+            {
+                <span class="text-danger">@ViewData.ModelState["StartsAt"]!.Errors[0].ErrorMessage</span>
+            }
+        </div>
+        <div class="col-md-6">
+            <label for="EndsAt">End date (UTC, inclusive)</label>
+            <input name="EndsAt" id="EndsAt" class="form-control" type="date" value="@Model.EndsAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+            @if (ViewData.ModelState["EndsAt"]?.Errors.Count > 0)
+            {
+                <span class="text-danger">@ViewData.ModelState["EndsAt"]!.Errors[0].ErrorMessage</span>
+            }
+        </div>
+        <div class="col-md-8">
+            <label for="Name">Campaign name (optional)</label>
+            <input name="Name" id="Name" class="form-control" value="@Model.Name" maxlength="120" placeholder="Leave blank to auto-name from the scope and discount" />
+        </div>
+        <div class="col-md-4">
+            <label class="d-block">Status</label>
+            <div class="form-check mt-2">
+                <input type="hidden" name="isActive" value="false" />
+                <input type="checkbox" class="form-check-input" name="isActive" id="isActive" value="true"
+                       @(Model.IsActive ? "checked" : null) />
+                <label class="form-check-label" for="isActive">Active (can go Live in the Shop)</label>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="alert alert-light border mb-0" id="price-preview">Select a scope and discount to preview.</div>
+        </div>
+    </div>
+    <button class="btn btn-primary mt-4" type="submit" name="createCampaign" value="1" formaction="@savePath">
+        @(isCreate ? "Create Campaign" : "Save changes")
+    </button>
+    <a class="btn btn-link mt-4" asp-action="Index">Cancel</a>
+</form>
+<script>
+(() => {
+    const form = document.getElementById('campaign-form');
+    const scopeAll = document.getElementById('scopeAll');
+    const scopeSingle = document.getElementById('scopeSingle');
+    const productField = document.getElementById('product-field');
+    const product = document.getElementById('ProductId');
+    const percent = document.getElementById('DiscountPercent');
+    const preview = document.getElementById('price-preview');
+    const money = (value) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(value);
+
+    const syncScope = () => {
+        const allParts = !!scopeAll?.checked;
+        if (productField) productField.style.display = allParts ? 'none' : '';
+        if (product && allParts) product.value = '';
+        update();
+    };
+
+    const update = () => {
+        const off = Number(percent?.value || 0);
+        if (!(off > 0) || off > 100) {
+            preview.textContent = 'Enter a discount percentage to preview.';
+            return;
+        }
+        if (scopeAll?.checked) {
+            preview.innerHTML = `<strong>All spare parts</strong> get <strong>${off}% OFF</strong> while this campaign is Live. Each part keeps its own stored price; only the displayed/in-store sale price changes.`;
+            return;
+        }
+        const option = product?.selectedOptions?.[0];
+        const price = Number(option?.dataset?.price || 0);
+        if (!price) {
+            preview.textContent = 'Select a spare part to preview the sale price.';
+            return;
+        }
+        const sale = Math.round(price * (1 - off / 100) * 100) / 100;
+        preview.innerHTML = `<strong>${option.textContent.split(' (')[0]}</strong>: ${money(price)} → <strong>${money(sale)}</strong> (${off}% OFF). Base catalog price stays ${money(price)}.`;
+    };
+
+    scopeSingle?.addEventListener('change', syncScope);
+    scopeAll?.addEventListener('change', syncScope);
+    product?.addEventListener('change', update);
+    percent?.addEventListener('input', update);
+    syncScope();
+})();
+</script>

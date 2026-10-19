@@ -13,6 +13,8 @@ namespace FinalProject.MVC.Controllers;
 [Route("Admin/Cars")]
 public sealed class AdminCarsController : AdminControllerBase
 {
+    private const int DefaultPageSize = 20;
+
     private readonly ICarApiService _cars;
 
     public AdminCarsController(
@@ -25,17 +27,73 @@ public sealed class AdminCarsController : AdminControllerBase
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        string? search,
+        int? brandId,
+        string? status,
+        int page = 1,
+        CancellationToken cancellationToken = default)
     {
         ViewData["Title"] = "Admin Cars - AutoVault";
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        var model = new AdminCarsIndexViewModel
+        {
+            Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+            BrandId = brandId is > 0 ? brandId : null,
+            Status = string.IsNullOrWhiteSpace(status) ? null : status.Trim(),
+            Page = page,
+            PageSize = DefaultPageSize
+        };
+
         try
         {
-            return View(await _cars.GetAllCarsAsync(cancellationToken: cancellationToken));
+            var lookups = await SafeLookupsAsync(cancellationToken);
+            model.Brands = lookups.Brands
+                .OrderBy(brand => brand.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var pageResult = await _cars.GetCarsAsync(
+                new CarApiQuery
+                {
+                    Search = model.Search,
+                    BrandId = model.BrandId,
+                    Status = model.Status,
+                    Page = model.Page,
+                    PageSize = model.PageSize
+                },
+                cancellationToken);
+
+            model.Items = pageResult.Items;
+            model.TotalCount = pageResult.TotalCount;
+            model.TotalPages = pageResult.TotalPages;
+            model.Page = pageResult.CurrentPage > 0 ? pageResult.CurrentPage : page;
+            model.PageSize = pageResult.PageSize > 0 ? pageResult.PageSize : DefaultPageSize;
         }
         catch (CarApiException)
         {
             ViewData["ServiceUnavailable"] = true;
-            return View(Array.Empty<CarApiDto>());
+        }
+
+        return View(model);
+    }
+
+    [HttpGet("Details/{id:int}")]
+    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
+    {
+        ViewData["Title"] = "Car Details - AutoVault";
+        try
+        {
+            var car = await _cars.GetCarByIdAsync(id, cancellationToken);
+            return car == null ? NotFound() : View(car);
+        }
+        catch (CarApiException)
+        {
+            ViewData["ServiceUnavailable"] = true;
+            return View((CarApiDto?)null);
         }
     }
 
@@ -107,7 +165,7 @@ public sealed class AdminCarsController : AdminControllerBase
         {
             await _cars.UpdateCarAsync(id, model.Car, token, cancellationToken);
             TempData["Success"] = "The car was updated.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new { id });
         }
         catch (CarApiException exception)
         {

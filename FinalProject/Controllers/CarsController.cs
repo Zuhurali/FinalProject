@@ -189,10 +189,15 @@ public class CarsController : ControllerBase
 
     private bool CanManage(string? ownerId)
     {
+        // Catalog cars have no owner. Admin and SuperAdmin may still edit or delete them.
+        if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+        {
+            return true;
+        }
+
         var userId = CurrentUserId();
         return userId != null
-            && (string.Equals(userId, ownerId, StringComparison.Ordinal)
-                || User.IsInRole("Admin")
-                || User.IsInRole("SuperAdmin"));
+            && !string.IsNullOrWhiteSpace(ownerId)
+            && string.Equals(userId, ownerId, StringComparison.Ordinal);
     }
 }

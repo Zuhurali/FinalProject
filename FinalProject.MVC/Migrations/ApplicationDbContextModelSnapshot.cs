@@ -137,8 +137,17 @@ namespace FinalProject.MVC.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal?>("CampaignDiscountPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int?>("CampaignId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDemo")
                         .HasColumnType("bit");
+
+                    b.Property<decimal>("ListUnitPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Note")
                         .IsRequired()
@@ -163,6 +172,8 @@ namespace FinalProject.MVC.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
 
                     b.HasIndex("ProductId");
 
@@ -304,6 +315,9 @@ namespace FinalProject.MVC.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AppliesToAllParts")
+                        .HasColumnType("bit");
+
                     b.Property<decimal?>("DiscountPercent")
                         .HasColumnType("decimal(5,2)");
 
@@ -321,7 +335,7 @@ namespace FinalProject.MVC.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("StartsAt")
@@ -329,9 +343,14 @@ namespace FinalProject.MVC.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AppliesToAllParts");
+
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductCampaigns");
+                    b.ToTable("ProductCampaigns", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductCampaigns_Scope", "([AppliesToAllParts] = 1 AND [ProductId] IS NULL) OR ([AppliesToAllParts] = 0 AND [ProductId] IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("FinalProject.MVC.Models.ProductInquiry", b =>
@@ -438,6 +457,11 @@ namespace FinalProject.MVC.Migrations
 
                     b.Property<bool>("InStock")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -676,11 +700,18 @@ namespace FinalProject.MVC.Migrations
 
             modelBuilder.Entity("FinalProject.MVC.Models.InPersonSale", b =>
                 {
+                    b.HasOne("FinalProject.MVC.Models.ProductCampaign", "Campaign")
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("FinalProject.MVC.Models.ShopCatalogProduct", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Campaign");
 
                     b.Navigation("Product");
                 });
@@ -711,8 +742,7 @@ namespace FinalProject.MVC.Migrations
                     b.HasOne("FinalProject.MVC.Models.ShopCatalogProduct", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Product");
                 });

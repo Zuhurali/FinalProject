@@ -198,6 +198,20 @@
     color: #8a8f98;
 }
 
+.av-card__price strong {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.av-card__offer-end {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #b45309;
+}
+
 .av-card__cta {
     display: inline-flex;
     align-items: center;

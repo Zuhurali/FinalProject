@@ -18,10 +18,11 @@ public sealed class ShopCatalogService : IShopCatalogService
     public async Task<IReadOnlyList<ShopProduct>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var products = await _db.ShopProducts.AsNoTracking()
+            .Where(product => product.IsActive)
             .OrderBy(product => product.Id)
             .ToListAsync(cancellationToken);
-        var offers = await ActiveOffersAsync(DateTime.UtcNow, cancellationToken);
-        return products.Select(product => ToModel(product, offers.GetValueOrDefault(product.Id))).ToList();
+        var liveOffers = await LoadLiveCampaignsAsync(DateTime.UtcNow, cancellationToken);
+        return products.Select(product => ToModel(product, PickOffer(product, liveOffers))).ToList();
     }
 
     public async Task<ShopCatalogProduct?> GetRecordAsync(int id, CancellationToken cancellationToken = default)
@@ -41,6 +42,7 @@ public sealed class ShopCatalogService : IShopCatalogService
         }
 
         product.InStock = product.Quantity > 0;
+        product.IsActive = true;
         if (product.CreatedAt == default)
         {
             product.CreatedAt = DateTime.UtcNow;
@@ -72,6 +74,7 @@ public sealed class ShopCatalogService : IShopCatalogService
         existing.Description = product.Description.Trim();
         existing.Quantity = Math.Max(0, product.Quantity);
         existing.InStock = existing.Quantity > 0;
+        existing.IsActive = product.IsActive;
         existing.Brand = product.Brand.Trim();
         existing.Compatibility = product.Compatibility.Trim();
         existing.Color = product.Color.Trim();
@@ -89,9 +92,34 @@ public sealed class ShopCatalogService : IShopCatalogService
             return false;
         }
 
+        var dependents = await CountDependentsAsync(id, cancellationToken);
+        if (dependents > 0)
+        {
+            existing.IsActive = false;
+            existing.InStock = existing.Quantity > 0;
+            await _db.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
         _db.ShopProducts.Remove(existing);
         await _db.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    private async Task<int> CountDependentsAsync(int id, CancellationToken cancellationToken)
+    {
+        var campaigns = await _db.ProductCampaigns.CountAsync(item => item.ProductId == id, cancellationToken);
+        var sales = await _db.InPersonSales.CountAsync(item => item.ProductId == id, cancellationToken);
+        var inquiries = await _db.ProductInquiries.CountAsync(item => item.ProductId == id, cancellationToken);
+        var requests = await _db.ShowroomPurchaseRequests.CountAsync(item => item.ProductId == id, cancellationToken);
+        var feedback = await _db.Database.SqlQueryRaw<int>(
+            """
+            SELECT
+                (SELECT COUNT(*) FROM ProductRatings WHERE ProductId = {0})
+                + (SELECT COUNT(*) FROM ProductReviews WHERE ProductId = {0}) AS Value
+            """,
+            id).ToListAsync(cancellationToken);
+        return campaigns + sales + inquiries + requests + feedback.FirstOrDefault();
     }
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
@@ -144,6 +172,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             model.SalePrice = ShowroomRules.DiscountedPrice(product.Price, offer.DiscountedPrice, offer.DiscountPercent);
             model.DiscountPercent = ShowroomRules.BadgePercent(product.Price, model.SalePrice, offer.DiscountPercent);
             model.OfferEndsAt = offer.EndsAt;
+            model.OfferEndLabel = ShowroomRules.InclusiveEndLabel(offer.EndsAt);
             model.OfferName = offer.Name;
         }
 
@@ -223,29 +252,93 @@ public sealed class ShopCatalogService : IShopCatalogService
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<ProductCampaign?> GetCampaignAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _db.ProductCampaigns.AsNoTracking()
+            .Include(campaign => campaign.Product)
+            .FirstOrDefaultAsync(campaign => campaign.Id == id, cancellationToken);
+    }
+
     public async Task<(bool Ok, string? Error)> SaveCampaignAsync(
         ProductCampaign campaign,
         CancellationToken cancellationToken = default)
     {
-        var product = await _db.ShopProducts.AsNoTracking()
-            .FirstOrDefaultAsync(item => item.Id == campaign.ProductId, cancellationToken);
-        if (product == null)
+        NormalizeCampaignScope(campaign);
+        NormalizeCampaignOffer(campaign);
+        NormalizeCampaignDates(campaign);
+
+        ShopCatalogProduct? product = null;
+        if (campaign.AppliesToAllParts)
         {
-            return (false, "Choose a product from the catalog.");
+            var windowError = ShowroomRules.ValidateCampaignWindowAndPercent(
+                campaign.DiscountPercent,
+                campaign.DiscountedPrice,
+                campaign.StartsAt,
+                campaign.EndsAt);
+            if (windowError != null)
+            {
+                return (false, windowError);
+            }
+
+            if (campaign.DiscountedPrice.HasValue)
+            {
+                return (false, "All-parts campaigns must use a percentage discount, not a fixed sale price.");
+            }
+        }
+        else
+        {
+            if (campaign.ProductId is null or <= 0)
+            {
+                return (false, "Choose a spare part from the catalog.");
+            }
+
+            product = await _db.ShopProducts.AsNoTracking()
+                .FirstOrDefaultAsync(item => item.Id == campaign.ProductId.Value, cancellationToken);
+            if (product == null)
+            {
+                return (false, "Choose a spare part from the catalog.");
+            }
+
+            var error = ShowroomRules.ValidateCampaign(
+                product.Price,
+                campaign.DiscountedPrice,
+                campaign.DiscountPercent,
+                campaign.StartsAt,
+                campaign.EndsAt);
+            if (error != null)
+            {
+                return (false, error);
+            }
         }
 
-        var error = ShowroomRules.ValidateCampaign(
-            product.Price,
-            campaign.DiscountedPrice,
-            campaign.DiscountPercent,
-            campaign.StartsAt,
-            campaign.EndsAt);
-        if (error != null)
+        if (string.IsNullOrWhiteSpace(campaign.Name))
         {
-            return (false, error);
+            campaign.Name = campaign.AppliesToAllParts
+                ? (campaign.DiscountPercent.HasValue
+                    ? $"All spare parts · {campaign.DiscountPercent:0.#}% OFF"
+                    : "All spare parts campaign")
+                : (campaign.DiscountPercent.HasValue
+                    ? $"{product!.Name} · {campaign.DiscountPercent:0.#}% OFF"
+                    : $"{product!.Name} campaign");
+        }
+        else
+        {
+            campaign.Name = campaign.Name.Trim();
         }
 
-        campaign.Name = campaign.Name.Trim();
+        if (campaign.IsActive)
+        {
+            var overlap = await FindOverlappingActiveCampaignAsync(campaign, cancellationToken);
+            if (overlap != null)
+            {
+                var target = overlap.AppliesToAllParts
+                    ? "all spare parts"
+                    : (overlap.Product?.Name ?? $"product #{overlap.ProductId}");
+                return (false,
+                    $"Another active campaign already covers {target} from {overlap.StartsAt:yyyy-MM-dd} to {overlap.EndsAt.AddDays(-1):yyyy-MM-dd} (UTC). Deactivate it or choose different dates.");
+            }
+        }
+
         if (campaign.Id == 0)
         {
             _db.ProductCampaigns.Add(campaign);
@@ -260,6 +353,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             }
 
             existing.ProductId = campaign.ProductId;
+            existing.AppliesToAllParts = campaign.AppliesToAllParts;
             existing.Name = campaign.Name;
             existing.DiscountedPrice = campaign.DiscountedPrice;
             existing.DiscountPercent = campaign.DiscountPercent;
@@ -272,7 +366,36 @@ public sealed class ShopCatalogService : IShopCatalogService
         return (true, null);
     }
 
-    public async Task<bool> SetCampaignActiveAsync(int id, bool isActive, CancellationToken cancellationToken = default)
+    public async Task<(bool Ok, string? Error)> SetCampaignActiveAsync(
+        int id,
+        bool isActive,
+        CancellationToken cancellationToken = default)
+    {
+        var campaign = await _db.ProductCampaigns.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (campaign == null)
+        {
+            return (false, "Campaign not found.");
+        }
+
+        if (isActive)
+        {
+            var overlap = await FindOverlappingActiveCampaignAsync(campaign, cancellationToken);
+            if (overlap != null)
+            {
+                var target = overlap.AppliesToAllParts
+                    ? "all spare parts"
+                    : (overlap.Product?.Name ?? $"product #{overlap.ProductId}");
+                return (false,
+                    $"Another active campaign already covers {target} from {overlap.StartsAt:yyyy-MM-dd} to {overlap.EndsAt.AddDays(-1):yyyy-MM-dd} (UTC). Deactivate it first.");
+            }
+        }
+
+        campaign.IsActive = isActive;
+        await _db.SaveChangesAsync(cancellationToken);
+        return (true, null);
+    }
+
+    public async Task<bool> DeleteCampaignAsync(int id, CancellationToken cancellationToken = default)
     {
         var campaign = await _db.ProductCampaigns.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (campaign == null)
@@ -280,15 +403,68 @@ public sealed class ShopCatalogService : IShopCatalogService
             return false;
         }
 
-        campaign.IsActive = isActive;
+        _db.ProductCampaigns.Remove(campaign);
         await _db.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    private async Task<ProductCampaign?> FindOverlappingActiveCampaignAsync(
+        ProductCampaign campaign,
+        CancellationToken cancellationToken)
+    {
+        var candidates = await _db.ProductCampaigns.AsNoTracking()
+            .Include(item => item.Product)
+            .Where(item => item.IsActive && item.Id != campaign.Id)
+            .ToListAsync(cancellationToken);
+        return candidates.FirstOrDefault(item =>
+            ShowroomRules.CampaignWindowsOverlap(item.StartsAt, item.EndsAt, campaign.StartsAt, campaign.EndsAt)
+            && ShowroomRules.CampaignsConflict(
+                campaign.AppliesToAllParts,
+                campaign.ProductId,
+                item.AppliesToAllParts,
+                item.ProductId));
+    }
+
+    private static void NormalizeCampaignScope(ProductCampaign campaign)
+    {
+        if (campaign.AppliesToAllParts)
+        {
+            campaign.ProductId = null;
+            campaign.DiscountedPrice = null;
+        }
+        else if (campaign.ProductId is <= 0)
+        {
+            campaign.ProductId = null;
+        }
+    }
+
+    private static void NormalizeCampaignOffer(ProductCampaign campaign)
+    {
+        if (campaign.DiscountPercent.HasValue)
+        {
+            campaign.DiscountedPrice = null;
+        }
+        else if (campaign.DiscountedPrice.HasValue)
+        {
+            campaign.DiscountPercent = null;
+        }
+    }
+
+    private static void NormalizeCampaignDates(ProductCampaign campaign)
+    {
+        // Admin form posts calendar dates labeled as UTC. End date is inclusive for the teacher;
+        // storage uses an exclusive EndsAt at the next UTC midnight.
+        var start = campaign.StartsAt.Date;
+        var endInclusive = campaign.EndsAt.Date;
+        campaign.StartsAt = DateTime.SpecifyKind(start, DateTimeKind.Utc);
+        campaign.EndsAt = DateTime.SpecifyKind(endInclusive.AddDays(1), DateTimeKind.Utc);
     }
 
     public async Task<IReadOnlyList<InPersonSale>> GetSalesAsync(CancellationToken cancellationToken = default)
     {
         return await _db.InPersonSales.AsNoTracking()
             .Include(sale => sale.Product)
+            .Include(sale => sale.Campaign)
             .OrderByDescending(sale => sale.SoldAt)
             .Take(200)
             .ToListAsync(cancellationToken);
@@ -314,8 +490,9 @@ public sealed class ShopCatalogService : IShopCatalogService
             return (false, error);
         }
 
-        var offers = await ActiveOffersAsync(DateTime.UtcNow, cancellationToken);
-        var priced = ToModel(product, offers.GetValueOrDefault(product.Id));
+        var liveOffers = await LoadLiveCampaignsAsync(DateTime.UtcNow, cancellationToken);
+        var offer = PickOffer(product, liveOffers);
+        var priced = ToModel(product, offer);
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         var affected = await _db.Database.ExecuteSqlInterpolatedAsync($"""
             UPDATE ShopProducts
@@ -334,6 +511,11 @@ public sealed class ShopCatalogService : IShopCatalogService
             ProductId = productId,
             Quantity = quantity,
             UnitPrice = priced.EffectivePrice,
+            ListUnitPrice = product.Price,
+            CampaignId = offer?.Id,
+            CampaignDiscountPercent = priced.HasOffer && priced.DiscountPercent.HasValue
+                ? priced.DiscountPercent.Value
+                : null,
             RecordedByUserId = recordedByUserId,
             Note = (note ?? string.Empty).Trim(),
             SoldAt = DateTime.UtcNow,
@@ -415,7 +597,7 @@ public sealed class ShopCatalogService : IShopCatalogService
 
         var product = await _db.ShopProducts.AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == request.ProductId, cancellationToken);
-        if (product == null)
+        if (product == null || !product.IsActive)
         {
             return PurchaseRequestResult.Failed("Product not found.");
         }
@@ -484,21 +666,29 @@ public sealed class ShopCatalogService : IShopCatalogService
         return true;
     }
 
-    private async Task<Dictionary<int, ProductCampaign>> ActiveOffersAsync(
+    private async Task<IReadOnlyList<ProductCampaign>> LoadLiveCampaignsAsync(
         DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        var campaigns = await _db.ProductCampaigns.AsNoTracking()
+        return await _db.ProductCampaigns.AsNoTracking()
             .Include(campaign => campaign.Product)
             .Where(campaign => campaign.IsActive && campaign.StartsAt <= utcNow && campaign.EndsAt > utcNow)
             .ToListAsync(cancellationToken);
-        return campaigns
-            .GroupBy(campaign => campaign.ProductId)
-            .ToDictionary(
-                group => group.Key,
-                group => group.OrderBy(item => ShowroomRules.DiscountedPrice(
-                    item.Product?.Price ?? 0,
-                    item.DiscountedPrice,
-                    item.DiscountPercent)).First());
+    }
+
+    private static ProductCampaign? PickOffer(
+        ShopCatalogProduct product,
+        IReadOnlyList<ProductCampaign> liveCampaigns)
+    {
+        return liveCampaigns
+            .Where(campaign =>
+                campaign.AppliesToAllParts
+                || (campaign.ProductId.HasValue && campaign.ProductId.Value == product.Id))
+            .OrderBy(campaign => ShowroomRules.DiscountedPrice(
+                product.Price,
+                campaign.DiscountedPrice,
+                campaign.DiscountPercent))
+            .ThenBy(campaign => campaign.Id)
+            .FirstOrDefault();
     }
 }

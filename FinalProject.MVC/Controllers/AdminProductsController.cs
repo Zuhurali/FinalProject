@@ -11,86 +11,51 @@ namespace FinalProject.MVC.Controllers;
 [Route("Admin/Products")]
 public sealed class AdminProductsController : AdminControllerBase
 {
-    private readonly IShopCatalogService _catalog;
-
     public AdminProductsController(
         UserManager<ApplicationUser> userManager,
-        IApiAccessTokenService tokenService,
-        IShopCatalogService catalog)
+        IApiAccessTokenService tokenService)
         : base(userManager, tokenService)
     {
-        _catalog = catalog;
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public IActionResult Index()
     {
-        ViewData["Title"] = "Admin Products - AutoVault";
-        return View(await _catalog.GetAllAsync(cancellationToken));
+        return RedirectToAction("Index", "AdminParts");
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpGet("Create")]
     public IActionResult Create()
     {
-        ViewData["Title"] = "Add Product - AutoVault";
-        return View(new ShopCatalogProduct { InStock = true });
+        return RedirectToAction("Create", "AdminParts");
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ShopCatalogProduct product, CancellationToken cancellationToken)
+    public IActionResult CreatePost()
     {
-        if (!ModelState.IsValid)
-        {
-            return View(product);
-        }
-
-        await _catalog.CreateAsync(product, cancellationToken);
-        TempData["Success"] = "The product was created.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Create", "AdminParts");
     }
 
     [HttpGet("Edit/{id:int}")]
-    public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+    public IActionResult Edit(int id)
     {
-        ViewData["Title"] = "Edit Product - AutoVault";
-        var product = await _catalog.GetRecordAsync(id, cancellationToken);
-        return product == null ? NotFound() : View(product);
+        return RedirectToAction("Edit", "AdminParts", new { id });
     }
 
     [HttpPost("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, ShopCatalogProduct product, CancellationToken cancellationToken)
+    public IActionResult EditPost(int id)
     {
-        product.Id = id;
-        if (!ModelState.IsValid)
-        {
-            return View(product);
-        }
-
-        if (!await _catalog.UpdateAsync(product, cancellationToken))
-        {
-            return NotFound();
-        }
-
-        TempData["Success"] = "The product was updated.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Edit", "AdminParts", new { id });
     }
 
     [HttpPost("Delete/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public IActionResult Delete(int id)
     {
-        if (!await _catalog.DeleteAsync(id, cancellationToken))
-        {
-            TempData["Error"] = "The product was not found.";
-        }
-        else
-        {
-            TempData["Success"] = "The product was deleted.";
-        }
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction("Index", "AdminParts");
     }
 }

@@ -1,0 +1,50 @@
+@model CarApiDto?
+@{
+    Layout = "_AdminLayout";
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (ViewData["ServiceUnavailable"] != null || Model == null)
+{
+    <div class="alert alert-warning">The car service is temporarily unavailable.</div>
+    <a class="btn btn-link" asp-action="Index">Back to cars</a>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">@Model.Brand?.Name @Model.Model</h1>
+        <div>
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+            <a class="btn btn-link" asp-action="Index">Back</a>
+        </div>
+    </div>
+    <div class="admin-card">
+        <div class="row g-4">
+            <div class="col-md-4">
+                @if (!string.IsNullOrWhiteSpace(Model.MainImage))
+                {
+                    <img src="@Url.Content(Model.MainImage)" alt="@Model.Brand?.Name @Model.Model" class="img-fluid" />
+                }
+            </div>
+            <div class="col-md-8">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Id</dt><dd class="col-sm-8">@Model.Id</dd>
+                    <dt class="col-sm-4">Brand</dt><dd class="col-sm-8">@Model.Brand?.Name</dd>
+                    <dt class="col-sm-4">Model</dt><dd class="col-sm-8">@Model.Model</dd>
+                    <dt class="col-sm-4">Year</dt><dd class="col-sm-8">@Model.Year</dd>
+                    <dt class="col-sm-4">Price</dt><dd class="col-sm-8">@Model.Price.ToString("C0")</dd>
+                    <dt class="col-sm-4">Status</dt><dd class="col-sm-8">@Model.Status</dd>
+                    <dt class="col-sm-4">Mileage</dt><dd class="col-sm-8">@Model.Mileage.ToString("N0")</dd>
+                    <dt class="col-sm-4">Fuel</dt><dd class="col-sm-8">@Model.FuelType</dd>
+                    <dt class="col-sm-4">Transmission</dt><dd class="col-sm-8">@Model.Transmission</dd>
+                    <dt class="col-sm-4">Color</dt><dd class="col-sm-8">@Model.Color</dd>
+                    <dt class="col-sm-4">Category</dt><dd class="col-sm-8">@Model.Category?.Name</dd>
+                    <dt class="col-sm-4">Owner</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.OwnerDisplayName) ? "Catalog" : Model.OwnerDisplayName)</dd>
+                    <dt class="col-sm-4">Description</dt><dd class="col-sm-8">@Model.Description</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+}

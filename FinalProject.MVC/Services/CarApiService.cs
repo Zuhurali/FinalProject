@@ -273,6 +273,7 @@ public class CarApiService : ICarApiService
             Fuel = query.Fuel,
             Transmission = query.Transmission,
             IsNew = query.IsNew,
+            Status = query.Status,
             Page = query.Page,
             PageSize = query.PageSize
         };
@@ -290,6 +291,7 @@ public class CarApiService : ICarApiService
         Add(parameters, "model", query.Model);
         Add(parameters, "fuel", query.Fuel);
         Add(parameters, "transmission", query.Transmission);
+        Add(parameters, "status", query.Status);
 
         if (query.BrandId is int brandId)
         {
