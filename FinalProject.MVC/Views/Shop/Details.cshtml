@@ -265,27 +265,65 @@
                     </form>
                 </details>
 
+                @{
+                    var productInquiries = ViewBag.ProductInquiries as IList<FinalProject.MVC.Models.ProductInquiry>
+                        ?? new List<FinalProject.MVC.Models.ProductInquiry>();
+                }
+                @if (productInquiries.Count > 0)
+                {
+                    <section class="av-ask__answers mt-3" aria-label="Answered questions">
+                        <h6 class="mb-2">Questions and answers</h6>
+                        @foreach (var qa in productInquiries)
+                        {
+                            <article class="av-ask__qa mb-3 p-3 border rounded">
+                                <p class="fw-semibold mb-1">Q: @qa.Message</p>
+                                <p class="text-muted small mb-1">@qa.CustomerName · @qa.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                <p class="mb-0"><strong>A:</strong> @qa.AdminReply</p>
+                                @if (qa.AdminRepliedAt.HasValue)
+                                {
+                                    <p class="text-muted small mb-0">Store reply · @qa.AdminRepliedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                }
+                            </article>
+                        }
+                    </section>
+                }
+
                 <div class="product-user-rating">
                     <h6>Your Rating</h6>
                     @if (User.Identity?.IsAuthenticated == true)
                     {
+                        var userRatingVal = (int?)ViewBag.UserRating ?? 0;
+                        var userRatingId  = (int?)ViewBag.UserRatingId ?? 0;
                         <form id="productRatingForm">
                             @Html.AntiForgeryToken()
-                            <input type="hidden" id="selectedRating" value="@((int?)ViewBag.UserRating ?? 0)" />
+                            <input type="hidden" id="selectedRating" value="@userRatingVal" />
+                            <input type="hidden" id="userRatingId"   value="@userRatingId" />
                             <div class="user-rating-stars" role="radiogroup" aria-label="Your rating">
                                 @for (var i = 1; i <= 5; i++)
                                 {
                                     <button type="button"
-                                            class="rating-star @(i <= ((int?)ViewBag.UserRating ?? 0) ? "selected" : "")"
+                                            class="rating-star @(i <= userRatingVal ? "selected" : "")"
                                             data-rating="@i"
                                             aria-label="@i star rating"
-                                            aria-pressed="@(i <= ((int?)ViewBag.UserRating ?? 0) ? "true" : "false")">
+                                            aria-pressed="@(i <= userRatingVal ? "true" : "false")">
                                         <i class="fa-solid fa-star"></i>
                                     </button>
                                 }
                             </div>
-                            <button type="submit" class="av-btn av-btn--ghost av-btn--small" id="submitRatingBtn">Submit Rating</button>
-                            <p id="ratingMessage" class="mt--10" aria-live="polite"></p>
+                            @if (userRatingVal > 0)
+                            {
+                                <p id="ratingMessage" class="mt--10" style="color:#6c757d;" aria-live="polite">
+                                    You rated this product @userRatingVal star@(userRatingVal == 1 ? "" : "s").
+                                </p>
+                                <button type="button" class="av-btn av-btn--ghost av-btn--small mt-1" id="deleteRatingBtn">
+                                    Delete My Rating
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="submit" class="av-btn av-btn--ghost av-btn--small" id="submitRatingBtn">Submit Rating</button>
+                                <p id="ratingMessage" class="mt--10" aria-live="polite"></p>
+                            }
                         </form>
                     }
                     else
@@ -359,11 +397,10 @@
                     </div>
                 </div>
                 <div class="tab-pane" id="messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
-                    <div id="reviews" class="woocommerce-Reviews">
+                    <div id="reviews" class="woocommerce-Reviews" data-can-view-history="@((User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) ? "true" : "false")">
                         @{
                             var reviews = ViewBag.Reviews as IEnumerable<FinalProject.MVC.Models.Api.ProductReviewDto>
                                 ?? Enumerable.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
-                            var editingId = Context.Request.Query["edit"].ToString();
                         }
                         @if (ViewData["ReviewServiceUnavailable"] as bool? == true)
                         {
@@ -371,23 +408,59 @@
                         }
                         @foreach (var review in reviews)
                         {
-                            <div class="reveiw-box mb--30">
-                                <h6>@review.UserDisplayName</h6>
+                            <div class="reveiw-box mb--30" id="review-block-@review.Id" data-review-id="@review.Id">
+                                <h6>
+                                    @review.UserDisplayName
+                                    <span id="review-edited-@review.Id" class="text-muted" @(review.WasEdited ? "" : "hidden")>(edited)</span>
+                                </h6>
                                 <p>@review.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
                                 @if (review.IsHidden)
                                 {
                                     <p><em>Hidden from the shop.</em></p>
                                 }
-                                <p>@review.Content</p>
+                                @* Static content — JS replaces this on inline edit *@
+                                <p id="review-content-@review.Id">@review.Content</p>
+
                                 @if (review.CanEdit && User.Identity?.IsAuthenticated == true)
                                 {
-                                    <a href="@Url.Action("Details", "Shop", new { id = Model.Id, edit = review.Id })#reviews">Edit</a>
-                                    <form asp-controller="Shop" asp-action="DeleteReview" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="productId" value="@Model.Id" />
-                                        <input type="hidden" name="reviewId" value="@review.Id" />
-                                        <button type="submit" class="btn btn-link p-0">Delete</button>
-                                    </form>
+                                    @* Inline edit section — hidden until user clicks Edit *@
+                                    <div id="review-view-actions-@review.Id">
+                                        <button type="button"
+                                                class="btn btn-link p-0 review-edit-open"
+                                                data-review-id="@review.Id"
+                                                data-product-id="@Model.Id">Edit</button>
+                                        <form asp-controller="Shop" asp-action="DeleteReview" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@Model.Id" />
+                                            <input type="hidden" name="reviewId" value="@review.Id" />
+                                            <button type="submit" class="btn btn-link p-0 ms-2">Delete</button>
+                                        </form>
+                                    </div>
+
+                                    <div id="review-editor-@review.Id" hidden>
+                                        <textarea id="review-textarea-@review.Id"
+                                                  class="form-control mt-2"
+                                                  rows="4"
+                                                  minlength="1"
+                                                  maxlength="1000"
+                                                  placeholder="Write your review (up to 1 000 characters)">@review.Content</textarea>
+                                        <p id="review-editor-error-@review.Id" class="text-danger small mt-1" aria-live="polite" hidden></p>
+                                        <p id="review-editor-status-@review.Id" class="text-success small mt-1" aria-live="polite" hidden></p>
+                                        <div class="mt-1 d-flex gap-2">
+                                            <button type="button"
+                                                    class="av-btn av-btn--ghost av-btn--small review-edit-save"
+                                                    data-review-id="@review.Id"
+                                                    data-product-id="@Model.Id">Save</button>
+                                            <button type="button"
+                                                    class="btn btn-link p-0 review-edit-cancel"
+                                                    data-review-id="@review.Id">Cancel</button>
+                                        </div>
+                                    </div>
+                                }
+                                @if ((User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) && review.WasEdited)
+                                {
+                                    <button type="button" class="btn btn-link p-0 review-history-open" data-review-id="@review.Id">Original text</button>
+                                    <div id="review-history-@review.Id" class="small mt-2" hidden></div>
                                 }
                             </div>
                         }
@@ -399,16 +472,12 @@
                             <h2 class="mb--30">Write a review</h2>
                             @if (User.Identity?.IsAuthenticated == true)
                             {
-                                var editing = reviews.FirstOrDefault(review => review.Id.ToString() == editingId && review.CanEdit);
+                                @* New-review form — unchanged full-page POST *@
                                 <form asp-controller="Shop" asp-action="SaveReview" method="post">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="productId" value="@Model.Id" />
-                                    @if (editing != null)
-                                    {
-                                        <input type="hidden" name="reviewId" value="@editing.Id" />
-                                    }
-                                    <textarea name="content" minlength="10" maxlength="1000" required placeholder="Write 10 to 1000 characters.">@(editing?.Content)</textarea>
-                                    <button type="submit" class="rts-btn btn-primary">@(editing == null ? "Submit Review" : "Update Review")</button>
+                                    <textarea name="content" minlength="1" maxlength="1000" required placeholder="Write your review (up to 1 000 characters)."></textarea>
+                                    <button type="submit" class="rts-btn btn-primary">Submit Review</button>
                                 </form>
                             }
                             else
@@ -555,16 +624,218 @@
                     paintUserRating(response.userRating);
                     paintAverageRating(response.averageRating, response.totalCount);
                     message.text(response.message).css('color', '#28a745');
+                    // Show delete button, hide submit button
+                    $('#submitRatingBtn').hide();
+                    $('#userRatingId').val(response.ratingId || 0);
+                    if (!$('#deleteRatingBtn').length) {
+                        $('<button type="button" class="av-btn av-btn--ghost av-btn--small mt-1" id="deleteRatingBtn">Delete My Rating</button>')
+                            .insertAfter(message);
+                    }
+                    $('#deleteRatingBtn').show();
                 },
                 error: function(xhr) {
                     const response = xhr.responseJSON;
-                    message.text(response?.message || 'Ratings are temporarily unavailable. Please try again.')
-                        .css('color', '#dc3545');
+                    if (xhr.status === 409 || response?.alreadyRated) {
+                        message.text(response?.message || 'You already rated this product. Delete your existing rating before submitting a new one.')
+                               .css('color', '#856404');
+                    } else {
+                        message.text(response?.message || 'Ratings are temporarily unavailable. Please try again.')
+                               .css('color', '#dc3545');
+                    }
                 },
                 complete: function() {
                     button.prop('disabled', false).text('Submit Rating');
                 }
             });
+        });
+
+        // Delete my rating
+        $(document).on('click', '#deleteRatingBtn', function() {
+            const ratingId = Number($('#userRatingId').val());
+            const button = $(this);
+            const message = $('#ratingMessage');
+
+            if (!ratingId) {
+                message.text('No rating found to delete.').css('color', '#dc3545');
+                return;
+            }
+
+            button.prop('disabled', true).text('Deleting...');
+            $.ajax({
+                url: '@Url.Action("DeleteMyRating", "Shop")',
+                type: 'POST',
+                data: {
+                    productId: @Model.Id,
+                    ratingId: ratingId,
+                    __RequestVerificationToken: $('#productRatingForm input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    paintUserRating(0);
+                    paintAverageRating(response.averageRating, response.totalCount);
+                    message.text(response.message).css('color', '#28a745');
+                    $('#userRatingId').val(0);
+                    button.hide();
+                    // Show submit button again
+                    if (!$('#submitRatingBtn').length) {
+                        $('<button type="submit" class="av-btn av-btn--ghost av-btn--small" id="submitRatingBtn">Submit Rating</button>')
+                            .insertBefore(message);
+                    }
+                    $('#submitRatingBtn').show();
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON;
+                    message.text(response?.message || 'Could not delete rating. Please try again.').css('color', '#dc3545');
+                    button.prop('disabled', false).text('Delete My Rating');
+                }
+            });
+        });
+
+        // ── Inline review editor ─────────────────────────────────────────────
+        // Reads the antiforgery token from any rendered form on the page.
+        function getReviewAFToken() {
+            const field = document.querySelector('input[name="__RequestVerificationToken"]');
+            return field ? field.value : '';
+        }
+
+        // Open editor in place — preserve scroll position
+        $(document).on('click', '.review-edit-open', function () {
+            const reviewId = $(this).data('review-id');
+            $('#review-view-actions-' + reviewId).hide();
+            const editor = $('#review-editor-' + reviewId);
+            editor.show();
+            const ta = document.getElementById('review-textarea-' + reviewId);
+            ta.focus();
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+        });
+
+        // Cancel — close editor, restore original text, stay at same scroll position
+        $(document).on('click', '.review-edit-cancel', function () {
+            const reviewId = $(this).data('review-id');
+            $('#review-editor-' + reviewId).hide();
+            $('#review-view-actions-' + reviewId).show();
+            // Restore textarea to the last known saved value shown in the DOM
+            const saved = $('#review-content-' + reviewId).text();
+            $('#review-textarea-' + reviewId).val(saved);
+            $('#review-editor-error-' + reviewId).hide().text('');
+        });
+
+        // Save review via fetch — update DOM in place, no page reload
+        $(document).on('click', '.review-edit-save', async function () {
+            const reviewId = $(this).data('review-id');
+            const productId = $(this).data('product-id');
+            const btn = $(this);
+            const errEl = $('#review-editor-error-' + reviewId);
+            const content = $('#review-textarea-' + reviewId).val().trim();
+
+            // Client-side validation
+            if (content.length < 1) {
+                errEl.text('Write at least 1 character.').show();
+                return;
+            }
+            if (content.length > 1000) {
+                errEl.text('Reviews cannot exceed 1 000 characters.').show();
+                return;
+            }
+
+            btn.prop('disabled', true).text('Saving…');
+            errEl.hide();
+
+            try {
+                const formData = new FormData();
+                formData.append('productId', productId);
+                formData.append('reviewId', reviewId);
+                formData.append('content', content);
+                formData.append('__RequestVerificationToken', getReviewAFToken());
+
+                const response = await fetch('@Url.Action("SaveReviewJson", "Shop")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!data.ok) {
+                    errEl.text(data.error || 'Could not save your review.').show();
+                    return;
+                }
+
+                const savedText = data.review.content;
+                $('#review-content-' + reviewId).text(savedText);
+                $('#review-edited-' + reviewId).prop('hidden', !data.review.wasEdited);
+                $('#review-editor-' + reviewId).hide();
+                $('#review-view-actions-' + reviewId).show();
+                $('#review-textarea-' + reviewId).val(savedText);
+                let note = document.getElementById('review-save-note-' + reviewId);
+                if (!note) {
+                    note = document.createElement('p');
+                    note.id = 'review-save-note-' + reviewId;
+                    note.className = 'text-success small';
+                    document.getElementById('review-content-' + reviewId).after(note);
+                }
+                note.textContent = 'Your review was updated.';
+                const reviewsRoot = document.getElementById('reviews');
+                if (data.review.wasEdited && reviewsRoot?.dataset.canViewHistory === 'true' && !document.getElementById('review-history-' + reviewId)) {
+                    const historyButton = document.createElement('button');
+                    historyButton.type = 'button';
+                    historyButton.className = 'btn btn-link p-0 review-history-open';
+                    historyButton.dataset.reviewId = reviewId;
+                    historyButton.textContent = 'Original text';
+                    const historyPanel = document.createElement('div');
+                    historyPanel.id = 'review-history-' + reviewId;
+                    historyPanel.className = 'small mt-2';
+                    historyPanel.hidden = true;
+                    note.after(historyButton, historyPanel);
+                }
+
+            } catch (err) {
+                errEl.text('Network error. Your review was not saved — please try again.').show();
+            } finally {
+                btn.prop('disabled', false).text('Save');
+            }
+        });
+
+        $(document).on('click', '.review-history-open', async function () {
+            const reviewId = $(this).data('review-id');
+            const panel = document.getElementById('review-history-' + reviewId);
+            if (!panel) {
+                return;
+            }
+            if (!panel.hidden && panel.dataset.loaded === '1') {
+                panel.hidden = true;
+                return;
+            }
+            const button = this;
+            button.disabled = true;
+            try {
+                const response = await fetch('/Admin/Reviews/History/' + reviewId);
+                const data = await response.json();
+                panel.replaceChildren();
+                if (!response.ok || !data.ok) {
+                    panel.textContent = data.error || 'The original text could not be loaded.';
+                    panel.hidden = false;
+                    return;
+                }
+                (data.items || []).forEach(function (item) {
+                    const when = document.createElement('div');
+                    when.className = 'text-muted';
+                    when.textContent = 'Previous text · ' + item.editedAt;
+                    const body = document.createElement('p');
+                    body.style.whiteSpace = 'pre-wrap';
+                    body.textContent = item.previousContent;
+                    panel.appendChild(when);
+                    panel.appendChild(body);
+                });
+                if (!data.items || data.items.length === 0) {
+                    panel.textContent = 'No earlier text is stored.';
+                }
+                panel.dataset.loaded = '1';
+                panel.hidden = false;
+            } catch (err) {
+                panel.hidden = false;
+                panel.textContent = 'The original text could not be loaded.';
+            } finally {
+                button.disabled = false;
+            }
         });
     });
 </script>

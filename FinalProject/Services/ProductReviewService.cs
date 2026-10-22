@@ -86,8 +86,7 @@ public sealed class ProductReviewService : IProductReviewService
                 return (null, "You can edit only your own review.");
             }
 
-            existing.Content = normalized;
-            existing.UpdatedAt = DateTime.UtcNow;
+            RecordEdit(existing, normalized);
             review = existing;
         }
         else
@@ -96,8 +95,7 @@ public sealed class ProductReviewService : IProductReviewService
                 .FirstOrDefaultAsync(item => item.ProductId == productId && item.UserId == userId, cancellationToken);
             if (existingForUser != null)
             {
-                existingForUser.Content = normalized;
-                existingForUser.UpdatedAt = DateTime.UtcNow;
+                RecordEdit(existingForUser, normalized);
                 review = existingForUser;
             }
             else
@@ -126,7 +124,6 @@ public sealed class ProductReviewService : IProductReviewService
     public async Task<(bool Ok, string? Error)> DeleteReviewAsync(
         int reviewId,
         string userId,
-        bool isModerator,
         CancellationToken cancellationToken = default)
     {
         var review = await _context.ProductReviews.FirstOrDefaultAsync(item => item.Id == reviewId, cancellationToken);
@@ -135,7 +132,7 @@ public sealed class ProductReviewService : IProductReviewService
             return (false, "Review not found.");
         }
 
-        if (!isModerator && review.UserId != userId)
+        if (review.UserId != userId)
         {
             return (false, "You can delete only your own review.");
         }
@@ -154,9 +151,48 @@ public sealed class ProductReviewService : IProductReviewService
         }
 
         review.IsHidden = isHidden;
-        review.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    public async Task<IReadOnlyList<ProductReviewRevisionItem>?> GetHistoryAsync(
+        int reviewId,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _context.ProductReviews.AsNoTracking()
+            .AnyAsync(review => review.Id == reviewId, cancellationToken);
+        if (!exists)
+        {
+            return null;
+        }
+
+        return await _context.ProductReviewRevisions.AsNoTracking()
+            .Where(revision => revision.ReviewId == reviewId)
+            .OrderByDescending(revision => revision.EditedAt)
+            .ThenByDescending(revision => revision.Id)
+            .Select(revision => new ProductReviewRevisionItem(
+                revision.Id,
+                revision.PreviousContent,
+                revision.EditedAt))
+            .ToListAsync(cancellationToken);
+    }
+
+    private void RecordEdit(ProductReview review, string normalized)
+    {
+        if (string.Equals(review.Content, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _context.ProductReviewRevisions.Add(new ProductReviewRevision
+        {
+            ReviewId = review.Id,
+            PreviousContent = review.Content,
+            EditedAt = DateTime.UtcNow
+        });
+        review.Content = normalized;
+        review.IsEdited = true;
+        review.UpdatedAt = DateTime.UtcNow;
     }
 
     private IQueryable<ProductReviewItem> Project(IQueryable<ProductReview> query, string? currentUserId, bool canModerate)
@@ -176,7 +212,9 @@ public sealed class ProductReviewService : IProductReviewService
                 review.IsHidden,
                 review.CreatedAt,
                 review.UpdatedAt,
-                canModerate || review.UserId == currentUserId);
+                review.UserId == currentUserId,
+                review.IsEdited,
+                canModerate && review.IsEdited);
     }
 
     private async Task<bool> ProductExistsAsync(int productId, CancellationToken cancellationToken)

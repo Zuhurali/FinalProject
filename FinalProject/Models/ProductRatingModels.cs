@@ -33,4 +33,8 @@ public sealed record CurrentUserProductRating(
     int ProductId,
     int Rating,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt)
+{
+    /// <summary>True when the user already has a rating for this product and the new submission was rejected.</summary>
+    public bool AlreadyExists { get; init; }
+}

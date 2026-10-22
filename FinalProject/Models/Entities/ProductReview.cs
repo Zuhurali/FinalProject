@@ -19,6 +19,8 @@ public class ProductReview
 
     public bool IsHidden { get; set; }
 
+    public bool IsEdited { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

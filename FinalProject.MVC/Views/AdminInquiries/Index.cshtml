@@ -5,6 +5,7 @@
 <div class="d-flex justify-content-between mb-4">
     <h1 class="h3">Product questions</h1>
 </div>
+
 <div class="admin-card">
     <p>Customers send these from a product page. They are questions about availability or fitment, not orders or payments.</p>
     @if (Model.Count == 0)
@@ -13,15 +14,22 @@
     }
     else
     {
-        <table class="table">
+        <table class="table align-top" id="inquiries-table">
             <thead>
-                <tr><th>When</th><th>Product</th><th>Customer</th><th>Message</th><th>Status</th><th></th></tr>
+                <tr>
+                    <th style="width:120px">When</th>
+                    <th>Product</th>
+                    <th>Customer</th>
+                    <th>Question</th>
+                    <th style="width:100px">Status</th>
+                    <th style="width:180px"></th>
+                </tr>
             </thead>
             <tbody>
             @foreach (var inquiry in Model)
             {
-                <tr>
-                    <td>@inquiry.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                <tr id="inq-row-@inquiry.Id" data-inquiry-id="@inquiry.Id">
+                    <td class="text-nowrap">@inquiry.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
                     <td>@(inquiry.Product?.Name ?? $"Product {inquiry.ProductId}")</td>
                     <td>
                         @inquiry.CustomerName<br />
@@ -31,14 +39,64 @@
                             <br /><a href="tel:@inquiry.Phone">@inquiry.Phone</a>
                         }
                     </td>
-                    <td style="max-width:360px;white-space:pre-wrap;">@inquiry.Message</td>
-                    <td>@(inquiry.IsHandled ? "Handled" : "New")</td>
                     <td>
-                        <form asp-action="Handled" method="post">
+                        <p style="white-space:pre-wrap;margin:0">@inquiry.Message</p>
+
+                        @* Saved reply section — always present, hidden when no reply *@
+                        <div id="inq-reply-display-@inquiry.Id"
+                             class="mt-2 p-2 border-start border-3 border-success bg-light"
+                             @(inquiry.HasReply ? "" : "hidden")>
+                            <small class="text-muted d-block mb-1">
+                                Admin reply
+                                @if (inquiry.AdminRepliedAt.HasValue)
+                                {
+                                    <span>· @inquiry.AdminRepliedAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                                }
+                            </small>
+                            <p id="inq-reply-text-@inquiry.Id" style="white-space:pre-wrap;margin:0">@inquiry.AdminReply</p>
+                        </div>
+
+                        @* Inline editor — hidden by default, opened by JS *@
+                        <div id="inq-editor-@inquiry.Id" hidden class="mt-2">
+                            <textarea id="inq-textarea-@inquiry.Id"
+                                      class="form-control"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Write your reply (max 2 000 characters)…">@inquiry.AdminReply</textarea>
+                            <p id="inq-editor-error-@inquiry.Id" class="text-danger small mt-1" hidden></p>
+                            <div class="mt-1 d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-sm btn-success inq-send-btn"
+                                        data-id="@inquiry.Id">Send Reply</button>
+                                <button type="button"
+                                        class="btn btn-sm btn-link p-0 inq-cancel-btn"
+                                        data-id="@inquiry.Id">Cancel</button>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span id="inq-status-@inquiry.Id"
+                              class="badge @(inquiry.StatusLabel == "Answered" ? "bg-success" : inquiry.StatusLabel == "Closed" ? "bg-secondary" : "bg-warning text-dark")">
+                            @inquiry.StatusLabel
+                        </span>
+                        <p id="inq-flash-@inquiry.Id" class="small mt-2 mb-0" hidden></p>
+                    </td>
+                    <td class="d-flex flex-column gap-1">
+                        @* Reply button — label changes after a reply exists *@
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary inq-reply-btn"
+                                data-id="@inquiry.Id">
+                            @(inquiry.HasReply ? "Edit Reply" : "Reply")
+                        </button>
+
+                        @* Handled toggle — separate from reply *@
+                        <form asp-action="Handled" method="post" class="m-0">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@inquiry.Id" />
                             <input type="hidden" name="handled" value="@(!inquiry.IsHandled ? "true" : "false")" />
-                            <button type="submit" class="btn btn-sm btn-outline-dark">@(inquiry.IsHandled ? "Mark new" : "Mark handled")</button>
+                            <button type="submit" class="btn btn-sm btn-outline-dark w-100">
+                                @(inquiry.IsHandled ? "Reopen" : "Mark Closed")
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -47,3 +105,123 @@
         </table>
     }
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    // Extract antiforgery token from the hidden field rendered by Razor
+    function getAFToken() {
+        const field = document.querySelector('input[name="__RequestVerificationToken"]');
+        return field ? field.value : '';
+    }
+
+    // Open inline editor
+    document.querySelectorAll('.inq-reply-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const id = btn.dataset.id;
+            document.getElementById('inq-editor-' + id).hidden = false;
+            const ta = document.getElementById('inq-textarea-' + id);
+            ta.focus();
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+        });
+    });
+
+    // Cancel — close editor, restore text to last saved value
+    document.querySelectorAll('.inq-cancel-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const id = btn.dataset.id;
+            document.getElementById('inq-editor-' + id).hidden = true;
+            // Restore textarea to what is currently displayed (so unsaved changes are discarded)
+            const savedText = document.getElementById('inq-reply-text-' + id)?.textContent ?? '';
+            document.getElementById('inq-textarea-' + id).value = savedText.trim();
+            const errEl = document.getElementById('inq-editor-error-' + id);
+            errEl.hidden = true;
+            errEl.textContent = '';
+        });
+    });
+
+    // Send reply via fetch
+    document.querySelectorAll('.inq-send-btn').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            const id = btn.dataset.id;
+            const ta = document.getElementById('inq-textarea-' + id);
+            const errEl = document.getElementById('inq-editor-error-' + id);
+            const reply = ta.value.trim();
+
+            // Client-side validation
+            if (reply.length === 0) {
+                errEl.textContent = 'Reply cannot be empty.';
+                errEl.hidden = false;
+                ta.focus();
+                return;
+            }
+            if (reply.length > 2000) {
+                errEl.textContent = 'Reply cannot exceed 2 000 characters.';
+                errEl.hidden = false;
+                return;
+            }
+
+            // Prevent double-submit
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+            errEl.hidden = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('id', id);
+                formData.append('reply', reply);
+                formData.append('__RequestVerificationToken', getAFToken());
+
+                const response = await fetch('@Url.Action("Reply", "AdminInquiries")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.ok) {
+                    errEl.textContent = data.error || 'Could not save the reply.';
+                    errEl.hidden = false;
+                    return;
+                }
+
+                // Update DOM with saved reply — no page reload
+                const displayEl = document.getElementById('inq-reply-display-' + id);
+                const textEl = document.getElementById('inq-reply-text-' + id);
+                textEl.textContent = data.reply ?? reply;
+                displayEl.hidden = false;
+
+                // Update status badge
+                const statusEl = document.getElementById('inq-status-' + id);
+                statusEl.textContent = data.statusLabel ?? 'Answered';
+                statusEl.className = 'badge bg-success';
+
+                // Update reply button label
+                const replyBtn = document.querySelector('.inq-reply-btn[data-id="' + id + '"]');
+                if (replyBtn) replyBtn.textContent = 'Edit Reply';
+
+                // Close editor
+                document.getElementById('inq-editor-' + id).hidden = true;
+
+                // Update textarea to match saved text (for next open)
+                ta.value = data.reply ?? reply;
+
+                const flash = document.getElementById('inq-flash-' + id);
+                if (flash) {
+                    flash.hidden = false;
+                    flash.className = 'small mt-2 mb-0 text-success';
+                    flash.textContent = 'Reply saved.';
+                }
+
+            } catch (err) {
+                errEl.textContent = 'Network error. Your reply was not saved — please try again.';
+                errEl.hidden = false;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send Reply';
+            }
+        });
+    });
+}());
+</script>
+}

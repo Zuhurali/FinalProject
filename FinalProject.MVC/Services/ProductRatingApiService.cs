@@ -129,6 +129,20 @@ public sealed class ProductRatingApiService : IProductRatingApiService
         await EnsureSuccessAsync(response, cancellationToken);
     }
 
+    public async Task DeleteMyRatingAsync(
+        int productId,
+        int ratingId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = Authorized(
+            HttpMethod.Delete,
+            $"api/products/{productId}/ratings/{ratingId}/my",
+            accessToken);
+        using var response = await SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+    }
+
     private static HttpRequestMessage Authorized(
         HttpMethod method,
         string url,

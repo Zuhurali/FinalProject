@@ -25,4 +25,24 @@ public class ProductInquiry
     public DateTime CreatedAt { get; set; }
 
     public bool IsHandled { get; set; }
+
+    // ── Admin reply ──────────────────────────────────────────────────────────
+    /// <summary>The admin's written reply. Null means no reply has been sent yet.</summary>
+    [MaxLength(2000)]
+    public string? AdminReply { get; set; }
+
+    /// <summary>UTC timestamp of the most recent reply save.</summary>
+    public DateTime? AdminRepliedAt { get; set; }
+
+    /// <summary>Identity user ID of the admin who last saved the reply.</summary>
+    [MaxLength(450)]
+    public string? AdminUserId { get; set; }
+
+    // Computed helpers (not mapped)
+    public bool HasReply => !string.IsNullOrWhiteSpace(AdminReply);
+
+    public string StatusLabel =>
+        HasReply ? "Answered" :
+        IsHandled ? "Closed" :
+        "New";
 }

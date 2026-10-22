@@ -85,6 +85,17 @@ public sealed class ProductReviewApiService : IProductReviewApiService
         await EnsureSuccessAsync(response, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProductReviewRevisionDto>> GetHistoryAsync(
+        int reviewId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = Authorized(HttpMethod.Get, $"api/products/reviews/{reviewId}/history", accessToken);
+        using var response = await SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<ProductReviewRevisionDto>>(JsonOptions, cancellationToken) ?? [];
+    }
+
     private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken)
     {
         var request = new HttpRequestMessage(method, url);

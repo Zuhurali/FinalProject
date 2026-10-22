@@ -43,6 +43,12 @@ public interface IShopCatalogService
 
     Task<bool> SetInquiryHandledAsync(int id, bool handled, CancellationToken cancellationToken = default);
 
+    Task<(bool Ok, string? Error)> SaveInquiryReplyAsync(
+        int id,
+        string reply,
+        string adminUserId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default);
 
     Task<PurchaseRequestResult> SavePurchaseRequestAsync(ShowroomPurchaseRequest request, CancellationToken cancellationToken = default);

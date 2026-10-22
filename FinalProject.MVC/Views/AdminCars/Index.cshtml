@@ -14,14 +14,6 @@
         <a class="btn btn-primary" asp-action="Create">Add Car</a>
     }
 </div>
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
 @if (ViewData["ServiceUnavailable"] != null)
 {
     <div class="alert alert-warning">The car service is temporarily unavailable.</div>

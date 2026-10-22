@@ -92,14 +92,23 @@ public sealed class ProductReviewsController : ControllerBase
             return Unauthorized();
         }
 
-        var isModerator = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
-        var (ok, error) = await _reviews.DeleteReviewAsync(reviewId, userId, isModerator, cancellationToken);
+        var (ok, error) = await _reviews.DeleteReviewAsync(reviewId, userId, cancellationToken);
         if (ok)
         {
             return NoContent();
         }
 
         return error == "Review not found." ? NotFound(new { message = error }) : Forbid();
+    }
+
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [HttpGet("reviews/{reviewId:int}/history")]
+    public async Task<ActionResult<IReadOnlyList<ProductReviewRevisionItem>>> History(
+        int reviewId,
+        CancellationToken cancellationToken)
+    {
+        var history = await _reviews.GetHistoryAsync(reviewId, cancellationToken);
+        return history == null ? NotFound(new { message = "Review not found." }) : Ok(history);
     }
 
     [Authorize(Roles = "Admin,SuperAdmin")]

@@ -4,7 +4,8 @@
     Layout = "_AdminLayout";
     var search = ViewData["Search"] as string;
     var category = ViewData["Category"] as string;
-    var pages = Model.PageSize == 0 ? 1 : (int)Math.Ceiling(Model.Total / (double)Model.PageSize);
+    var window = PageWindow.Describe(Model.Page, Model.PageSize == 0 ? 10 : Model.PageSize, Model.Items.Count, Model.Total);
+    var pages = window.PageCount;
 }
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Parts</h1>
@@ -93,14 +94,14 @@
     }
     else
     {
-        <p class="mb-2">Showing @Model.Items.Count of @Model.Total</p>
+        <p class="mb-2">Showing @window.Start–@window.End of @Model.Total</p>
     }
     @if (pages > 1)
     {
         <nav>
             @for (var number = 1; number <= pages; number++)
             {
-                <a class="btn btn-sm @(number == Model.Page ? "btn-primary" : "btn-outline-secondary") me-1" asp-action="Index" asp-route-page="@number" asp-route-search="@search" asp-route-category="@category">@number</a>
+                <a class="btn btn-sm @(number == window.Page ? "btn-primary" : "btn-outline-secondary") me-1" asp-action="Index" asp-route-page="@number" asp-route-search="@search" asp-route-category="@category">@number</a>
             }
         </nav>
     }

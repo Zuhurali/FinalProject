@@ -27,4 +27,11 @@ public interface IProductRatingService
         int productId,
         int ratingId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Allows the rating's owner to delete their own rating.</summary>
+    Task<(bool Found, bool Allowed)> DeleteRatingByUserAsync(
+        int productId,
+        int ratingId,
+        string userId,
+        CancellationToken cancellationToken = default);
 }

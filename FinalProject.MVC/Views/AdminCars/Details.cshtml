@@ -2,10 +2,6 @@
 @{
     Layout = "_AdminLayout";
 }
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
 @if (ViewData["ServiceUnavailable"] != null || Model == null)
 {
     <div class="alert alert-warning">The car service is temporarily unavailable.</div>

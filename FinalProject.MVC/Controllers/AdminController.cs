@@ -79,6 +79,7 @@ public sealed class AdminController : AdminControllerBase
             });
         }
 
+        ViewBag.CurrentUserId = UserManager.GetUserId(User);
         return View(models);
     }
 
@@ -87,38 +88,131 @@ public sealed class AdminController : AdminControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangeRole(string userId, string role)
     {
-        if (role is not (AppRoles.Admin or AppRoles.Member))
+        var (ok, message) = await ApplyRoleChangeAsync(userId, role);
+        TempData[ok ? "Success" : "Error"] = message;
+        return RedirectToAction(nameof(Users));
+    }
+
+    [Authorize(Roles = AppRoles.SuperAdmin)]
+    [HttpPost("Users/Roles")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeRoles(List<AdminUserRoleChangeItem>? items)
+    {
+        items ??= [];
+        if (items.Count == 0)
         {
-            TempData["Error"] = "Choose Member or Admin.";
+            TempData["Error"] = "No role changes were submitted.";
             return RedirectToAction(nameof(Users));
+        }
+
+        var updated = 0;
+        var errors = new List<string>();
+        foreach (var item in items)
+        {
+            if (string.IsNullOrWhiteSpace(item.UserId) || string.IsNullOrWhiteSpace(item.Role))
+            {
+                continue;
+            }
+
+            var (ok, message) = await ApplyRoleChangeAsync(item.UserId, item.Role);
+            if (!ok)
+            {
+                errors.Add(message);
+                continue;
+            }
+
+            if (!message.Contains("already has this role", StringComparison.OrdinalIgnoreCase))
+            {
+                updated++;
+            }
+        }
+
+        if (updated > 0 && errors.Count == 0)
+        {
+            TempData["Success"] = updated == 1
+                ? "1 user role was updated."
+                : $"{updated} user roles were updated.";
+        }
+        else if (updated > 0)
+        {
+            TempData["Success"] =
+                $"{updated} user role(s) were updated. Some changes could not be applied: {string.Join(" ", errors)}";
+        }
+        else if (errors.Count > 0)
+        {
+            TempData["Error"] = string.Join(" ", errors);
+        }
+        else
+        {
+            TempData["Success"] = "No role changes were needed.";
+        }
+
+        return RedirectToAction(nameof(Users));
+    }
+
+    private async Task<(bool Ok, string Message)> ApplyRoleChangeAsync(string userId, string role)
+    {
+        if (role is not (AppRoles.SuperAdmin or AppRoles.Admin or AppRoles.Member))
+        {
+            return (false, "Choose SuperAdmin, Admin, or Member.");
         }
 
         var user = await UserManager.FindByIdAsync(userId);
         if (user == null)
         {
-            return NotFound();
+            return (false, "User not found.");
         }
 
-        if (await UserManager.IsInRoleAsync(user, AppRoles.SuperAdmin))
+        var currentUserId = UserManager.GetUserId(User);
+        var roles = await UserManager.GetRolesAsync(user);
+        var isSuperAdmin = roles.Contains(AppRoles.SuperAdmin);
+        if (user.Id == currentUserId && role != AppRoles.SuperAdmin)
         {
-            TempData["Error"] = "A SuperAdmin account cannot be changed from this page.";
-            return RedirectToAction(nameof(Users));
+            return (false, "You cannot remove your own SuperAdmin role.");
         }
 
-        if (await UserManager.IsInRoleAsync(user, AppRoles.Admin))
+        if (isSuperAdmin && role != AppRoles.SuperAdmin)
         {
-            await UserManager.RemoveFromRoleAsync(user, AppRoles.Admin);
+            var superAdmins = await UserManager.GetUsersInRoleAsync(AppRoles.SuperAdmin);
+            if (superAdmins.Count <= 1)
+            {
+                return (false, "At least one SuperAdmin account must remain.");
+            }
         }
 
-        if (await UserManager.IsInRoleAsync(user, AppRoles.Member))
+        var changed = false;
+        foreach (var existing in AppRoles.All)
         {
-            await UserManager.RemoveFromRoleAsync(user, AppRoles.Member);
+            if (existing != role && roles.Contains(existing))
+            {
+                var removed = await UserManager.RemoveFromRoleAsync(user, existing);
+                if (!removed.Succeeded)
+                {
+                    return (false, string.Join(", ", removed.Errors.Select(error => error.Description)));
+                }
+
+                changed = true;
+            }
         }
 
-        var result = await UserManager.AddToRoleAsync(user, role);
-        TempData[result.Succeeded ? "Success" : "Error"] = result.Succeeded
-            ? "The user role was updated."
-            : string.Join(", ", result.Errors.Select(error => error.Description));
-        return RedirectToAction(nameof(Users));
+        if (!roles.Contains(role))
+        {
+            var added = await UserManager.AddToRoleAsync(user, role);
+            if (!added.Succeeded)
+            {
+                return (false, string.Join(", ", added.Errors.Select(error => error.Description)));
+            }
+
+            changed = true;
+        }
+
+        if (changed && user.Id != currentUserId)
+        {
+            await UserManager.UpdateSecurityStampAsync(user);
+        }
+
+        return changed
+            ? (true, "The user role was updated.")
+            : (true, "That user already has this role.");
     }
 }

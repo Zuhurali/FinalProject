@@ -17770,6 +17770,12 @@ a.category-wrapper2:hover {
 .project-wrapper2 .content-area .title {
   font-size: 24px;
   padding: 0 30px;
+  color: #ffffff;
+}
+.project-wrapper2 .content-area .title:hover,
+.project-wrapper2 .content-area .title a,
+.project-wrapper2 .content-area .title a:hover {
+  color: #ffffff;
 }
 .project-wrapper2 .content-area .feature-area {
   display: flex;

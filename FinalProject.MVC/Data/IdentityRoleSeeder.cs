@@ -1,154 +1,129 @@
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Security;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace FinalProject.MVC.Data;
 
+/// <summary>
+/// Ensures Identity roles exist and optionally seeds or resets configured accounts.
+/// Existing accounts are never recreated. Passwords change only when the matching
+/// reset flag is true and a non-empty password is supplied from configuration.
+/// </summary>
 public static class IdentityRoleSeeder
 {
-    public static async Task SeedAsync(IServiceProvider services, IConfiguration configuration)
+    public static async Task SeedAsync(
+        IServiceProvider services,
+        IEnumerable<(string Email, string Password, string Role, bool ResetPassword)> accounts)
     {
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var environment = services.GetRequiredService<IHostEnvironment>();
-        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("IdentityRoleSeeder");
+        var logger = services.GetRequiredService<ILoggerFactory>()
+                             .CreateLogger("IdentityRoleSeeder");
 
         foreach (var roleName in AppRoles.All)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
-                var created = await roleManager.CreateAsync(new IdentityRole(roleName));
-                if (!created.Succeeded)
+                var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+                if (!result.Succeeded)
                 {
                     throw new InvalidOperationException(
-                        $"Unable to create the {roleName} role: {string.Join(", ", created.Errors.Select(error => error.Description))}");
+                        $"Could not create role '{roleName}': " +
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
+
+                logger.LogInformation("Created role {Role}.", roleName);
             }
         }
 
-        var legacyRole = await roleManager.FindByNameAsync(AppRoles.LegacyUser);
-        var memberRole = await roleManager.FindByNameAsync(AppRoles.Member);
-        if (legacyRole != null && memberRole != null)
+        var legacyUsers = await userManager.GetUsersInRoleAsync(AppRoles.LegacyUser);
+        foreach (var legacy in legacyUsers)
         {
-            var legacyUsers = await userManager.GetUsersInRoleAsync(AppRoles.LegacyUser);
-            foreach (var user in legacyUsers)
+            if (!await userManager.IsInRoleAsync(legacy, AppRoles.Member))
             {
-                if (!await userManager.IsInRoleAsync(user, AppRoles.Member))
+                await userManager.AddToRoleAsync(legacy, AppRoles.Member);
+            }
+
+            await userManager.RemoveFromRoleAsync(legacy, AppRoles.LegacyUser);
+        }
+
+        foreach (var (email, password, role, resetPassword) in accounts)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                continue;
+            }
+
+            var existing = await userManager.FindByEmailAsync(email);
+            if (existing != null)
+            {
+                if (resetPassword)
                 {
-                    await userManager.AddToRoleAsync(user, AppRoles.Member);
+                    if (string.IsNullOrWhiteSpace(password))
+                    {
+                        logger.LogWarning(
+                            "Password reset requested for {Email}, but no password was supplied. The existing password was left unchanged.",
+                            email);
+                    }
+                    else
+                    {
+                        var token = await userManager.GeneratePasswordResetTokenAsync(existing);
+                        var resetResult = await userManager.ResetPasswordAsync(existing, token, password);
+                        if (!resetResult.Succeeded)
+                        {
+                            throw new InvalidOperationException(
+                                $"Could not reset password for '{email}': " +
+                                string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+                        }
+
+                        await userManager.UpdateSecurityStampAsync(existing);
+                        logger.LogInformation("Password reset applied for existing account {Email}.", email);
+                    }
                 }
 
-                await userManager.RemoveFromRoleAsync(user, AppRoles.LegacyUser);
+                if (!await userManager.IsInRoleAsync(existing, role))
+                {
+                    await userManager.AddToRoleAsync(existing, role);
+                    await userManager.UpdateSecurityStampAsync(existing);
+                    logger.LogInformation("Assigned role {Role} to existing account {Email}.", role, email);
+                }
+
+                continue;
             }
-        }
 
-        var email = configuration["AdminSeed:SuperAdminEmail"]?.Trim();
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return;
-        }
-
-        var password = configuration["AdminSeed:SuperAdminPassword"];
-        var resetPassword = configuration.GetValue("AdminSeed:ResetSuperAdminPassword", false);
-        var superAdmin = await userManager.FindByEmailAsync(email);
-        if (superAdmin == null)
-        {
             if (string.IsNullOrWhiteSpace(password))
             {
-                return;
+                logger.LogWarning("Skipping {Role} account {Email}: no initial password supplied.", role, email);
+                continue;
             }
 
-            superAdmin = new ApplicationUser
+            var user = new ApplicationUser
             {
                 UserName = email,
                 Email = email,
                 EmailConfirmed = true,
-                FirstName = "Super",
-                LastName = "Admin",
                 CreatedAt = DateTime.UtcNow
             };
-            var result = await userManager.CreateAsync(superAdmin, password);
-            if (!result.Succeeded)
+
+            var createResult = await userManager.CreateAsync(user, password);
+            if (!createResult.Succeeded)
             {
+                var alreadyExists = createResult.Errors.Any(e =>
+                    e.Code == "DuplicateEmail" || e.Code == "DuplicateUserName");
+                if (alreadyExists)
+                {
+                    logger.LogInformation("Concurrent seed detected for {Email} — account already exists, skipping.", email);
+                    continue;
+                }
+
                 throw new InvalidOperationException(
-                    "Unable to create the configured SuperAdmin account: " +
-                    string.Join(", ", result.Errors.Select(error => error.Description)));
+                    $"Could not create {role} account '{email}': " +
+                    string.Join(", ", createResult.Errors.Select(e => e.Description)));
             }
-        }
-        else if (resetPassword)
-        {
-            await ResetExistingSuperAdminPasswordAsync(
-                userManager,
-                environment,
-                logger,
-                superAdmin,
-                password);
-        }
 
-        if (!superAdmin.EmailConfirmed)
-        {
-            superAdmin.EmailConfirmed = true;
-            await userManager.UpdateAsync(superAdmin);
+            await userManager.AddToRoleAsync(user, role);
+            logger.LogInformation("Created {Role} account {Email}.", role, email);
         }
-
-        if (!await userManager.IsInRoleAsync(superAdmin, AppRoles.SuperAdmin))
-        {
-            await userManager.AddToRoleAsync(superAdmin, AppRoles.SuperAdmin);
-        }
-    }
-
-    /// <summary>
-    /// Development-only one-shot password reset. Uses Identity's reset token API.
-    /// Enable only through User Secrets: AdminSeed:ResetSuperAdminPassword = true.
-    /// </summary>
-    private static async Task ResetExistingSuperAdminPasswordAsync(
-        UserManager<ApplicationUser> userManager,
-        IHostEnvironment environment,
-        ILogger logger,
-        ApplicationUser superAdmin,
-        string? password)
-    {
-        if (!environment.IsDevelopment())
-        {
-            logger.LogWarning(
-                "Ignored AdminSeed:ResetSuperAdminPassword because the environment is {Environment}.",
-                environment.EnvironmentName);
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(password))
-        {
-            throw new InvalidOperationException(
-                "AdminSeed:ResetSuperAdminPassword is true, but AdminSeed:SuperAdminPassword is empty. " +
-                "Set both values in User Secrets, then run the MVC project once.");
-        }
-
-        if (!await userManager.IsInRoleAsync(superAdmin, AppRoles.SuperAdmin))
-        {
-            throw new InvalidOperationException(
-                $"Refusing to reset the password for {superAdmin.Email}: the account is not SuperAdmin.");
-        }
-
-        var token = await userManager.GeneratePasswordResetTokenAsync(superAdmin);
-        var reset = await userManager.ResetPasswordAsync(superAdmin, token, password);
-        if (!reset.Succeeded)
-        {
-            throw new InvalidOperationException(
-                "Unable to reset the SuperAdmin password: " +
-                string.Join(", ", reset.Errors.Select(error => error.Description)));
-        }
-
-        if (await userManager.IsLockedOutAsync(superAdmin))
-        {
-            await userManager.SetLockoutEndDateAsync(superAdmin, null);
-        }
-
-        logger.LogWarning(
-            "Development reset applied for SuperAdmin {Email}. " +
-            "Sign in with that email or username, then set AdminSeed:ResetSuperAdminPassword to false " +
-            "and remove AdminSeed:SuperAdminPassword from User Secrets.",
-            superAdmin.Email);
     }
 }

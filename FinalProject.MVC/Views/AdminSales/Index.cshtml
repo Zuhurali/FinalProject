@@ -4,14 +4,6 @@
     var products = (IReadOnlyList<ShopProduct>)ViewBag.Products;
 }
 <h1 class="h3 mb-4">In-person sales</h1>
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
 <p class="text-muted">If a spare-parts campaign is Live, the unit price below uses the campaign discount automatically. Car sales are not recorded here.</p>
 <form method="post" class="admin-card mb-4" id="sale-form">
     @Html.AntiForgeryToken()

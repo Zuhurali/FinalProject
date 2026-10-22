@@ -9,7 +9,14 @@ public sealed record ProductReviewItem(
     bool IsHidden,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    bool CanEdit);
+    bool CanEdit,
+    bool WasEdited,
+    bool CanViewHistory);
+
+public sealed record ProductReviewRevisionItem(
+    int Id,
+    string PreviousContent,
+    DateTime EditedAt);
 
 public sealed class SaveProductReviewRequest
 {

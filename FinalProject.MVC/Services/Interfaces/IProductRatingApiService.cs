@@ -33,4 +33,10 @@ public interface IProductRatingApiService
         int ratingId,
         string accessToken,
         CancellationToken cancellationToken = default);
+
+    Task DeleteMyRatingAsync(
+        int productId,
+        int ratingId,
+        string accessToken,
+        CancellationToken cancellationToken = default);
 }

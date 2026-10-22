@@ -116,7 +116,6 @@ builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
 builder.Services.AddScoped<IProductPopularityService, ProductPopularityService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
-// Add session support
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -133,11 +132,9 @@ if (app.Environment.IsDevelopment())
     await DevelopmentApiHost.EnsureStartedAsync(app.Environment.ContentRootPath, apiBaseUrl, app.Lifetime, startupLogger);
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -146,10 +143,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // Enable authentication
+app.UseAuthentication(); 
 app.UseAuthorization();
 
-app.UseSession(); // Enable session
+app.UseSession(); 
 
 app.MapControllerRoute(
     name: "default",
@@ -167,7 +164,28 @@ static async Task SeedApplicationAsync(WebApplication app)
         await catalog.EnsureSeedAsync();
     }
 
+    var seed = app.Configuration.GetSection("AdminSeed");
+    var accounts = new (string Email, string Password, string Role, bool ResetPassword)[]
+    {
+        (
+            seed["SuperAdminEmail"] ?? string.Empty,
+            seed["SuperAdminPassword"] ?? string.Empty,
+            AppRoles.SuperAdmin,
+            seed.GetValue<bool?>("ResetSuperAdminPassword") ?? false),
+        (
+            seed["AdminEmail"] ?? string.Empty,
+            seed["AdminPassword"] ?? string.Empty,
+            AppRoles.Admin,
+            seed.GetValue<bool?>("ResetAdminPassword") ?? false),
+        (
+            seed["MemberEmail"] ?? string.Empty,
+            seed["MemberPassword"] ?? string.Empty,
+            AppRoles.Member,
+            seed.GetValue<bool?>("ResetMemberPassword") ?? false)
+    };
+
     await using var identityScope = app.Services.CreateAsyncScope();
-    await IdentityRoleSeeder.SeedAsync(identityScope.ServiceProvider, app.Configuration);
+    await IdentityRoleSeeder.SeedAsync(identityScope.ServiceProvider, accounts);
+    await ExactDevAccountRemover.RemoveAsync(identityScope.ServiceProvider);
     await PopularityDemoSeeder.SeedAsync(identityScope.ServiceProvider);
 }

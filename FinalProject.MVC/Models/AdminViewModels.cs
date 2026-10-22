@@ -30,6 +30,13 @@ public sealed class AdminUserViewModel
     public bool IsSuperAdmin { get; set; }
 }
 
+public sealed class AdminUserRoleChangeItem
+{
+    public string UserId { get; set; } = string.Empty;
+
+    public string Role { get; set; } = string.Empty;
+}
+
 public sealed class LookupEditorViewModel
 {
     public int Id { get; set; }

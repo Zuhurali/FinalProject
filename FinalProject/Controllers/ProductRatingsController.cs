@@ -79,6 +79,7 @@ public sealed class ProductRatingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<CurrentUserProductRating>> SaveRating(
         int productId,
         [FromBody] SaveProductRatingRequest request,
@@ -107,9 +108,48 @@ public sealed class ProductRatingsController : ControllerBase
             request.Rating,
             cancellationToken);
 
-        return result == null
-            ? Unauthorized(new { message = "The authenticated user no longer exists." })
-            : Ok(result);
+        if (result == null)
+        {
+            return Unauthorized(new { message = "The authenticated user no longer exists." });
+        }
+
+        if (result.AlreadyExists)
+        {
+            return Conflict(new
+            {
+                message = "You already have a rating for this product. Delete your existing rating before submitting a new one.",
+                existingRatingId = result.Id,
+                existingRating = result.Rating
+            });
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>Allows the authenticated user to delete their own rating.</summary>
+    [Authorize]
+    [HttpDelete("{productId:int}/ratings/{ratingId:int}/my")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteMyRating(
+        int productId,
+        int ratingId,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var (found, allowed) = await _ratingService.DeleteRatingByUserAsync(
+            productId, ratingId, userId, cancellationToken);
+
+        if (!found) return NotFound(new { message = "Rating not found." });
+        if (!allowed) return Forbid();
+        return NoContent();
     }
 
     [Authorize(Roles = "Admin,SuperAdmin")]

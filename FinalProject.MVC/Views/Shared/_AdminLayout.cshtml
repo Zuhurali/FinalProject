@@ -46,15 +46,22 @@
             <main class="col-lg-10 admin-main">
                 @if (TempData["Success"] != null)
                 {
-                    <div class="alert alert-success">@TempData["Success"]</div>
+                    <div class="alert alert-success alert-dismissible" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" aria-label="Close" onclick="this.parentElement.remove()"></button>
+                    </div>
                 }
                 @if (TempData["Error"] != null)
                 {
-                    <div class="alert alert-danger">@TempData["Error"]</div>
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" aria-label="Close" onclick="this.parentElement.remove()"></button>
+                    </div>
                 }
                 @RenderBody()
             </main>
         </div>
     </div>
 </body>
+@await RenderSectionAsync("Scripts", required: false)
 </html>

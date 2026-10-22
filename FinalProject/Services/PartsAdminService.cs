@@ -28,6 +28,12 @@ public sealed class PartsAdminService : IPartsAdminService
         pageSize = pageSize is < 1 or > 50 ? DefaultPageSize : pageSize;
         var query = Filtered(search, category);
         var total = await query.CountAsync(cancellationToken);
+        var lastPage = total == 0 ? 1 : (int)Math.Ceiling(total / (double)pageSize);
+        if (page > lastPage)
+        {
+            page = lastPage;
+        }
+
         var rows = await query
             .OrderBy(part => part.Id)
             .Skip((page - 1) * pageSize)

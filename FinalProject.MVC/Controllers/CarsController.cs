@@ -234,7 +234,9 @@ namespace FinalProject.MVC.Controllers
 
         private async Task<IActionResult> SetFavoriteAsync(int id, bool favorite, string? returnUrl)
         {
-            var wantsJson = Request.Headers.Accept.Any(value => value?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true);
+            var wantsJson =
+                string.Equals(Request.Headers["X-Requested-With"], "fetch", StringComparison.OrdinalIgnoreCase)
+                || Request.Headers.Accept.Any(value => value?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true);
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {

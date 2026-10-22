@@ -47,7 +47,23 @@
         color: var(--color-body);
     }
     form.wishlist button { border:0; background:transparent; color:inherit; padding:0; }
+    #favorite-card-status {
+        position: fixed;
+        right: 20px;
+        bottom: 24px;
+        z-index: 40;
+        margin: 0;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: #1f1f1f;
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(0,0,0,.18);
+        max-width: min(320px, calc(100vw - 40px));
+    }
+    #favorite-card-status.is-error { background: #8a1f1f; }
 </style>
+
+<p id="favorite-card-status" role="status" aria-live="polite" hidden></p>
 
 <div class="rts-breadcrumb-area portfolio jarallax">
     <div class="container">
@@ -159,11 +175,21 @@
                             <span class="tag">@car.Badge</span>
                             @if (User.Identity?.IsAuthenticated == true)
                             {
-                                <form asp-action="@(car.IsFavorite ? "RemoveFavorite" : "AddFavorite")" asp-route-id="@car.Id" method="post" class="wishlist">
+                                <form asp-action="@(car.IsFavorite ? "RemoveFavorite" : "AddFavorite")"
+                                      asp-route-id="@car.Id"
+                                      method="post"
+                                      class="wishlist"
+                                      data-favorite-toggle
+                                      data-is-favorite="@(car.IsFavorite ? "true" : "false")"
+                                      data-add-url="@Url.Action("AddFavorite", "Cars", new { id = car.Id })"
+                                      data-remove-url="@Url.Action("RemoveFavorite", "Cars", new { id = car.Id })">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="returnUrl" value="@($"{Context.Request.Path}{Context.Request.QueryString}")">
-                                    <button type="submit" title="@(car.IsFavorite ? "Remove from favorites" : "Add to favorites")">
-                                        <i class="@(car.IsFavorite ? "fa-solid" : "fa-regular") fa-heart"></i>
+                                    <button type="submit"
+                                            data-favorite-button
+                                            aria-pressed="@(car.IsFavorite ? "true" : "false")"
+                                            title="@(car.IsFavorite ? "Remove from favorites" : "Add to favorites")">
+                                        <i class="@(car.IsFavorite ? "fa-solid" : "fa-regular") fa-heart" data-favorite-icon></i>
                                     </button>
                                 </form>
                             }
@@ -235,3 +261,7 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/car-favorites.js" asp-append-version="true"></script>
+}

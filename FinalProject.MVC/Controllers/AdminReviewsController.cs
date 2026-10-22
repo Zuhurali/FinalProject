@@ -58,35 +58,77 @@ public sealed class AdminReviewsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Hide(int id, bool hidden, CancellationToken cancellationToken)
     {
-        await Moderate(token => _reviews.SetHiddenAsync(id, hidden, token, cancellationToken), cancellationToken);
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpPost("Delete/{id:int}")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
-    {
-        await Moderate(token => _reviews.DeleteReviewAsync(id, token, cancellationToken), cancellationToken);
-        return RedirectToAction(nameof(Index));
-    }
-
-    private async Task Moderate(Func<string, Task> action, CancellationToken cancellationToken)
-    {
+        var wantsJson = string.Equals(Request.Headers["X-Requested-With"], "fetch", StringComparison.OrdinalIgnoreCase);
         try
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var token = await CreateTokenAsync();
+            if (token == null)
             {
-                return;
+                return wantsJson
+                    ? Json(new { ok = false, error = "Sign in is required." })
+                    : Challenge();
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
-            await action(_tokenService.CreateToken(User, roles));
-            TempData["Success"] = "The review was updated.";
+            await _reviews.SetHiddenAsync(id, hidden, token, cancellationToken);
+            if (wantsJson)
+            {
+                return Json(new { ok = true, hidden });
+            }
+
+            TempData["Success"] = hidden ? "The review is hidden." : "The review is visible again.";
         }
         catch (CarApiException exception)
         {
+            if (wantsJson)
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                return Json(new { ok = false, error = exception.Message });
+            }
+
             TempData["Error"] = exception.Message;
         }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet("History/{id:int}")]
+    public async Task<IActionResult> History(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var token = await CreateTokenAsync();
+            if (token == null)
+            {
+                return Unauthorized(new { ok = false, error = "Sign in is required." });
+            }
+
+            var history = await _reviews.GetHistoryAsync(id, token, cancellationToken);
+            return Json(new
+            {
+                ok = true,
+                items = history.Select(item => new
+                {
+                    previousContent = item.PreviousContent,
+                    editedAt = item.EditedAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm") + " UTC"
+                })
+            });
+        }
+        catch (CarApiException exception)
+        {
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return Json(new { ok = false, error = exception.Message });
+        }
+    }
+
+    private async Task<string?> CreateTokenAsync()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return null;
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return _tokenService.CreateToken(User, roles);
     }
 }

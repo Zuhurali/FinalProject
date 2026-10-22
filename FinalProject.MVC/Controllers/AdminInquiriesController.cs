@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,5 +32,38 @@ public sealed class AdminInquiriesController : Controller
             ? "Question status updated."
             : "Question not found.";
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// AJAX endpoint — returns JSON so the admin UI can update inline without a full-page reload.
+    /// Requires antiforgery token supplied as the X-XSRF-TOKEN header or form field.
+    /// </summary>
+    [HttpPost("Reply")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reply(int id, string reply, CancellationToken cancellationToken)
+    {
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(adminUserId))
+        {
+            return Json(new { ok = false, error = "Not authenticated." });
+        }
+
+        var (ok, error) = await _catalog.SaveInquiryReplyAsync(id, reply, adminUserId, cancellationToken);
+        if (!ok)
+        {
+            return Json(new { ok = false, error });
+        }
+
+        // Return the saved reply and timestamp so the client can update the DOM
+        var inquiry = (await _catalog.GetInquiriesAsync(cancellationToken))
+            .FirstOrDefault(q => q.Id == id);
+
+        return Json(new
+        {
+            ok = true,
+            reply = inquiry?.AdminReply,
+            repliedAt = inquiry?.AdminRepliedAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm"),
+            statusLabel = inquiry?.StatusLabel ?? "Answered"
+        });
     }
 }

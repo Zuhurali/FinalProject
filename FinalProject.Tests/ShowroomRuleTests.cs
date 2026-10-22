@@ -80,9 +80,17 @@ public class ShowroomRuleTests
     [Fact]
     public void Review_content_length_is_validated()
     {
-        Assert.NotNull(ReviewContentRules.Normalize("short", out _));
+        // Empty / whitespace-only are still rejected.
+        Assert.NotNull(ReviewContentRules.Normalize("", out _));
+        Assert.NotNull(ReviewContentRules.Normalize("   ", out _));
+
+        // Single character and short text are now accepted (MinLength = 1).
+        Assert.Null(ReviewContentRules.Normalize("a", out _));
+        Assert.Null(ReviewContentRules.Normalize("short", out _));
         Assert.Null(ReviewContentRules.Normalize("This review is long enough.", out var normalized));
         Assert.Equal("This review is long enough.", normalized);
+
+        // Over-length is still rejected.
         Assert.NotNull(ReviewContentRules.Normalize(new string('a', 1001), out _));
     }
 
@@ -105,6 +113,33 @@ public class ShowroomRuleTests
         Assert.Null(createMethod.GetCustomAttribute<AllowAnonymousAttribute>());
         Assert.NotNull(update!.GetCustomAttribute<AuthorizeAttribute>());
         Assert.Equal("Admin,SuperAdmin", moderate!.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        var history = typeof(ProductReviewsController).GetMethod(nameof(ProductReviewsController.History))!;
+        Assert.Equal("Admin,SuperAdmin", history.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        var delete = typeof(ProductReviewsController).GetMethod(nameof(ProductReviewsController.Delete))!;
+        Assert.NotNull(delete.GetCustomAttribute<AuthorizeAttribute>());
+        Assert.Null(delete.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        var users = typeof(FinalProject.MVC.Controllers.AdminController).GetMethod("Users")!;
+        Assert.Equal("SuperAdmin", users.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        var changeRoles = typeof(FinalProject.MVC.Controllers.AdminController).GetMethod("ChangeRoles")!;
+        Assert.Equal("SuperAdmin", changeRoles.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.NotNull(changeRoles.GetCustomAttribute<HttpPostAttribute>());
+        Assert.NotNull(changeRoles.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
+        var addFavorite = typeof(FinalProject.MVC.Controllers.CarsController).GetMethod("AddFavorite")!;
+        var removeFavorite = typeof(FinalProject.MVC.Controllers.CarsController).GetMethod("RemoveFavorite")!;
+        Assert.NotNull(addFavorite.GetCustomAttribute<AuthorizeAttribute>());
+        Assert.NotNull(removeFavorite.GetCustomAttribute<AuthorizeAttribute>());
+        Assert.NotNull(addFavorite.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
+        Assert.NotNull(removeFavorite.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
+    }
+
+    [Fact]
+    public void Parts_page_labels_follow_the_visible_range()
+    {
+        Assert.Equal((1, 10, 1, 3), PageWindow.Describe(1, 10, 10, 21));
+        Assert.Equal((11, 20, 2, 3), PageWindow.Describe(2, 10, 10, 21));
+        Assert.Equal((21, 21, 3, 3), PageWindow.Describe(3, 10, 1, 21));
+        Assert.Equal((21, 21, 3, 3), PageWindow.Describe(9, 10, 1, 21));
+        Assert.Equal((1, 4, 1, 1), PageWindow.Describe(1, 10, 4, 4));
     }
 
     [Fact]

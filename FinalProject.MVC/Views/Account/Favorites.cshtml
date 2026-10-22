@@ -10,11 +10,14 @@
     </div></div>
 </div>
 
-<div class="rts-contact-page-form-area rts-section-gapNew account">
+<div class="rts-contact-page-form-area rts-section-gapNew account account-favorites">
     <div class="container"><div class="row g-5">
         <div class="col-lg-3"><partial name="_AccountNavigation" /></div>
         <div class="col-lg-9">
-            <h3 class="title mb-4">Favorite Cars</h3>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <h3 class="title mb-0">Favorite Cars</h3>
+                <a asp-controller="Cars" asp-action="Index" class="rts-btn btn-primary radius-small">Browse Cars</a>
+            </div>
             @if (ViewData["AccountServiceUnavailable"] != null)
             {
                 <div class="alert alert-warning">Favorites are temporarily unavailable.</div>
@@ -24,7 +27,6 @@
                 <div class="account-empty-state text-center">
                     <i class="fa-regular fa-heart"></i><h4>No favorite cars yet.</h4>
                     <p>Save cars from the catalog and they will appear here.</p>
-                    <a asp-controller="Cars" asp-action="Index" class="rts-btn btn-primary radius-small">Browse Cars</a>
                 </div>
             }
             else
@@ -42,12 +44,12 @@
                                 <div class="content-area">
                                     <span class="price">$@favorite.Car.Price.ToString("N0")</span>
                                     <h6 class="title">@favorite.Car.Brand?.Name @favorite.Car.Model</h6>
-                                    <div class="d-flex gap-2">
+                                    <div class="favorites-card-actions">
                                         <a asp-controller="Cars" asp-action="Details" asp-route-id="@favorite.Car.Id" class="rts-btn btn-primary radius-small">View</a>
-                                        <form asp-controller="Cars" asp-action="RemoveFavorite" asp-route-id="@favorite.Car.Id" method="post">
+                                        <form asp-controller="Cars" asp-action="RemoveFavorite" asp-route-id="@favorite.Car.Id" method="post" class="favorites-remove-form">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="returnUrl" value="@Context.Request.Path">
-                                            <button class="rts-btn btn-border radius-small" type="submit">Remove</button>
+                                            <button class="rts-btn radius-small favorites-remove-btn" type="submit">Remove</button>
                                         </form>
                                     </div>
                                 </div>
@@ -63,4 +65,46 @@
 <style>
     .account-empty-state { padding:55px 25px; border:1px dashed #d8d8d8; border-radius:12px; }
     .account-empty-state i { color:var(--color-primary); font-size:42px; margin-bottom:15px; }
+    .account-favorites .project-wrapper2 .content-area > .price {
+        position: static;
+        transform: none;
+        display: inline-block;
+        margin: 0 30px 12px;
+    }
+    .account-favorites .favorites-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 30px 0;
+    }
+    .account-favorites .favorites-remove-form {
+        margin: 0;
+        display: inline-flex;
+    }
+    .account-favorites .favorites-remove-btn,
+    .account-favorites .favorites-remove-btn:hover,
+    .account-favorites .favorites-remove-btn:focus,
+    .account-favorites .favorites-remove-btn:active {
+        background: #1f1f1f !important;
+        color: #ffffff !important;
+        border: 1px solid #1f1f1f !important;
+        box-shadow: none !important;
+        transform: none !important;
+        top: auto !important;
+        left: auto !important;
+        position: relative;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .account-favorites .favorites-remove-btn:hover,
+    .account-favorites .favorites-remove-btn:focus,
+    .account-favorites .favorites-remove-btn:active {
+        background: #000000 !important;
+        border-color: #000000 !important;
+    }
+    .account-favorites .favorites-remove-btn::after {
+        content: none !important;
+        display: none !important;
+        transform: none !important;
+    }
 </style>

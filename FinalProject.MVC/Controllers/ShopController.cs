@@ -508,7 +508,8 @@ namespace FinalProject.MVC.Controllers
                             product.Id,
                             accessToken,
                             cancellationToken);
-                        ViewBag.UserRating = userRating?.Rating ?? 0;
+                        ViewBag.UserRating   = userRating?.Rating ?? 0;
+                        ViewBag.UserRatingId = userRating?.Id ?? 0;
                     }
                 }
             }
@@ -548,6 +549,12 @@ namespace FinalProject.MVC.Controllers
             ViewBag.RelatedProducts = related;
             ViewBag.SubmissionKey = Guid.NewGuid();
 
+            // Load answered inquiries so the product page can display admin replies
+            var inquiries = await _shopCatalog.GetInquiriesAsync(cancellationToken);
+            ViewBag.ProductInquiries = inquiries
+                .Where(q => q.ProductId == product.Id && q.HasReply)
+                .ToList();
+
             return View(product);
         }
 
@@ -583,7 +590,7 @@ namespace FinalProject.MVC.Controllers
             {
                 var roles = await _userManager.GetRolesAsync(user);
                 var accessToken = _tokenService.CreateToken(User, roles);
-                await _ratingApiService.SaveRatingAsync(
+                var saved = await _ratingApiService.SaveRatingAsync(
                     productId,
                     rating,
                     accessToken,
@@ -594,9 +601,21 @@ namespace FinalProject.MVC.Controllers
                 {
                     success = true,
                     message = "Your rating has been saved.",
+                    ratingId = saved.Id,
                     averageRating = summary?.AverageRating ?? rating,
                     totalCount = summary?.TotalCount ?? 1,
                     userRating = rating
+                });
+            }
+            catch (CarApiException ex) when (ex.Message.Contains("already have a rating", StringComparison.OrdinalIgnoreCase)
+                                              || ex.Message.Contains("409", StringComparison.Ordinal))
+            {
+                Response.StatusCode = StatusCodes.Status409Conflict;
+                return Json(new
+                {
+                    success = false,
+                    alreadyRated = true,
+                    message = "You already rated this product. Delete your existing rating first, then you can submit a new one."
                 });
             }
             catch (CarApiException)
@@ -607,6 +626,63 @@ namespace FinalProject.MVC.Controllers
                     success = false,
                     message = "Ratings are temporarily unavailable. Please try again."
                 });
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> DeleteMyRating(
+            int productId,
+            int ratingId,
+            CancellationToken cancellationToken)
+        {
+            await EnsureCatalogAsync(cancellationToken);
+
+            if (_allProducts.All(product => product.Id != productId))
+            {
+                Response.StatusCode = StatusCodes.Status404NotFound;
+                return Json(new { success = false, message = "Product not found." });
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Json(new { success = false, message = "Please sign in." });
+            }
+
+            try
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var accessToken = _tokenService.CreateToken(User, roles);
+                await _ratingApiService.DeleteMyRatingAsync(productId, ratingId, accessToken, cancellationToken);
+                var summary = await _ratingApiService.GetRatingsAsync(productId, cancellationToken);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Your rating has been removed. You can now submit a new one.",
+                    averageRating = summary?.AverageRating ?? 0.0,
+                    totalCount = summary?.TotalCount ?? 0
+                });
+            }
+            catch (CarApiException ex) when (ex.Message.Contains("403", StringComparison.Ordinal)
+                                              || ex.Message.Contains("Forbidden", StringComparison.OrdinalIgnoreCase))
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Json(new { success = false, message = "You can only delete your own rating." });
+            }
+            catch (CarApiException ex) when (ex.Message.Contains("404", StringComparison.Ordinal)
+                                              || ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
+                Response.StatusCode = StatusCodes.Status404NotFound;
+                return Json(new { success = false, message = "Rating not found." });
+            }
+            catch (CarApiException)
+            {
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return Json(new { success = false, message = "Ratings are temporarily unavailable. Please try again." });
             }
         }
 
@@ -664,6 +740,52 @@ namespace FinalProject.MVC.Controllers
             }
 
             return RedirectToAction(nameof(Details), new { id = productId });
+        }
+
+        /// <summary>
+        /// JSON endpoint used by the inline review editor on the product details page.
+        /// Returns the saved ProductReviewDto so the client can update the DOM without a page reload.
+        /// </summary>
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveReviewJson(
+            int productId,
+            int? reviewId,
+            string content,
+            CancellationToken cancellationToken)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Json(new { ok = false, error = "Not authenticated." });
+            }
+
+            try
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var accessToken = _tokenService.CreateToken(User, roles);
+                var saved = await _reviewApiService.SaveReviewAsync(productId, reviewId, content, accessToken, cancellationToken);
+                return Json(new
+                {
+                    ok = true,
+                    review = new
+                    {
+                        saved.Id,
+                        saved.Content,
+                        saved.UserDisplayName,
+                        saved.CreatedAt,
+                        saved.UpdatedAt,
+                        saved.CanEdit,
+                        saved.IsHidden,
+                        wasEdited = saved.WasEdited
+                    }
+                });
+            }
+            catch (CarApiException exception)
+            {
+                return Json(new { ok = false, error = exception.Message });
+            }
         }
 
         public IActionResult Cart()

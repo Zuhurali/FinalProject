@@ -4,38 +4,53 @@
     var names = ViewBag.ProductNames as IReadOnlyDictionary<int, string> ?? new Dictionary<int, string>();
 }
 <h1 class="h3 mb-4">Reviews</h1>
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
 @if (ViewData["ReviewServiceUnavailable"] as bool? == true)
 {
     <div class="alert alert-warning">The review service is unavailable.</div>
 }
+<div id="review-ajax-banner" class="alert d-none" role="alert" aria-live="polite"></div>
 <div class="admin-card">
     <table class="table">
-        <thead><tr><th>Product</th><th>Customer</th><th>Review</th><th>Hidden</th><th></th></tr></thead>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Customer</th>
+                <th>Review</th>
+                <th style="width:90px">Visibility</th>
+                <th style="width:160px"></th>
+            </tr>
+        </thead>
         <tbody>
         @foreach (var review in Model)
         {
-            <tr>
+            <tr id="review-row-@review.Id" data-review-id="@review.Id">
                 <td>@names.GetValueOrDefault(review.ProductId, $"Product #{review.ProductId}")</td>
                 <td>@review.UserDisplayName</td>
-                <td>@review.Content</td>
-                <td>@(review.IsHidden ? "Yes" : "No")</td>
                 <td>
-                    <form asp-action="Hide" asp-route-id="@review.Id" method="post" class="d-inline">
+                    <p class="mb-1" style="white-space:pre-wrap">@review.Content</p>
+                    @if (review.WasEdited)
+                    {
+                        <button type="button" class="btn btn-link btn-sm p-0 review-history-btn" data-review-id="@review.Id">Original text</button>
+                        <div id="review-history-@review.Id" class="small mt-2" hidden></div>
+                    }
+                </td>
+                <td>
+                    <span id="review-vis-@review.Id"
+                          class="badge @(review.IsHidden ? "bg-secondary" : "bg-success")">
+                        @(review.IsHidden ? "Hidden" : "Visible")
+                    </span>
+                </td>
+                <td class="d-flex gap-2">
+                    @* Hide/Unhide — progressive-enhancement AJAX with form fallback *@
+                    <form asp-action="Hide" asp-route-id="@review.Id" method="post" class="d-inline review-hide-form"
+                          data-review-id="@review.Id" data-target-hidden="@(!review.IsHidden ? "true" : "false")">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="hidden" value="@(!review.IsHidden)" />
-                        <button class="btn btn-link p-0" type="submit">@(review.IsHidden ? "Show" : "Hide")</button>
-                    </form>
-                    <form asp-action="Delete" asp-route-id="@review.Id" method="post" class="d-inline" onsubmit="return confirm('Remove this review?');">
-                        @Html.AntiForgeryToken()
-                        <button class="btn btn-link text-danger p-0" type="submit">Remove</button>
+                        <button type="submit"
+                                class="btn btn-link p-0 review-hide-btn"
+                                id="review-hide-btn-@review.Id">
+                            @(review.IsHidden ? "Unhide" : "Hide")
+                        </button>
                     </form>
                 </td>
             </tr>
@@ -43,3 +58,112 @@
         </tbody>
     </table>
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    const banner = document.getElementById('review-ajax-banner');
+
+    function showBanner(msg, isError) {
+        banner.textContent = msg;
+        banner.className = 'alert ' + (isError ? 'alert-danger' : 'alert-success');
+        banner.classList.remove('d-none');
+        setTimeout(function () { banner.classList.add('d-none'); }, 4000);
+    }
+
+    document.querySelectorAll('.review-hide-form').forEach(function (form) {
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const reviewId = form.dataset.reviewId;
+            const btn = document.getElementById('review-hide-btn-' + reviewId);
+            const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
+            const hiddenInput = form.querySelector('input[name="hidden"]');
+            const targetHidden = hiddenInput.value === 'true'; // what we're setting it TO
+
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'fetch' },
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (response.ok && data.ok) {
+                    const visBadge = document.getElementById('review-vis-' + reviewId);
+                    const nowHidden = data.hidden === true;
+                    if (nowHidden) {
+                        visBadge.textContent = 'Hidden';
+                        visBadge.className = 'badge bg-secondary';
+                        btn.textContent = 'Unhide';
+                        hiddenInput.value = 'false';          // next click will unhide
+                        form.dataset.targetHidden = 'false';
+                    } else {
+                        visBadge.textContent = 'Visible';
+                        visBadge.className = 'badge bg-success';
+                        btn.textContent = 'Hide';
+                        hiddenInput.value = 'true';           // next click will hide
+                        form.dataset.targetHidden = 'true';
+                    }
+                    showBanner(nowHidden ? 'The review is hidden.' : 'The review is visible again.', false);
+                } else {
+                    showBanner(data.error || 'Could not update visibility. Please try again.', true);
+                    btn.textContent = targetHidden ? 'Hide' : 'Unhide';
+                }
+            } catch (err) {
+                showBanner('Network error. Please try again.', true);
+                btn.textContent = targetHidden ? 'Hide' : 'Unhide';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+
+    document.querySelectorAll('.review-history-btn').forEach(function (button) {
+        button.addEventListener('click', async function () {
+            const id = button.dataset.reviewId;
+            const panel = document.getElementById('review-history-' + id);
+            if (!panel.hidden && panel.dataset.loaded === '1') {
+                panel.hidden = true;
+                return;
+            }
+
+            button.disabled = true;
+            try {
+                const response = await fetch('/Admin/Reviews/History/' + id);
+                const data = await response.json();
+                if (!response.ok || !data.ok) {
+                    panel.hidden = false;
+                    panel.textContent = data.error || 'The original text could not be loaded.';
+                    return;
+                }
+
+                panel.innerHTML = (data.items || []).map(function (item) {
+                    const text = document.createElement('div');
+                    const when = document.createElement('div');
+                    when.className = 'text-muted';
+                    when.textContent = 'Previous text · ' + item.editedAt;
+                    const body = document.createElement('p');
+                    body.style.whiteSpace = 'pre-wrap';
+                    body.textContent = item.previousContent;
+                    text.appendChild(when);
+                    text.appendChild(body);
+                    return text.outerHTML;
+                }).join('') || '<p class="mb-0">No earlier text is stored.</p>';
+                panel.dataset.loaded = '1';
+                panel.hidden = false;
+            } catch (err) {
+                panel.hidden = false;
+                panel.textContent = 'The original text could not be loaded.';
+            } finally {
+                button.disabled = false;
+            }
+        });
+    });
+}());
+</script>
+}

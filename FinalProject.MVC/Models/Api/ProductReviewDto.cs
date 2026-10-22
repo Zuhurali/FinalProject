@@ -11,4 +11,13 @@ public sealed class ProductReviewDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool CanEdit { get; set; }
+    public bool WasEdited { get; set; }
+    public bool CanViewHistory { get; set; }
+}
+
+public sealed class ProductReviewRevisionDto
+{
+    public int Id { get; set; }
+    public string PreviousContent { get; set; } = string.Empty;
+    public DateTime EditedAt { get; set; }
 }

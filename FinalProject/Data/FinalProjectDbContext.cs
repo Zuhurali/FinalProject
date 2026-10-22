@@ -24,6 +24,8 @@ public class FinalProjectDbContext : DbContext
 
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
 
+    public DbSet<ProductReviewRevision> ProductReviewRevisions => Set<ProductReviewRevision>();
+
     public DbSet<IdentityUserReference> IdentityUsers => Set<IdentityUserReference>();
 
     public DbSet<Favorite> Favorites => Set<Favorite>();
@@ -110,7 +112,7 @@ public class FinalProjectDbContext : DbContext
         {
             entity.ToTable("ProductReviews", table => table.HasCheckConstraint(
                 "CK_ProductReviews_ContentLength",
-                "LEN([Content]) >= 10 AND LEN([Content]) <= 1000"));
+                "LEN([Content]) >= 1 AND LEN([Content]) <= 1000"));
             entity.Property(review => review.UserId).IsRequired().HasMaxLength(450);
             entity.Property(review => review.Content).IsRequired().HasMaxLength(1000);
             entity.HasIndex(review => review.ProductId)
@@ -119,6 +121,17 @@ public class FinalProjectDbContext : DbContext
                 .IsUnique()
                 .HasDatabaseName("UX_ProductReviews_UserId_ProductId");
             entity.HasQueryFilter(review => !review.IsDemo);
+        });
+
+        modelBuilder.Entity<ProductReviewRevision>(entity =>
+        {
+            entity.ToTable("ProductReviewRevisions");
+            entity.Property(revision => revision.PreviousContent).IsRequired().HasMaxLength(1000);
+            entity.HasIndex(revision => revision.ReviewId);
+            entity.HasOne<ProductReview>()
+                .WithMany()
+                .HasForeignKey(revision => revision.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<IdentityUserReference>(entity =>

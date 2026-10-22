@@ -23,7 +23,10 @@ public interface IProductReviewService
     Task<(bool Ok, string? Error)> DeleteReviewAsync(
         int reviewId,
         string userId,
-        bool isModerator,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ProductReviewRevisionItem>?> GetHistoryAsync(
+        int reviewId,
         CancellationToken cancellationToken = default);
 
     Task<bool> SetHiddenAsync(

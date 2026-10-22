@@ -568,8 +568,49 @@ public sealed class ShopCatalogService : IShopCatalogService
         }
 
         inquiry.IsHandled = handled;
+        // When an admin reopens a question (handled=false) the existing reply is no longer
+        // authoritative, so clear it so the public page does not show stale information.
+        if (!handled)
+        {
+            inquiry.AdminReply = null;
+            inquiry.AdminRepliedAt = null;
+            inquiry.AdminUserId = null;
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    public async Task<(bool Ok, string? Error)> SaveInquiryReplyAsync(
+        int id,
+        string reply,
+        string adminUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var normalized = (reply ?? string.Empty).Trim();
+        if (normalized.Length == 0)
+        {
+            return (false, "Reply cannot be empty.");
+        }
+
+        if (normalized.Length > 2000)
+        {
+            return (false, "Reply cannot exceed 2 000 characters.");
+        }
+
+        var inquiry = await _db.ProductInquiries.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (inquiry == null)
+        {
+            return (false, "Question not found.");
+        }
+
+        inquiry.AdminReply = normalized;
+        inquiry.AdminRepliedAt = DateTime.UtcNow;
+        inquiry.AdminUserId = adminUserId;
+        // A reply also counts as handled
+        inquiry.IsHandled = true;
+        await _db.SaveChangesAsync(cancellationToken);
+        return (true, null);
     }
 
     public async Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default)

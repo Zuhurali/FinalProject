@@ -113,29 +113,35 @@ public sealed class ProductRatingService : IProductRatingService
         }
 
         var now = DateTime.UtcNow;
-        var entity = await _context.ProductRatings
+
+        // One active rating per user per product — reject if one already exists.
+        var existing = await _context.ProductRatings
             .SingleOrDefaultAsync(
                 item => item.ProductId == productId && item.UserId == userId,
                 cancellationToken);
 
-        if (entity == null)
+        if (existing != null)
         {
-            entity = new ProductRating
-            {
-                ProductId = productId,
-                UserId = userId,
-                Rating = rating,
-                CreatedAt = now,
-                UpdatedAt = now
-            };
-            _context.ProductRatings.Add(entity);
-        }
-        else
-        {
-            entity.Rating = rating;
-            entity.UpdatedAt = now;
+            // Signal "already rated" with a distinct sentinel value so callers can
+            // distinguish "rating rejected" from "user/product not found".
+            return new CurrentUserProductRating(
+                existing.Id,
+                existing.ProductId,
+                existing.Rating,
+                existing.CreatedAt,
+                existing.UpdatedAt)
+            { AlreadyExists = true };
         }
 
+        var entity = new ProductRating
+        {
+            ProductId = productId,
+            UserId = userId,
+            Rating = rating,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        _context.ProductRatings.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
 
         return new CurrentUserProductRating(
@@ -167,6 +173,36 @@ public sealed class ProductRatingService : IProductRatingService
         _context.ProductRatings.Remove(rating);
         await _context.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    public async Task<(bool Found, bool Allowed)> DeleteRatingByUserAsync(
+        int productId,
+        int ratingId,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await ProductExistsAsync(productId, cancellationToken))
+        {
+            return (false, false);
+        }
+
+        var rating = await _context.ProductRatings.SingleOrDefaultAsync(
+            item => item.ProductId == productId && item.Id == ratingId,
+            cancellationToken);
+
+        if (rating == null)
+        {
+            return (false, false);
+        }
+
+        if (rating.UserId != userId)
+        {
+            return (true, false);   // found but belongs to someone else
+        }
+
+        _context.ProductRatings.Remove(rating);
+        await _context.SaveChangesAsync(cancellationToken);
+        return (true, true);
     }
 
     private async Task<bool> ProductExistsAsync(int productId, CancellationToken cancellationToken)
