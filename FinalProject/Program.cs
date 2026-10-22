@@ -21,6 +21,7 @@ builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<IProductRatingService, ProductRatingService>();
 builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
 builder.Services.AddScoped<IMarketplaceService, MarketplaceService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICatalogAdminService, CatalogAdminService>();
 builder.Services.AddScoped<IPartsAdminService, PartsAdminService>();
 builder.Services.AddAuthorization();

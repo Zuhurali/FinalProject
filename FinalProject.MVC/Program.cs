@@ -1,6 +1,7 @@
 using FinalProject.MVC.Configuration;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Hosting;
+using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Security;
 using FinalProject.MVC.Services;
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 // Add DbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -92,6 +94,16 @@ builder.Services.AddHttpClient<IMarketplaceApiService, MarketplaceApiService>(cl
     PooledConnectionLifetime = TimeSpan.FromSeconds(30),
     ConnectTimeout = TimeSpan.FromSeconds(5)
 });
+builder.Services.AddHttpClient<INotificationApiService, NotificationApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(20);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromSeconds(30),
+    ConnectTimeout = TimeSpan.FromSeconds(5)
+});
 builder.Services.AddHttpClient<IAdminApiService, AdminApiService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
@@ -115,6 +127,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
 builder.Services.AddScoped<IProductPopularityService, ProductPopularityService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<AccountActivityHistory>();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -151,6 +164,7 @@ app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<ConversationHub>("/hubs/conversations");
 
 await SeedApplicationAsync(app);
 

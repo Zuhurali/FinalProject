@@ -17,23 +17,33 @@
         <div class="col-lg-9">
             <div class="conversation-header mb-4">
                 @if (!string.IsNullOrWhiteSpace(Model.CarImageUrl)) { <img src="@Url.Content(Model.CarImageUrl)" alt="@Model.CarName"> }
-                <div><h3>@Model.CarName</h3><p>@Model.Subject</p><a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.CarId">View listing</a></div>
+                <div>
+                    <h3>@Model.CarName</h3>
+                    <p>@Model.Subject</p>
+                    <p class="mb-1">
+                        <strong>Buyer:</strong> @Model.BuyerDisplayName
+                        &nbsp;·&nbsp;
+                        <strong>Dealer:</strong> @Model.SellerDisplayName
+                    </p>
+                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.CarId">View car details</a>
+                </div>
             </div>
             @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
-            <div class="message-thread">
+            <div class="alert alert-danger" id="conversation-send-error" hidden></div>
+            <div class="message-thread" id="message-thread" data-current-user-id="@currentUserId">
                 @foreach (var message in Model.Messages)
                 {
-                    <div class="message-bubble @(message.SenderId == currentUserId ? "mine" : "theirs")">
+                    <div class="message-bubble @(message.SenderId == currentUserId ? "mine" : "theirs")" data-message-id="@message.Id">
                         <strong>@message.SenderDisplayName</strong>
                         <p>@message.Content</p>
-                        <time>@message.CreatedAt.ToLocalTime().ToString("g")</time>
+                        <time datetime="@message.CreatedAt.ToString("o")">@message.CreatedAt.ToLocalTime().ToString("g")</time>
                     </div>
                 }
             </div>
-            <form asp-action="Reply" asp-route-id="@Model.Id" method="post" class="message-reply-form mt-4">
+            <form asp-action="Reply" asp-route-id="@Model.Id" method="post" class="message-reply-form mt-4" id="conversation-reply-form" data-conversation-id="@Model.Id">
                 @Html.AntiForgeryToken()
-                <textarea name="content" rows="4" class="input-form" placeholder="Write a reply..." required maxlength="4000"></textarea>
-                <button type="submit" class="rts-btn btn-primary radius-small mt-3">Send Reply</button>
+                <textarea id="conversation-reply-input" name="content" rows="4" class="input-form" placeholder="Write a reply... " maxlength="4000"></textarea>
+                <button type="submit" class="rts-btn btn-primary radius-small mt-3" data-send-reply>Send Reply</button>
             </form>
         </div>
     </div></div>
@@ -42,10 +52,37 @@
 <style>
     .conversation-header { display:flex; gap:18px; align-items:center; padding:18px; border:1px solid #eee; border-radius:12px; }
     .conversation-header img { width:130px; height:85px; object-fit:cover; border-radius:9px; }
-    .message-thread { display:flex; flex-direction:column; gap:14px; padding:20px; background:#f7f7f7; border-radius:12px; }
-    .message-bubble { max-width:78%; padding:14px 18px; border-radius:14px; background:#fff; }
+    .message-thread {
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        padding:20px;
+        background:#f7f7f7;
+        border-radius:12px;
+        height:min(520px, 60vh);
+        max-height:520px;
+        overflow-y:auto;
+        overflow-x:hidden;
+        overscroll-behavior:contain;
+        scroll-behavior:smooth;
+    }
+    .message-bubble { max-width:78%; padding:14px 18px; border-radius:14px; background:#fff; flex-shrink:0; }
     .message-bubble.mine { align-self:flex-end; background:#fff0ea; }
     .message-bubble.theirs { align-self:flex-start; }
     .message-bubble p { margin:6px 0; white-space:pre-wrap; }
     .message-bubble time { font-size:12px; color:var(--color-body); }
+    .message-reply-form { position:relative; z-index:1; }
+    @@media (max-width: 767.98px) {
+        .message-thread {
+            height:min(420px, 55vh);
+            max-height:420px;
+            padding:14px;
+        }
+        .message-bubble { max-width:88%; }
+    }
 </style>
+
+@section Scripts {
+    <script src="~/lib/signalr/signalr.min.js" asp-append-version="true"></script>
+    <script src="~/js/conversation-chat.js" asp-append-version="true"></script>
+}

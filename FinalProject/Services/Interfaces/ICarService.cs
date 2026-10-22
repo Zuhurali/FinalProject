@@ -16,7 +16,7 @@ public interface ICarService
 
     Task<CarResponse?> CreateCatalogAsync(SaveCarRequest request, CancellationToken cancellationToken = default);
 
-    Task<CarResponse?> UpdateAsync(int id, SaveCarRequest request, CancellationToken cancellationToken = default);
+    Task<CarUpdateResult?> UpdateAsync(int id, SaveCarRequest request, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
 

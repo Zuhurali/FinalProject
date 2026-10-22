@@ -5,9 +5,30 @@
     <nav aria-label="Account navigation">
         <ul class="account-menu">
             <li><a asp-action="Index"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
-            <li><a asp-action="Listings"><i class="fa-solid fa-car"></i> My Listings</a></li>
-            <li><a asp-action="Favorites"><i class="fa-regular fa-heart"></i> Favorites</a></li>
-            <li><a asp-action="Messages"><i class="fa-regular fa-envelope"></i> Messages</a></li>
+            <li>
+                <a asp-action="Listings">
+                    <i class="fa-solid fa-car"></i> My Listings
+                    <span class="account-menu-badge" data-notification-badge="listings" hidden>0</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Favorites">
+                    <i class="fa-regular fa-heart"></i> Favorites
+                    <span class="account-menu-badge" data-notification-badge="favorites" hidden>0</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Messages">
+                    <i class="fa-regular fa-envelope"></i> Messages
+                    <span class="account-menu-badge" data-notification-badge="messages" hidden>0</span>
+                </a>
+            </li>
+            <li>
+                <a asp-action="Notifications">
+                    <i class="fa-regular fa-bell"></i> Notifications
+                    <span class="account-menu-badge" data-notification-badge="total" hidden>0</span>
+                </a>
+            </li>
             <li><a asp-action="Profile"><i class="fa-regular fa-user"></i> Profile Settings</a></li>
             @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
             {
@@ -33,4 +54,9 @@
     .account-nav-card .account-menu a:hover,
     .account-nav-logout:hover { color:var(--color-primary); }
     .account-nav-card i { width:18px; color:var(--color-primary); }
+    .account-menu-badge {
+        margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:999px;
+        background:#e11d48; color:#fff; font-size:11px; font-weight:700; line-height:20px; text-align:center;
+    }
+    .account-menu-badge[hidden] { display:none !important; }
 </style>

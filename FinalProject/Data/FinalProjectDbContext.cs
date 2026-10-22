@@ -32,7 +32,11 @@ public class FinalProjectDbContext : DbContext
 
     public DbSet<Conversation> Conversations => Set<Conversation>();
 
+    public DbSet<ConversationHide> ConversationHides => Set<ConversationHide>();
+
     public DbSet<CarMessage> Messages => Set<CarMessage>();
+
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
 
     public DbSet<ShopProductReference> ShopProducts => Set<ShopProductReference>();
 
@@ -208,6 +212,24 @@ public class FinalProjectDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<ConversationHide>(entity =>
+        {
+            entity.Property(hide => hide.UserId).IsRequired().HasMaxLength(450);
+            entity.HasIndex(hide => new { hide.ConversationId, hide.UserId })
+                .IsUnique()
+                .HasDatabaseName("UX_ConversationHides_ConversationId_UserId");
+            entity.HasIndex(hide => hide.UserId)
+                .HasDatabaseName("IX_ConversationHides_UserId");
+            entity.HasOne(hide => hide.Conversation)
+                .WithMany(conversation => conversation.Hides)
+                .HasForeignKey(hide => hide.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(hide => hide.User)
+                .WithMany()
+                .HasForeignKey(hide => hide.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<CarMessage>(entity =>
         {
             entity.Property(message => message.SenderId).IsRequired().HasMaxLength(450);
@@ -227,6 +249,27 @@ public class FinalProjectDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(message => message.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserNotification>(entity =>
+        {
+            entity.Property(notification => notification.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(notification => notification.Type).IsRequired().HasMaxLength(40);
+            entity.Property(notification => notification.Title).IsRequired().HasMaxLength(200);
+            entity.Property(notification => notification.Body).IsRequired().HasMaxLength(1000);
+            entity.Property(notification => notification.Url).IsRequired().HasMaxLength(500);
+            entity.Property(notification => notification.DedupKey).HasMaxLength(200);
+            entity.HasIndex(notification => new { notification.UserId, notification.IsRead })
+                .HasDatabaseName("IX_UserNotifications_UserId_IsRead");
+            entity.HasIndex(notification => notification.CreatedAt);
+            entity.HasIndex(notification => new { notification.UserId, notification.DedupKey })
+                .IsUnique()
+                .HasFilter("[DedupKey] IS NOT NULL")
+                .HasDatabaseName("UX_UserNotifications_UserId_DedupKey");
+            entity.HasOne(notification => notification.User)
+                .WithMany()
+                .HasForeignKey(notification => notification.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         var seededAt = new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc);

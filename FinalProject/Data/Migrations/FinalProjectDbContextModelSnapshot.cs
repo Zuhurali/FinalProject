@@ -327,6 +327,37 @@ namespace FinalProject.Data.Migrations
                     b.ToTable("Conversations");
                 });
 
+            modelBuilder.Entity("FinalProject.Models.Entities.ConversationHide", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("HiddenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ConversationHides_UserId");
+
+                    b.HasIndex("ConversationId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ConversationHides_ConversationId_UserId");
+
+                    b.ToTable("ConversationHides");
+                });
+
             modelBuilder.Entity("FinalProject.Models.Entities.Favorite", b =>
                 {
                     b.Property<int>("Id")
@@ -593,6 +624,73 @@ namespace FinalProject.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FinalProject.Models.Entities.UserNotification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DedupKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("RelatedCarId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RelatedConversationId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RelatedMessageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId", "DedupKey")
+                        .IsUnique()
+                        .HasDatabaseName("UX_UserNotifications_UserId_DedupKey")
+                        .HasFilter("[DedupKey] IS NOT NULL");
+
+                    b.HasIndex("UserId", "IsRead")
+                        .HasDatabaseName("IX_UserNotifications_UserId_IsRead");
+
+                    b.ToTable("UserNotifications");
+                });
+
             modelBuilder.Entity("FinalProject.Models.Entities.Car", b =>
                 {
                     b.HasOne("FinalProject.Models.Entities.Brand", "Brand")
@@ -684,6 +782,25 @@ namespace FinalProject.Data.Migrations
                     b.Navigation("Seller");
                 });
 
+            modelBuilder.Entity("FinalProject.Models.Entities.ConversationHide", b =>
+                {
+                    b.HasOne("FinalProject.Models.Entities.Conversation", "Conversation")
+                        .WithMany("Hides")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FinalProject.Models.Entities.Favorite", b =>
                 {
                     b.HasOne("FinalProject.Models.Entities.Car", "Car")
@@ -712,6 +829,17 @@ namespace FinalProject.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("FinalProject.Models.Entities.UserNotification", b =>
+                {
+                    b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FinalProject.Models.Entities.Brand", b =>
                 {
                     b.Navigation("Cars");
@@ -733,6 +861,8 @@ namespace FinalProject.Data.Migrations
 
             modelBuilder.Entity("FinalProject.Models.Entities.Conversation", b =>
                 {
+                    b.Navigation("Hides");
+
                     b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618

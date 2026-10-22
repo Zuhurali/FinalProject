@@ -14,6 +14,14 @@
     var isSignedIn = User.Identity?.IsAuthenticated == true;
     var favoriteUnavailable = ViewData["FavoriteServiceUnavailable"] as bool? == true;
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var messageReturnUrl = returnUrl.Contains('?', StringComparison.Ordinal)
+        ? $"{returnUrl}&openMessage=1"
+        : $"{returnUrl}?openMessage=1";
+    var isStoreListing = string.IsNullOrWhiteSpace(Model.OwnerId);
+    var dealerLabel = isStoreListing ? "AutoVault Store" : (Model.OwnerDisplayName ?? "Seller");
+    var defaultSubject = $"Inquiry about {Model.Name}";
+    var defaultMessage = $"Hi, I'm interested in the {Model.Name}.\n\nI'd like to ask about pricing, availability, or a possible discount.";
+    var openMessage = string.Equals(Context.Request.Query["openMessage"], "1", StringComparison.Ordinal);
     var mileageText = $"{Model.Mileage:N0} Miles";
     var isElectric = string.Equals(Model.Fuel, "Electric", StringComparison.OrdinalIgnoreCase);
     var engineLabel = isElectric ? "Motor" : "Engine";
@@ -172,36 +180,34 @@
                     }
 
                     <div class="message-form mb--60" id="carMessageForm">
-                        <h2>Contact Seller</h2>
+                        <h2>Message Dealer</h2>
+                        <p class="mb-3">Ask @dealerLabel about discounts, pricing, availability, or more details for this @(Model.Name).</p>
                         @if (TempData["Error"] != null)
                         {
                             <div class="alert alert-danger">@TempData["Error"]</div>
                         }
-                        @if (string.IsNullOrWhiteSpace(Model.OwnerId))
+                        @if (TempData["Success"] != null)
                         {
-                            <p>This vehicle is offered by the AutoVault store in Baku. Call or email the store for availability and pricing.</p>
-                            <div class="contact-button-area">
-                                <a href="tel:+994503546767" class="rts-btn radius-small telegram"><img src="~/assets/images/cta/call.svg" alt=""> +994 50 354 67 67</a>
-                                <a href="mailto:Autovault@gmail.com" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Autovault@gmail.com</a>
-                            </div>
+                            <div class="alert alert-success">@TempData["Success"]</div>
                         }
-                        else if (isOwner)
+                        @if (isOwner)
                         {
-                            <div class="alert alert-info">This is your listing. Messages from buyers will appear in your account.</div>
+                            <div class="alert alert-info">This is your listing. Buyer messages appear under Account → Messages.</div>
                         }
                         else if (!isSignedIn)
                         {
-                            <p>Please sign in to contact the seller.</p>
-                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@returnUrl" class="rts-btn btn-primary radius-small">Sign In</a>
+                            <p>Sign in to send a message about this car. You will return here afterward.</p>
+                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@messageReturnUrl" class="rts-btn btn-primary radius-small">Sign In to Message Dealer</a>
                         }
                         else
                         {
                             <form asp-action="ContactSeller" asp-route-id="@Model.Id" method="post" class="form-inner">
                                 @Html.AntiForgeryToken()
-                                <input type="text" name="subject" placeholder="Subject (optional)" maxlength="200">
-                                <textarea name="message" placeholder="Type your message*" required maxlength="4000"></textarea>
+                                <input type="text" name="subject" value="@defaultSubject" placeholder="Subject" maxlength="200" required>
+                                <textarea name="message" placeholder="Ask about price, discounts, availability, or request more information*" required maxlength="4000">@defaultMessage</textarea>
                                 <button class="rts-btn btn-primary radius-small" type="submit"><img src="~/assets/images/portfolio/send.svg" alt=""> Send Message</button>
                             </form>
+                            <p class="mt-3 mb-0"><a asp-controller="Account" asp-action="Messages">View your conversations</a></p>
                         }
                     </div>
 
@@ -294,13 +300,17 @@
                             </ul>
                             <p class="av-favorite__status" role="status" aria-live="polite" data-favorite-status>@(favoriteUnavailable ? "Favourites are temporarily unavailable." : TempData["FavoriteError"])</p>
                             <div class="price-btn">
-                                @if (string.IsNullOrWhiteSpace(Model.OwnerId))
+                                @if (isOwner)
                                 {
-                                    <a href="tel:+994503546767" class="rts-btn btn-primary radius-small">Call For Final Price</a>
+                                    <a asp-controller="Account" asp-action="Messages" class="rts-btn btn-primary radius-small">View Messages</a>
+                                }
+                                else if (isSignedIn)
+                                {
+                                    <a href="#carMessageForm" class="rts-btn btn-primary radius-small">Message Dealer</a>
                                 }
                                 else
                                 {
-                                    <a href="#carMessageForm" class="rts-btn btn-primary radius-small">Call For Final Price</a>
+                                    <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@messageReturnUrl" class="rts-btn btn-primary radius-small">Message Dealer</a>
                                 }
                             </div>
                         </div>
@@ -326,26 +336,28 @@
                         <div class="contact side-box">
                             <h2>Seller</h2>
                             <div class="contact-inner">
-                                @if (string.IsNullOrWhiteSpace(Model.OwnerId))
+                                @if (isStoreListing)
                                 {
                                     <h5>AutoVault Store</h5>
                                     <p>Babek Prospekti 22–24, Baku, Azerbaijan</p>
-                                    <p><a href="tel:+994503546767">+994 50 354 67 67</a></p>
-                                    <p><a href="mailto:Autovault@gmail.com">Autovault@gmail.com</a></p>
-                                    <div class="contact-button-area">
-                                        <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-small telegram">Contact the store</a>
-                                    </div>
                                 }
                                 else
                                 {
                                     <h5>@Model.OwnerDisplayName</h5>
                                     <p>AutoVault Seller</p>
-                                    @if (!isOwner)
-                                    {
-                                        <div class="contact-button-area">
-                                            <a href="#carMessageForm" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Send Message</a>
-                                        </div>
-                                    }
+                                }
+                                @if (!isOwner)
+                                {
+                                    <div class="contact-button-area">
+                                        @if (isSignedIn)
+                                        {
+                                            <a href="#carMessageForm" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Message Dealer</a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@messageReturnUrl" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Message Dealer</a>
+                                        }
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -391,4 +403,10 @@
 
 @section Scripts {
     <script src="~/js/car-details.js" asp-append-version="true"></script>
+    @if (openMessage)
+    {
+        <script>
+            document.getElementById('carMessageForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        </script>
+    }
 }

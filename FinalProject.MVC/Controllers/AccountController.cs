@@ -2,11 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Security;
+using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
 using System.Threading.Tasks;
 
@@ -19,32 +22,44 @@ namespace FinalProject.MVC.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMarketplaceApiService _marketplaceApi;
+        private readonly INotificationApiService _notificationApi;
         private readonly ICarApiService _carApi;
         private readonly IApiAccessTokenService _tokenService;
         private readonly IEmailSender _emailSender;
         private readonly IWebHostEnvironment _environment;
         private readonly IMemoryCache _cache;
+        private readonly IHubContext<ConversationHub> _conversations;
+        private readonly ILogger<AccountController> _logger;
+        private readonly AccountActivityHistory _activityHistory;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
             IMarketplaceApiService marketplaceApi,
+            INotificationApiService notificationApi,
             ICarApiService carApi,
             IApiAccessTokenService tokenService,
             IEmailSender emailSender,
             IWebHostEnvironment environment,
-            IMemoryCache cache)
+            IMemoryCache cache,
+            IHubContext<ConversationHub> conversations,
+            ILogger<AccountController> logger,
+            AccountActivityHistory activityHistory)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _marketplaceApi = marketplaceApi;
+            _notificationApi = notificationApi;
             _carApi = carApi;
             _tokenService = tokenService;
             _emailSender = emailSender;
             _environment = environment;
             _cache = cache;
+            _conversations = conversations;
+            _logger = logger;
+            _activityHistory = activityHistory;
         }
 
         [Authorize]
@@ -69,6 +84,10 @@ namespace FinalProject.MVC.Controllers
                 model.Summary = await _marketplaceApi.GetSummaryAsync(
                     await CreateAccessTokenAsync(user),
                     HttpContext.RequestAborted);
+                model.Summary.RecentActivity = (await _activityHistory.FilterAsync(
+                    user,
+                    model.Summary.RecentActivity,
+                    HttpContext.RequestAborted)).ToList();
             }
             catch (CarApiException)
             {
@@ -76,6 +95,40 @@ namespace FinalProject.MVC.Controllers
             }
 
             return View(model);
+        }
+
+        [Authorize]
+        [HttpPost("Account/Activity/Clear")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearActivity()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            await _activityHistory.ClearAllAsync(user, HttpContext.RequestAborted);
+            return Json(new { cleared = true });
+        }
+
+        [Authorize]
+        [HttpPost("Account/Activity/Hide")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> HideActivity(string key)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            if (!await _activityHistory.HideAsync(user, key, HttpContext.RequestAborted))
+            {
+                return BadRequest(new { message = "That activity entry could not be removed." });
+            }
+
+            return Json(new { hidden = true, key = key?.Trim() });
         }
 
         [HttpGet]
@@ -479,11 +532,12 @@ namespace FinalProject.MVC.Controllers
 
             try
             {
-                await _carApi.UpdateCarAsync(
+                var update = await _carApi.UpdateCarAsync(
                     id,
                     model.Car,
                     await CreateAccessTokenAsync(user),
                     HttpContext.RequestAborted);
+                await BroadcastNotificationsAsync(update.Notifications);
                 TempData["Success"] = "Your listing was updated.";
                 return RedirectToAction(nameof(Listings));
             }
@@ -593,10 +647,15 @@ namespace FinalProject.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reply(int id, string content)
         {
+            var wantsJson = WantsJson();
             if (string.IsNullOrWhiteSpace(content))
             {
-                TempData["Error"] = "Enter a message.";
-                return RedirectToAction(nameof(Conversation), new { id });
+                return MessageFailure(id, wantsJson, "Enter a message.");
+            }
+
+            if (content.Trim().Length > 4000)
+            {
+                return MessageFailure(id, wantsJson, "A message cannot exceed 4000 characters.");
             }
 
             var user = await _userManager.GetUserAsync(User);
@@ -605,12 +664,218 @@ namespace FinalProject.MVC.Controllers
                 return Challenge();
             }
 
-            await _marketplaceApi.ReplyAsync(
-                id,
-                content,
-                await CreateAccessTokenAsync(user),
-                HttpContext.RequestAborted);
-            return RedirectToAction(nameof(Conversation), new { id });
+            try
+            {
+                var token = await CreateAccessTokenAsync(user);
+                var message = await _marketplaceApi.ReplyAsync(
+                    id,
+                    content,
+                    token,
+                    HttpContext.RequestAborted);
+                try
+                {
+                    await _conversations.Clients
+                        .Group(ConversationHub.GroupName(id))
+                        .SendAsync(
+                            ConversationHub.MessageReceivedEvent,
+                            message,
+                            HttpContext.RequestAborted);
+
+                    var details = await _marketplaceApi.GetConversationAsync(
+                        id,
+                        token,
+                        HttpContext.RequestAborted);
+                    if (details != null)
+                    {
+                        await BroadcastConversationRestoredAsync(details, message);
+                    }
+
+                    if (message.Notification != null)
+                    {
+                        await BroadcastNotificationAsync(message.Notification);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "Conversation {ConversationId} was saved but not broadcast.", id);
+                }
+
+                return wantsJson
+                    ? Json(message)
+                    : RedirectToAction(nameof(Conversation), new { id });
+            }
+            catch (CarApiException exception)
+            {
+                return MessageFailure(id, wantsJson, exception.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("Account/Notifications")]
+        public async Task<IActionResult> Notifications()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            ViewData["Title"] = "Notifications - AutoVault";
+            try
+            {
+                var token = await CreateAccessTokenAsync(user);
+                var list = await _notificationApi.GetAsync(token, 50, HttpContext.RequestAborted);
+                // Persist read for items the user is viewing; badge JS clears counts without a reload.
+                if (list.Items.Exists(item => !item.IsRead))
+                {
+                    await _notificationApi.MarkAllReadAsync(token, HttpContext.RequestAborted);
+                    ViewData["NotificationsMarkedRead"] = true;
+                }
+
+                return View(list);
+            }
+            catch (CarApiException)
+            {
+                ViewData["AccountServiceUnavailable"] = true;
+                return View(new NotificationListDto());
+            }
+        }
+
+        [Authorize]
+        [HttpGet("Account/Notifications/Count")]
+        public async Task<IActionResult> NotificationCount()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                var counts = await _notificationApi.GetUnreadCountsAsync(
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                return Json(counts);
+            }
+            catch (CarApiException)
+            {
+                return Json(new NotificationUnreadCountsDto());
+            }
+        }
+
+        [Authorize]
+        [HttpPost("Account/Notifications/{id:int}/Read")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkNotificationRead(int id, string? returnUrl)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                var counts = await _notificationApi.MarkReadAsync(
+                    id,
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+
+                if (WantsJson())
+                {
+                    return Json(new
+                    {
+                        read = true,
+                        counts,
+                        returnUrl = IsSafeLocalUrl(returnUrl) ? returnUrl : null
+                    });
+                }
+
+                if (IsSafeLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl!);
+                }
+
+                return RedirectToAction(nameof(Notifications));
+            }
+            catch (CarApiException exception)
+            {
+                if (WantsJson())
+                {
+                    return BadRequest(new { message = exception.Message });
+                }
+
+                TempData["Error"] = exception.Message;
+                return RedirectToAction(nameof(Notifications));
+            }
+        }
+
+        [Authorize]
+        [HttpPost("Account/Notifications/ReadAll")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAllNotificationsRead()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                var counts = await _notificationApi.MarkAllReadAsync(
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                if (WantsJson())
+                {
+                    return Json(new { marked = true, counts });
+                }
+
+                TempData["Success"] = "All notifications marked as read.";
+            }
+            catch (CarApiException exception)
+            {
+                if (WantsJson())
+                {
+                    return BadRequest(new { message = exception.Message });
+                }
+
+                TempData["Error"] = exception.Message;
+            }
+
+            return RedirectToAction(nameof(Notifications));
+        }
+
+        private bool IsSafeLocalUrl(string? url) =>
+            !string.IsNullOrWhiteSpace(url)
+            && Url.IsLocalUrl(url)
+            && url.StartsWith('/')
+            && !url.StartsWith("//", StringComparison.Ordinal);
+
+        [Authorize]
+        [HttpPost("Account/Messages/{id:int}/Hide")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> HideConversation(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                await _marketplaceApi.HideConversationAsync(
+                    id,
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                return Json(new { hidden = true, id });
+            }
+            catch (CarApiException exception)
+            {
+                return BadRequest(new { message = exception.Message });
+            }
         }
 
         [Authorize]
@@ -754,6 +1019,83 @@ namespace FinalProject.MVC.Controllers
         {
             var roles = await _userManager.GetRolesAsync(user);
             return _tokenService.CreateToken(User, roles);
+        }
+
+        private bool WantsJson() =>
+            string.Equals(Request.Headers.XRequestedWith, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase)
+            || Request.Headers.Accept.Any(value =>
+                value?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true);
+
+        private IActionResult MessageFailure(int id, bool wantsJson, string message)
+        {
+            if (wantsJson)
+            {
+                return BadRequest(new { message });
+            }
+
+            TempData["Error"] = message;
+            return RedirectToAction(nameof(Conversation), new { id });
+        }
+
+        private async Task BroadcastConversationRestoredAsync(
+            ConversationDetailsDto details,
+            MessageDto message)
+        {
+            var payload = new
+            {
+                details.Id,
+                details.CarId,
+                details.CarName,
+                details.CarImageUrl,
+                details.BuyerId,
+                details.SellerId,
+                details.BuyerDisplayName,
+                details.SellerDisplayName,
+                lastMessage = message.Content,
+                updatedAt = message.CreatedAt,
+                receiverId = message.ReceiverId
+            };
+
+            await _conversations.Clients
+                .Group(ConversationHub.InboxGroupName(details.BuyerId))
+                .SendAsync(
+                    ConversationHub.ConversationRestoredEvent,
+                    payload,
+                    HttpContext.RequestAborted);
+            await _conversations.Clients
+                .Group(ConversationHub.InboxGroupName(details.SellerId))
+                .SendAsync(
+                    ConversationHub.ConversationRestoredEvent,
+                    payload,
+                    HttpContext.RequestAborted);
+        }
+
+        private async Task BroadcastNotificationAsync(NotificationDto notification)
+        {
+            await _conversations.Clients
+                .Group(ConversationHub.InboxGroupName(notification.UserId))
+                .SendAsync(
+                    ConversationHub.NotificationReceivedEvent,
+                    notification,
+                    HttpContext.RequestAborted);
+        }
+
+        private async Task BroadcastNotificationsAsync(IEnumerable<NotificationDto> notifications)
+        {
+            foreach (var notification in notifications)
+            {
+                try
+                {
+                    await BroadcastNotificationAsync(notification);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Notification {NotificationId} was saved but not broadcast.",
+                        notification.Id);
+                }
+            }
         }
     }
 

@@ -33,6 +33,7 @@
                 <a asp-controller="AdminReviews" asp-action="Index">Reviews</a>
                 <a asp-controller="AdminRequests" asp-action="Index">Purchase Requests</a>
                 <a asp-controller="AdminInquiries" asp-action="Index">Questions</a>
+                <a asp-controller="Account" asp-action="Messages">Dealer Messages</a>
                 @if (User.IsInRole("SuperAdmin"))
                 {
                     <a asp-controller="Admin" asp-action="Users">Users</a>

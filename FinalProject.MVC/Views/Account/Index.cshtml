@@ -65,22 +65,29 @@
                             </a>
                         </div>
                     </div>
-                    <div class="title-mid-wrapper-home-two mt--40">
-                        <h3 class="title">Recent Activity</h3>
+                    <div class="title-mid-wrapper-home-two mt--40 d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                        <h3 class="title mb-0">Recent Activity</h3>
+                        <button type="button"
+                                class="rts-btn btn-primary radius-small"
+                                id="clear-activity-btn"
+                                data-clear-url="@Url.Action("ClearActivity", "Account")"
+                                @(Model.Summary.RecentActivity.Count == 0 ? "hidden" : null)>
+                            Clear All
+                        </button>
                     </div>
-                    @if (Model.Summary.RecentActivity.Count == 0)
-                    {
-                        <div class="account-empty-state">
-                            <i class="fa-regular fa-clock"></i>
-                            <p>No recent activity yet.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <ul class="account-activity-list">
-                            @foreach (var activity in Model.Summary.RecentActivity)
-                            {
-                                <li>
+                    <div class="alert alert-danger" id="activity-error" hidden></div>
+                    <div class="account-empty-state" id="activity-empty" @(Model.Summary.RecentActivity.Count == 0 ? null : "hidden")>
+                        <i class="fa-regular fa-clock"></i>
+                        <p>No recent activity yet.</p>
+                    </div>
+                    <ul class="account-activity-list" id="activity-list" @(Model.Summary.RecentActivity.Count == 0 ? "hidden" : null)>
+                        @foreach (var activity in Model.Summary.RecentActivity)
+                        {
+                            var key = string.IsNullOrWhiteSpace(activity.Key)
+                                ? FinalProject.MVC.Services.AccountActivityHistory.BuildKey(activity.Type, activity.Url, activity.CreatedAt)
+                                : activity.Key;
+                            <li data-activity-key="@key">
+                                <div class="account-activity-main">
                                     @if (!string.IsNullOrWhiteSpace(activity.Url))
                                     {
                                         <a href="@activity.Url">@activity.Description</a>
@@ -90,10 +97,20 @@
                                         <span>@activity.Description</span>
                                     }
                                     <time>@activity.CreatedAt.ToLocalTime().ToString("g")</time>
-                                </li>
-                            }
-                        </ul>
-                    }
+                                </div>
+                                <button type="button"
+                                        class="account-activity-remove"
+                                        data-hide-url="@Url.Action("HideActivity", "Account")"
+                                        data-activity-key="@key"
+                                        aria-label="Remove this activity">
+                                    Remove
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                    <form id="activity-antiforgery" class="d-none">
+                        @Html.AntiForgeryToken()
+                    </form>
                 </div>
             </div>
         </div>
@@ -101,6 +118,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/account-activity.js" asp-append-version="true"></script>
     <script>
         (function () {
             var signOutLink = document.getElementById("accountSignOut");
@@ -124,10 +142,13 @@
     .account-empty-state { padding:34px; text-align:center; border:1px dashed #d8d8d8; border-radius:12px; }
     .account-empty-state i { color:var(--color-primary); font-size:28px; margin-bottom:10px; }
     .account-activity-list { list-style:none; padding:0; margin:0; }
-    .account-activity-list li { display:flex; justify-content:space-between; gap:15px; padding:14px 0; border-bottom:1px solid #eee; }
+    .account-activity-list li { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:14px 0; border-bottom:1px solid #eee; }
+    .account-activity-main { display:flex; justify-content:space-between; gap:15px; flex:1; min-width:0; }
     .account-activity-list a,
     .account-activity-list span { color:#333; text-decoration:none; }
     .account-activity-list a:hover,
     .account-activity-list a:focus { color:var(--color-primary); }
     .account-activity-list time { color:var(--color-body); white-space:nowrap; }
+    .account-activity-remove { border:0; background:transparent; color:var(--color-body); text-decoration:underline; padding:0; cursor:pointer; white-space:nowrap; }
+    .account-activity-remove:hover { color:var(--color-primary); }
 </style>

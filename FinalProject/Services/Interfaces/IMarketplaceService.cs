@@ -12,9 +12,17 @@ public interface IMarketplaceService
 
     Task<bool> RemoveFavoriteAsync(string userId, int carId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ConversationSummaryResponse>> GetConversationsAsync(string userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ConversationSummaryResponse>> GetConversationsAsync(
+        string userId,
+        bool asStoreStaff = false,
+        CancellationToken cancellationToken = default);
 
-    Task<ConversationDetailsResponse?> GetConversationAsync(int id, string userId, bool markRead, CancellationToken cancellationToken = default);
+    Task<ConversationDetailsResponse?> GetConversationAsync(
+        int id,
+        string userId,
+        bool markRead,
+        bool asStoreStaff = false,
+        CancellationToken cancellationToken = default);
 
     Task<ConversationDetailsResponse?> StartConversationAsync(
         int carId,
@@ -26,6 +34,13 @@ public interface IMarketplaceService
         int conversationId,
         string senderId,
         string content,
+        bool asStoreStaff = false,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> HideConversationAsync(
+        int conversationId,
+        string userId,
+        bool asStoreStaff = false,
         CancellationToken cancellationToken = default);
 
     Task<AccountSummaryResponse> GetSummaryAsync(string userId, CancellationToken cancellationToken = default);

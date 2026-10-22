@@ -1,0 +1,123 @@
+@model FinalProject.MVC.Models.Api.NotificationListDto
+@{
+    ViewData["Title"] = "Notifications - AutoVault";
+    var markedRead = ViewData["NotificationsMarkedRead"] as bool? == true;
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Notifications</h1>
+            <div class="nav-bread-crumb">
+                <a asp-action="Index">Account</a>
+                <a href="#" class="current">Notifications</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-3">
+                <partial name="_AccountNavigation" />
+            </div>
+            <div class="col-lg-9">
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+                }
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success" role="alert">@TempData["Success"]</div>
+                }
+
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
+                    <h3 class="title mb-0">Your notifications</h3>
+                    <div id="mark-all-notifications-wrap" @(Model.Items.Any(item => !item.IsRead) && !markedRead ? null : "hidden")>
+                        <form asp-action="MarkAllNotificationsRead" method="post" id="mark-all-notifications-form">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="rts-btn btn-primary radius-small">Mark all as read</button>
+                        </form>
+                    </div>
+                </div>
+
+                @if (ViewData["AccountServiceUnavailable"] != null)
+                {
+                    <div class="alert alert-warning">Notifications are temporarily unavailable.</div>
+                }
+                else if (Model.Items.Count == 0)
+                {
+                    <div class="account-empty-state text-center">
+                        <i class="fa-regular fa-bell"></i>
+                        <h4>No notifications yet</h4>
+                        <p>New messages and price drops on cars you favorited will show up here.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="notification-list"
+                         id="notification-list"
+                         data-marked-read="@(markedRead ? "true" : "false")">
+                        @foreach (var item in Model.Items)
+                        {
+                            var showUnread = !item.IsRead && !markedRead;
+                            <form asp-action="MarkNotificationRead"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  class="notification-row @(showUnread ? "is-unread" : "is-read")"
+                                  data-notification-id="@item.Id"
+                                  data-notification-type="@item.Type">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="returnUrl" value="@item.Url" />
+                                <button type="submit" class="notification-row__button">
+                                    <span class="notification-row__icon">
+                                        <i class="fa-solid @(item.Type == "price_drop" ? "fa-tags" : "fa-envelope")"></i>
+                                    </span>
+                                    <span class="notification-row__body">
+                                        <span class="notification-row__title">@item.Title</span>
+                                        <span class="notification-row__text">@item.Body</span>
+                                        <time datetime="@item.CreatedAt.ToString("o")">@item.CreatedAt.ToLocalTime().ToString("g")</time>
+                                    </span>
+                                    @if (showUnread)
+                                    {
+                                        <span class="notification-row__dot" aria-hidden="true"></span>
+                                    }
+                                </button>
+                            </form>
+                        }
+                    </div>
+                }
+
+                <form id="notification-antiforgery" class="d-none">
+                    @Html.AntiForgeryToken()
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .notification-list { display:flex; flex-direction:column; gap:12px; }
+    .notification-row { margin:0; }
+    .notification-row__button {
+        width:100%; display:flex; align-items:flex-start; gap:14px; text-align:left;
+        padding:16px 18px; border:1px solid #ececec; border-radius:12px; background:#fff; color:inherit;
+        cursor:pointer;
+    }
+    .notification-row.is-unread .notification-row__button {
+        border-left:4px solid var(--color-primary); background:#fff8f5;
+    }
+    .notification-row.is-read .notification-row__button { opacity:0.82; }
+    .notification-row__icon {
+        width:40px; height:40px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+        background:rgba(255,54,0,0.1); color:var(--color-primary); flex-shrink:0;
+    }
+    .notification-row__body { display:flex; flex-direction:column; gap:4px; min-width:0; flex:1; }
+    .notification-row__title { font-weight:700; color:#0b1c39; }
+    .notification-row__text { color:var(--color-body); }
+    .notification-row time { font-size:0.85rem; color:#888; }
+    .notification-row__dot {
+        width:10px; height:10px; border-radius:50%; background:var(--color-primary); margin-top:6px; flex-shrink:0;
+    }
+</style>

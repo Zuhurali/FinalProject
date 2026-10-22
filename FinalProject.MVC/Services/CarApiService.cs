@@ -143,7 +143,7 @@ public class CarApiService : ICarApiService
             ?? throw new CarApiException("The car API returned an unreadable listing.");
     }
 
-    public async Task<CarApiDto> UpdateCarAsync(
+    public async Task<CarUpdateResultDto> UpdateCarAsync(
         int id,
         SaveCarDto car,
         string accessToken,
@@ -156,8 +156,8 @@ public class CarApiService : ICarApiService
             JsonContent.Create(car),
             cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
-        return await response.Content.ReadFromJsonAsync<CarApiDto>(JsonOptions, cancellationToken)
-            ?? throw new CarApiException("The car API returned an unreadable listing.");
+        return await response.Content.ReadFromJsonAsync<CarUpdateResultDto>(JsonOptions, cancellationToken)
+            ?? throw new CarApiException("The car API returned an unreadable listing update.");
     }
 
     public async Task DeleteCarAsync(

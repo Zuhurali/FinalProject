@@ -1,3 +1,4 @@
+using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Exceptions;
@@ -6,6 +7,7 @@ using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FinalProject.MVC.Controllers;
 
@@ -16,14 +18,20 @@ public sealed class AdminCarsController : AdminControllerBase
     private const int DefaultPageSize = 20;
 
     private readonly ICarApiService _cars;
+    private readonly IHubContext<ConversationHub> _conversations;
+    private readonly ILogger<AdminCarsController> _logger;
 
     public AdminCarsController(
         UserManager<ApplicationUser> userManager,
         IApiAccessTokenService tokenService,
-        ICarApiService carApi)
+        ICarApiService carApi,
+        IHubContext<ConversationHub> conversations,
+        ILogger<AdminCarsController> logger)
         : base(userManager, tokenService)
     {
         _cars = carApi;
+        _conversations = conversations;
+        _logger = logger;
     }
 
     [HttpGet("")]
@@ -163,7 +171,27 @@ public sealed class AdminCarsController : AdminControllerBase
 
         try
         {
-            await _cars.UpdateCarAsync(id, model.Car, token, cancellationToken);
+            var update = await _cars.UpdateCarAsync(id, model.Car, token, cancellationToken);
+            foreach (var notification in update.Notifications)
+            {
+                try
+                {
+                    await _conversations.Clients
+                        .Group(ConversationHub.InboxGroupName(notification.UserId))
+                        .SendAsync(
+                            ConversationHub.NotificationReceivedEvent,
+                            notification,
+                            cancellationToken);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Notification {NotificationId} was saved but not broadcast.",
+                        notification.Id);
+                }
+            }
+
             TempData["Success"] = "The car was updated.";
             return RedirectToAction(nameof(Details), new { id });
         }

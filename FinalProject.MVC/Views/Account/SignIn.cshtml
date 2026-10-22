@@ -41,7 +41,18 @@
                             <input type="text" id="identifier" name="identifier" class="input-form" placeholder="Email or Username" autocomplete="username" required>
                         </div>
                         <div class="form__control mb-3">
-                            <input type="password" name="password" class="input-form" placeholder="Password" required>
+                            <label for="password">Password</label>
+                            <div class="sign-in-password">
+                                <input type="password" id="password" name="password" class="input-form" placeholder="Password" autocomplete="current-password" required>
+                                <button type="button"
+                                        class="sign-in-password__toggle"
+                                        id="password-visibility-toggle"
+                                        aria-label="Show password"
+                                        aria-pressed="false"
+                                        title="Show password">
+                                    <i class="far fa-eye" aria-hidden="true" data-password-icon></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="form__control mb-3 sign-in-remember">
                             <input type="checkbox" name="rememberMe" value="true" id="rememberMe">
@@ -77,4 +88,46 @@
     .sign-in-remember label { padding-left:0 !important; margin:0; }
     .sign-in-remember label::before,
     .sign-in-remember label::after { display:none !important; content:none !important; }
+    .sign-in-password { position:relative; }
+    .sign-in-password .input-form { padding-right:3rem; width:100%; }
+    .sign-in-password__toggle {
+        position:absolute;
+        top:50%;
+        right:12px;
+        transform:translateY(-50%);
+        border:0;
+        background:transparent;
+        color:var(--color-body, #666);
+        width:2rem;
+        height:2rem;
+        display:grid;
+        place-items:center;
+        padding:0;
+        cursor:pointer;
+        z-index:2;
+    }
+    .sign-in-password__toggle:hover,
+    .sign-in-password__toggle:focus-visible { color:var(--color-primary); outline:none; }
 </style>
+
+@section Scripts {
+    <script>
+        (function () {
+            var input = document.getElementById("password");
+            var toggle = document.getElementById("password-visibility-toggle");
+            var icon = toggle && toggle.querySelector("[data-password-icon]");
+            if (!input || !toggle || !icon) {
+                return;
+            }
+
+            toggle.addEventListener("click", function () {
+                var show = input.type === "password";
+                input.type = show ? "text" : "password";
+                icon.className = show ? "far fa-eye-slash" : "far fa-eye";
+                toggle.setAttribute("aria-pressed", show ? "true" : "false");
+                toggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+                toggle.setAttribute("title", show ? "Hide password" : "Show password");
+            });
+        })();
+    </script>
+}

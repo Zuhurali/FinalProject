@@ -69,7 +69,8 @@ public sealed record MessageResponse(
     string ReceiverId,
     string Content,
     bool IsRead,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    NotificationResponse? Notification = null);
 
 public sealed record ConversationSummaryResponse(
     int Id,
@@ -91,9 +92,11 @@ public sealed record ConversationDetailsResponse(
     string SellerId,
     string SellerDisplayName,
     string? Subject,
-    IReadOnlyList<MessageResponse> Messages);
+    IReadOnlyList<MessageResponse> Messages,
+    NotificationResponse? Notification = null);
 
 public sealed record AccountActivityResponse(
+    string Key,
     string Type,
     string Description,
     DateTime CreatedAt,

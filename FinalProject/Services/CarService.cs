@@ -9,10 +9,12 @@ namespace FinalProject.Services;
 public class CarService : ICarService
 {
     private readonly FinalProjectDbContext _dbContext;
+    private readonly INotificationService _notifications;
 
-    public CarService(FinalProjectDbContext dbContext)
+    public CarService(FinalProjectDbContext dbContext, INotificationService notifications)
     {
         _dbContext = dbContext;
+        _notifications = notifications;
     }
 
     public async Task<PagedResult<CarResponse>> QueryAsync(CarListQuery query, CancellationToken cancellationToken = default)
@@ -204,7 +206,7 @@ public class CarService : ICarService
         return await GetByIdAsync(car.Id, cancellationToken);
     }
 
-    public async Task<CarResponse?> UpdateAsync(
+    public async Task<CarUpdateResult?> UpdateAsync(
         int id,
         SaveCarRequest request,
         CancellationToken cancellationToken = default)
@@ -216,12 +218,14 @@ public class CarService : ICarService
 
         var car = await _dbContext.Cars
             .Include(item => item.Images)
+            .Include(item => item.Brand)
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (car == null)
         {
             return null;
         }
 
+        var previousPrice = car.Price;
         car.BrandId = request.BrandId;
         car.CategoryId = request.CategoryId;
         car.Model = request.Model.Trim();
@@ -257,7 +261,21 @@ public class CarService : ICarService
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return await GetByIdAsync(id, cancellationToken);
+
+        IReadOnlyList<NotificationResponse> notifications = Array.Empty<NotificationResponse>();
+        if (Commerce.NotificationRules.IsPriceDrop(previousPrice, request.Price))
+        {
+            var carName = $"{car.Brand.Name} {car.Model}".Trim();
+            notifications = await _notifications.CreatePriceDropNotificationsAsync(
+                car.Id,
+                carName,
+                previousPrice,
+                request.Price,
+                cancellationToken);
+        }
+
+        var updated = await GetByIdAsync(id, cancellationToken);
+        return updated == null ? null : new CarUpdateResult(updated, notifications);
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)

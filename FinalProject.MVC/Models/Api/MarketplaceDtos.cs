@@ -59,6 +59,8 @@ public sealed class FavoriteDto
 
 public sealed class AccountActivityDto
 {
+    public string Key { get; set; } = string.Empty;
+
     public string Type { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
@@ -113,6 +115,8 @@ public sealed class MessageDto
     public bool IsRead { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public NotificationDto? Notification { get; set; }
 }
 
 public sealed class ConversationDetailsDto
@@ -136,4 +140,56 @@ public sealed class ConversationDetailsDto
     public string? Subject { get; set; }
 
     public List<MessageDto> Messages { get; set; } = new();
+
+    public NotificationDto? Notification { get; set; }
+}
+
+public sealed class NotificationDto
+{
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+
+    public string Type { get; set; } = string.Empty;
+
+    public string Title { get; set; } = string.Empty;
+
+    public string Body { get; set; } = string.Empty;
+
+    public string Url { get; set; } = string.Empty;
+
+    public bool IsRead { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public int? RelatedConversationId { get; set; }
+
+    public int? RelatedCarId { get; set; }
+}
+
+public sealed class NotificationListDto
+{
+    public int UnreadCount { get; set; }
+
+    public List<NotificationDto> Items { get; set; } = new();
+}
+
+public sealed class NotificationUnreadCountsDto
+{
+    public int Count { get; set; }
+
+    public int Messages { get; set; }
+
+    public int Favorites { get; set; }
+
+    public int Listings { get; set; }
+
+    public int Other { get; set; }
+}
+
+public sealed class CarUpdateResultDto
+{
+    public CarApiDto Car { get; set; } = null!;
+
+    public List<NotificationDto> Notifications { get; set; } = new();
 }

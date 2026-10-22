@@ -25,9 +25,14 @@ public interface IMarketplaceApiService
         string accessToken,
         CancellationToken cancellationToken = default);
 
-    Task ReplyAsync(
+    Task<MessageDto> ReplyAsync(
         int conversationId,
         string content,
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task HideConversationAsync(
+        int conversationId,
         string accessToken,
         CancellationToken cancellationToken = default);
 }

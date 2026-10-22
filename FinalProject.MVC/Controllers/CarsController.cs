@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using FinalProject.MVC.Data;
+using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Exceptions;
@@ -7,6 +8,7 @@ using FinalProject.MVC.Mappings;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FinalProject.MVC.Controllers
 {
@@ -17,19 +19,22 @@ namespace FinalProject.MVC.Controllers
         private readonly IMarketplaceApiService _marketplaceApi;
         private readonly IApiAccessTokenService _tokenService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IHubContext<ConversationHub> _conversations;
 
         public CarsController(
             ICarApiService carApi,
             ILogger<CarsController> logger,
             IMarketplaceApiService marketplaceApi,
             IApiAccessTokenService tokenService,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IHubContext<ConversationHub> conversations)
         {
             _carApi = carApi;
             _logger = logger;
             _marketplaceApi = marketplaceApi;
             _tokenService = tokenService;
             _userManager = userManager;
+            _conversations = conversations;
         }
 
         public async Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, string? condition, int page = 1)
@@ -303,6 +308,26 @@ namespace FinalProject.MVC.Controllers
                     message,
                     await CreateAccessTokenAsync(user),
                     HttpContext.RequestAborted);
+                if (conversation.Notification != null)
+                {
+                    try
+                    {
+                        await _conversations.Clients
+                            .Group(ConversationHub.InboxGroupName(conversation.Notification.UserId))
+                            .SendAsync(
+                                ConversationHub.NotificationReceivedEvent,
+                                conversation.Notification,
+                                HttpContext.RequestAborted);
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(
+                            exception,
+                            "Seller notification for conversation {ConversationId} was saved but not broadcast.",
+                            conversation.Id);
+                    }
+                }
+
                 return RedirectToAction(
                     "Conversation",
                     "Account",

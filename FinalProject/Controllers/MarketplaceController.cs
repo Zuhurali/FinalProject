@@ -86,7 +86,10 @@ public sealed class MarketplaceController : ControllerBase
         var userId = CurrentUserId();
         return userId == null
             ? Unauthorized()
-            : Ok(await _marketplace.GetConversationsAsync(userId, cancellationToken));
+            : Ok(await _marketplace.GetConversationsAsync(
+                userId,
+                asStoreStaff: IsStoreStaff(),
+                cancellationToken));
     }
 
     [HttpGet("api/conversations/{id:int}")]
@@ -104,6 +107,7 @@ public sealed class MarketplaceController : ControllerBase
             id,
             userId,
             markRead: true,
+            asStoreStaff: IsStoreStaff(),
             cancellationToken);
         return conversation == null ? NotFound() : Ok(conversation);
     }
@@ -149,9 +153,34 @@ public sealed class MarketplaceController : ControllerBase
             id,
             userId,
             request.Content,
+            asStoreStaff: IsStoreStaff(),
             cancellationToken);
         return message == null ? NotFound() : Ok(message);
     }
 
+    [HttpPost("api/conversations/{id:int}/hide")]
+    public async Task<IActionResult> HideConversation(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var hidden = await _marketplace.HideConversationAsync(
+            id,
+            userId,
+            asStoreStaff: IsStoreStaff(),
+            cancellationToken);
+        return hidden
+            ? Ok(new { hidden = true })
+            : NotFound(new { message = "Conversation not found or you cannot hide it." });
+    }
+
     private string? CurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    private bool IsStoreStaff() =>
+        User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
 }

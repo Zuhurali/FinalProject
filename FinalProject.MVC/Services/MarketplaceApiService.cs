@@ -111,7 +111,7 @@ public sealed class MarketplaceApiService : IMarketplaceApiService
                ?? throw new CarApiException("The marketplace API returned an unreadable conversation.");
     }
 
-    public async Task ReplyAsync(
+    public async Task<MessageDto> ReplyAsync(
         int conversationId,
         string content,
         string accessToken,
@@ -122,6 +122,22 @@ public sealed class MarketplaceApiService : IMarketplaceApiService
             $"api/conversations/{conversationId}/messages",
             accessToken,
             JsonContent.Create(new { content }),
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<MessageDto>(JsonOptions, cancellationToken)
+            ?? throw new CarApiException("The marketplace API returned an unreadable message.");
+    }
+
+    public async Task HideConversationAsync(
+        int conversationId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(
+            HttpMethod.Post,
+            $"api/conversations/{conversationId}/hide",
+            accessToken,
+            null,
             cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
     }

@@ -30,4 +30,6 @@ public sealed class Conversation
     public IdentityUserReference Seller { get; set; } = null!;
 
     public ICollection<CarMessage> Messages { get; set; } = new List<CarMessage>();
+
+    public ICollection<ConversationHide> Hides { get; set; } = new List<ConversationHide>();
 }
