@@ -36,13 +36,13 @@
                         <p class="desc wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s">Welcome to Autovault where innovation drives every journey. Discover a range of designed to elevate your driving experience. Please arrive a few minutes early, and if you need to make any changes to your appointment, don't hesitate to give us a call. We look forward to servicing your vehicle and keeping it running smoothly.</p>
                         <div class="button-area">
                             <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-small">Contact Us</a>
-                            <a href="tel:+994505590606" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s">
+                            <a href="@DealershipContactOptions.Value.TelHref" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">
                                 <span>
                                     <i class="fa-regular fa-phone"></i>
                                 </span>
                                 <div class="content">
                                     <h6>Call Us Now</h6>
-                                    <p>+994505590606</p>
+                                    <p>@DealershipContactOptions.Value.DisplayPhone</p>
                                 </div>
                             </a>
                         </div>
@@ -216,17 +216,4 @@
                 </div>
             </section>
             <!-- Brand Area End -->
-            <div class="rts-cta-area area-2">
-                <div class="container">
-                    <div class="cta-inner">
-                        <h2 class="title">If you have any questions Please Call.</h2>
-                        <div class="contact">
-                <a href="call-to:+994 50 354 67 67">
-                                <img src="~/assets/images/cta/call.svg" alt="">
-                                +994 50 354 67 67</a>
-                        </div>
-                        <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
-                        <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
-                    </div>
-                </div>
-            </div>
+            <partial name="_DealershipCallCta" />

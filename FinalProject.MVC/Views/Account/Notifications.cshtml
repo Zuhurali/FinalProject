@@ -1,6 +1,7 @@
 @model FinalProject.MVC.Models.Api.NotificationListDto
 @{
     ViewData["Title"] = "Notifications - AutoVault";
+    ViewData["BodyClass"] = "account-page-body";
     var markedRead = ViewData["NotificationsMarkedRead"] as bool? == true;
 }
 
@@ -18,11 +19,11 @@
 
 <div class="rts-contact-page-form-area rts-section-gapNew account">
     <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-3">
+        <div class="row g-4 g-lg-5">
+            <div class="col-12 col-md-5 col-lg-4">
                 <partial name="_AccountNavigation" />
             </div>
-            <div class="col-lg-9">
+            <div class="col-12 col-md-7 col-lg-8">
                 @if (TempData["Error"] != null)
                 {
                     <div class="alert alert-danger" role="alert">@TempData["Error"]</div>

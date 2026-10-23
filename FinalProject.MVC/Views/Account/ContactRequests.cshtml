@@ -1,0 +1,93 @@
+@model IReadOnlyList<ContactRequest>
+@{
+    ViewData["Title"] = "My Contact Requests - AutoVault";
+    ViewData["BodyClass"] = "account-page-body";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">My Contact Requests</h1>
+            <div class="nav-bread-crumb">
+                <a asp-action="Index">Account</a>
+                <a href="#" class="current">Contact Requests</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container">
+        <div class="row g-4 g-lg-5">
+            <div class="col-12 col-md-5 col-lg-4">
+                <partial name="_AccountNavigation" />
+            </div>
+            <div class="col-12 col-md-7 col-lg-8">
+                <div class="mian-wrapper-form">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                        <h3 class="title mb-0">Your submissions</h3>
+                        <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-small">New message</a>
+                    </div>
+                    <p class="text-muted mb-4">Only requests you submitted while signed in appear here. Status updates are managed by the AutoVault team.</p>
+
+                    @if (Model.Count == 0)
+                    {
+                        <div class="account-empty-state text-center">
+                            <i class="fa-regular fa-inbox"></i>
+                            <h4>No contact requests yet</h4>
+                            <p>You have not submitted any contact requests linked to this account. Send a Get In Touch message while signed in (or using this account’s email), and it will appear here with its status.</p>
+                            <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-small mt-2">Go to Contact</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle account-contact-requests-table">
+                                <thead>
+                                    <tr>
+                                        <th>Submitted</th>
+                                        <th>Interest</th>
+                                        <th>Message</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var request in Model)
+                                {
+                                    <tr>
+                                        <td>@request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                        <td>@request.Interest</td>
+                                        <td style="max-width:320px;white-space:pre-wrap;">@request.Message</td>
+                                        <td>
+                                            <span class="account-request-status status-@request.Status.Replace(" ", "-").ToLowerInvariant()">
+                                                @request.Status
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .account-empty-state { padding:34px; text-align:center; border:1px dashed #d8d8d8; border-radius:12px; }
+    .account-empty-state i { color:var(--color-primary); font-size:28px; margin-bottom:10px; display:block; }
+    .account-request-status {
+        display:inline-block;
+        padding:4px 10px;
+        border-radius:999px;
+        font-size:0.8rem;
+        font-weight:700;
+        background:#f3f4f6;
+        color:#374151;
+    }
+    .account-request-status.status-new { background:#eff6ff; color:#1d4ed8; }
+    .account-request-status.status-in-progress { background:#fff7ed; color:#c2410c; }
+    .account-request-status.status-resolved { background:#ecfdf5; color:#047857; }
+</style>

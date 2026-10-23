@@ -1,0 +1,60 @@
+@{
+    var contact = DealershipContactOptions.Value;
+    // Keep Call (tel:) and WhatsApp (wa.me chat) as sibling anchors — never nest or share an href.
+    var callHref = contact.TelHref;
+    var whatsAppHref = contact.WhatsAppHref;
+}
+<div class="dealership-contact-buttons" role="group" aria-label="Dealership contact options">
+    <a href="@callHref"
+       class="rts-btn radius-small btn-primary dealership-call"
+       data-contact-action="call"
+       aria-label="Call AutoVault at @contact.DisplayPhone">
+        <img src="~/assets/images/portfolio/phone.svg" alt="" aria-hidden="true">
+        <span>Call @contact.DisplayPhone</span>
+    </a>
+    <a href="@whatsAppHref"
+       class="rts-btn radius-small dealership-whatsapp"
+       data-contact-action="whatsapp"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open a WhatsApp chat with AutoVault (not a phone call)">
+        <img src="~/assets/images/portfolio/whatsapp.svg" alt="" aria-hidden="true">
+        <span>WhatsApp</span>
+    </a>
+</div>
+<style>
+    .dealership-contact-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        position: relative;
+        z-index: 1;
+    }
+    .dealership-contact-buttons > a.rts-btn {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        pointer-events: auto;
+        text-decoration: none;
+    }
+    .dealership-contact-buttons .dealership-whatsapp {
+        background: #25D366;
+        color: #fff !important;
+        border-color: #25D366;
+    }
+    .dealership-contact-buttons .dealership-whatsapp:hover,
+    .dealership-contact-buttons .dealership-whatsapp:focus {
+        filter: brightness(0.95);
+        color: #fff !important;
+    }
+    /* Theme CSS targets .whatsapp / .phone — keep aliases without sharing hit targets. */
+    .side-box.contact .contact-inner .contact-button-area .dealership-contact-buttons {
+        gap: 12px;
+    }
+</style>

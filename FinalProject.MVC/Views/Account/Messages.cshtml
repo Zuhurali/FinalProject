@@ -1,6 +1,7 @@
 @model AccountMessagesViewModel
 @{
     ViewData["Title"] = "Messages - AutoVault";
+    ViewData["BodyClass"] = "account-page-body";
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 
@@ -12,9 +13,9 @@
 </div>
 
 <div class="rts-contact-page-form-area rts-section-gapNew account">
-    <div class="container"><div class="row g-5">
-        <div class="col-lg-3"><partial name="_AccountNavigation" /></div>
-        <div class="col-lg-9">
+    <div class="container"><div class="row g-4 g-lg-5">
+        <div class="col-12 col-md-5 col-lg-4"><partial name="_AccountNavigation" /></div>
+        <div class="col-12 col-md-7 col-lg-8">
             <h3 class="title mb-4">Conversations</h3>
             <div class="alert alert-danger" id="conversation-list-error" hidden></div>
             @if (ViewData["AccountServiceUnavailable"] != null)

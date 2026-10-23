@@ -86,12 +86,13 @@ public static class CarApiMapper
                 .ToList(),
             ImageCount = dto.Images == null || dto.Images.Count == 0 ? 1 : dto.Images.Count,
             IsNew = dto.IsNew,
+            IsFeatured = dto.IsFeatured,
             Badge = dto.IsNew ? "New" : "Used",
             Seats = seats,
-            InStock = dto.Status == "Active",
+            InStock = string.Equals(dto.Status, "Active", StringComparison.OrdinalIgnoreCase),
             OwnerId = dto.OwnerId,
             OwnerDisplayName = dto.OwnerDisplayName,
-            Status = dto.Status,
+            Status = string.IsNullOrWhiteSpace(dto.Status) ? "Active" : dto.Status,
             CreatedAt = dto.CreatedAt
         };
     }

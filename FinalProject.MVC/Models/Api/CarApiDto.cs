@@ -93,6 +93,8 @@ public class CarApiDto
 
     public bool IsNew { get; set; }
 
+    public bool IsFeatured { get; set; }
+
     public string? OwnerId { get; set; }
 
     public string? OwnerDisplayName { get; set; }

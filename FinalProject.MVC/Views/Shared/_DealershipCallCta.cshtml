@@ -1,0 +1,18 @@
+@{
+    var contact = DealershipContactOptions.Value;
+}
+<div class="rts-cta-area area-2">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="title">If you have any questions Please Call.</h2>
+            <div class="contact">
+                <a href="@contact.TelHref" aria-label="Call AutoVault at @contact.DisplayPhone">
+                    <img src="~/assets/images/cta/call.svg" alt="">
+                    @contact.DisplayPhone
+                </a>
+            </div>
+            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
+            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        </div>
+    </div>
+</div>

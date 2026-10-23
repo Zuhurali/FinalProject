@@ -158,6 +158,7 @@ public class ShowroomRuleTests
         Assert.Equal("Admin,SuperAdmin", sales.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", reviews.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(FinalProject.MVC.Controllers.AdminInquiriesController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal("Admin,SuperAdmin", typeof(FinalProject.MVC.Controllers.AdminContactRequestsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         var parts = typeof(FinalProject.MVC.Controllers.AdminPartsController);
         Assert.Equal("Admin,SuperAdmin", parts.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("SuperAdmin", parts.GetMethod("Create", Type.EmptyTypes)!.GetCustomAttribute<AuthorizeAttribute>()!.Roles);

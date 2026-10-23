@@ -19,6 +19,7 @@ namespace FinalProject.MVC.Data
         public DbSet<InPersonSale> InPersonSales { get; set; }
         public DbSet<ProductInquiry> ProductInquiries { get; set; }
         public DbSet<ShowroomPurchaseRequest> ShowroomPurchaseRequests { get; set; }
+        public DbSet<ContactRequest> ContactRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -156,6 +157,29 @@ namespace FinalProject.MVC.Data
                 {
                     table.HasCheckConstraint("CK_ShowroomPurchaseRequests_Quantity", "[Quantity] >= 1 AND [Quantity] <= 10");
                     table.HasCheckConstraint("CK_ShowroomPurchaseRequests_Status", "[Status] IN (N'New', N'Contacted', N'Completed', N'Cancelled')");
+                });
+            });
+
+            builder.Entity<ContactRequest>(entity =>
+            {
+                entity.Property(request => request.CustomerName).HasMaxLength(80).IsRequired();
+                entity.Property(request => request.Email).HasMaxLength(200).IsRequired();
+                entity.Property(request => request.Phone).HasMaxLength(40).IsRequired();
+                entity.Property(request => request.Interest).HasMaxLength(120).IsRequired();
+                entity.Property(request => request.Message).HasMaxLength(1000).IsRequired();
+                entity.Property(request => request.Status).HasMaxLength(20).IsRequired();
+                entity.Property(request => request.UserId).HasMaxLength(450);
+                entity.HasIndex(request => request.CreatedAt);
+                entity.HasIndex(request => request.Status);
+                entity.HasIndex(request => request.UserId);
+                entity.ToTable("ContactRequests", table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_ContactRequests_MessageLength",
+                        "LEN([Message]) >= 10 AND LEN([Message]) <= 1000");
+                    table.HasCheckConstraint(
+                        "CK_ContactRequests_Status",
+                        "[Status] IN (N'New', N'In Progress', N'Resolved')");
                 });
             });
         }

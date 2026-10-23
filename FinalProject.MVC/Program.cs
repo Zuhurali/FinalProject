@@ -122,9 +122,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ManageUsers", policy => policy.RequireRole(AppRoles.SuperAdmin));
 });
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<DealershipContactSettings>(
+    builder.Configuration.GetSection(DealershipContactSettings.SectionName));
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
+builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
 builder.Services.AddScoped<IProductPopularityService, ProductPopularityService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<AccountActivityHistory>();

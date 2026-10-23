@@ -1,3 +1,4 @@
+@model IReadOnlyList<LuxuryShowcaseBrand>
 @{
     ViewData["Title"] = "About Us - AutoVault";
 }
@@ -39,13 +40,13 @@
                         <p class="desc wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s">
                             AutoVault is a store on Babek Prospekti 22–24 in Baku. Browse used cars and automotive parts online, then visit in person to inspect the item and complete the purchase. There is no online payment or delivery.
                         </p>
-                        <a href="tel:+994503546767" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s">
+                        <a href="@DealershipContactOptions.Value.TelHref" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">
                             <span>
                                 <i class="fa-regular fa-phone"></i>
                             </span>
                             <div class="content">
                                 <h6>Call Us Now</h6>
-                                <p>+994 50 354 67 67</p>
+                                <p>@DealershipContactOptions.Value.DisplayPhone</p>
                             </div>
                         </a>
                     </div>
@@ -59,18 +60,201 @@
     </div>
 </section>
 
-<div class="rts-cta-area area-2">
+<section class="av-luxury-showcase" aria-labelledby="about-showcase-heading">
     <div class="container">
-        <div class="cta-inner">
-            <h2 class="title">If you have any questions Please Call.</h2>
-            <div class="contact">
-                <a href="tel:+994503546767">
-                    <img src="~/assets/images/cta/call.svg" alt="">
-                    +994 50 354 67 67
-                </a>
-            </div>
-            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
-            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
+        <div class="av-luxury-showcase__intro">
+            <p class="av-luxury-showcase__eyebrow">Exclusive marques</p>
+            <h2 id="about-showcase-heading" class="av-luxury-showcase__title">Discover Premium Vehicles</h2>
+            <p class="av-luxury-showcase__desc">A curated look at Lamborghini, Ferrari, Bentley, and Rolls-Royce from the AutoVault collection.</p>
+        </div>
+        <div class="av-luxury-showcase__grid">
+            @foreach (var brand in Model)
+            {
+                <article class="av-luxury-card @(brand.HasListings ? null : "is-soon")">
+                    @if (brand.HasListings)
+                    {
+                        <a asp-controller="Cars"
+                           asp-action="Index"
+                           asp-route-make="@brand.Name"
+                           class="av-luxury-card__link"
+                           aria-label="View @brand.Name listings">
+                            <figure class="av-luxury-card__media">
+                                <img src="@Url.Content(brand.ImagePath)"
+                                     alt="@brand.Name vehicle"
+                                     width="640"
+                                     height="400"
+                                     loading="lazy">
+                            </figure>
+                            <div class="av-luxury-card__body">
+                                <h3 class="av-luxury-card__name">@brand.Name</h3>
+                                <p class="av-luxury-card__text">@brand.Descriptor</p>
+                                <span class="av-luxury-card__action">View listings <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                            </div>
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="av-luxury-card__link" aria-label="@brand.Name coming soon">
+                            <figure class="av-luxury-card__media">
+                                <img src="@Url.Content(brand.ImagePath)"
+                                     alt="@brand.Name vehicle"
+                                     width="640"
+                                     height="400"
+                                     loading="lazy">
+                            </figure>
+                            <div class="av-luxury-card__body">
+                                <h3 class="av-luxury-card__name">@brand.Name</h3>
+                                <p class="av-luxury-card__text">@brand.Descriptor</p>
+                                <span class="av-luxury-card__soon">Coming soon</span>
+                            </div>
+                        </div>
+                    }
+                </article>
+            }
         </div>
     </div>
-</div>
+</section>
+
+<style>
+    .av-luxury-showcase {
+        padding: 48px 0 88px;
+        background: #050b20;
+    }
+    .av-luxury-showcase__intro {
+        max-width: 640px;
+        margin: 0 auto 36px;
+        text-align: center;
+    }
+    .av-luxury-showcase__eyebrow {
+        margin: 0 0 10px;
+        color: var(--color-primary);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+    .av-luxury-showcase__title {
+        margin: 0 0 12px;
+        color: #fff;
+        font-size: clamp(1.85rem, 3vw, 2.6rem);
+        line-height: 1.15;
+    }
+    .av-luxury-showcase__desc {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 1.05rem;
+        line-height: 1.65;
+    }
+    .av-luxury-showcase__grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+    }
+    .av-luxury-card {
+        border-radius: 14px;
+        overflow: hidden;
+        background: #0b1428;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+        transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .av-luxury-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(255, 54, 0, 0.45);
+        box-shadow: 0 20px 36px rgba(255, 54, 0, 0.12);
+    }
+    .av-luxury-card__link {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+    }
+    .av-luxury-card__media {
+        margin: 0;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        background: #111827;
+    }
+    .av-luxury-card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.4s ease;
+    }
+    .av-luxury-card:hover .av-luxury-card__media img {
+        transform: scale(1.05);
+    }
+    .av-luxury-card__body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 18px 18px 20px;
+        flex: 1;
+    }
+    .av-luxury-card__name {
+        margin: 0;
+        color: #fff;
+        font-size: 1.2rem;
+        line-height: 1.2;
+    }
+    .av-luxury-card__text {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .av-luxury-card__action {
+        margin-top: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--color-primary);
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+    .av-luxury-card__soon {
+        margin-top: auto;
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .av-luxury-card.is-soon {
+        opacity: 0.92;
+    }
+    .av-luxury-card.is-soon:hover {
+        transform: none;
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+    }
+    .av-luxury-card.is-soon:hover .av-luxury-card__media img {
+        transform: none;
+    }
+    @@media (max-width: 1199px) {
+        .av-luxury-showcase__grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @@media (max-width: 767px) {
+        .av-luxury-showcase {
+            padding: 36px 0 64px;
+        }
+        .av-luxury-showcase__grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .av-luxury-showcase__intro {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+    }
+</style>

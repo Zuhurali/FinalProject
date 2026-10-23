@@ -1,3 +1,10 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    bool IsActive(string controller, string? action = null) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+        && (action is null || string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase));
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,34 +16,65 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
         body.admin-shell { background:#f4f6f8; }
-        .admin-sidebar { background:#111827; min-height:100vh; color:#fff; padding:24px 16px; }
-        .admin-sidebar a { display:block; color:#d1d5db; padding:10px 12px; border-radius:8px; }
-        .admin-sidebar a:hover, .admin-sidebar a.active { background:#1f2937; color:#fff; }
+        .admin-sidebar {
+            background:#111827;
+            min-height:100vh;
+            color:#fff;
+            padding:24px 18px;
+        }
+        .admin-sidebar h4 {
+            white-space:nowrap;
+            margin-bottom:1.25rem;
+        }
+        .admin-sidebar a {
+            display:block;
+            color:#d1d5db;
+            padding:10px 12px;
+            border-radius:8px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .admin-sidebar a:hover,
+        .admin-sidebar a.active {
+            background:#1f2937;
+            color:#fff;
+        }
         .admin-main { padding:28px; }
         .admin-card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
         .admin-stat { font-size:28px; font-weight:700; }
+        @@media (max-width: 991.98px) {
+            .admin-sidebar {
+                min-height:auto;
+                padding-bottom:12px;
+            }
+            .admin-sidebar a {
+                white-space:normal;
+            }
+        }
     </style>
 </head>
 <body class="admin-shell">
     <div class="container-fluid">
         <div class="row">
-            <aside class="col-lg-2 admin-sidebar">
+            <aside class="col-12 col-lg-3 col-xl-2 admin-sidebar" aria-label="Admin navigation">
                 <h4 class="mb-4">AutoVault</h4>
-                <a asp-controller="Admin" asp-action="Index">Dashboard</a>
-                <a asp-controller="AdminCars" asp-action="Index">Cars</a>
-                <a asp-controller="AdminParts" asp-action="Index">Parts</a>
-                <a asp-controller="AdminCampaigns" asp-action="Index">Campaigns</a>
-                <a asp-controller="AdminSales" asp-action="Index">In-Store Sales</a>
-                <a asp-controller="AdminBrands" asp-action="Index">Brands</a>
-                <a asp-controller="AdminCategories" asp-action="Index">Categories</a>
-                <a asp-controller="AdminRatings" asp-action="Index">Ratings</a>
-                <a asp-controller="AdminReviews" asp-action="Index">Reviews</a>
-                <a asp-controller="AdminRequests" asp-action="Index">Purchase Requests</a>
-                <a asp-controller="AdminInquiries" asp-action="Index">Questions</a>
-                <a asp-controller="Account" asp-action="Messages">Dealer Messages</a>
+                <a class="@(IsActive("Admin", "Index") ? "active" : null)" asp-controller="Admin" asp-action="Index">Dashboard</a>
+                <a class="@(IsActive("AdminCars") ? "active" : null)" asp-controller="AdminCars" asp-action="Index">Cars</a>
+                <a class="@(IsActive("AdminParts") ? "active" : null)" asp-controller="AdminParts" asp-action="Index">Parts</a>
+                <a class="@(IsActive("AdminCampaigns") ? "active" : null)" asp-controller="AdminCampaigns" asp-action="Index">Campaigns</a>
+                <a class="@(IsActive("AdminSales") ? "active" : null)" asp-controller="AdminSales" asp-action="Index">In-Store Sales</a>
+                <a class="@(IsActive("AdminBrands") ? "active" : null)" asp-controller="AdminBrands" asp-action="Index">Brands</a>
+                <a class="@(IsActive("AdminCategories") ? "active" : null)" asp-controller="AdminCategories" asp-action="Index">Categories</a>
+                <a class="@(IsActive("AdminRatings") ? "active" : null)" asp-controller="AdminRatings" asp-action="Index">Ratings</a>
+                <a class="@(IsActive("AdminReviews") ? "active" : null)" asp-controller="AdminReviews" asp-action="Index">Reviews</a>
+                <a class="@(IsActive("AdminRequests") ? "active" : null)" asp-controller="AdminRequests" asp-action="Index">Purchase Requests</a>
+                <a class="@(IsActive("AdminContactRequests") ? "active" : null)" asp-controller="AdminContactRequests" asp-action="Index">Contact Requests</a>
+                <a class="@(IsActive("AdminInquiries") ? "active" : null)" asp-controller="AdminInquiries" asp-action="Index">Questions</a>
+                <a class="@(IsActive("Account", "Messages") ? "active" : null)" asp-controller="Account" asp-action="Messages">Dealer Messages</a>
                 @if (User.IsInRole("SuperAdmin"))
                 {
-                    <a asp-controller="Admin" asp-action="Users">Users</a>
+                    <a class="@(IsActive("Admin", "Users") ? "active" : null)" asp-controller="Admin" asp-action="Users">Users</a>
                 }
                 <a asp-controller="Home" asp-action="Index">View Site</a>
                 <form asp-controller="Account" asp-action="SignOut" method="post" class="mt-3">
@@ -44,7 +82,7 @@
                     <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
                 </form>
             </aside>
-            <main class="col-lg-10 admin-main">
+            <main class="col-12 col-lg-9 col-xl-10 admin-main">
                 @if (TempData["Success"] != null)
                 {
                     <div class="alert alert-success alert-dismissible" role="alert">

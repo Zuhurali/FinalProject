@@ -14,7 +14,8 @@ namespace FinalProject.MVC.Models
         public string ImagePath { get; set; } = string.Empty;
         public IReadOnlyList<string> GalleryImages { get; set; } = Array.Empty<string>();
         public bool IsNew { get; set; }
-        public string Badge { get; set; } = string.Empty; // New, Stocks, Trending, etc.
+        public bool IsFeatured { get; set; }
+        public string Badge { get; set; } = string.Empty; // New, Used (from IsNew)
         public int ImageCount { get; set; } = 1;
         public int Year { get; set; }
         public string Color { get; set; } = string.Empty;

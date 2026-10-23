@@ -53,14 +53,14 @@
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
                                 <p>Phone</p>
-                                <p><a href="call-to:@Model.Phone">@Model.Phone</a></p>
+                                <p><a href="@DealershipContactSettings.TelHrefFor(Model.Phone)">@Model.Phone</a></p>
                             </div>
                         </li>
                         <li>
                             <i class="fa-regular fa-circle-check"></i>
                             <div class="text">
                                 <p>Email</p>
-                                <p><a href="mail-to:@Model.Email">@Model.Email</a></p>
+                                <p><a href="mailto:@Model.Email">@Model.Email</a></p>
                             </div>
                         </li>
                     </ul>

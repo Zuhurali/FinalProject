@@ -31,6 +31,7 @@ namespace FinalProject.MVC.Controllers
         private readonly IHubContext<ConversationHub> _conversations;
         private readonly ILogger<AccountController> _logger;
         private readonly AccountActivityHistory _activityHistory;
+        private readonly IContactRequestService _contactRequests;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -45,7 +46,8 @@ namespace FinalProject.MVC.Controllers
             IMemoryCache cache,
             IHubContext<ConversationHub> conversations,
             ILogger<AccountController> logger,
-            AccountActivityHistory activityHistory)
+            AccountActivityHistory activityHistory,
+            IContactRequestService contactRequests)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -60,6 +62,7 @@ namespace FinalProject.MVC.Controllers
             _conversations = conversations;
             _logger = logger;
             _activityHistory = activityHistory;
+            _contactRequests = contactRequests;
         }
 
         [Authorize]
@@ -876,6 +879,32 @@ namespace FinalProject.MVC.Controllers
             {
                 return BadRequest(new { message = exception.Message });
             }
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> ContactRequests(CancellationToken cancellationToken)
+        {
+            ViewData["Title"] = "My Contact Requests - AutoVault";
+            ViewData["BodyClass"] = "account-page-body";
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            // Only claim orphans whose form email matches this account's email.
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await _contactRequests.ClaimOrphanedByVerifiedEmailAsync(
+                    user.Id,
+                    user.Email,
+                    cancellationToken);
+            }
+
+            var requests = await _contactRequests.GetForUserAsync(user.Id, cancellationToken);
+            return View(requests);
         }
 
         [Authorize]

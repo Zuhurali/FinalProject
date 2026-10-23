@@ -299,7 +299,7 @@
                                 </li>
                             </ul>
                             <p class="av-favorite__status" role="status" aria-live="polite" data-favorite-status>@(favoriteUnavailable ? "Favourites are temporarily unavailable." : TempData["FavoriteError"])</p>
-                            <div class="price-btn">
+                            <div class="price-btn d-flex flex-column gap-2">
                                 @if (isOwner)
                                 {
                                     <a asp-controller="Account" asp-action="Messages" class="rts-btn btn-primary radius-small">View Messages</a>
@@ -312,6 +312,7 @@
                                 {
                                     <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@messageReturnUrl" class="rts-btn btn-primary radius-small">Message Dealer</a>
                                 }
+                                <partial name="_DealershipContactButtons" />
                             </div>
                         </div>
                         <div class="overview side-box">
@@ -339,7 +340,7 @@
                                 @if (isStoreListing)
                                 {
                                     <h5>AutoVault Store</h5>
-                                    <p>Babek Prospekti 22–24, Baku, Azerbaijan</p>
+                                    <p>@DealershipContactOptions.Value.AddressLine</p>
                                 }
                                 else
                                 {
@@ -357,6 +358,7 @@
                                         {
                                             <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@messageReturnUrl" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Message Dealer</a>
                                         }
+                                        <partial name="_DealershipContactButtons" />
                                     </div>
                                 }
                             </div>
@@ -368,21 +370,7 @@
     </div>
 </div>
 
-<div class="rts-cta-area area-2">
-    <div class="container">
-        <div class="cta-inner">
-            <h2 class="title">If you have any questions Please Call.</h2>
-            <div class="contact">
-                <a href="tel:+994503546767">
-                    <img src="~/assets/images/cta/call.svg" alt="">
-                    +994 50 354 67 67
-                </a>
-            </div>
-            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
-            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
-        </div>
-    </div>
-</div>
+<partial name="_DealershipCallCta" />
 
 @if (slides.Count > 0)
 {

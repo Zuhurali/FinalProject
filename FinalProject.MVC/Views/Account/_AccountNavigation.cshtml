@@ -1,41 +1,42 @@
 <div class="mian-wrapper-form account-nav-card">
     <div class="title-mid-wrapper-home-two">
-        <h3 class="title">My Account</h3>
+        <h3 class="title account-nav-title">My Account</h3>
     </div>
     <nav aria-label="Account navigation">
         <ul class="account-menu">
-            <li><a asp-action="Index"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+            <li><a asp-controller="Account" asp-action="Index"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
             <li>
-                <a asp-action="Listings">
+                <a asp-controller="Account" asp-action="Listings">
                     <i class="fa-solid fa-car"></i> My Listings
                     <span class="account-menu-badge" data-notification-badge="listings" hidden>0</span>
                 </a>
             </li>
             <li>
-                <a asp-action="Favorites">
+                <a asp-controller="Account" asp-action="Favorites">
                     <i class="fa-regular fa-heart"></i> Favorites
                     <span class="account-menu-badge" data-notification-badge="favorites" hidden>0</span>
                 </a>
             </li>
             <li>
-                <a asp-action="Messages">
+                <a asp-controller="Account" asp-action="Messages">
                     <i class="fa-regular fa-envelope"></i> Messages
                     <span class="account-menu-badge" data-notification-badge="messages" hidden>0</span>
                 </a>
             </li>
             <li>
-                <a asp-action="Notifications">
+                <a asp-controller="Account" asp-action="Notifications">
                     <i class="fa-regular fa-bell"></i> Notifications
                     <span class="account-menu-badge" data-notification-badge="total" hidden>0</span>
                 </a>
             </li>
-            <li><a asp-action="Profile"><i class="fa-regular fa-user"></i> Profile Settings</a></li>
+            <li><a asp-controller="Account" asp-action="ContactRequests"><i class="fa-regular fa-inbox"></i> My Contact Requests</a></li>
+            <li><a asp-controller="Account" asp-action="Profile"><i class="fa-regular fa-user"></i> Profile Settings</a></li>
             @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
             {
                 <li><a asp-controller="Admin" asp-action="Index"><i class="fa-solid fa-shield"></i> Admin Panel</a></li>
             }
             <li>
-                <form asp-action="SignOut" method="post">
+                <form asp-controller="Account" asp-action="SignOut" method="post">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="account-nav-logout">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
@@ -47,16 +48,52 @@
 </div>
 
 <style>
+    /* Override theme mian-wrapper-form padding (60–135px) that crushed the sidebar title. */
+    .account-nav-card.mian-wrapper-form {
+        padding: 24px 22px !important;
+        margin: 0 !important;
+        height: auto;
+    }
+    .account-nav-card .account-nav-title {
+        margin: 0 0 12px;
+        white-space: nowrap;
+        overflow: visible;
+        word-break: normal;
+        overflow-wrap: normal;
+        font-size: clamp(1.35rem, 1.8vw, 1.75rem);
+        line-height: 1.25;
+    }
     .account-nav-card .account-menu { list-style:none; padding:0; margin:0; }
     .account-nav-card .account-menu li { border-bottom:1px solid #eee; }
     .account-nav-card .account-menu a,
-    .account-nav-logout { display:flex; align-items:center; gap:10px; width:100%; padding:13px 4px; color:var(--color-body); background:none; border:0; text-align:left; }
+    .account-nav-logout {
+        display:flex;
+        align-items:center;
+        gap:10px;
+        width:100%;
+        padding:13px 4px;
+        color:var(--color-body);
+        background:none;
+        border:0;
+        text-align:left;
+        white-space:nowrap;
+    }
     .account-nav-card .account-menu a:hover,
     .account-nav-logout:hover { color:var(--color-primary); }
-    .account-nav-card i { width:18px; color:var(--color-primary); }
+    .account-nav-card i { width:18px; flex:0 0 18px; color:var(--color-primary); }
     .account-menu-badge {
         margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:999px;
         background:#e11d48; color:#fff; font-size:11px; font-weight:700; line-height:20px; text-align:center;
     }
     .account-menu-badge[hidden] { display:none !important; }
+    @@media (max-width: 767.98px) {
+        .account-nav-card.mian-wrapper-form {
+            padding: 20px 16px !important;
+            margin-bottom: 8px !important;
+        }
+        .account-nav-card .account-menu a,
+        .account-nav-logout {
+            white-space: normal;
+        }
+    }
 </style>

@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="~/assets/fonts/rt-icon.css">
     <link rel="stylesheet" href="~/assets/css/style.css">
     <link rel="stylesheet" href="~/css/showroom-shop.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/contact-form.css" asp-append-version="true">
 </head>
 <body class="@ViewData["BodyClass"]">
     <div class="loader-wrapper">
@@ -81,7 +82,7 @@
                                             </div>
                                             <div class="text">
                                                 <p>Call Us Now</p>
-                                                <a href="tel:+994503546767">+994 50 354 67 67</a>
+                                                <a href="@DealershipContactOptions.Value.TelHref" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">@DealershipContactOptions.Value.DisplayPhone</a>
                                             </div>
                                         </div>
                                         <div class="map-area">
@@ -92,7 +93,7 @@
                                             </div>
                                             <div class="text">
                                                 <p>Send US Email</p>
-                                                <a href="mail-to:Autovault@gmail.com">Autovault@gmail.com</a>
+                                                <a href="@DealershipContactOptions.Value.MailtoHref">@DealershipContactOptions.Value.Email</a>
                                             </div>
                                         </div>
                                         <div class="map-area">
@@ -103,7 +104,7 @@
                                             </div>
                                             <div class="text">
                                                 <p>Our Location</p>
-                                                <a href="https://www.google.com/maps/search/?api=1&amp;query=Baku%20Auto%20Mall%2C%20Babek%20Prospekti%2022-24%2C%20Baku%2C%20Azerbaijan" target="_blank" rel="noopener">Babek Prospekti 22–24, Baku, Azerbaijan</a>
+                                                <a href="@DealershipContactOptions.Value.MapsHref" target="_blank" rel="noopener">@DealershipContactOptions.Value.AddressLine</a>
                                             </div>
                                         </div>
                                     </div>
@@ -275,21 +276,33 @@
                                                 <i class="rt-icon-phone"></i>
                                                 <div class="content">
                                                     <span>Call the store</span>
-                                            <a class="number" href="tel:+994503546767">+994 50 354 67 67</a>
+                                                    <a class="number" href="@DealershipContactOptions.Value.TelHref" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">@DealershipContactOptions.Value.DisplayPhone</a>
+                                                </div>
+                                            </div>
+                                            <div class="single-contact">
+                                                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                                                <div class="content">
+                                                    <span>WhatsApp</span>
+                                                    <a class="number"
+                                                       href="@DealershipContactOptions.Value.WhatsAppHref"
+                                                       data-contact-action="whatsapp"
+                                                       target="_blank"
+                                                       rel="noopener noreferrer"
+                                                       aria-label="Open a WhatsApp chat with AutoVault (not a phone call)">WhatsApp</a>
                                                 </div>
                                             </div>
                                             <div class="single-contact">
                                                 <i class="rt-icon-mail"></i>
                                                 <div class="content">
                                                     <span>Email</span>
-                                                    <a class="number" href="mailto:info@autovault.com">info@autovault.com</a>
+                                                    <a class="number" href="@DealershipContactOptions.Value.MailtoHref">@DealershipContactOptions.Value.Email</a>
                                                 </div>
                                             </div>
                                             <div class="single-contact">
                                                 <i class="rt-icon-location"></i>
                                                 <div class="content">
                                                     <span>Location</span>
-                                                    <a class="number" href="https://www.google.com/maps/search/?api=1&amp;query=Baku%20Auto%20Mall%2C%20Babek%20Prospekti%2022-24%2C%20Baku%2C%20Azerbaijan" target="_blank" rel="noopener">Babek Prospekti 22–24, Baku, Azerbaijan</a>
+                                                    <a class="number" href="@DealershipContactOptions.Value.MapsHref" target="_blank" rel="noopener">@DealershipContactOptions.Value.AddressLine</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -396,7 +409,7 @@
     <script src="~/assets/js/plugins/jquery-ui.js"></script>
     <script src="~/assets/js/vendor/waw.js"></script>
     <script src="~/assets/js/plugins/counter-up.js"></script>
-    <script src="~/assets/js/plugins/contact-form.js"></script>
+    <script src="~/assets/js/plugins/contact-form.js" asp-append-version="true"></script>
     <script src="~/assets/js/plugins/swiper.js"></script>
     <script src="~/assets/js/plugins/metismenu.js"></script>
     <script src="~/assets/js/vendor/jarallax.js"></script>

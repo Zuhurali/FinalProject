@@ -1,0 +1,90 @@
+@model IReadOnlyList<ContactRequest>
+@{
+    Layout = "_AdminLayout";
+}
+<div class="d-flex justify-content-between mb-4">
+    <h1 class="h3">Contact Requests</h1>
+</div>
+<div class="admin-card">
+    <p>Messages submitted from the Contact page and the Shop “Get In Touch” form. Update the status as you follow up.</p>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (Model.Count == 0)
+    {
+        <p>No contact requests yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Submitted</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Car / part</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var request in Model)
+                {
+                    <tr>
+                        <td>@request.Id</td>
+                        <td>@request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                        <td>@request.CustomerName</td>
+                        <td><a href="mailto:@request.Email">@request.Email</a></td>
+                        <td><a href="@DealershipContactSettings.TelHrefFor(request.Phone)">@request.Phone</a></td>
+                        <td>@request.Interest</td>
+                        <td style="max-width:320px;white-space:pre-wrap;">@request.Message</td>
+                        <td><strong>@request.Status</strong></td>
+                        <td>
+                            <form asp-action="Status" method="post" class="d-flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <select name="status" class="form-select form-select-sm" aria-label="Status for contact request @request.Id">
+                                    @foreach (var status in ContactRequestStatus.All)
+                                    {
+                                        if (status == request.Status)
+                                        {
+                                            <option value="@status" selected>@status</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@status">@status</option>
+                                        }
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-dark">Save</button>
+                            </form>
+                        </td>
+                        <td class="text-nowrap">
+                            <form asp-action="Delete"
+                                  asp-route-id="@request.Id"
+                                  method="post"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to delete this contact request? This action cannot be undone.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete contact request @request.Id">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

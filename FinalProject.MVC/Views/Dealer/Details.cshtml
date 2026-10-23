@@ -21,11 +21,11 @@
                                 <ul class="feature-area dealer">
                                     <li>
                                         <img src="~/assets/images/portfolio/feature-icon/17.svg" alt="">
-                                        <a href="call-to:@dealer.Phone">@dealer.Phone</a>
+                                        <a href="@DealershipContactSettings.TelHrefFor(dealer.Phone)">@dealer.Phone</a>
                                     </li>
                                     <li>
                                         <img src="~/assets/images/portfolio/feature-icon/18.svg" alt="">
-                                        <a href="mail-to:@dealer.Email">@dealer.Email</a>
+                                        <a href="mailto:@dealer.Email">@dealer.Email</a>
                                     </li>
                                     <li>
                                         <img src="~/assets/images/portfolio/feature-icon/19.svg" alt="">
@@ -290,8 +290,7 @@
                                 <h5>@dealer.ContactName</h5>
                                 <p>@dealer.ContactRole</p>
                                 <div class="contact-button-area">
-                                    <a href="#" class="rts-btn radius-small whatsapp"><img src="~/assets/images/portfolio/whatsapp.svg" alt=""> @dealer.Whatsapp</a>
-                                    <a href="#" class="rts-btn radius-small btn-primary phone"><img src="~/assets/images/portfolio/phone.svg" alt=""> @dealer.ContactPhone</a>
+                                    <partial name="_DealershipContactButtons" />
                                     <a href="#dealerMessageForm" class="rts-btn radius-small telegram"><img src="~/assets/images/portfolio/send.svg" alt=""> Send Message</a>
                                 </div>
                             </div>
@@ -311,21 +310,7 @@
     </div>
 </div>
 
-<div class="rts-cta-area area-2">
-    <div class="container">
-        <div class="cta-inner">
-            <h2 class="title">If you have any questions Please Call.</h2>
-            <div class="contact">
-                <a href="call-to:+994 50 354 67 67">
-                    <img src="~/assets/images/cta/call.svg" alt="">
-                    +994 50 354 67 67
-                </a>
-            </div>
-            <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
-            <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
-        </div>
-    </div>
-</div>
+<partial name="_DealershipCallCta" />
 
 @section Scripts {
     <script>

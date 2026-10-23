@@ -1,0 +1,42 @@
+.contact-form .av-field-error {
+    display: block;
+    margin-top: 6px;
+    color: #c62828;
+    font-size: 0.85rem;
+    line-height: 1.35;
+}
+
+.contact-form .av-field-error[hidden] {
+    display: none !important;
+}
+
+.contact-form .input-form.is-invalid,
+.contact-form textarea.is-invalid {
+    border-color: #c62828 !important;
+}
+
+.contact-form #form-messages {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.contact-form #form-messages:empty {
+    display: none;
+}
+
+.contact-form #form-messages.success {
+    color: #1b5e20;
+    background: rgba(46, 125, 50, 0.1);
+    border: 1px solid rgba(46, 125, 50, 0.28);
+}
+
+.contact-form #form-messages.error {
+    color: #b71c1c;
+    background: rgba(198, 40, 40, 0.08);
+    border: 1px solid rgba(198, 40, 40, 0.25);
+}
