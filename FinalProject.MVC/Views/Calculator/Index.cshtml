@@ -1,5 +1,10 @@
+@model CarLoanCalculatorModel
 @{
     ViewData["Title"] = "Calculator - AutoVault";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/car-loan-calculator.css" asp-append-version="true">
 }
 
 <!-- rts breadcrumb area start -->
@@ -8,7 +13,7 @@
         <div class="breadcrumb-area-wrapper">
             <h1 class="title">Car Loan Calculator</h1>
             <div class="nav-bread-crumb">
-                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-controller="Home" asp-action="Index">Dealership</a>
                 <a href="#" class="current">Calculator</a>
             </div>
         </div>
@@ -17,66 +22,168 @@
 <!-- rts breadcrumb area end -->
 
 <!-- Calculator Area Start -->
-<section class="rts-calculator-area rts-section-gap">
+<section class="rts-calculator-area rts-section-gap av-loan-calculator-page">
     <div class="container">
-        <div class="calculator-form-inner">
-            <h4 class="text-center mb--30">Car Loan Calculator</h4>
-            <form id="carLoanCalculator" action="#">
-                <div class="single-wrapper">
-                    <span>
-                        <select name="my_select" class="mySelect">
-                            <option value="2" selected>Select A Car</option>
-                            <option value="10">Mazda</option>
-                            <option value="1">Citroen</option>
-                            <option value="13">Honda</option>
-                            <option value="14">Mitsubishi</option>
-                            <option value="15">Peugeot</option>
-                        </select>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
-                    <span>
-                        <input type="text" placeholder="Vehicle Price" required>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
+        <div class="calculator-form-inner av-loan-calculator">
+            <h4 class="text-center av-loan-title">Car Loan Calculator</h4>
+            <p class="av-loan-intro text-center">Estimate your monthly payment with a standard fixed-rate amortization formula. Enter numbers only; use a period for decimals.</p>
+
+            <form id="carLoanCalculator"
+                  asp-controller="Calculator"
+                  asp-action="Calculate"
+                  method="post"
+                  novalidate>
+                @Html.AntiForgeryToken()
+
+                <div id="loan-form-messages" class="av-loan-notice" role="status" aria-live="polite" hidden></div>
+
+                <div class="single-wrapper av-loan-row">
+                    <div class="av-loan-field">
+                        <label class="av-loan-label" for="carMake">Car make</label>
+                        <span class="av-loan-control">
+                            <select id="carMake" name="carMake" class="mySelect" required>
+                                <option value="">Select a car make</option>
+                                <option value="Mazda">Mazda</option>
+                                <option value="Citroen">Citroen</option>
+                                <option value="Honda">Honda</option>
+                                <option value="Mitsubishi">Mitsubishi</option>
+                                <option value="Peugeot">Peugeot</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <img src="~/assets/images/icon/car-03.svg" alt="">
+                        </span>
+                        <span class="av-loan-error" data-error-for="carMake" hidden></span>
+                    </div>
+                    <div class="av-loan-field">
+                        <label class="av-loan-label" for="carPrice">Car price ($)</label>
+                        <span class="av-loan-control">
+                            <input type="text"
+                                   inputmode="decimal"
+                                   autocomplete="off"
+                                   id="carPrice"
+                                   name="carPrice"
+                                   class="av-loan-input"
+                                   value="@Model.CarPrice"
+                                   placeholder="e.g. 30000"
+                                   data-numeric="decimal"
+                                   maxlength="12"
+                                   required>
+                            <img src="~/assets/images/icon/car-03.svg" alt="">
+                        </span>
+                        <span class="av-loan-error" data-error-for="carPrice" hidden></span>
+                    </div>
                 </div>
-                <div class="single-wrapper">
-                    <span>
-                        <input type="text" placeholder="Down Payment" required>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
-                    <span>
-                        <input type="text" placeholder="Interest Rate" required>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
+
+                <div class="single-wrapper av-loan-row">
+                    <div class="av-loan-field">
+                        <label class="av-loan-label" for="downPayment">Down payment ($)</label>
+                        <span class="av-loan-control">
+                            <input type="text"
+                                   inputmode="decimal"
+                                   autocomplete="off"
+                                   id="downPayment"
+                                   name="downPayment"
+                                   class="av-loan-input"
+                                   value="@Model.DownPayment"
+                                   placeholder="e.g. 15000"
+                                   data-numeric="decimal"
+                                   maxlength="12"
+                                   required>
+                            <img src="~/assets/images/icon/car-03.svg" alt="">
+                        </span>
+                        <span class="av-loan-error" data-error-for="downPayment" hidden></span>
+                    </div>
+                    <div class="av-loan-field">
+                        <label class="av-loan-label" for="loanTermMonths">Loan term (months)</label>
+                        <span class="av-loan-control">
+                            <input type="text"
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   id="loanTermMonths"
+                                   name="loanTermMonths"
+                                   class="av-loan-input"
+                                   value="@Model.LoanTermMonths"
+                                   placeholder="e.g. 36"
+                                   data-numeric="integer"
+                                   maxlength="3"
+                                   required>
+                            <img src="~/assets/images/icon/car-03.svg" alt="">
+                        </span>
+                        <span class="av-loan-error" data-error-for="loanTermMonths" hidden></span>
+                    </div>
                 </div>
-                <div class="single-wrapper">
-                    <span>
-                        <select name="my_select" class="mySelect">
-                            <option value="2" selected>Payment Type</option>
-                            <option value="10">Paypal</option>
-                            <option value="1">Payoneer</option>
-                            <option value="13">Skrill</option>
-                            <option value="14">Wise</option>
-                        </select>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
+
+                <div class="single-wrapper av-loan-row">
+                    <div class="av-loan-field">
+                        <label class="av-loan-label" for="annualInterestRate">Annual interest rate</label>
+                        <span class="av-loan-control av-loan-control--rate">
+                            <input type="text"
+                                   inputmode="decimal"
+                                   autocomplete="off"
+                                   id="annualInterestRate"
+                                   name="annualInterestRate"
+                                   class="av-loan-input av-loan-input--rate"
+                                   value="@(Model.AnnualInterestRate ?? "8")"
+                                   placeholder="e.g. 8"
+                                   data-numeric="decimal"
+                                   maxlength="8"
+                                   aria-describedby="annualInterestRateHint"
+                                   required>
+                            <img src="~/assets/images/icon/car-03.svg" alt="">
+                            <span class="av-loan-rate-suffix" aria-hidden="true">%</span>
+                        </span>
+                        <span id="annualInterestRateHint" class="av-loan-hint">Enter the yearly rate as a percentage (for example, 8 for 8%).</span>
+                        <span class="av-loan-error" data-error-for="annualInterestRate" hidden></span>
+                    </div>
+                    <div class="av-loan-field av-loan-field--action">
+                        <span class="av-loan-label av-loan-label--spacer" aria-hidden="true">&nbsp;</span>
+                        <button type="submit" id="loanCalculateBtn" class="rts-btn radius-small btn-primary av-loan-submit">Calculate</button>
+                    </div>
                 </div>
-                <div class="single-wrapper">
-                    <button type="submit" class="rts-btn radius-small btn-primary mb--20">Calculate</button>
-                </div>
-                <div class="single-wrapper">
-                    <span>
-                        <input type="text" placeholder="Monthly Payment" readonly>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
-                    <span>
-                        <input type="text" placeholder="Total Interest" readonly>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
-                    <span>
-                        <input type="text" placeholder="Total Payments" readonly>
-                        <img src="~/assets/images/icon/car-03.svg" alt="">
-                    </span>
+
+                <div class="av-loan-results" id="loanResults" hidden>
+                    <h5 class="av-loan-results-title">Your loan estimate</h5>
+                    <div class="single-wrapper av-loan-row">
+                        <div class="av-loan-field">
+                            <label class="av-loan-label" for="loanPrincipal">Loan principal</label>
+                            <span class="av-loan-control">
+                                <input type="text" id="loanPrincipal" class="av-loan-input av-loan-output" readonly tabindex="-1">
+                                <img src="~/assets/images/icon/car-03.svg" alt="">
+                            </span>
+                        </div>
+                        <div class="av-loan-field">
+                            <label class="av-loan-label" for="monthlyPayment">Monthly payment</label>
+                            <span class="av-loan-control">
+                                <input type="text" id="monthlyPayment" class="av-loan-input av-loan-output av-loan-output--emphasis" readonly tabindex="-1">
+                                <img src="~/assets/images/icon/car-03.svg" alt="">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="single-wrapper av-loan-row">
+                        <div class="av-loan-field">
+                            <label class="av-loan-label" for="totalLoanPayments">Total loan payments</label>
+                            <span class="av-loan-control">
+                                <input type="text" id="totalLoanPayments" class="av-loan-input av-loan-output" readonly tabindex="-1">
+                                <img src="~/assets/images/icon/car-03.svg" alt="">
+                            </span>
+                        </div>
+                        <div class="av-loan-field">
+                            <label class="av-loan-label" for="totalInterest">Total interest paid</label>
+                            <span class="av-loan-control">
+                                <input type="text" id="totalInterest" class="av-loan-input av-loan-output" readonly tabindex="-1">
+                                <img src="~/assets/images/icon/car-03.svg" alt="">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="single-wrapper av-loan-row">
+                        <div class="av-loan-field av-loan-field--full">
+                            <label class="av-loan-label" for="totalCost">Total cost (including down payment)</label>
+                            <span class="av-loan-control">
+                                <input type="text" id="totalCost" class="av-loan-input av-loan-output av-loan-output--emphasis" readonly tabindex="-1">
+                                <img src="~/assets/images/icon/car-03.svg" alt="">
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -154,57 +261,5 @@
 <partial name="_DealershipCallCta" />
 
 @section Scripts {
-    <script>
-        (function () {
-            var form = document.getElementById("carLoanCalculator");
-            if (!form) {
-                return;
-            }
-
-            var months = 60;
-            var priceInput = form.querySelector('input[placeholder="Vehicle Price"]');
-            var downInput = form.querySelector('input[placeholder="Down Payment"]');
-            var rateInput = form.querySelector('input[placeholder="Interest Rate"]');
-            var monthlyInput = form.querySelector('input[placeholder="Monthly Payment"]');
-            var interestInput = form.querySelector('input[placeholder="Total Interest"]');
-            var totalInput = form.querySelector('input[placeholder="Total Payments"]');
-
-            function parseAmount(value) {
-                var number = parseFloat(String(value).replace(/[^0-9.]/g, ""));
-                return isNaN(number) ? 0 : number;
-            }
-
-            function formatMoney(value) {
-                return "$" + value.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
-
-            form.addEventListener("submit", function (event) {
-                event.preventDefault();
-
-                var price = parseAmount(priceInput.value);
-                var down = parseAmount(downInput.value);
-                var annualRate = parseAmount(rateInput.value);
-                var principal = Math.max(price - down, 0);
-                var monthlyRate = annualRate / 100 / 12;
-                var monthly;
-
-                if (monthlyRate === 0) {
-                    monthly = principal / months;
-                } else {
-                    var factor = Math.pow(1 + monthlyRate, months);
-                    monthly = principal * monthlyRate * factor / (factor - 1);
-                }
-
-                var totalPayments = monthly * months;
-                var totalInterest = totalPayments - principal;
-
-                monthlyInput.value = formatMoney(monthly);
-                interestInput.value = formatMoney(totalInterest);
-                totalInput.value = formatMoney(totalPayments);
-            });
-        })();
-    </script>
+    <script src="~/js/plugins/car-loan-calculator.js" asp-append-version="true"></script>
 }

@@ -897,7 +897,7 @@
         };
 
         $(document).ready(function () {
-          $('select').niceSelect();
+          $('select').not('.av-native-select').niceSelect();
         });
       }(jQuery));
     },

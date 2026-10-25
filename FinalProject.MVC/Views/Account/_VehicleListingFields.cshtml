@@ -1,0 +1,701 @@
+@model CarEditorViewModel
+@using System.Globalization
+@{
+    string Shown(string key, string stored, bool blankWhenZero)
+    {
+        var posted = ViewData.ModelState.TryGetValue(key, out var entry);
+        return ListingFieldValues.Number(Model.Id, posted, entry?.AttemptedValue, stored, blankWhenZero);
+    }
+
+    IEnumerable<string> Choices(IEnumerable<string> options, string? current)
+    {
+        var list = options.ToList();
+        if (!string.IsNullOrWhiteSpace(current)
+            && !list.Contains(current, StringComparer.OrdinalIgnoreCase))
+        {
+            list.Insert(0, current.Trim());
+        }
+
+        return list;
+    }
+
+    var seats = CarListingRules.SeatChoices.ToList();
+    if (Model.Car.Seats is int currentSeats && !seats.Contains(currentSeats))
+    {
+        seats.Add(currentSeats);
+        seats.Sort();
+    }
+
+    var yearText = Shown("Car.Year", Model.Car.Year.ToString(CultureInfo.InvariantCulture), true);
+    var selectedYear = int.TryParse(yearText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedYear) && parsedYear > 0
+        ? parsedYear
+        : (int?)null;
+    var newestYear = Math.Max(CarListingRules.MaxModelYear, selectedYear ?? CarListingRules.MaxModelYear);
+    var selectedCategory = Model.Lookups.Categories.FirstOrDefault(category => category.Id == Model.Car.CategoryId);
+    var selectedBrand = Model.Lookups.Brands.FirstOrDefault(brand => brand.Id == Model.Car.BrandId);
+    var selectedType = selectedCategory == null ? string.Empty : VehicleTypeCatalog.For(selectedCategory.Name);
+    var price = Shown("Car.Price", Model.Car.Price.ToString("0.##", CultureInfo.CurrentCulture), true);
+    var mileage = Shown("Car.Mileage", Model.Car.Mileage.ToString(CultureInfo.InvariantCulture), true);
+    var horsepower = Shown("Car.Horsepower", Model.Car.Horsepower?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, true);
+    var cylinders = Shown("Car.Cylinders", Model.Car.Cylinders?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, true);
+    var colorName = VehicleColorCatalog.DisplayName(Model.Car.Color);
+    var colorHex = VehicleColorCatalog.Hex(Model.Car.Color);
+    var selectedFeatures = Model.Car.Features ?? new List<string>();
+    var preview = string.IsNullOrWhiteSpace(Model.Car.ImageUrl) ? null : Url.Content(Model.Car.ImageUrl);
+    var knownModel = Model.Lookups.Models.Any(item =>
+        item.BrandId == Model.Car.BrandId
+        && item.Name.Equals(Model.Car.Model, StringComparison.OrdinalIgnoreCase));
+    var otherModel = !string.IsNullOrWhiteSpace(Model.Car.Model) && !knownModel;
+}
+
+<input type="hidden" name="Car.FeaturesSpecified" value="true" />
+<input type="hidden" name="Car.ConditionSpecified" value="true" />
+
+<section class="av-section">
+    <h2>Basic Information</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="vehicle-type"><i class="rt-icon-car" aria-hidden="true"></i> Vehicle type</label>
+                <select id="vehicle-type" class="input-form av-native-select">
+                    <option value="">Select vehicle type</option>
+                    @foreach (var type in VehicleTypeCatalog.Types)
+                    {
+                        <option value="@type.Key" selected="@(selectedType == type.Key ? "selected" : null)">@type.Label</option>
+                    }
+                </select>
+                <small class="av-help">Filters the body styles already stored in AutoVault. Category IDs are not changed.</small>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_CategoryId"><i class="rt-icon-sedan" aria-hidden="true"></i> Category / Body style</label>
+                <select id="Car_CategoryId" name="Car.CategoryId" class="input-form av-native-select" required>
+                    <option value="">Select category</option>
+                    @foreach (var category in Model.Lookups.Categories)
+                    {
+                        var categoryType = VehicleTypeCatalog.For(category.Name);
+                        <option value="@category.Id"
+                                data-type="@categoryType"
+                                selected="@(Model.Car.CategoryId == category.Id ? "selected" : null)">@category.Name</option>
+                    }
+                </select>
+                <small id="category-empty" class="av-help" hidden>No categories are stored for this vehicle type.</small>
+                <span asp-validation-for="Car.CategoryId" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="brand-input"><i class="rt-icon-car-1" aria-hidden="true"></i> Make / Brand</label>
+                <div class="av-combo" data-combo="brand">
+                    <input id="brand-input" class="input-form av-combo-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" placeholder="Select make" autocomplete="off" value="@selectedBrand?.Name" required />
+                    <button type="button" class="av-combo-clear" aria-label="Clear make" hidden>&times;</button>
+                    <input type="hidden" id="Car_BrandId" name="Car.BrandId" value="@(Model.Car.BrandId > 0 ? Model.Car.BrandId.ToString(CultureInfo.InvariantCulture) : string.Empty)" />
+                    <ul class="av-combo-list" role="listbox" hidden></ul>
+                </div>
+                <span asp-validation-for="Car.BrandId" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="model-input"><i class="rt-icon-sport-car" aria-hidden="true"></i> Model</label>
+                <div class="av-combo" data-combo="model">
+                    <input id="model-input" class="input-form av-combo-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" placeholder="Select model" autocomplete="off" value="@(otherModel ? "Other model" : Model.Car.Model)" required />
+                    <button type="button" class="av-combo-clear" aria-label="Clear model" hidden>&times;</button>
+                    <ul class="av-combo-list" role="listbox" hidden></ul>
+                </div>
+                <input id="Car_Model" name="@(otherModel ? null : "Car.Model")" class="input-form" value="@(otherModel ? null : Model.Car.Model)" hidden />
+                <input id="Car_Model_Other" name="@(otherModel ? "Car.Model" : null)" class="input-form mt-2@(otherModel ? string.Empty : " d-none")" maxlength="100" placeholder="Enter the model name" value="@(otherModel ? Model.Car.Model : null)" />
+                <small class="av-help">Choose Other model only when the vehicle is not in the suggestions for the selected make.</small>
+                <span asp-validation-for="Car.Model" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_Year"><i class="rt-icon-calendar" aria-hidden="true"></i> Model Year</label>
+                <select id="Car_Year" name="Car.Year" class="input-form av-native-select" required>
+                    <option value="">Select model year</option>
+                    @for (var modelYear = newestYear; modelYear >= 1900; modelYear--)
+                    {
+                        <option value="@modelYear" selected="@(selectedYear == modelYear ? "selected" : null)">@modelYear</option>
+                    }
+                </select>
+                <span asp-validation-for="Car.Year" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_Price"><i class="rt-icon-competitive" aria-hidden="true"></i> Price</label>
+                <input id="Car_Price" name="Car.Price" class="input-form" inputmode="decimal" min="0.01" step="0.01" placeholder="Enter price" value="@price" required />
+                <span asp-validation-for="Car.Price" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_Status">Listing Status</label>
+                <select id="Car_Status" name="Car.Status" class="input-form av-native-select">
+                    @foreach (var status in CarListingRules.Statuses)
+                    {
+                        <option value="@status" selected="@(string.Equals(Model.Car.Status, status, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@status</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_Condition"><i class="rt-icon-review" aria-hidden="true"></i> Condition</label>
+                <select id="Car_Condition" name="Car.Condition" class="input-form av-native-select" required>
+                    <option value="">Select condition</option>
+                    @foreach (var condition in CarListingRules.Conditions)
+                    {
+                        <option value="@condition" selected="@(string.Equals(Model.Car.Condition, condition, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@condition</option>
+                    }
+                </select>
+                <span asp-validation-for="Car.Condition" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="av-section">
+    <h2>Vehicle Specifications</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form__control av-field">
+                <label for="Car_Mileage"><i class="rt-icon-tracking" aria-hidden="true"></i> Mileage</label>
+                <input id="Car_Mileage" name="Car.Mileage" class="input-form" inputmode="numeric" min="0" placeholder="Enter mileage" value="@mileage" required />
+                <span asp-validation-for="Car.Mileage" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form__control av-field">
+                <label for="Car_MileageUnit">Unit</label>
+                <select id="Car_MileageUnit" name="Car.MileageUnit" class="input-form av-native-select" required>
+                    <option value="">Select</option>
+                    <option value="km" selected="@(string.Equals(Model.Car.MileageUnit, "km", StringComparison.OrdinalIgnoreCase) ? "selected" : null)">km</option>
+                    <option value="mi" selected="@(string.Equals(Model.Car.MileageUnit, "mi", StringComparison.OrdinalIgnoreCase) ? "selected" : null)">miles</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_FuelType"><i class="rt-icon-fuel-station" aria-hidden="true"></i> Fuel Type</label>
+                <select id="Car_FuelType" name="Car.FuelType" class="input-form av-native-select" required>
+                    <option value="">Select fuel type</option>
+                    @foreach (var fuel in Choices(CarListingRules.Fuels, Model.Car.FuelType))
+                    {
+                        <option value="@fuel" selected="@(string.Equals(Model.Car.FuelType, fuel, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@fuel</option>
+                    }
+                </select>
+                <span asp-validation-for="Car.FuelType" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_Transmission"><i class="rt-icon-gearshift" aria-hidden="true"></i> Transmission</label>
+                <select id="Car_Transmission" name="Car.Transmission" class="input-form av-native-select" required>
+                    <option value="">Select transmission</option>
+                    @foreach (var transmission in Choices(CarListingRules.Transmissions, Model.Car.Transmission))
+                    {
+                        <option value="@transmission" selected="@(string.Equals(Model.Car.Transmission, transmission, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@transmission</option>
+                    }
+                </select>
+                <span asp-validation-for="Car.Transmission" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="form__control av-field">
+                <label><i class="rt-icon-color-palette" aria-hidden="true"></i> Exterior Color</label>
+                <div class="av-color-swatches" role="list">
+                    @foreach (var color in CarListingRules.ExteriorColors)
+                    {
+                        <button type="button"
+                                class="av-color-swatch@(string.Equals(colorName, color.Name, StringComparison.OrdinalIgnoreCase) ? " is-selected" : string.Empty)"
+                                data-color="@color.Name"
+                                data-hex="@color.Hex"
+                                title="@color.Name"
+                                aria-label="@color.Name">
+                            <span class="av-color-chip" style="background:@color.Hex"></span>
+                            <span>@color.Name</span>
+                        </button>
+                    }
+                    @{
+                        var isCustomColor = !string.IsNullOrWhiteSpace(colorName)
+                            && !CarListingRules.ExteriorColors.Any(item => item.Name.Equals(colorName, StringComparison.OrdinalIgnoreCase));
+                    }
+                    <button type="button" class="av-color-swatch@(isCustomColor ? " is-selected" : string.Empty)" data-color="Other" data-hex="" aria-label="Other color">
+                        <span class="av-color-chip av-color-chip-other"></span>
+                        <span>Other</span>
+                    </button>
+                </div>
+                <div class="av-color-custom row g-2 mt-2 align-items-center">
+                    <div class="col-md-4">
+                        <label class="av-help mb-1" for="Car_Color_Hex">HEX</label>
+                        <input id="Car_Color_Hex" class="input-form" maxlength="7" placeholder="#000000" value="@colorHex" autocomplete="off" />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <div class="flex-grow-1">
+                            <label class="av-help mb-1" for="Car_Color_Picker">Picker</label>
+                            <input id="Car_Color_Picker" type="color" value="@(colorHex ?? "#808080")" aria-label="Color picker" />
+                        </div>
+                        <span id="Car_Color_Preview" class="av-color-preview" style="background:@(colorHex ?? "transparent")" title="Preview"></span>
+                    </div>
+                    <div class="col-md-4" id="Car_Color_Name_Wrap" @(isCustomColor ? null : "hidden")>
+                        <label class="av-help mb-1" for="Car_Color_Name">Custom name</label>
+                        <input id="Car_Color_Name" class="input-form" maxlength="40" placeholder="Custom color" value="@colorName" autocomplete="off" />
+                    </div>
+                </div>
+                <div id="Car_Color_Selected" class="av-help">@(string.IsNullOrWhiteSpace(colorName) ? "No color selected" : (string.IsNullOrWhiteSpace(colorHex) ? colorName : $"{colorName} ({colorHex})"))</div>
+                <input type="hidden" id="Car_Color" name="Car.Color" value="@(string.IsNullOrWhiteSpace(Model.Car.Color) ? string.Empty : VehicleColorCatalog.FromPosted(Model.Car.Color))" />
+                <small class="av-help">Choose a swatch, enter a HEX code, or use the picker. A HEX code approximates the paint and is not the factory finish name.</small>
+                <span asp-validation-for="Car.Color" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form__control av-field">
+                <label for="engine-input"><i class="rt-icon-engine" aria-hidden="true"></i> Engine Size <span class="av-optional">(optional)</span></label>
+                <div class="av-combo" data-combo="engine">
+                    <input id="engine-input" class="input-form av-combo-input" type="text" role="combobox" aria-autocomplete="list" placeholder="Search or enter liters" autocomplete="off" value="@Model.Car.Engine" />
+                    <button type="button" class="av-combo-clear" aria-label="Clear engine size" hidden>&times;</button>
+                    <input type="hidden" id="Car_Engine" name="Car.Engine" value="@Model.Car.Engine" />
+                    <ul class="av-combo-list" role="listbox" hidden></ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form__control av-field">
+                <label for="hp-input"><i class="rt-icon-monitoring-test" aria-hidden="true"></i> Horsepower <span class="av-optional">(optional)</span></label>
+                <div class="av-combo" data-combo="horsepower">
+                    <input id="hp-input" class="input-form av-combo-input" type="text" role="combobox" aria-autocomplete="list" inputmode="numeric" placeholder="Search or enter HP" autocomplete="off" value="@horsepower" />
+                    <button type="button" class="av-combo-clear" aria-label="Clear horsepower" hidden>&times;</button>
+                    <input type="hidden" id="Car_Horsepower" name="Car.Horsepower" value="@horsepower" />
+                    <ul class="av-combo-list" role="listbox" hidden></ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4" id="cylinder-field">
+            <div class="form__control av-field">
+                <label for="Car_Cylinders"><i class="rt-icon-engine" aria-hidden="true"></i> Cylinders <span class="av-optional">(optional)</span></label>
+                <select id="Car_Cylinders" name="Car.Cylinders" class="input-form av-native-select">
+                    <option value="">Select cylinders</option>
+                    @foreach (var count in CarListingRules.CylinderChoices)
+                    {
+                        <option value="@count" selected="@(cylinders == count.ToString(CultureInfo.InvariantCulture) ? "selected" : null)">@count</option>
+                    }
+                </select>
+                <small class="av-help">Leave empty for electric vehicles.</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form__control av-field">
+                <label for="Car_DriveType"><i class="rt-icon-drive" aria-hidden="true"></i> Drive Type <span class="av-optional">(optional)</span></label>
+                <select id="Car_DriveType" name="Car.DriveType" class="input-form av-native-select">
+                    <option value="">Select drive type</option>
+                    @foreach (var drive in Choices(CarListingRules.DriveTypes, Model.Car.DriveType))
+                    {
+                        <option value="@drive" selected="@(string.Equals(Model.Car.DriveType, drive, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@drive</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form__control av-field">
+                <label for="Car_Seats"><i class="rt-icon-user" aria-hidden="true"></i> Seating Capacity <span class="av-optional">(optional)</span></label>
+                <select id="Car_Seats" name="Car.Seats" class="input-form av-native-select">
+                    <option value="">Select seats</option>
+                    @foreach (var seat in seats)
+                    {
+                        <option value="@seat" selected="@(Model.Car.Seats == seat ? "selected" : null)">@seat seats</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form__control av-field">
+                <label for="Car_Doors"><i class="rt-icon-car" aria-hidden="true"></i> Doors <span class="av-optional">(optional)</span></label>
+                <select id="Car_Doors" name="Car.Doors" class="input-form av-native-select">
+                    <option value="">Select doors</option>
+                    @foreach (var door in CarListingRules.DoorChoices)
+                    {
+                        <option value="@door" selected="@(Model.Car.Doors == door ? "selected" : null)">@door doors</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_Steering"><i class="rt-icon-drive" aria-hidden="true"></i> Steering wheel <span class="av-optional">(optional)</span></label>
+                <select id="Car_Steering" name="Car.Steering" class="input-form av-native-select">
+                    <option value="">Select steering</option>
+                    <option value="LHD" selected="@(string.Equals(Model.Car.Steering, "LHD", StringComparison.OrdinalIgnoreCase) ? "selected" : null)">Left-hand drive</option>
+                    <option value="RHD" selected="@(string.Equals(Model.Car.Steering, "RHD", StringComparison.OrdinalIgnoreCase) ? "selected" : null)">Right-hand drive</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_Vin">VIN / Chassis <span class="av-optional">(optional)</span></label>
+                <input asp-for="Car.Vin" class="input-form" maxlength="17" placeholder="11 to 17 letters and numbers" autocomplete="off" />
+                <span asp-validation-for="Car.Vin" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="av-section">
+    <h2>Vehicle History</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_AccidentHistory"><i class="rt-icon-review" aria-hidden="true"></i> Accident history <span class="av-optional">(optional)</span></label>
+                <select id="Car_AccidentHistory" name="Car.AccidentHistory" class="input-form av-native-select">
+                    <option value="">Not specified</option>
+                    @foreach (var accident in CarListingRules.AccidentChoices)
+                    {
+                        <option value="@accident" selected="@(string.Equals(Model.Car.AccidentHistory, accident, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@accident</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_CustomsStatus"><i class="rt-icon-check-circle" aria-hidden="true"></i> Customs clearance <span class="av-optional">(optional)</span></label>
+                <select id="Car_CustomsStatus" name="Car.CustomsStatus" class="input-form av-native-select">
+                    <option value="">Not specified</option>
+                    @foreach (var customs in CarListingRules.CustomsChoices)
+                    {
+                        <option value="@customs" selected="@(string.Equals(Model.Car.CustomsStatus, customs, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@customs</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form__control av-field">
+                <label for="Car_MarketOrigin"><i class="rt-icon-marker" aria-hidden="true"></i> Market of origin <span class="av-optional">(optional)</span></label>
+                <select id="Car_MarketOrigin" name="Car.MarketOrigin" class="input-form av-native-select">
+                    <option value="">Not specified</option>
+                    @foreach (var market in Choices(CarListingRules.MarketOrigins, Model.Car.MarketOrigin))
+                    {
+                        <option value="@market" selected="@(string.Equals(Model.Car.MarketOrigin, market, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@market</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-12">
+            <partial name="_BodyPartsPicker" model="@(("Car.RepaintedParts", "Car_RepaintedParts", Model.Car.RepaintedParts, "Repainted parts", "rt-icon-color-palette", "Select every panel that has been repainted."))" />
+        </div>
+        <div class="col-12">
+            <partial name="_BodyPartsPicker" model="@(("Car.ReplacedParts", "Car_ReplacedParts", Model.Car.ReplacedParts, "Replaced parts", "rt-icon-engineer", "Select every part that has been replaced."))" />
+        </div>
+    </div>
+</section>
+
+<section class="av-section">
+    <h2>Car Features</h2>
+    <p class="av-help mb-3">Select every feature this vehicle has. Only checked features appear on the details page.</p>
+    <div class="av-feature-grid">
+        @foreach (var feature in CarFeatureCatalog.All)
+        {
+            var selected = selectedFeatures.Contains(feature.Key, StringComparer.OrdinalIgnoreCase);
+            <label>
+                <input type="checkbox" name="Car.Features" value="@feature.Key" @(selected ? "checked" : null) />
+                <span>@feature.Label</span>
+            </label>
+        }
+    </div>
+</section>
+
+<section class="av-section">
+    <h2>Images</h2>
+    <div class="form__control av-field">
+        <label for="Car_ImageUrl">Primary image</label>
+        <div class="av-image-row">
+            <input asp-for="Car.ImageUrl" id="Car_ImageUrl" class="input-form" placeholder="~/assets/images/... or https://..." autocomplete="off" />
+            <div>
+                <input type="file" id="car-image-file" name="imageFile" class="av-file-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                <label for="car-image-file" class="av-choose-file">Choose File</label>
+            </div>
+        </div>
+        <div id="car-image-file-name" class="av-help" aria-live="polite"></div>
+        <small class="av-help">JPG, JPEG, PNG, or WEBP up to 5 MB. A chosen file replaces the path. Leave it empty when editing to keep the current primary image.</small>
+        <span asp-validation-for="Car.ImageUrl" class="text-danger"></span>
+        <div class="av-preview-frame">
+            <img id="car-image-preview" class="av-image-preview" src="@preview" alt="Primary image preview" style="@(preview == null ? "display:none;" : null)" />
+        </div>
+    </div>
+    <div class="form__control av-field av-gallery-field">
+        <span class="av-field-label">Gallery images</span>
+        <input type="file" id="gallery-files" name="galleryFiles" class="av-file-input" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+        <label for="gallery-files" class="av-add-images" id="gallery-add-button">
+            <i class="rt-icon-convertible-car" aria-hidden="true"></i>
+            <span>Add Images</span>
+        </label>
+        <div id="gallery-new-preview" class="av-gallery-preview"></div>
+        <div id="gallery-file-name" class="av-help" aria-live="polite"></div>
+        <small class="av-help">Add several photos at once, then add more later. There is no three-image limit. Each photo can be up to 5 MB.</small>
+    </div>
+</section>
+
+<section class="av-section">
+    <h2>Description</h2>
+    <div class="form__control av-field">
+        <label for="Car_Description">Additional notes</label>
+        <textarea asp-for="Car.Description" class="input-form" rows="8" maxlength="4000" placeholder="Describe the vehicle's condition, history, and other relevant information" required></textarea>
+        <span asp-validation-for="Car.Description" class="text-danger"></span>
+    </div>
+</section>
+
+<script type="application/json" id="car-model-catalog">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+    brands = Model.Lookups.Brands.Select(item => new { id = item.Id, name = item.Name }),
+    models = Model.Lookups.Models.Select(item => new { brandId = item.BrandId, name = item.Name }),
+    engines = CarListingRules.EngineSizes,
+    horsepower = CarListingRules.HorsepowerChoices
+}))</script>
+<script>
+    (function () {
+        var node = document.getElementById('car-model-catalog');
+        var data = node ? JSON.parse(node.textContent || '{}') : {};
+        var typeSelect = document.getElementById('vehicle-type');
+        var categorySelect = document.getElementById('Car_CategoryId');
+        var categoryEmpty = document.getElementById('category-empty');
+        var fuelSelect = document.getElementById('Car_FuelType');
+        var cylinderField = document.getElementById('cylinder-field');
+        var cylinderInput = document.getElementById('Car_Cylinders');
+        var modelKnown = document.getElementById('Car_Model');
+        var modelOther = document.getElementById('Car_Model_Other');
+        var brandHidden = document.getElementById('Car_BrandId');
+
+        function combo(name) {
+            var root = document.querySelector('[data-combo="' + name + '"]');
+            return {
+                root: root,
+                input: root.querySelector('.av-combo-input'),
+                hidden: root.querySelector('input[type="hidden"]'),
+                list: root.querySelector('.av-combo-list'),
+                clear: root.querySelector('.av-combo-clear')
+            };
+        }
+
+        var brand = combo('brand');
+        var model = combo('model');
+        var engine = combo('engine');
+        var horsepower = combo('horsepower');
+        var openControl = null;
+
+        function showClear(control) {
+            var hasValue = (control.input.value || '').trim().length > 0;
+            control.clear.hidden = !hasValue;
+        }
+
+        function closeList(control) {
+            if (!control) {
+                return;
+            }
+            control.list.hidden = true;
+            control.input.setAttribute('aria-expanded', 'false');
+            if (openControl === control) {
+                openControl = null;
+            }
+        }
+
+        function openList(control, items, onPick) {
+            if (openControl && openControl !== control) {
+                closeList(openControl);
+            }
+            control.list.innerHTML = '';
+            items.forEach(function (item) {
+                var option = document.createElement('li');
+                option.setAttribute('role', 'option');
+                option.tabIndex = -1;
+                option.textContent = item.label;
+                option.addEventListener('mousedown', function (event) {
+                    event.preventDefault();
+                    onPick(item);
+                    closeList(control);
+                    showClear(control);
+                });
+                control.list.appendChild(option);
+            });
+            control.list.hidden = items.length === 0;
+            control.input.setAttribute('aria-expanded', items.length ? 'true' : 'false');
+            openControl = items.length ? control : null;
+        }
+
+        function modelsForBrand() {
+            var brandId = brandHidden.value;
+            return (data.models || []).filter(function (item) {
+                return String(item.brandId) === String(brandId);
+            }).map(function (item) {
+                return { label: item.name, value: item.name };
+            });
+        }
+
+        function setOther(active, text) {
+            if (active) {
+                modelOther.classList.remove('d-none');
+                modelOther.name = 'Car.Model';
+                modelOther.required = true;
+                modelKnown.removeAttribute('name');
+                modelKnown.value = '';
+                if (text) {
+                    modelOther.value = text;
+                }
+                model.input.value = 'Other model';
+            } else {
+                modelOther.classList.add('d-none');
+                modelOther.required = false;
+                modelOther.removeAttribute('name');
+                modelOther.value = '';
+                modelKnown.name = 'Car.Model';
+            }
+        }
+
+        function bindSearch(control, source, onPick) {
+            function refresh() {
+                var query = control.input.value.trim().toLowerCase();
+                var items = source().filter(function (item) {
+                    return query.length === 0 || item.label.toLowerCase().indexOf(query) !== -1;
+                });
+                openList(control, items, onPick);
+            }
+            control.input.addEventListener('focus', refresh);
+            control.input.addEventListener('input', function () {
+                if (control.hidden) {
+                    control.hidden.value = '';
+                }
+                showClear(control);
+                refresh();
+            });
+            control.input.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeList(control);
+                }
+            });
+            control.clear.addEventListener('click', function () {
+                control.input.value = '';
+                if (control.hidden) {
+                    control.hidden.value = '';
+                }
+                showClear(control);
+                control.input.focus();
+                onPick({ label: '', value: '' });
+            });
+            document.addEventListener('click', function (event) {
+                if (!control.root.contains(event.target)) {
+                    closeList(control);
+                }
+            });
+            showClear(control);
+        }
+
+        function syncCategories() {
+            if (!categorySelect) {
+                return;
+            }
+            var type = typeSelect ? typeSelect.value : '';
+            var visible = 0;
+            var selectedStillVisible = false;
+            Array.prototype.forEach.call(categorySelect.options, function (option, index) {
+                if (index === 0) {
+                    option.hidden = false;
+                    option.disabled = false;
+                    return;
+                }
+                var matches = !type || option.getAttribute('data-type') === type;
+                option.hidden = !matches;
+                option.disabled = !matches;
+                if (matches) {
+                    visible += 1;
+                    if (option.selected) {
+                        selectedStillVisible = true;
+                    }
+                }
+            });
+            if (!selectedStillVisible) {
+                categorySelect.value = '';
+            }
+            if (categoryEmpty) {
+                categoryEmpty.hidden = visible > 0 || !type;
+            }
+        }
+
+        bindSearch(brand, function () {
+            return (data.brands || []).map(function (item) { return { label: item.name, value: String(item.id) }; });
+        }, function (item) {
+            brand.input.value = item.label;
+            brandHidden.value = item.value || '';
+            model.input.value = '';
+            setOther(false);
+            modelKnown.value = '';
+            showClear(model);
+        });
+
+        bindSearch(model, function () {
+            return modelsForBrand().concat([{ label: 'Other model', value: '__other__' }]);
+        }, function (item) {
+            if (item.value === '__other__') {
+                setOther(true);
+                return;
+            }
+            setOther(false);
+            model.input.value = item.label;
+            modelKnown.value = item.value || '';
+        });
+        model.input.addEventListener('input', function () {
+            if (model.input.value !== 'Other model') {
+                modelKnown.value = '';
+            }
+        });
+
+        if (typeSelect) {
+            typeSelect.addEventListener('change', syncCategories);
+        }
+        syncCategories();
+
+        if (engine.root) {
+            bindSearch(engine, function () {
+                return (data.engines || []).map(function (item) { return { label: item, value: item }; });
+            }, function (item) {
+                engine.input.value = item.label;
+                engine.hidden.value = item.value || '';
+            });
+            engine.input.addEventListener('change', function () {
+                engine.hidden.value = engine.input.value.trim();
+            });
+        }
+
+        if (horsepower.root) {
+            bindSearch(horsepower, function () {
+                return (data.horsepower || []).map(function (item) { return { label: String(item) + ' HP', value: String(item) }; });
+            }, function (item) {
+                horsepower.input.value = item.label;
+                horsepower.hidden.value = item.value || '';
+            });
+            horsepower.input.addEventListener('input', function () {
+                var digits = horsepower.input.value.replace(/[^\d]/g, '');
+                horsepower.hidden.value = digits;
+            });
+        }
+
+        function syncCylinders() {
+            var electric = fuelSelect && fuelSelect.value === 'Electric';
+            if (!cylinderField) {
+                return;
+            }
+            cylinderField.hidden = electric;
+            if (electric && cylinderInput) {
+                cylinderInput.value = '';
+            }
+            if (electric && engine.root && !engine.hidden.value) {
+                engine.input.placeholder = 'Dual-motor or leave empty';
+            }
+        }
+        if (fuelSelect) {
+            fuelSelect.addEventListener('change', syncCylinders);
+        }
+        syncCylinders();
+        if (modelOther && !modelOther.classList.contains('d-none')) {
+            setOther(true, modelOther.value);
+        }
+    })();
+</script>

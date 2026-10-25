@@ -32,4 +32,15 @@ public sealed class AdminRequestsController : Controller
             : "Request not found or status not allowed.";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost("Delete/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var deleted = await _catalog.DeletePurchaseRequestAsync(id, cancellationToken);
+        TempData[deleted ? "Success" : "Error"] = deleted
+            ? $"Purchase request #{id} was deleted."
+            : "Purchase request not found or was already deleted.";
+        return RedirectToAction(nameof(Index));
+    }
 }

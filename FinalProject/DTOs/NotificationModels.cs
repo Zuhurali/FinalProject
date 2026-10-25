@@ -25,4 +25,5 @@ public sealed record NotificationUnreadCountsResponse(
 
 public sealed record CarUpdateResult(
     CarResponse Car,
-    IReadOnlyList<NotificationResponse> Notifications);
+    IReadOnlyList<NotificationResponse> Notifications,
+    IReadOnlyList<string>? RemovedImageUrls = null);

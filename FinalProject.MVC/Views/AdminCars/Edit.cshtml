@@ -3,8 +3,13 @@
     Layout = "_AdminLayout";
 }
 <h1 class="h3 mb-4">Edit Car</h1>
-<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="admin-card">
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="admin-card">
     <partial name="_CarFields" model="Model" />
-    <button class="btn btn-primary" type="submit">Save</button>
+    <button class="btn btn-primary mt-3" type="submit">Save</button>
     <a class="btn btn-link" asp-action="Index">Cancel</a>
 </form>
+@section Scripts {
+    <script src="~/js/car-color-picker.js" asp-append-version="true"></script>
+    <script src="~/js/car-body-parts.js" asp-append-version="true"></script>
+    <partial name="_CarImagePickerScripts" />
+}

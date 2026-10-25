@@ -17,7 +17,7 @@
                 <th>Customer</th>
                 <th>Review</th>
                 <th style="width:90px">Visibility</th>
-                <th style="width:160px"></th>
+                <th style="width:220px"></th>
             </tr>
         </thead>
         <tbody>
@@ -40,16 +40,28 @@
                         @(review.IsHidden ? "Hidden" : "Visible")
                     </span>
                 </td>
-                <td class="d-flex gap-2">
+                <td class="d-flex flex-wrap gap-2 align-items-center">
                     @* Hide/Unhide — progressive-enhancement AJAX with form fallback *@
                     <form asp-action="Hide" asp-route-id="@review.Id" method="post" class="d-inline review-hide-form"
                           data-review-id="@review.Id" data-target-hidden="@(!review.IsHidden ? "true" : "false")">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="hidden" value="@(!review.IsHidden)" />
                         <button type="submit"
-                                class="btn btn-link p-0 review-hide-btn"
+                                class="btn btn-sm btn-outline-dark review-hide-btn"
                                 id="review-hide-btn-@review.Id">
                             @(review.IsHidden ? "Unhide" : "Hide")
+                        </button>
+                    </form>
+                    <form asp-action="Delete"
+                          asp-route-id="@review.Id"
+                          method="post"
+                          class="d-inline"
+                          onsubmit="return confirm('Permanently delete this review? This cannot be undone.');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                                aria-label="Delete review @review.Id">
+                            Delete
                         </button>
                     </form>
                 </td>

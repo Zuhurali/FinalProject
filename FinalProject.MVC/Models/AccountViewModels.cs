@@ -47,4 +47,6 @@ public sealed class CarEditorViewModel
     public SaveCarDto Car { get; set; } = new();
 
     public CarLookupDto Lookups { get; set; } = new();
+
+    public List<CarImageApiDto> Gallery { get; set; } = new();
 }

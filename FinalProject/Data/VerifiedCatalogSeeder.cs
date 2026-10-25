@@ -334,4 +334,29 @@ public static class VerifiedCatalogSeeder
         new("Porsche", "911 Turbo S", "Coupe", 2021, 214500m, 11240, "Petrol", "Automatic", "White", "Porsche 911 Turbo S. 4 seats, all-wheel drive, 3.8L twin-turbo flat-six.", false, "/assets/images/catalog/sports-car/turbo-s-1.jpg", new[] { "/assets/images/catalog/sports-car/porsche-992-turbo-s-rear.jpg" }),
         new("Chevrolet", "Corvette C8", "Sports Car", 2021, 78900m, 18640, "Petrol", "Automatic", "Red", "Chevrolet Corvette C8. 2 seats, rear-wheel drive, 6.2L V8.", false, "/assets/images/catalog/sports-car/corvette-1.jpg", new[] { "/assets/images/catalog/sports-car/chevrolet-corvette-c8-rear.jpg", "/assets/images/catalog/sports-car/chevrolet-corvette-c8-interior.jpg" })
     };
+
+    public readonly record struct CatalogModel(string Brand, string Model);
+
+    public static IReadOnlyList<CatalogModel> KnownModels { get; } =
+        Vehicles
+            .Select(vehicle => new CatalogModel(vehicle.Brand, vehicle.Model))
+            .Distinct()
+            .ToArray();
+
+    public static bool BelongsToAnotherBrand(string? model, string? brandName)
+    {
+        if (string.IsNullOrWhiteSpace(model) || string.IsNullOrWhiteSpace(brandName))
+        {
+            return false;
+        }
+
+        var text = model.Trim();
+        var owners = KnownModels
+            .Where(item => item.Model.Equals(text, StringComparison.OrdinalIgnoreCase))
+            .Select(item => item.Brand)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return owners.Count > 0
+            && !owners.Contains(brandName.Trim(), StringComparer.OrdinalIgnoreCase);
+    }
 }

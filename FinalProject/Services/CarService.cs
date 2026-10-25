@@ -1,3 +1,4 @@
+using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.DTOs;
 using FinalProject.Mappings;
@@ -131,6 +132,8 @@ public class CarService : ICarService
             return null;
         }
 
+        await EnsureModelMatchesBrandAsync(request.BrandId, request.Model, cancellationToken);
+
         var now = DateTime.UtcNow;
         var car = new Models.Entities.Car
         {
@@ -142,7 +145,7 @@ public class CarService : ICarService
             Mileage = request.Mileage,
             FuelType = request.FuelType.Trim(),
             Transmission = request.Transmission.Trim(),
-            Color = request.Color.Trim(),
+            Color = VehicleColorCatalog.FromPosted(request.Color),
             Description = request.Description.Trim(),
             OwnerId = ownerId,
             Status = request.Status,
@@ -158,6 +161,8 @@ public class CarService : ICarService
                 }
             }
         };
+        ApplySpecifications(car, request);
+        AppendGalleryImages(car, request);
 
         _dbContext.Cars.Add(car);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -173,6 +178,8 @@ public class CarService : ICarService
             return null;
         }
 
+        await EnsureModelMatchesBrandAsync(request.BrandId, request.Model, cancellationToken);
+
         var now = DateTime.UtcNow;
         var car = new Models.Entities.Car
         {
@@ -184,7 +191,7 @@ public class CarService : ICarService
             Mileage = request.Mileage,
             FuelType = request.FuelType.Trim(),
             Transmission = request.Transmission.Trim(),
-            Color = request.Color.Trim(),
+            Color = VehicleColorCatalog.FromPosted(request.Color),
             Description = request.Description.Trim(),
             OwnerId = null,
             Status = request.Status,
@@ -200,6 +207,8 @@ public class CarService : ICarService
                 }
             }
         };
+        ApplySpecifications(car, request);
+        AppendGalleryImages(car, request);
 
         _dbContext.Cars.Add(car);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -215,6 +224,8 @@ public class CarService : ICarService
         {
             return null;
         }
+
+        await EnsureModelMatchesBrandAsync(request.BrandId, request.Model, cancellationToken);
 
         var car = await _dbContext.Cars
             .Include(item => item.Images)
@@ -234,31 +245,12 @@ public class CarService : ICarService
         car.Mileage = request.Mileage;
         car.FuelType = request.FuelType.Trim();
         car.Transmission = request.Transmission.Trim();
-        car.Color = request.Color.Trim();
+        car.Color = VehicleColorCatalog.FromPosted(request.Color);
         car.Description = request.Description.Trim();
         car.Status = request.Status;
         car.UpdatedAt = DateTime.UtcNow;
-
-        foreach (var existingImage in car.Images)
-        {
-            existingImage.IsMain = false;
-        }
-
-        var image = car.Images.OrderBy(item => item.DisplayOrder).ThenBy(item => item.Id).FirstOrDefault();
-        if (image == null)
-        {
-            car.Images.Add(new Models.Entities.CarImage
-            {
-                ImageUrl = request.ImageUrl.Trim(),
-                IsMain = true,
-                DisplayOrder = 0
-            });
-        }
-        else
-        {
-            image.ImageUrl = request.ImageUrl.Trim();
-            image.IsMain = true;
-        }
+        ApplySpecifications(car, request);
+        var removedImageUrls = await SyncGalleryAsync(car, request, cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -275,7 +267,7 @@ public class CarService : ICarService
         }
 
         var updated = await GetByIdAsync(id, cancellationToken);
-        return updated == null ? null : new CarUpdateResult(updated, notifications);
+        return updated == null ? null : new CarUpdateResult(updated, notifications, removedImageUrls);
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -312,8 +304,69 @@ public class CarService : ICarService
                 Name = category.Name
             })
             .ToListAsync(cancellationToken);
+        var storedModels = await _dbContext.Cars
+            .AsNoTracking()
+            .Where(car => car.Model != "")
+            .Select(car => new { car.BrandId, car.Model })
+            .ToListAsync(cancellationToken);
+        var models = new List<BrandModelResponse>();
+        foreach (var brand in brands)
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in VerifiedCatalogSeeder.KnownModels.Where(item =>
+                         item.Brand.Equals(brand.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                names.Add(item.Model);
+            }
 
-        return new CarLookupResponse(brands, categories);
+            foreach (var item in storedModels.Where(item => item.BrandId == brand.Id))
+            {
+                if (!string.IsNullOrWhiteSpace(item.Model))
+                {
+                    names.Add(item.Model.Trim());
+                }
+            }
+
+            foreach (var name in names.OrderBy(name => name, StringComparer.OrdinalIgnoreCase))
+            {
+                models.Add(new BrandModelResponse(brand.Id, name));
+            }
+        }
+
+        return new CarLookupResponse(brands, categories, models);
+    }
+
+    private async Task EnsureModelMatchesBrandAsync(
+        int brandId,
+        string model,
+        CancellationToken cancellationToken)
+    {
+        var brand = await _dbContext.Brands
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == brandId, cancellationToken);
+        if (brand == null || string.IsNullOrWhiteSpace(model))
+        {
+            return;
+        }
+
+        var text = model.Trim();
+        if (VerifiedCatalogSeeder.BelongsToAnotherBrand(text, brand.Name))
+        {
+            throw new CarListingException(
+                "Select a model for the chosen make, or enter a model that is not already listed under another make.");
+        }
+
+        var owners = await _dbContext.Cars
+            .AsNoTracking()
+            .Where(car => car.Model.ToLower() == text.ToLower())
+            .Select(car => car.BrandId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        if (owners.Count > 0 && !owners.Contains(brandId))
+        {
+            throw new CarListingException(
+                "Select a model for the chosen make, or enter a model that is not already listed under another make.");
+        }
     }
 
     private async Task<bool> LookupsExistAsync(
@@ -412,4 +465,251 @@ public class CarService : ICarService
 
         return value.Contains(term, StringComparison.Ordinal) ? 1 : 2;
     }
+
+    private static void AppendGalleryImages(Models.Entities.Car car, SaveCarRequest request)
+    {
+        if (!request.GallerySpecified)
+        {
+            return;
+        }
+
+        var images = car.Images.ToList();
+        var nextOrder = images.Count == 0 ? 0 : images.Max(image => image.DisplayOrder) + 1;
+        foreach (var url in NormalizeAdditionalUrls(request, images.Count))
+        {
+            if (images.Any(image => CarGalleryRules.UrlsMatch(image.ImageUrl, url)))
+            {
+                continue;
+            }
+
+            var added = new Models.Entities.CarImage
+            {
+                ImageUrl = url,
+                IsMain = false,
+                DisplayOrder = nextOrder++
+            };
+            car.Images.Add(added);
+            images.Add(added);
+        }
+    }
+
+    private async Task<IReadOnlyList<string>> SyncGalleryAsync(
+        Models.Entities.Car car,
+        SaveCarRequest request,
+        CancellationToken cancellationToken)
+    {
+        var images = car.Images.ToList();
+        var removedUrls = new List<string>();
+        var removeIds = request.GallerySpecified
+            ? (request.RemoveImageIds ?? []).ToHashSet()
+            : [];
+        if (request.GallerySpecified)
+        {
+            var remaining = images.Count(image => !removeIds.Contains(image.Id));
+            _ = NormalizeAdditionalUrls(request, remaining);
+        }
+
+        if (request.GallerySpecified)
+        {
+            foreach (var image in images.Where(image => removeIds.Contains(image.Id)).ToList())
+            {
+                removedUrls.Add(image.ImageUrl);
+                car.Images.Remove(image);
+                _dbContext.Remove(image);
+                images.Remove(image);
+            }
+        }
+
+        var primaryUrl = request.ImageUrl.Trim();
+        var primary = request.GallerySpecified && request.PrimaryImageId is int primaryId
+            ? images.FirstOrDefault(image => image.Id == primaryId)
+            : null;
+
+        if (primary != null)
+        {
+            if (!CarGalleryRules.UrlsMatch(primary.ImageUrl, primaryUrl)
+                && !removedUrls.Any(url => CarGalleryRules.UrlsMatch(url, primaryUrl)))
+            {
+                removedUrls.Add(primary.ImageUrl);
+                primary.ImageUrl = primaryUrl;
+            }
+
+            SetMain(images, primary);
+        }
+        else
+        {
+            var match = images.FirstOrDefault(image => CarGalleryRules.UrlsMatch(image.ImageUrl, primaryUrl));
+            if (match != null)
+            {
+                SetMain(images, match);
+            }
+            else if (removedUrls.Any(url => CarGalleryRules.UrlsMatch(url, primaryUrl)))
+            {
+                var fallback = images
+                    .OrderBy(image => image.DisplayOrder)
+                    .ThenBy(image => image.Id)
+                    .FirstOrDefault();
+                if (fallback != null)
+                {
+                    SetMain(images, fallback);
+                }
+            }
+            else if (images.Count > 0)
+            {
+                var current = images.FirstOrDefault(image => image.IsMain)
+                    ?? images.OrderBy(image => image.DisplayOrder).ThenBy(image => image.Id).First();
+                if (!CarGalleryRules.UrlsMatch(current.ImageUrl, primaryUrl))
+                {
+                    removedUrls.Add(current.ImageUrl);
+                    current.ImageUrl = primaryUrl;
+                }
+
+                SetMain(images, current);
+            }
+            else if (!string.IsNullOrWhiteSpace(primaryUrl))
+            {
+                var created = new Models.Entities.CarImage
+                {
+                    ImageUrl = primaryUrl,
+                    IsMain = true,
+                    DisplayOrder = 0
+                };
+                car.Images.Add(created);
+                images.Add(created);
+            }
+        }
+
+        if (request.GallerySpecified)
+        {
+            var nextOrder = images.Count == 0 ? 0 : images.Max(image => image.DisplayOrder) + 1;
+            foreach (var url in NormalizeAdditionalUrls(request, images.Count))
+            {
+                if (images.Any(image => CarGalleryRules.UrlsMatch(image.ImageUrl, url)))
+                {
+                    continue;
+                }
+
+                var added = new Models.Entities.CarImage
+                {
+                    ImageUrl = url,
+                    IsMain = false,
+                    DisplayOrder = nextOrder++
+                };
+                car.Images.Add(added);
+                images.Add(added);
+            }
+        }
+
+        if (images.Count > 0 && images.All(image => !image.IsMain))
+        {
+            SetMain(images, images.OrderBy(image => image.DisplayOrder).ThenBy(image => image.Id).First());
+        }
+
+        if (images.Count == 0)
+        {
+            throw new CarGalleryException("Keep at least one image, or choose a new primary image.");
+        }
+
+        var stillUsed = new HashSet<string>(
+            images.Select(image => image.ImageUrl.Trim()),
+            StringComparer.OrdinalIgnoreCase);
+        var candidates = removedUrls
+            .Select(url => url.Trim())
+            .Where(url => url.Length > 0 && !stillUsed.Contains(url))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (candidates.Count == 0 || car.Id == 0)
+        {
+            return candidates;
+        }
+
+        var referenced = await _dbContext.CarImages
+            .AsNoTracking()
+            .Where(image => image.CarId != car.Id && candidates.Contains(image.ImageUrl))
+            .Select(image => image.ImageUrl)
+            .ToListAsync(cancellationToken);
+        var shared = new HashSet<string>(referenced, StringComparer.OrdinalIgnoreCase);
+        return candidates.Where(url => !shared.Contains(url)).ToList();
+    }
+
+    private static IReadOnlyList<string> NormalizeAdditionalUrls(SaveCarRequest request, int existingCount)
+    {
+        var urls = new List<string>();
+        foreach (var url in request.AdditionalImageUrls ?? [])
+        {
+            var trimmed = url?.Trim() ?? string.Empty;
+            if (trimmed.Length == 0)
+            {
+                continue;
+            }
+
+            if (!CarGalleryRules.IsSafeReference(trimmed))
+            {
+                throw new CarGalleryException("An image path is not allowed.");
+            }
+
+            if (urls.Any(existing => CarGalleryRules.UrlsMatch(existing, trimmed)))
+            {
+                continue;
+            }
+
+            urls.Add(trimmed);
+        }
+
+        if (existingCount + urls.Count > CarGalleryRules.MaxImages)
+        {
+            throw new CarGalleryException($"A car can have up to {CarGalleryRules.MaxImages} images.");
+        }
+
+        return urls;
+    }
+
+    private static void SetMain(IEnumerable<Models.Entities.CarImage> images, Models.Entities.CarImage primary)
+    {
+        foreach (var image in images)
+        {
+            image.IsMain = ReferenceEquals(image, primary);
+        }
+    }
+
+    private static void ApplySpecifications(Models.Entities.Car car, SaveCarRequest request)
+    {
+        car.Seats = request.Seats is > 0 and <= 12 ? request.Seats : null;
+        car.DriveType = CarListingRules.CanonicalDrive(request.DriveType);
+        car.Engine = VehicleEngineCatalog.Normalize(request.Engine) ?? Blank(request.Engine);
+        var fuel = CarListingRules.CanonicalFuel(request.FuelType);
+        if (fuel != null)
+        {
+            car.FuelType = fuel;
+        }
+
+        var transmission = CarListingRules.CanonicalTransmission(request.Transmission);
+        if (transmission != null)
+        {
+            car.Transmission = transmission;
+        }
+        car.MileageUnit = CarListingRules.CanonicalMileageUnit(request.MileageUnit);
+        car.Horsepower = request.Horsepower is > 0 and <= 2000 ? request.Horsepower : null;
+        car.Doors = request.Doors is >= 2 and <= 5 ? request.Doors : null;
+        car.Cylinders = request.Cylinders is >= 1 and <= 16 ? request.Cylinders : null;
+        car.Steering = CarListingRules.Canonical(request.Steering, CarListingRules.SteeringPositions);
+        car.Vin = Blank(request.Vin)?.ToUpperInvariant();
+        car.AccidentHistory = CarListingRules.Canonical(request.AccidentHistory, CarListingRules.AccidentChoices);
+        car.RepaintedParts = VehicleBodyPartCatalog.Normalize(request.RepaintedParts) ?? Blank(request.RepaintedParts);
+        car.ReplacedParts = VehicleBodyPartCatalog.Normalize(request.ReplacedParts) ?? Blank(request.ReplacedParts);
+        car.CustomsStatus = CarListingRules.Canonical(request.CustomsStatus, CarListingRules.CustomsChoices);
+        car.MarketOrigin = Blank(request.MarketOrigin);
+        if (request.ConditionSpecified)
+        {
+            car.IsNew = string.Equals(request.Condition, "New", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (request.FeaturesSpecified)
+        {
+            car.Features = CarFeatureCatalog.Store(request.Features);
+        }
+    }
+
+    private static string? Blank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

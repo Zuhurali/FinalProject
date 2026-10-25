@@ -3,51 +3,39 @@
     ViewData["Title"] = "Edit Listing - AutoVault";
 }
 
+<link rel="stylesheet" href="~/css/car-listing-form.css" asp-append-version="true">
+
 <div class="rts-breadcrumb-area service jarallax">
-    <div class="container"><div class="breadcrumb-area-wrapper">
-        <h1 class="title">Edit Listing</h1>
-        <div class="nav-bread-crumb"><a asp-action="Index">Account</a><a asp-action="Listings" class="current">My Listings</a></div>
-    </div></div>
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Edit Listing</h1>
+            <div class="nav-bread-crumb">
+                <a asp-action="Index">Account</a>
+                <a asp-action="Listings" class="current">My Listings</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <section class="rts-section-gap">
     <div class="container">
-        <div class="contact-form">
-            <h3 class="text-center mb-4">Update Your Vehicle</h3>
-            <form asp-action="EditListing" asp-route-id="@Model.Id" method="post">
+        <div class="contact-form av-listing-card">
+            <h3 class="mb-4">Update Your Vehicle</h3>
+            <form asp-action="EditListing" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="av-listing-form">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <div class="row">
-                    <div class="col-md-6"><div class="form__control mb-3">
-                        <select asp-for="Car.BrandId" class="input-form">
-                            @foreach (var brand in Model.Lookups.Brands) { <option value="@brand.Id">@brand.Name</option> }
-                        </select>
-                    </div></div>
-                    <div class="col-md-6"><div class="form__control mb-3"><input asp-for="Car.Model" class="input-form" placeholder="Model"></div></div>
-                    <div class="col-md-6"><div class="form__control mb-3">
-                        <select asp-for="Car.CategoryId" class="input-form">
-                            @foreach (var category in Model.Lookups.Categories) { <option value="@category.Id">@category.Name</option> }
-                        </select>
-                    </div></div>
-                    <div class="col-md-6"><div class="form__control mb-3"><input asp-for="Car.Year" class="input-form" placeholder="Year"></div></div>
-                    <div class="col-md-6"><div class="form__control mb-3"><input asp-for="Car.Price" class="input-form" placeholder="Price"></div></div>
-                    <div class="col-md-6"><div class="form__control mb-3"><input asp-for="Car.Mileage" class="input-form" placeholder="Mileage"></div></div>
-                    <div class="col-md-4"><div class="form__control mb-3"><input asp-for="Car.FuelType" class="input-form" placeholder="Fuel Type"></div></div>
-                    <div class="col-md-4"><div class="form__control mb-3"><input asp-for="Car.Transmission" class="input-form" placeholder="Transmission"></div></div>
-                    <div class="col-md-4"><div class="form__control mb-3"><input asp-for="Car.Color" class="input-form" placeholder="Color"></div></div>
+                <partial name="_VehicleListingFields" model="Model" />
+                <div class="d-flex flex-column flex-sm-row gap-3">
+                    <button type="submit" class="submit__btn">Save Changes</button>
+                    <a asp-action="Listings" class="rts-btn btn-border radius-small">Cancel</a>
                 </div>
-                <div class="form__control mb-3"><input asp-for="Car.ImageUrl" class="input-form" placeholder="Image path or URL"></div>
-                <div class="form__control mb-3"><textarea asp-for="Car.Description" class="input-form" rows="5" placeholder="Description"></textarea></div>
-                <div class="form__control mb-3">
-                    <select asp-for="Car.Status" class="input-form">
-                        <option value="Active">Active</option>
-                        <option value="Sold">Sold</option>
-                        <option value="Draft">Draft</option>
-                    </select>
-                </div>
-                <button type="submit" class="submit__btn">Save Changes</button>
-                <a asp-action="Listings" class="rts-btn btn-border radius-small">Cancel</a>
             </form>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/js/car-color-picker.js" asp-append-version="true"></script>
+    <script src="~/js/car-body-parts.js" asp-append-version="true"></script>
+    <partial name="~/Views/AdminCars/_CarImagePickerScripts.cshtml" />
+}

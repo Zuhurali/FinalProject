@@ -13,16 +13,16 @@ public static class PopularityRanking
     public const double SalesWeight = 0.4;
 
     public const string Explanation =
-        "Popularity uses genuine customer ratings, visible customer reviews, and stored in-store sale quantities. " +
-        "Demonstration ratings and reviews are excluded. " +
-        "ratingScore = (n * average + 5 * 3.5) / (n + 5). " +
+        "Popularity uses only genuine customer ratings, visible (non-hidden) customer reviews, " +
+        "and recorded in-store sales (IsDemo = 0). Simulated/demo sales are never counted. " +
+        "ratingScore = (n × average + 5 × 3.5) / (n + 5). " +
         "n is the visible review count, or the rating count when a part has ratings but no written review. " +
-        "average is the mean of stored star ratings. 3.5 is the prior mean and 5 is the prior weight, " +
-        "so one 5-star review cannot outrank many strong reviews. " +
-        "salesScore = 5 * units / (units + 30), where units is the sum of stored sale quantities. " +
-        "popularity = 0.6 * ratingScore + 0.4 * salesScore. " +
-        "Ties go to the higher sales count, then the lower product id. " +
-        "Rows marked as demo sales are simulated presentation data, not verified sales.";
+        "average is the mean of stored star ratings (1–5). The 3.5 prior mean and weight 5 stop a single " +
+        "5-star rating from outranking many strong ratings. Parts with no ratings use the prior mean 3.5. " +
+        "salesScore = 5 × units / (units + 30), where units is the sum of quantities from recorded sales only. " +
+        "Parts with no recorded sales get salesScore = 0. " +
+        "popularity = 0.6 × ratingScore + 0.4 × salesScore. " +
+        "Ties go to the higher recorded-sales quantity, then the lower product id.";
 
     public static int SampleSize(int ratingCount, int reviewCount)
     {
@@ -51,15 +51,13 @@ public static class PopularityRanking
         return 5d * unitsSold / (unitsSold + SalesPrior);
     }
 
-    public static int UnitsSold(int realSales, int demoSales)
-    {
-        return Math.Max(0, realSales) + Math.Max(0, demoSales);
-    }
+    /// <summary>Recorded (non-demo) sale units only.</summary>
+    public static int UnitsSold(int recordedSales) => Math.Max(0, recordedSales);
 
-    public static double Score(double averageRating, int ratingCount, int reviewCount, int realSales, int demoSales)
+    public static double Score(double averageRating, int ratingCount, int reviewCount, int recordedSales)
     {
         return (RatingWeight * RatingScore(averageRating, ratingCount, reviewCount))
-            + (SalesWeight * SalesScore(UnitsSold(realSales, demoSales)));
+            + (SalesWeight * SalesScore(UnitsSold(recordedSales)));
     }
 
     public static IEnumerable<T> ByLatest<T>(IEnumerable<T> products, Func<T, DateTime> createdAt, Func<T, int> productId)
@@ -72,12 +70,12 @@ public static class PopularityRanking
     public static IEnumerable<T> ByPopularity<T>(
         IEnumerable<T> products,
         Func<T, double> score,
-        Func<T, int> unitsSold,
+        Func<T, int> recordedSales,
         Func<T, int> productId)
     {
         return products
             .OrderByDescending(score)
-            .ThenByDescending(unitsSold)
+            .ThenByDescending(recordedSales)
             .ThenBy(productId);
     }
 }

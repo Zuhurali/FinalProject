@@ -14,6 +14,35 @@
 <style>
     .side-box.tag-area ul li { cursor: pointer; }
     .side-box.tag-area ul li.is-active { background: var(--color-primary); color: #fff; }
+
+    /* Desktop: sidebar scrolls inside the viewport; page height follows the car grid. */
+    @@media (min-width: 992px) {
+        .cars-two-sidebar-sticky {
+            top: 120px;
+        }
+        .cars-two-filters-scroll {
+            max-height: min(75vh, calc(100vh - 140px));
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding-right: 6px;
+            scrollbar-gutter: stable;
+        }
+        .cars-two-filters-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .cars-two-filters-scroll::-webkit-scrollbar-thumb {
+            background: rgba(85, 85, 85, 0.35);
+            border-radius: 8px;
+        }
+        .cars-two-filters-scroll::-webkit-scrollbar-track {
+            background: rgba(85, 85, 85, 0.08);
+            border-radius: 8px;
+        }
+    }
+
+    #carLoadMore[hidden] {
+        display: none !important;
+    }
 </style>
 
 <div class="rts-breadcrumb-area portfolio jarallax">
@@ -32,8 +61,8 @@
     <div class="container">
         <div class="row g-5">
             <div class="col-lg-4">
-                <div class="sticky-top">
-                    <div class="left-side-bar">
+                <div class="sticky-top cars-two-sidebar-sticky">
+                    <div class="left-side-bar cars-two-filters-scroll">
                         <div class="search-area side-box">
                             <h2>Cars Search</h2>
                             <form action="#" id="carSearchForm">
@@ -203,7 +232,7 @@
                                         <ul class="feature-area">
                                             <li>
                                                 <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                @($"{car.Mileage:N0} Miles")
+                                                @car.MileageText
                                             </li>
                                             <li>
                                                 <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
@@ -225,7 +254,7 @@
                         }
                     </div>
                     <h6 id="carEmpty" class="d-none text-center mt--40">No cars match this filter.</h6>
-                    <a href="#" class="rts-btn load-more-btn btn-border" id="carLoadMore">Load More</a>
+                    <button type="button" class="rts-btn load-more-btn btn-border" id="carLoadMore">Load More</button>
                 </div>
             </div>
         </div>
@@ -250,6 +279,7 @@
             var search = document.getElementById("carSearch");
             var empty = document.getElementById("carEmpty");
             var loadMore = document.getElementById("carLoadMore");
+            var cards = Array.prototype.slice.call(document.querySelectorAll(".car-card"));
 
             function selected(selector) {
                 return Array.prototype.slice.call(document.querySelectorAll(selector + ":checked")).map(function (input) {
@@ -280,7 +310,7 @@
                 maxLabel.textContent = "$" + bounds.max.toLocaleString();
             }
 
-            function apply() {
+            function matchingCards() {
                 var query = search.value.trim().toLowerCase();
                 var makes = selected(".make-filter");
                 var models = selected(".model-filter");
@@ -290,7 +320,7 @@
                     return item.getAttribute("data-fuel");
                 });
                 var bounds = priceBounds();
-                var matches = Array.prototype.slice.call(document.querySelectorAll(".car-card")).filter(function (card) {
+                return cards.filter(function (card) {
                     var price = parseFloat(card.getAttribute("data-price"));
                     if (query && card.getAttribute("data-search").toLowerCase().indexOf(query) === -1) return false;
                     if (makes.length && makes.indexOf(card.getAttribute("data-make")) === -1) return false;
@@ -300,56 +330,60 @@
                     if (fuelValues.length && fuelValues.indexOf(card.getAttribute("data-fuel")) === -1) return false;
                     return price >= bounds.min && price <= bounds.max;
                 });
-                document.querySelectorAll(".car-card").forEach(function (card) {
-                    card.classList.add("d-none");
-                });
+            }
+
+            // Toggle visibility in place (no hide-all pass) so Load More does not collapse page height / jump scroll.
+            function apply() {
+                var matches = matchingCards();
+                var matchIndex = new Map();
                 matches.forEach(function (card, index) {
-                    if (index < shown) card.classList.remove("d-none");
+                    matchIndex.set(card, index);
+                });
+                cards.forEach(function (card) {
+                    var index = matchIndex.has(card) ? matchIndex.get(card) : -1;
+                    var shouldShow = index >= 0 && index < shown;
+                    card.classList.toggle("d-none", !shouldShow);
                 });
                 empty.classList.toggle("d-none", matches.length > 0);
-                loadMore.classList.toggle("d-none", matches.length <= shown);
+                var hasMore = matches.length > shown;
+                loadMore.hidden = !hasMore;
+                loadMore.disabled = !hasMore;
+            }
+
+            function resetPagingAndApply() {
+                shown = pageSize;
+                apply();
             }
 
             minRange.addEventListener("input", function () {
                 if (parseInt(minRange.value, 10) > parseInt(maxRange.value, 10) - 5) {
                     minRange.value = parseInt(maxRange.value, 10) - 5;
                 }
-                shown = pageSize;
                 updateRange();
-                apply();
+                resetPagingAndApply();
             });
             maxRange.addEventListener("input", function () {
                 if (parseInt(maxRange.value, 10) < parseInt(minRange.value, 10) + 5) {
                     maxRange.value = parseInt(minRange.value, 10) + 5;
                 }
-                shown = pageSize;
                 updateRange();
-                apply();
+                resetPagingAndApply();
             });
             document.getElementById("carSearchForm").addEventListener("submit", function (event) {
                 event.preventDefault();
-                shown = pageSize;
-                apply();
+                resetPagingAndApply();
             });
-            search.addEventListener("input", function () {
-                shown = pageSize;
-                apply();
-            });
+            search.addEventListener("input", resetPagingAndApply);
             document.querySelectorAll(".make-filter, .model-filter, .seat-filter, .color-filter").forEach(function (input) {
-                input.addEventListener("change", function () {
-                    shown = pageSize;
-                    apply();
-                });
+                input.addEventListener("change", resetPagingAndApply);
             });
             document.querySelectorAll(".fuel-filter").forEach(function (item) {
                 item.addEventListener("click", function () {
                     item.classList.toggle("is-active");
-                    shown = pageSize;
-                    apply();
+                    resetPagingAndApply();
                 });
             });
-            loadMore.addEventListener("click", function (event) {
-                event.preventDefault();
+            loadMore.addEventListener("click", function () {
                 shown += pageSize;
                 apply();
             });

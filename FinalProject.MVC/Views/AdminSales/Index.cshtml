@@ -2,11 +2,13 @@
 @{
     Layout = "_AdminLayout";
     var products = (IReadOnlyList<ShopProduct>)ViewBag.Products;
+    var submissionKey = (Guid)ViewBag.SubmissionKey;
 }
 <h1 class="h3 mb-4">In-person sales</h1>
-<p class="text-muted">If a spare-parts campaign is Live, the unit price below uses the campaign discount automatically. Car sales are not recorded here.</p>
+<p class="text-muted">If a spare-parts campaign is Live, the unit price below uses the campaign discount automatically. Car sales are not recorded here. Only genuine recorded sales appear below and in Popular Items ranking.</p>
 <form method="post" class="admin-card mb-4" id="sale-form">
     @Html.AntiForgeryToken()
+    <input type="hidden" name="submissionKey" value="@submissionKey" />
     <div class="row g-3">
         <div class="col-md-5">
             <label>Product</label>
@@ -20,7 +22,8 @@
                             data-list="@product.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                             data-sale="@product.EffectivePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                             data-offer="@(product.HasOffer ? "1" : "0")"
-                            data-percent="@(product.DiscountPercent?.ToString() ?? "")">
+                            data-percent="@(product.DiscountPercent?.ToString() ?? "")"
+                            data-stock="@product.Quantity">
                         @product.Name — @priceLabel — @product.StockStatus (@product.Quantity)
                     </option>
                 }
@@ -28,7 +31,7 @@
         </div>
         <div class="col-md-2">
             <label>Quantity</label>
-            <input name="quantity" type="number" min="1" value="1" class="form-control" required />
+            <input name="quantity" id="sale-quantity" type="number" min="1" value="1" class="form-control" required />
         </div>
         <div class="col-md-5">
             <label>Note</label>
@@ -38,45 +41,55 @@
             <div class="alert alert-light border mb-0" id="sale-price-preview">Select a part to see the unit price that will be recorded.</div>
         </div>
     </div>
-    <button class="btn btn-primary mt-3" type="submit">Record in-store sale</button>
+    <button class="btn btn-primary mt-3" type="submit" id="sale-submit">Record in-store sale</button>
 </form>
 <div class="admin-card">
-    <table class="table">
-        <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>List</th><th>Unit charged</th><th>Campaign</th><th>Source</th><th>Note</th></tr></thead>
-        <tbody>
-        @foreach (var sale in Model)
-        {
-            <tr>
-                <td>@sale.SoldAt.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@(sale.Product?.Name ?? $"Product #{sale.ProductId}")</td>
-                <td>@sale.Quantity</td>
-                <td>@(sale.ListUnitPrice > 0 ? sale.ListUnitPrice.ToString("C") : "—")</td>
-                <td>@sale.UnitPrice.ToString("C")</td>
-                <td>
-                    @if (sale.CampaignDiscountPercent.HasValue)
-                    {
-                        <text>@($"{sale.CampaignDiscountPercent:0.#}% OFF")</text>
-                        @if (!string.IsNullOrWhiteSpace(sale.Campaign?.Name))
+    <h2 class="h5">Recorded sales</h2>
+    @if (Model.Count == 0)
+    {
+        <p class="text-muted mb-0">No recorded in-store sales yet. Demo/simulated sales are not listed here.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>List</th><th>Unit charged</th><th>Campaign</th><th>Note</th></tr></thead>
+            <tbody>
+            @foreach (var sale in Model)
+            {
+                <tr>
+                    <td>@sale.SoldAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@(sale.Product?.Name ?? $"Product #{sale.ProductId}")</td>
+                    <td>@sale.Quantity</td>
+                    <td>@(sale.ListUnitPrice > 0 ? sale.ListUnitPrice.ToString("C") : "—")</td>
+                    <td>@sale.UnitPrice.ToString("C")</td>
+                    <td>
+                        @if (sale.CampaignDiscountPercent.HasValue)
                         {
-                            <div class="small text-muted">@sale.Campaign.Name</div>
+                            <text>@($"{sale.CampaignDiscountPercent:0.#}% OFF")</text>
+                            @if (!string.IsNullOrWhiteSpace(sale.Campaign?.Name))
+                            {
+                                <div class="small text-muted">@sale.Campaign.Name</div>
+                            }
                         }
-                    }
-                    else
-                    {
-                        <text>—</text>
-                    }
-                </td>
-                <td>@(sale.IsDemo ? "Demo (simulated)" : "Recorded sale")</td>
-                <td>@sale.Note</td>
-            </tr>
-        }
-        </tbody>
-    </table>
+                        else
+                        {
+                            <text>—</text>
+                        }
+                    </td>
+                    <td>@sale.Note</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
 </div>
 <script>
 (() => {
+    const form = document.getElementById('sale-form');
     const select = document.getElementById('sale-product');
+    const quantity = document.getElementById('sale-quantity');
     const preview = document.getElementById('sale-price-preview');
+    const submit = document.getElementById('sale-submit');
     const money = (value) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(value);
     const update = () => {
         const option = select?.selectedOptions?.[0];
@@ -85,17 +98,26 @@
         const sale = Number(option.dataset.sale || 0);
         const offer = option.dataset.offer === '1';
         const percent = option.dataset.percent;
+        const stock = Number(option.dataset.stock || 0);
+        quantity.max = String(Math.max(1, stock));
         preview.innerHTML = offer
-            ? `Live campaign: list ${money(list)} → charged <strong>${money(sale)}</strong> (${percent}% OFF). Stock will decrease by the quantity entered.`
-            : `No live campaign. Charged unit price: <strong>${money(sale)}</strong>.`;
+            ? `Live campaign: list ${money(list)} → charged <strong>${money(sale)}</strong> (${percent}% OFF). Stock will decrease by the quantity entered (available: ${stock}).`
+            : `No live campaign. Charged unit price: <strong>${money(sale)}</strong>. Stock available: ${stock}.`;
     };
     select?.addEventListener('change', update);
+    form?.addEventListener('submit', () => {
+        if (submit) {
+            submit.disabled = true;
+            submit.textContent = 'Recording…';
+        }
+    });
     update();
 })();
 </script>
 <div class="admin-card mt-4">
     <h2 class="h4">Popular Items ranking</h2>
-    <p>@ViewBag.Formula The ranking score is this formula's result. It is shown here so the order can be checked. Customers do not see it.</p>
+    <p class="mb-3">@ViewBag.Formula</p>
+    <p class="text-muted small">Average / Ratings / Reviews come from genuine customer submissions. Recorded sales are genuine in-store quantities only. Products with no activity show 0.</p>
     <table class="table">
         <thead>
             <tr>
@@ -106,7 +128,6 @@
                 <th>Ratings</th>
                 <th>Reviews</th>
                 <th>Recorded sales</th>
-                <th>Demo sales (simulated)</th>
                 <th>Ranking score</th>
             </tr>
         </thead>
@@ -121,11 +142,10 @@
                 <td>@rank</td>
                 <td>@product.Name</td>
                 <td>@product.CreatedAt.ToString("yyyy-MM-dd")</td>
-                <td>@product.Rating.ToString("0.00")</td>
+                <td>@(product.RatingCount > 0 ? product.Rating.ToString("0.00") : "—")</td>
                 <td>@product.RatingCount</td>
                 <td>@product.ReviewCount</td>
                 <td>@product.RealSalesCount</td>
-                <td>@product.DemoSalesCount</td>
                 <td>@product.PopularityScore.ToString("0.000")</td>
             </tr>
             rank++;

@@ -71,6 +71,16 @@ public sealed class ProductReviewApiService : IProductReviewApiService
         await EnsureSuccessAsync(response, cancellationToken);
     }
 
+    public async Task DeleteReviewAsAdminAsync(
+        int reviewId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = Authorized(HttpMethod.Delete, $"api/products/reviews/{reviewId}/admin", accessToken);
+        using var response = await SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+    }
+
     public async Task SetHiddenAsync(
         int reviewId,
         bool hidden,

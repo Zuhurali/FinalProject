@@ -1,3 +1,4 @@
+using FinalProject.Commerce;
 using FinalProject.DTOs;
 using FinalProject.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -11,10 +12,12 @@ namespace FinalProject.Controllers;
 public class CarsController : ControllerBase
 {
     private readonly ICarService _carService;
+    private readonly ICarDiscoveryService _discovery;
 
-    public CarsController(ICarService carService)
+    public CarsController(ICarService carService, ICarDiscoveryService discovery)
     {
         _carService = carService;
+        _discovery = discovery;
     }
 
     [HttpGet]
@@ -75,6 +78,22 @@ public class CarsController : ControllerBase
         return Ok(car);
     }
 
+    [HttpPost("{id:int}/views")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RecordView(int id, CancellationToken cancellationToken)
+    {
+        if (id <= 0)
+        {
+            return BadRequest(new { message = "Car id must be greater than zero." });
+        }
+
+        return await _discovery.RecordViewAsync(id, cancellationToken: cancellationToken)
+            ? NoContent()
+            : NotFound();
+    }
+
     [AllowAnonymous]
     [HttpGet("lookups")]
     [ProducesResponseType(typeof(CarLookupResponse), StatusCodes.Status200OK)]
@@ -111,10 +130,21 @@ public class CarsController : ControllerBase
             return Unauthorized();
         }
 
-        var car = await _carService.CreateAsync(userId, request, cancellationToken);
-        return car == null
-            ? BadRequest(new { message = "The owner, brand, or category is invalid." })
-            : CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
+        try
+        {
+            var car = await _carService.CreateAsync(userId, request, cancellationToken);
+            return car == null
+                ? BadRequest(new { message = "The owner, brand, or category is invalid." })
+                : CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
+        }
+        catch (CarGalleryException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (CarListingException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
     }
 
     [Authorize(Roles = "SuperAdmin")]
@@ -126,10 +156,21 @@ public class CarsController : ControllerBase
         [FromBody] SaveCarRequest request,
         CancellationToken cancellationToken)
     {
-        var car = await _carService.CreateCatalogAsync(request, cancellationToken);
-        return car == null
-            ? BadRequest(new { message = "The brand or category is invalid." })
-            : CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
+        try
+        {
+            var car = await _carService.CreateCatalogAsync(request, cancellationToken);
+            return car == null
+                ? BadRequest(new { message = "The brand or category is invalid." })
+                : CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
+        }
+        catch (CarGalleryException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (CarListingException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
     }
 
     [Authorize]
@@ -153,10 +194,21 @@ public class CarsController : ControllerBase
             return Forbid();
         }
 
-        var updated = await _carService.UpdateAsync(id, request, cancellationToken);
-        return updated == null
-            ? BadRequest(new { message = "The brand or category is invalid." })
-            : Ok(updated);
+        try
+        {
+            var updated = await _carService.UpdateAsync(id, request, cancellationToken);
+            return updated == null
+                ? BadRequest(new { message = "The brand or category is invalid." })
+                : Ok(updated);
+        }
+        catch (CarGalleryException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (CarListingException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
     }
 
     [Authorize]

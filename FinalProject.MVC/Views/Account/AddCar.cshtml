@@ -3,6 +3,8 @@
     ViewData["Title"] = "Add Car - AutoVault";
 }
 
+<link rel="stylesheet" href="~/css/car-listing-form.css" asp-append-version="true">
+
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
@@ -17,67 +19,16 @@
 
 <section class="rts-section-gap">
     <div class="container">
-        <div class="contact-form">
-            <h3 class="text-center mb-4">List Your Vehicle</h3>
+        <div class="contact-form av-listing-card">
+            <h3 class="mb-4">List Your Vehicle</h3>
             @if (ViewData["AccountServiceUnavailable"] != null)
             {
                 <div class="alert alert-warning">The listing service is temporarily unavailable.</div>
             }
-            <form asp-action="AddCar" method="post">
+            <form asp-action="AddCar" method="post" enctype="multipart/form-data" class="av-listing-form">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form__control mb-3">
-                            <select asp-for="Car.BrandId" class="input-form" required>
-                                <option value="">Select Make</option>
-                                @foreach (var brand in Model.Lookups.Brands)
-                                {
-                                    <option value="@brand.Id">@brand.Name</option>
-                                }
-                            </select>
-                            <span asp-validation-for="Car.BrandId" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form__control mb-3">
-                            <input asp-for="Car.Model" class="input-form" placeholder="Model" required>
-                            <span asp-validation-for="Car.Model" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form__control mb-3">
-                            <select asp-for="Car.CategoryId" class="input-form" required>
-                                <option value="">Select Category</option>
-                                @foreach (var category in Model.Lookups.Categories)
-                                {
-                                    <option value="@category.Id">@category.Name</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form__control mb-3">
-                            <input asp-for="Car.Year" class="input-form" placeholder="Year" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6"><div class="form__control mb-3"><input asp-for="Car.Price" class="input-form" placeholder="Price" required></div></div>
-                    <div class="col-md-6"><div class="form__control mb-3"><input asp-for="Car.Mileage" class="input-form" placeholder="Mileage" required></div></div>
-                    <div class="col-md-4"><div class="form__control mb-3"><input asp-for="Car.FuelType" class="input-form" placeholder="Fuel Type" required></div></div>
-                    <div class="col-md-4"><div class="form__control mb-3"><input asp-for="Car.Transmission" class="input-form" placeholder="Transmission" required></div></div>
-                    <div class="col-md-4"><div class="form__control mb-3"><input asp-for="Car.Color" class="input-form" placeholder="Color" required></div></div>
-                </div>
-                <div class="form__control mb-3">
-                    <input asp-for="Car.ImageUrl" class="input-form" placeholder="Image path or URL" required>
-                    <small>Use a valid existing AutoVault asset path or image URL.</small>
-                </div>
-                <div class="form__control mb-3">
-                    <textarea asp-for="Car.Description" class="input-form" rows="5" placeholder="Description" required></textarea>
-                </div>
+                <partial name="_VehicleListingFields" model="Model" />
                 <div class="form__control">
                     <button type="submit" class="submit__btn w-100">Submit Listing</button>
                 </div>
@@ -85,3 +36,9 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script src="~/js/car-color-picker.js" asp-append-version="true"></script>
+    <script src="~/js/car-body-parts.js" asp-append-version="true"></script>
+    <partial name="~/Views/AdminCars/_CarImagePickerScripts.cshtml" />
+}

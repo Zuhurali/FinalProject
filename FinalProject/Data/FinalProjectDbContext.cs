@@ -30,6 +30,8 @@ public class FinalProjectDbContext : DbContext
 
     public DbSet<Favorite> Favorites => Set<Favorite>();
 
+    public DbSet<CarView> CarViews => Set<CarView>();
+
     public DbSet<Conversation> Conversations => Set<Conversation>();
 
     public DbSet<ConversationHide> ConversationHides => Set<ConversationHide>();
@@ -62,6 +64,17 @@ public class FinalProjectDbContext : DbContext
             entity.Property(car => car.FuelType).IsRequired().HasMaxLength(50);
             entity.Property(car => car.Transmission).IsRequired().HasMaxLength(50);
             entity.Property(car => car.Color).IsRequired().HasMaxLength(50);
+            entity.Property(car => car.DriveType).HasMaxLength(20);
+            entity.Property(car => car.Engine).HasMaxLength(80);
+            entity.Property(car => car.Features).HasMaxLength(800);
+            entity.Property(car => car.MileageUnit).HasMaxLength(8);
+            entity.Property(car => car.Steering).HasMaxLength(8);
+            entity.Property(car => car.Vin).HasMaxLength(17);
+            entity.Property(car => car.AccidentHistory).HasMaxLength(40);
+            entity.Property(car => car.RepaintedParts).HasMaxLength(400);
+            entity.Property(car => car.ReplacedParts).HasMaxLength(400);
+            entity.Property(car => car.CustomsStatus).HasMaxLength(40);
+            entity.Property(car => car.MarketOrigin).HasMaxLength(80);
             entity.Property(car => car.Description).HasMaxLength(4000);
             entity.Property(car => car.Price).HasColumnType("decimal(18,2)");
             entity.Property(car => car.OwnerId).HasMaxLength(450);
@@ -166,6 +179,18 @@ public class FinalProjectDbContext : DbContext
             entity.Property(product => product.Color).HasMaxLength(50);
             entity.Property(product => product.Fuel).HasMaxLength(50);
             entity.Property(product => product.SearchKeywords).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<CarView>(entity =>
+        {
+            entity.HasIndex(view => view.ViewedAt)
+                .HasDatabaseName("IX_CarViews_ViewedAt");
+            entity.HasIndex(view => new { view.CarId, view.ViewedAt })
+                .HasDatabaseName("IX_CarViews_CarId_ViewedAt");
+            entity.HasOne(view => view.Car)
+                .WithMany()
+                .HasForeignKey(view => view.CarId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Favorite>(entity =>

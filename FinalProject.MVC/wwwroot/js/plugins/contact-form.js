@@ -135,6 +135,7 @@
 
         return {
             success: success,
+            emailSent: parsed.emailSent !== false,
             message: safeMessage(
                 message,
                 success ? SUCCESS_FALLBACK : (hasErrors ? VALIDATION_SUMMARY : GENERIC_ERROR)
@@ -150,7 +151,7 @@
             : (Object.keys(errors).length ? VALIDATION_SUMMARY : GENERIC_ERROR);
 
         clearFieldErrors($form);
-        $messages.removeClass('success').addClass('error');
+        $messages.removeClass('success notice').addClass('error');
         Object.keys(errors).forEach(function (key) {
             showFieldError($form, key, errors[key]);
         });
@@ -158,14 +159,15 @@
     }
 
     function applySuccess($form, $messages, payload) {
-        $messages.removeClass('error').addClass('success');
+        var emailed = !payload || payload.emailSent !== false;
+        $messages.removeClass('error success notice').addClass(emailed ? 'success' : 'notice');
         $messages.text(safeMessage(payload && payload.message, SUCCESS_FALLBACK));
         $form.find('#name, #email, #phone, #car, #message').val('');
         clearFieldErrors($form);
     }
 
     function showGenericError($messages) {
-        $messages.removeClass('success').addClass('error');
+        $messages.removeClass('success notice').addClass('error');
         $messages.text(GENERIC_ERROR);
     }
 
@@ -234,7 +236,7 @@
             $form.on('submit.avContact', function (e) {
                 e.preventDefault();
                 clearFieldErrors($form);
-                $messages.removeClass('success error').text('');
+                $messages.removeClass('success error notice').text('');
 
                 var clientErrors = clientValidate($form);
                 if (Object.keys(clientErrors).length) {
@@ -247,7 +249,11 @@
                 }
 
                 var $submit = $form.find('[type="submit"]');
-                $submit.prop('disabled', true);
+                if ($submit.prop('disabled')) {
+                    return;
+                }
+                var originalLabel = $submit.text();
+                $submit.prop('disabled', true).attr('aria-busy', 'true').text('Sending...');
 
                 $.ajax({
                     type: 'POST',
@@ -273,7 +279,7 @@
                         showGenericError($messages);
                     })
                     .always(function () {
-                        $submit.prop('disabled', false);
+                        $submit.prop('disabled', false).removeAttr('aria-busy').text(originalLabel);
                     });
             });
 

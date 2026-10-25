@@ -90,4 +90,28 @@ public class CarApiMapperTests
 
         Assert.Equal("RWD", car.DriveType);
     }
+
+    [Fact]
+    public void ToCar_prefers_saved_specs_and_lists_only_selected_features()
+    {
+        var dto = Dto("Nissan 370Z. 2 seats, all-wheel drive, 3.7L V6.");
+        dto.Seats = 7;
+        dto.Engine = "2.0L Turbo";
+        dto.Features = ["Touchscreen", "FogLights", "NotAFeature"];
+
+        var car = CarApiMapper.ToCar(dto);
+
+        Assert.Equal(7, car.Seats);
+        Assert.Equal("2.0L Turbo", car.Engine);
+        Assert.Equal(["Touchscreen Display", "Fog Lights"], car.Features);
+    }
+
+    [Fact]
+    public void ToCar_uses_make_and_model_as_the_title_for_a_written_description()
+    {
+        var car = CarApiMapper.ToCar(Dto("Great daily driver. Very clean, one owner, full service history."));
+
+        Assert.Equal("Nissan 370Z", car.Name);
+        Assert.StartsWith("Great daily driver.", car.Description, StringComparison.Ordinal);
+    }
 }

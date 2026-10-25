@@ -67,7 +67,7 @@
                                         <h5><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Model</a></h5>
                                         <div class="author-date">
                                             <div class="person">@car.Year · @car.Fuel · @car.Transmission</div>
-                                            <div class="date">$@car.Price.ToString("N0") · @car.Mileage.ToString("N0") Miles</div>
+                                            <div class="date">$@car.Price.ToString("N0") · @car.MileageText</div>
                                         </div>
                                     </div>
                                 </div>

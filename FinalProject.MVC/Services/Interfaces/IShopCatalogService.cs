@@ -51,11 +51,15 @@ public interface IShopCatalogService
         string adminUserId,
         CancellationToken cancellationToken = default);
 
+    Task<bool> DeleteInquiryAsync(int id, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default);
 
     Task<PurchaseRequestResult> SavePurchaseRequestAsync(ShowroomPurchaseRequest request, CancellationToken cancellationToken = default);
 
     Task<bool> SetPurchaseRequestStatusAsync(int id, string status, CancellationToken cancellationToken = default);
+
+    Task<bool> DeletePurchaseRequestAsync(int id, CancellationToken cancellationToken = default);
 }
 
 public sealed record PurchaseRequestResult(bool Ok, bool Duplicate, int? RequestId, string? Error)

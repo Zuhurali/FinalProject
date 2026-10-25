@@ -155,26 +155,38 @@
 <!-- Catalog Area End -->
 
             <!-- Brand Area Start -->
-            <section class="rts-brand-area rts-section-gapBottom">
+            @* WOW leave visibility:hidden when body (not window) scrolls; keep logos visible without wow. *@
+            <section class="rts-brand-area shop-brand-area rts-section-gapBottom">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Store</p>
-                        <h2 class="section-title wow move-right">Collected in <span>Baku</span></h2>
+                        <p class="sub-title">Store</p>
+                        <h2 class="section-title">Collected in <span>Baku</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <ul>
-                            <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
-                            <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
+                            <li><img src="~/assets/images/brand/01-w.svg" alt="Jeep"></li>
+                            <li><img src="~/assets/images/brand/02.svg" alt="Ford"></li>
+                            <li><img src="~/assets/images/brand/03.svg" alt="Mazda"></li>
+                            <li><img src="~/assets/images/brand/04.svg" alt="BMW"></li>
+                            <li><img src="~/assets/images/brand/05.svg" alt="Honda"></li>
+                            <li><img src="~/assets/images/brand/06.svg" alt="Audi"></li>
+                            <li><img src="~/assets/images/brand/07.svg" alt="Nissan"></li>
                         </ul>
                     </div>
                 </div>
             </section>
             <!-- Brand Area End -->
+            <style>
+                .rts-brand-area.shop-brand-area .section-title-area2,
+                .rts-brand-area.shop-brand-area .section-inner ul li {
+                    visibility: visible;
+                }
+                .rts-brand-area.shop-brand-area .section-inner ul li img {
+                    max-width: 72%;
+                    max-height: 72%;
+                    vertical-align: middle;
+                }
+            </style>
 
             <!-- Cta Area Start -->
             <div class="rts-cta-area">

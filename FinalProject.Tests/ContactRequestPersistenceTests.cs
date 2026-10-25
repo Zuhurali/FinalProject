@@ -30,6 +30,7 @@ public class ContactRequestPersistenceTests
         Assert.Equal("ada@example.com", stored.Email);
         Assert.Equal("+994 50 354 67 67", stored.Phone);
         Assert.Equal("Brake pads", stored.Interest);
+        Assert.Equal("Please call me about availability this week.", stored.Message);
         Assert.Equal(ContactRequestStatus.New, stored.Status);
         Assert.Null(stored.UserId);
         Assert.True(stored.CreatedAt <= DateTime.UtcNow.AddMinutes(1));

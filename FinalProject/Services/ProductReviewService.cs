@@ -142,6 +142,21 @@ public sealed class ProductReviewService : IProductReviewService
         return (true, null);
     }
 
+    public async Task<bool> DeleteReviewAsAdminAsync(
+        int reviewId,
+        CancellationToken cancellationToken = default)
+    {
+        var review = await _context.ProductReviews.FirstOrDefaultAsync(item => item.Id == reviewId, cancellationToken);
+        if (review == null)
+        {
+            return false;
+        }
+
+        _context.ProductReviews.Remove(review);
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<bool> SetHiddenAsync(int reviewId, bool isHidden, CancellationToken cancellationToken = default)
     {
         var review = await _context.ProductReviews.FirstOrDefaultAsync(item => item.Id == reviewId, cancellationToken);

@@ -32,6 +32,7 @@ namespace FinalProject.MVC.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly AccountActivityHistory _activityHistory;
         private readonly IContactRequestService _contactRequests;
+        private readonly ICarImageUploadService _carImages;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -47,7 +48,8 @@ namespace FinalProject.MVC.Controllers
             IHubContext<ConversationHub> conversations,
             ILogger<AccountController> logger,
             AccountActivityHistory activityHistory,
-            IContactRequestService contactRequests)
+            IContactRequestService contactRequests,
+            ICarImageUploadService carImages)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -63,6 +65,7 @@ namespace FinalProject.MVC.Controllers
             _logger = logger;
             _activityHistory = activityHistory;
             _contactRequests = contactRequests;
+            _carImages = carImages;
         }
 
         [Authorize]
@@ -404,10 +407,14 @@ namespace FinalProject.MVC.Controllers
         [Authorize(Roles = AppRoles.Admin + "," + AppRoles.SuperAdmin)]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddCar(CarEditorViewModel model)
+        [RequestSizeLimit(64 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
+        public async Task<IActionResult> AddCar(CarEditorViewModel model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
         {
+            var uploaded = await PrepareListingImagesAsync(model, imageFile, galleryFiles, requireImage: true);
             if (!ModelState.IsValid)
             {
+                DiscardUploads(model, uploaded);
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
                 return View(model);
             }
@@ -415,6 +422,7 @@ namespace FinalProject.MVC.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
+                DiscardUploads(model, uploaded);
                 return Challenge();
             }
 
@@ -429,10 +437,77 @@ namespace FinalProject.MVC.Controllers
             }
             catch (CarApiException exception)
             {
+                DiscardUploads(model, uploaded);
                 ModelState.AddModelError(string.Empty, exception.Message);
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
                 return View(model);
             }
+        }
+
+        private async Task ApplyListingImageAsync(CarEditorViewModel model, IFormFile? imageFile, bool requireImage)
+        {
+            var error = await _carImages.ApplyAsync(model.Car, imageFile, requireImage, HttpContext.RequestAborted);
+            if (error != null)
+            {
+                ModelState.AddModelError("Car.ImageUrl", error);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Car.ImageUrl))
+            {
+                ModelState.Remove("Car.ImageUrl");
+            }
+        }
+
+        private async Task<List<string>> PrepareListingImagesAsync(
+            CarEditorViewModel model,
+            IFormFile? imageFile,
+            IEnumerable<IFormFile>? galleryFiles,
+            bool requireImage)
+        {
+            var uploaded = new List<string>();
+            var previousImage = model.Car.ImageUrl;
+            await ApplyListingImageAsync(model, imageFile, requireImage);
+            var imageFailed = ModelState["Car.ImageUrl"]?.Errors.Count > 0;
+            if (imageFile is { Length: > 0 } && !imageFailed && !string.IsNullOrWhiteSpace(model.Car.ImageUrl))
+            {
+                uploaded.Add(model.Car.ImageUrl);
+            }
+
+            var galleryError = await _carImages.SaveGalleryAsync(
+                model.Car.AdditionalImageUrls,
+                galleryFiles,
+                HttpContext.RequestAborted);
+            if (galleryError != null)
+            {
+                ModelState.AddModelError(string.Empty, galleryError);
+            }
+            else
+            {
+                uploaded.AddRange(model.Car.AdditionalImageUrls);
+                if (model.Car.AdditionalImageUrls.Count > 0)
+                {
+                    model.Car.GallerySpecified = true;
+                }
+            }
+
+            HttpContext.Items["listing-original-image"] = previousImage;
+            return uploaded;
+        }
+
+        private void DiscardUploads(CarEditorViewModel model, IReadOnlyList<string> uploaded)
+        {
+            _carImages.DeleteUploads(uploaded);
+            if (uploaded.Any(path => string.Equals(path, model.Car.ImageUrl, StringComparison.OrdinalIgnoreCase)))
+            {
+                var original = HttpContext.Items["listing-original-image"] as string ?? string.Empty;
+                model.Car.ImageUrl = uploaded.Any(path => string.Equals(path, original, StringComparison.OrdinalIgnoreCase))
+                    ? string.Empty
+                    : original;
+            }
+
+            model.Car.AdditionalImageUrls.Clear();
+            model.Car.GallerySpecified = false;
         }
 
         [Authorize]
@@ -500,7 +575,23 @@ namespace FinalProject.MVC.Controllers
                     Color = car.Color,
                     Description = car.Description,
                     ImageUrl = car.MainImage,
-                    Status = car.Status
+                    Status = car.Status,
+                    Seats = car.Seats,
+                    DriveType = car.DriveType,
+                    Engine = car.Engine,
+                    MileageUnit = car.MileageUnit,
+                    Horsepower = car.Horsepower,
+                    Doors = car.Doors,
+                    Cylinders = car.Cylinders,
+                    Steering = car.Steering,
+                    Vin = car.Vin,
+                    AccidentHistory = car.AccidentHistory,
+                    RepaintedParts = car.RepaintedParts,
+                    ReplacedParts = car.ReplacedParts,
+                    CustomsStatus = car.CustomsStatus,
+                    MarketOrigin = car.MarketOrigin,
+                    Condition = car.IsNew ? "New" : "Used",
+                    Features = car.Features ?? new List<string>()
                 },
                 Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted)
             });
@@ -509,7 +600,9 @@ namespace FinalProject.MVC.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditListing(int id, CarEditorViewModel model)
+        [RequestSizeLimit(64 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
+        public async Task<IActionResult> EditListing(int id, CarEditorViewModel model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -517,9 +610,11 @@ namespace FinalProject.MVC.Controllers
                 return Challenge();
             }
 
+            model.Id = id;
+            var uploaded = await PrepareListingImagesAsync(model, imageFile, galleryFiles, requireImage: true);
             if (!ModelState.IsValid)
             {
-                model.Id = id;
+                DiscardUploads(model, uploaded);
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
                 return View(model);
             }
@@ -537,6 +632,7 @@ namespace FinalProject.MVC.Controllers
             }
             catch (CarApiException exception)
             {
+                DiscardUploads(model, uploaded);
                 ModelState.AddModelError(string.Empty, exception.Message);
                 model.Id = id;
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);

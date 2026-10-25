@@ -256,6 +256,10 @@ public class ShowroomRuleTests
     {
         var controller = typeof(FinalProject.MVC.Controllers.AdminRequestsController);
         Assert.Equal("Admin,SuperAdmin", controller.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        var delete = controller.GetMethod(nameof(FinalProject.MVC.Controllers.AdminRequestsController.Delete))!;
+        Assert.NotNull(delete.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
+        Assert.NotNull(delete.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
+        Assert.Null(delete.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpGetAttribute>());
         var requestToBuy = typeof(FinalProject.MVC.Controllers.ShopController)
             .GetMethod(nameof(FinalProject.MVC.Controllers.ShopController.RequestToBuy))!;
         Assert.NotNull(requestToBuy.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());

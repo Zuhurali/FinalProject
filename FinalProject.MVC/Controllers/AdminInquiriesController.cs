@@ -34,6 +34,17 @@ public sealed class AdminInquiriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost("Delete/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var deleted = await _catalog.DeleteInquiryAsync(id, cancellationToken);
+        TempData[deleted ? "Success" : "Error"] = deleted
+            ? $"Product question #{id} was deleted."
+            : "Product question not found or was already deleted.";
+        return RedirectToAction(nameof(Index));
+    }
+
     /// <summary>
     /// AJAX endpoint — returns JSON so the admin UI can update inline without a full-page reload.
     /// Requires antiforgery token supplied as the X-XSRF-TOKEN header or form field.

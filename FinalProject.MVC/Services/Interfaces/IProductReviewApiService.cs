@@ -22,6 +22,8 @@ public interface IProductReviewApiService
 
     Task DeleteReviewAsync(int reviewId, string accessToken, CancellationToken cancellationToken = default);
 
+    Task DeleteReviewAsAdminAsync(int reviewId, string accessToken, CancellationToken cancellationToken = default);
+
     Task SetHiddenAsync(int reviewId, bool hidden, string accessToken, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ProductReviewRevisionDto>> GetHistoryAsync(

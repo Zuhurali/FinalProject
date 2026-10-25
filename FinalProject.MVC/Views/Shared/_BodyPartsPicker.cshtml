@@ -1,0 +1,39 @@
+@model (string FieldName, string InputId, string? Stored, string Label, string IconClass, string Help)
+@{
+    var parsed = VehicleBodyPartCatalog.Read(Model.Stored);
+    var otherId = Model.InputId + "_other";
+    var otherWrapId = Model.InputId + "_other_wrap";
+}
+<div class="form__control av-field av-body-parts" data-body-parts="@Model.InputId">
+    <label><i class="@Model.IconClass" aria-hidden="true"></i> @Model.Label <span class="av-optional">(optional)</span></label>
+    <p class="av-help mb-2">@Model.Help Leave unselected if you are not specifying any parts.</p>
+    <div class="av-part-chips" role="group" aria-label="@Model.Label">
+        @foreach (var part in VehicleBodyPartCatalog.Parts)
+        {
+            var checkedPart = parsed.Parts.Contains(part, StringComparer.OrdinalIgnoreCase);
+            <label class="av-part-chip">
+                <input type="checkbox"
+                       class="av-part-check"
+                       value="@part"
+                       @(checkedPart ? "checked" : null) />
+                <span>@part</span>
+            </label>
+        }
+        <label class="av-part-chip">
+            <input type="checkbox"
+                   class="av-part-check av-part-other"
+                   value="@VehicleBodyPartCatalog.OtherKey"
+                   data-other-wrap="@otherWrapId"
+                   @(parsed.OtherSelected ? "checked" : null) />
+            <span>Other</span>
+        </label>
+    </div>
+    <div id="@otherWrapId" class="mt-2" @(parsed.OtherSelected ? null : "hidden")>
+        <input id="@otherId"
+               class="input-form form-control av-part-other-text"
+               maxlength="200"
+               placeholder="Describe other parts"
+               value="@parsed.OtherText" />
+    </div>
+    <input type="hidden" id="@Model.InputId" name="@Model.FieldName" class="av-part-stored" value="@Model.Stored" />
+</div>

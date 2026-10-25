@@ -1,0 +1,66 @@
+using FinalProject.Commerce;
+using FinalProject.DTOs;
+using FinalProject.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FinalProject.Controllers;
+
+[ApiController]
+[Route("api/cars/explore")]
+public sealed class CarDiscoveryController : ControllerBase
+{
+    private readonly ICarDiscoveryService _discovery;
+
+    public CarDiscoveryController(ICarDiscoveryService discovery)
+    {
+        _discovery = discovery;
+    }
+
+    [HttpGet("most-viewed")]
+    [ProducesResponseType(typeof(PagedResult<RankedCarResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PagedResult<RankedCarResponse>>> MostViewed(
+        [FromQuery] string? period,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = CarDiscoveryRules.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        if (!CarDiscoveryRules.TryNormalizePeriod(period, out var normalized))
+        {
+            return BadRequest(new { message = "Period must be today, week, or all." });
+        }
+
+        return Ok(await _discovery.GetMostViewedAsync(normalized, page, pageSize, cancellationToken: cancellationToken));
+    }
+
+    [HttpGet("most-favorited")]
+    [ProducesResponseType(typeof(PagedResult<RankedCarResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<RankedCarResponse>>> MostFavorited(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = CarDiscoveryRules.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await _discovery.GetMostFavoritedAsync(page, pageSize, cancellationToken));
+    }
+
+    [HttpGet("latest")]
+    [ProducesResponseType(typeof(PagedResult<CarResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<CarResponse>>> Latest(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = CarDiscoveryRules.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await _discovery.GetLatestArrivalsAsync(page, pageSize, cancellationToken));
+    }
+
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [HttpGet("statistics")]
+    [ProducesResponseType(typeof(CarDiscoveryStatisticsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<CarDiscoveryStatisticsResponse>> Statistics(CancellationToken cancellationToken)
+    {
+        return Ok(await _discovery.GetStatisticsAsync(cancellationToken: cancellationToken));
+    }
+}

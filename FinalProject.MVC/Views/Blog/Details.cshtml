@@ -82,15 +82,6 @@
                         <li>Car Deals</li>
                         <li>Luxury Cars</li>
                     </ul>
-                    <div class="share-link mb--40">
-                        <h2>Share</h2>
-                        <ul>
-                            <li><a href="#"><img src="~/assets/images/icon/f-3.svg" alt=""></a></li>
-                            <li><a href="#"><img src="~/assets/images/icon/x-3.svg" alt=""></a></li>
-                            <li><a href="#"><img src="~/assets/images/icon/insta-3.svg" alt=""></a></li>
-                            <li><a href="#"><img src="~/assets/images/icon/in-3.svg" alt=""></a></li>
-                        </ul>
-                    </div>
                     <div class="comment-area mb--40">
                         <h2>Comment</h2>
                         <div class="comment-box mb--30">
@@ -176,7 +167,7 @@
                                             <h6><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Model</a></h6>
                                             <div class="author-date">
                                                 <div class="person">@car.Year · @car.Fuel · @car.Transmission</div>
-                                                <div class="date">$@car.Price.ToString("N0") · @car.Mileage.ToString("N0") Miles</div>
+                                                <div class="date">$@car.Price.ToString("N0") · @car.MileageText</div>
                                             </div>
                                         </div>
                                     </div>

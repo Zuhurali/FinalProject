@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/assets/css/vendor/bootstrap.min.css">
+    <link rel="stylesheet" href="~/assets/fonts/rt-icon.css">
     <link rel="stylesheet" href="~/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
@@ -25,6 +26,7 @@
         .admin-sidebar h4 {
             white-space:nowrap;
             margin-bottom:1.25rem;
+            color:#fff;
         }
         .admin-sidebar a {
             display:block;
@@ -61,6 +63,7 @@
                 <h4 class="mb-4">AutoVault</h4>
                 <a class="@(IsActive("Admin", "Index") ? "active" : null)" asp-controller="Admin" asp-action="Index">Dashboard</a>
                 <a class="@(IsActive("AdminCars") ? "active" : null)" asp-controller="AdminCars" asp-action="Index">Cars</a>
+                <a class="@(IsActive("AdminStatistics") ? "active" : null)" asp-controller="AdminStatistics" asp-action="Index">Car Statistics</a>
                 <a class="@(IsActive("AdminParts") ? "active" : null)" asp-controller="AdminParts" asp-action="Index">Parts</a>
                 <a class="@(IsActive("AdminCampaigns") ? "active" : null)" asp-controller="AdminCampaigns" asp-action="Index">Campaigns</a>
                 <a class="@(IsActive("AdminSales") ? "active" : null)" asp-controller="AdminSales" asp-action="Index">In-Store Sales</a>

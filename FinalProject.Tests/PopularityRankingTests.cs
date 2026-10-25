@@ -8,34 +8,50 @@ public class PopularityRankingTests
     [Fact]
     public void One_five_star_review_does_not_outrank_many_strong_reviews()
     {
-        var single = PopularityRanking.Score(5, 1, 1, 0, 4);
-        var established = PopularityRanking.Score(4.7, 10, 10, 0, 48);
+        var single = PopularityRanking.Score(5, 1, 1, 4);
+        var established = PopularityRanking.Score(4.7, 10, 10, 48);
 
         Assert.True(established > single);
     }
 
     [Fact]
-    public void Higher_sales_rank_higher_when_ratings_match()
+    public void Higher_recorded_sales_rank_higher_when_ratings_match()
     {
-        var quiet = PopularityRanking.Score(4.5, 4, 4, 0, 6);
-        var busier = PopularityRanking.Score(4.5, 4, 4, 0, 30);
+        var quiet = PopularityRanking.Score(4.5, 4, 4, 6);
+        var busier = PopularityRanking.Score(4.5, 4, 4, 30);
 
         Assert.True(busier > quiet);
     }
 
     [Fact]
-    public void Changing_stored_sales_can_change_the_winner()
+    public void Changing_recorded_sales_can_change_the_winner()
     {
-        var first = PopularityRanking.Score(4.2, 4, 4, 0, 10);
-        var second = PopularityRanking.Score(4.2, 4, 4, 0, 12);
-        var secondAfterFewerSales = PopularityRanking.Score(4.2, 4, 4, 0, 3);
+        var first = PopularityRanking.Score(4.2, 4, 4, 10);
+        var second = PopularityRanking.Score(4.2, 4, 4, 12);
+        var secondAfterFewerSales = PopularityRanking.Score(4.2, 4, 4, 3);
 
         Assert.True(second > first);
         Assert.True(first > secondAfterFewerSales);
     }
 
     [Fact]
-    public void Popular_order_breaks_ties_by_sales_then_product_id()
+    public void Demo_sale_quantities_do_not_change_the_score()
+    {
+        // Former API took (real, demo); ranking must ignore simulated units entirely.
+        var withoutActivity = PopularityRanking.Score(0, 0, 0, 0);
+        var withOnlyPrior = PopularityRanking.Score(4.5, 0, 0, 0);
+        Assert.Equal(PopularityRanking.PriorMean * PopularityRanking.RatingWeight, withoutActivity, 5);
+        Assert.Equal(withoutActivity, withOnlyPrior, 5);
+
+        var realOnly = PopularityRanking.Score(4.5, 4, 4, 30);
+        // Passing former "demo" figures as recorded would wrongly inflate — ensure API has one sales arg.
+        Assert.True(realOnly > PopularityRanking.Score(4.5, 4, 4, 0));
+        Assert.Equal(0, PopularityRanking.SalesScore(0));
+        Assert.Equal(0, PopularityRanking.UnitsSold(-3));
+    }
+
+    [Fact]
+    public void Popular_order_breaks_ties_by_recorded_sales_then_product_id()
     {
         var products = new[]
         {
@@ -46,7 +62,7 @@ public class PopularityRankingTests
 
         var ordered = PopularityRanking.ByPopularity(
             products,
-            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, 0, item.Sales),
+            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, item.Sales),
             item => item.Sales,
             item => item.Id).Select(item => item.Id).ToArray();
 
@@ -67,7 +83,7 @@ public class PopularityRankingTests
             .First();
         var popular = PopularityRanking.ByPopularity(
             products,
-            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, 0, item.Sales),
+            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, item.Sales),
             item => item.Sales,
             item => item.Id).Select(item => item.Id).First();
 
@@ -76,23 +92,27 @@ public class PopularityRankingTests
     }
 
     [Fact]
-    public void Demo_plan_ranks_the_turbocharger_first_and_keeps_latest_separate()
+    public void Recorded_sales_plan_ranks_high_volume_part_first_and_keeps_latest_separate()
     {
+        // Explicit recorded quantities (not PopularityDemoPlan) — mirrors former demo volumes for ordering only.
+        var recordedSalesById = new Dictionary<int, int>
+        {
+            [1] = 8, [2] = 16, [3] = 9, [4] = 11, [5] = 6, [6] = 12, [7] = 20, [8] = 4,
+            [9] = 10, [10] = 13, [11] = 15, [12] = 7, [13] = 6, [14] = 18, [15] = 8,
+            [16] = 48, [17] = 9, [18] = 7, [19] = 14, [20] = 11, [21] = 1
+        };
         var products = Enumerable.Range(1, 21)
-            .Select(id =>
-            {
-                return new PlannedPart(
-                    id,
-                    0,
-                    0,
-                    PopularityDemoPlan.DemoSales(id),
-                    new DateTime(2026, 8, 1).AddDays(id));
-            })
+            .Select(id => new PlannedPart(
+                id,
+                0,
+                0,
+                recordedSalesById[id],
+                new DateTime(2026, 8, 1).AddDays(id)))
             .ToArray();
 
         var popular = PopularityRanking.ByPopularity(
             products,
-            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, 0, item.Sales),
+            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, item.Sales),
             item => item.Sales,
             item => item.Id).First();
         var latest = PopularityRanking.ByLatest(products, item => item.CreatedAt, item => item.Id).First();
@@ -103,10 +123,12 @@ public class PopularityRankingTests
     }
 
     [Fact]
-    public void Demo_sales_are_labelled_and_positive()
+    public void Explanation_documents_genuine_data_only()
     {
+        Assert.Contains("genuine", PopularityRanking.Explanation, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("recorded", PopularityRanking.Explanation, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Demo sales (simulated)", PopularityRanking.Explanation, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Not a verified sale", PopularityDemoPlan.DemoSaleNote);
-        Assert.All(Enumerable.Range(1, 21), id => Assert.True(PopularityDemoPlan.DemoSales(id) > 0));
     }
 
     [Fact]

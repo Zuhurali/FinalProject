@@ -22,7 +22,7 @@
     var defaultSubject = $"Inquiry about {Model.Name}";
     var defaultMessage = $"Hi, I'm interested in the {Model.Name}.\n\nI'd like to ask about pricing, availability, or a possible discount.";
     var openMessage = string.Equals(Context.Request.Query["openMessage"], "1", StringComparison.Ordinal);
-    var mileageText = $"{Model.Mileage:N0} Miles";
+    var mileageText = Model.MileageText;
     var isElectric = string.Equals(Model.Fuel, "Electric", StringComparison.OrdinalIgnoreCase);
     var engineLabel = isElectric ? "Motor" : "Engine";
     var listedOn = Model.CreatedAt.Year >= 2000 ? Model.CreatedAt.ToString("MMM dd, yyyy") : string.Empty;
@@ -35,7 +35,11 @@
     if (Model.Seats > 0) overview.Add(("13", "Seating Capacity", $"{Model.Seats} seats"));
     if (!string.IsNullOrWhiteSpace(Model.DriveType)) overview.Add(("14", "Drive Type", Model.DriveType));
     if (!string.IsNullOrWhiteSpace(Model.Engine)) overview.Add(("15", engineLabel, Model.Engine));
-    if (!string.IsNullOrWhiteSpace(Model.Color)) overview.Add(("16", "Color", Model.Color));
+    if (!string.IsNullOrWhiteSpace(Model.Color)) overview.Add(("16", "Color", string.IsNullOrWhiteSpace(Model.ColorHex) ? Model.Color : $"{Model.Color} ({Model.ColorHex})"));
+    if (Model.Horsepower > 0) overview.Add(("17", "Horsepower", $"{Model.Horsepower} HP"));
+    if (Model.Doors > 0) overview.Add(("18", "Doors", Model.Doors.ToString()));
+    if (Model.Cylinders > 0) overview.Add(("19", "Cylinders", Model.Cylinders.ToString()));
+    if (!string.IsNullOrWhiteSpace(Model.Steering)) overview.Add(("04", "Steering", Model.Steering == "RHD" ? "Right-hand drive" : "Left-hand drive"));
 
     var keySpecs = new List<(string Value, string Label)>();
     if (!string.IsNullOrWhiteSpace(Model.Transmission)) keySpecs.Add((Model.Transmission, "Transmission"));
@@ -43,14 +47,23 @@
     if (!string.IsNullOrWhiteSpace(Model.Fuel)) keySpecs.Add((Model.Fuel, "Fuel Type"));
     keySpecs.Add((mileageText, "Mileage"));
     if (Model.Seats > 0) keySpecs.Add(($"{Model.Seats} seats", "Seating"));
-    if (!string.IsNullOrWhiteSpace(Model.Color)) keySpecs.Add((Model.Color, "Exterior Color"));
+    if (!string.IsNullOrWhiteSpace(Model.Color)) keySpecs.Add((string.IsNullOrWhiteSpace(Model.ColorHex) ? Model.Color : $"{Model.Color} ({Model.ColorHex})", "Exterior Color"));
 
     var engineRows = new List<(string Label, string Value)>();
     if (!string.IsNullOrWhiteSpace(Model.Make)) engineRows.Add(("Make", Model.Make));
     if (!string.IsNullOrWhiteSpace(Model.Model)) engineRows.Add(("Model", Model.Model));
     if (!string.IsNullOrWhiteSpace(Model.Category)) engineRows.Add(("Category", Model.Category));
     if (!string.IsNullOrWhiteSpace(Model.Engine)) engineRows.Add((engineLabel, Model.Engine));
+    if (Model.Horsepower > 0) engineRows.Add(("Horsepower", $"{Model.Horsepower} HP"));
+    if (Model.Cylinders > 0) engineRows.Add(("Cylinders", Model.Cylinders.ToString()));
     if (!string.IsNullOrWhiteSpace(Model.DriveType)) engineRows.Add(("Drive Type", Model.DriveType));
+    if (Model.Doors > 0) engineRows.Add(("Doors", Model.Doors.ToString()));
+    if (!string.IsNullOrWhiteSpace(Model.Vin)) engineRows.Add(("VIN", Model.Vin));
+    if (!string.IsNullOrWhiteSpace(Model.MarketOrigin)) engineRows.Add(("Market", Model.MarketOrigin));
+    if (!string.IsNullOrWhiteSpace(Model.AccidentHistory)) engineRows.Add(("Accident history", Model.AccidentHistory));
+    if (!string.IsNullOrWhiteSpace(Model.CustomsStatus)) engineRows.Add(("Customs", Model.CustomsStatus));
+    if (!string.IsNullOrWhiteSpace(Model.RepaintedParts)) engineRows.Add(("Repainted parts", Model.RepaintedParts));
+    if (!string.IsNullOrWhiteSpace(Model.ReplacedParts)) engineRows.Add(("Replaced parts", Model.ReplacedParts));
 }
 
 <link rel="stylesheet" href="~/css/car-details.css" asp-append-version="true">
@@ -133,17 +146,16 @@
                         <p class="mb--30">@Model.Description</p>
                     }
 
-                    <h2 class="mb--30">Car Features</h2>
-                    <ul class="feature-list mb--40">
-                        <li><i class="fa-regular fa-circle-check"></i> Engine Type</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Horsepower</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Automatic Climate Control</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Touchscreen Display</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Navigation System</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Fog Lights</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Start-Stop Technology</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Automatic Headlights</li>
-                    </ul>
+                    @if (Model.Features.Count > 0)
+                    {
+                        <h2 class="mb--30">Car Features</h2>
+                        <ul class="feature-list mb--40">
+                            @foreach (var feature in Model.Features)
+                            {
+                                <li><i class="fa-regular fa-circle-check"></i> @feature</li>
+                            }
+                        </ul>
+                    }
 
                     @if (keySpecs.Count > 0)
                     {
@@ -230,7 +242,7 @@
                                                 <ul class="feature-area">
                                                     <li>
                                                         <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                        @relatedCar.Mileage.ToString("N0") Miles
+                                                        @relatedCar.MileageText
                                                     </li>
                                                     <li>
                                                         <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">

@@ -474,7 +474,9 @@ public sealed class ShopCatalogService : IShopCatalogService
 
     public async Task<IReadOnlyList<InPersonSale>> GetSalesAsync(CancellationToken cancellationToken = default)
     {
+        // Recorded sales only — simulated/demo rows are excluded from the admin history.
         return await _db.InPersonSales.AsNoTracking()
+            .Where(sale => !sale.IsDemo)
             .Include(sale => sale.Product)
             .Include(sale => sale.Campaign)
             .OrderByDescending(sale => sale.SoldAt)
@@ -625,6 +627,19 @@ public sealed class ShopCatalogService : IShopCatalogService
         return (true, null);
     }
 
+    public async Task<bool> DeleteInquiryAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var inquiry = await _db.ProductInquiries.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (inquiry == null)
+        {
+            return false;
+        }
+
+        _db.ProductInquiries.Remove(inquiry);
+        await _db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default)
     {
         return await _db.ShowroomPurchaseRequests.AsNoTracking()
@@ -715,6 +730,19 @@ public sealed class ShopCatalogService : IShopCatalogService
 
         request.Status = status;
         request.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> DeletePurchaseRequestAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var request = await _db.ShowroomPurchaseRequests.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (request == null)
+        {
+            return false;
+        }
+
+        _db.ShowroomPurchaseRequests.Remove(request);
         await _db.SaveChangesAsync(cancellationToken);
         return true;
     }

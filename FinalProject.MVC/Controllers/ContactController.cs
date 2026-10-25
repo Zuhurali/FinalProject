@@ -81,45 +81,89 @@ public class ContactController : Controller
             };
         }
 
-        var (sent, mailError) = await _mailer.SendAsync(model, cancellationToken);
-        if (!sent)
+        var userId = await ResolveAuthenticatedUserIdAsync();
+        bool saved;
+        int? id;
+        Dictionary<string, string> errors;
+        string? error;
+        try
         {
+            (saved, id, errors, error) = await _contactRequests.SaveAsync(model, userId, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Contact inquiry from {Email} could not be stored.", model.Email);
             return new JsonResult(new
             {
                 success = false,
-                message = mailError ?? ContactInquiryMailer.DeliveryFailedMessage
+                emailSent = false,
+                message = ContactFormOutcome.SaveFailed
             })
             {
-                StatusCode = StatusCodes.Status503ServiceUnavailable
+                StatusCode = StatusCodes.Status500InternalServerError
             };
         }
 
-        var userId = await ResolveAuthenticatedUserIdAsync();
-        var (ok, id, errors, error) = await _contactRequests.SaveAsync(model, userId, cancellationToken);
-        if (!ok)
+        if (!saved)
         {
-            _logger.LogWarning(
-                "Contact email was sent for {Email} but the request was not stored: {Error}",
-                model.Email,
-                error);
+            if (errors.Count > 0)
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    emailSent = false,
+                    message = "Please correct the highlighted fields.",
+                    errors
+                })
+                {
+                    StatusCode = StatusCodes.Status400BadRequest
+                };
+            }
+
+            _logger.LogWarning("Contact inquiry from {Email} was not stored: {Error}", model.Email, error);
+            return new JsonResult(new
+            {
+                success = false,
+                emailSent = false,
+                message = error ?? ContactFormOutcome.SaveFailed
+            })
+            {
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
         }
-        else
+
+        var (emailed, mailError) = await _mailer.SendAsync(model, cancellationToken);
+        var emailUnavailable = !emailed
+            && string.Equals(mailError, ContactInquiryMailer.NotConfiguredMessage, StringComparison.Ordinal);
+        var outcome = ContactFormOutcome.AfterSuccessfulSave(emailed, emailUnavailable);
+
+        if (emailed)
         {
             _logger.LogInformation(
-                "Contact request #{Id} emailed and saved from {Name} <{Email}> user {UserId} interest {Interest}",
+                "Contact request #{Id} saved and emailed from {Name} <{Email}> user {UserId} interest {Interest}",
                 id,
                 model.Name,
                 model.Email,
                 userId ?? "(anonymous)",
                 model.Car);
         }
+        else
+        {
+            _logger.LogWarning(
+                "Contact request #{Id} was saved but email was not sent: {Error}",
+                id,
+                mailError);
+        }
 
         return new JsonResult(new
         {
-            success = true,
-            message = "Thank you. Your message was sent. Our team will get back to you shortly.",
-            errors
-        });
+            success = outcome.Success,
+            emailSent = outcome.EmailSent,
+            message = outcome.Message
+        })
+        {
+            StatusCode = outcome.StatusCode
+        };
     }
 
     private async Task<string?> ResolveAuthenticatedUserIdAsync()

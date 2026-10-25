@@ -89,6 +89,34 @@ public class CarApiDto
 
     public string Color { get; set; } = string.Empty;
 
+    public int? Seats { get; set; }
+
+    public string? Engine { get; set; }
+
+    public string? MileageUnit { get; set; }
+
+    public int? Horsepower { get; set; }
+
+    public int? Doors { get; set; }
+
+    public int? Cylinders { get; set; }
+
+    public string? Steering { get; set; }
+
+    public string? Vin { get; set; }
+
+    public string? AccidentHistory { get; set; }
+
+    public string? RepaintedParts { get; set; }
+
+    public string? ReplacedParts { get; set; }
+
+    public string? CustomsStatus { get; set; }
+
+    public string? MarketOrigin { get; set; }
+
+    public List<string> Features { get; set; } = new();
+
     public string Description { get; set; } = string.Empty;
 
     public bool IsNew { get; set; }

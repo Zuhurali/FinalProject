@@ -76,6 +76,80 @@ public class CarApiService : ICarApiService
         return suggestions ?? new List<CarSuggestionDto>();
     }
 
+    public async Task RecordViewAsync(int id, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"api/cars/{id}/views");
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            throw new CarApiException("The car API could not be reached.", exception);
+        }
+        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new CarApiException("The car API request timed out.", exception);
+        }
+
+        using (response)
+        {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return;
+            }
+
+            await EnsureSuccessAsync(response, cancellationToken);
+        }
+    }
+
+    public async Task<PagedRankedCarsDto> GetMostViewedAsync(
+        string period,
+        int page = 1,
+        int pageSize = 9,
+        CancellationToken cancellationToken = default)
+    {
+        var url =
+            $"api/cars/explore/most-viewed?period={Uri.EscapeDataString(period)}&page={page}&pageSize={pageSize}";
+        using var response = await SendAsync(url, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<PagedRankedCarsDto>(JsonOptions, cancellationToken)
+            ?? new PagedRankedCarsDto { CurrentPage = page, PageSize = pageSize };
+    }
+
+    public async Task<PagedRankedCarsDto> GetMostFavoritedAsync(
+        int page = 1,
+        int pageSize = 9,
+        CancellationToken cancellationToken = default)
+    {
+        var url = $"api/cars/explore/most-favorited?page={page}&pageSize={pageSize}";
+        using var response = await SendAsync(url, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<PagedRankedCarsDto>(JsonOptions, cancellationToken)
+            ?? new PagedRankedCarsDto { CurrentPage = page, PageSize = pageSize };
+    }
+
+    public async Task<PagedCarsDto> GetLatestArrivalsAsync(
+        int page = 1,
+        int pageSize = 9,
+        CancellationToken cancellationToken = default)
+    {
+        var url = $"api/cars/explore/latest?page={page}&pageSize={pageSize}";
+        using var response = await SendAsync(url, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<PagedCarsDto>(JsonOptions, cancellationToken)
+            ?? new PagedCarsDto { CurrentPage = page, PageSize = pageSize };
+    }
+
+    public async Task<CarDiscoveryStatisticsDto> GetDiscoveryStatisticsAsync(string accessToken, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAuthorizedAsync(HttpMethod.Get, "api/cars/explore/statistics", accessToken, null, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<CarDiscoveryStatisticsDto>(JsonOptions, cancellationToken)
+            ?? new CarDiscoveryStatisticsDto();
+    }
+
     public async Task<CarApiDto?> GetCarByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync($"api/cars/{id}", cancellationToken);

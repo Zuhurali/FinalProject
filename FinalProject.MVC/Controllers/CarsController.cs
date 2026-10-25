@@ -198,6 +198,15 @@ namespace FinalProject.MVC.Controllers
                     .Take(2)
                     .ToList();
                 await MarkFavoritesAsync([car]);
+                try
+                {
+                    await _carApi.RecordViewAsync(car.Id, HttpContext.RequestAborted);
+                }
+                catch (CarApiException exception)
+                {
+                    _logger.LogWarning(exception, "View for car {CarId} could not be recorded.", car.Id);
+                }
+
                 ViewData["Title"] = $"{car.Name} - AutoVault";
                 ViewData["BodyClass"] = "with-sidebar";
                 ViewData["HeaderStyle"] = "three";
@@ -209,6 +218,103 @@ namespace FinalProject.MVC.Controllers
                 TempData["CarApiUnavailable"] = true;
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        public async Task<IActionResult> MostViewed(string? period, int page = 1)
+        {
+            var selected = period?.Trim().ToLowerInvariant() switch
+            {
+                "today" => "today",
+                "week" => "week",
+                _ => "all"
+            };
+            return await ExplorePageAsync(
+                "Most Viewed Cars",
+                "Ranked by how many times each car's details page was opened.",
+                "viewed",
+                selected,
+                "views",
+                nameof(MostViewed),
+                page,
+                async () =>
+                {
+                    var result = await _carApi.GetMostViewedAsync(
+                        selected,
+                        page,
+                        CarExplorePage.PageSize,
+                        HttpContext.RequestAborted);
+                    return (
+                        result.Items.Select(item => new CarExploreItem
+                        {
+                            Car = CarApiMapper.ToCar(item.Car),
+                            Count = item.Count,
+                            Detail = $"{item.Count} view{(item.Count == 1 ? "" : "s")}"
+                        }).ToList(),
+                        result.CurrentPage,
+                        result.TotalPages,
+                        result.TotalCount);
+                });
+        }
+
+        public async Task<IActionResult> MostFavorited(int page = 1)
+        {
+            return await ExplorePageAsync(
+                "Most Favorited Cars",
+                "Ranked by how many accounts currently have each car saved.",
+                "favorited",
+                "all",
+                "favorites",
+                nameof(MostFavorited),
+                page,
+                async () =>
+                {
+                    var result = await _carApi.GetMostFavoritedAsync(
+                        page,
+                        CarExplorePage.PageSize,
+                        HttpContext.RequestAborted);
+                    return (
+                        result.Items.Select(item => new CarExploreItem
+                        {
+                            Car = CarApiMapper.ToCar(item.Car),
+                            Count = item.Count,
+                            Detail = $"{item.Count} favorite{(item.Count == 1 ? "" : "s")}"
+                        }).ToList(),
+                        result.CurrentPage,
+                        result.TotalPages,
+                        result.TotalCount);
+                });
+        }
+
+        public async Task<IActionResult> Latest(int page = 1)
+        {
+            return await ExplorePageAsync(
+                "Latest Arrivals",
+                "Newest listings first, using each car's listing date.",
+                "latest",
+                "all",
+                "",
+                nameof(Latest),
+                page,
+                async () =>
+                {
+                    var result = await _carApi.GetLatestArrivalsAsync(
+                        page,
+                        CarExplorePage.PageSize,
+                        HttpContext.RequestAborted);
+                    return (
+                        result.Items.Select(dto =>
+                        {
+                            var car = CarApiMapper.ToCar(dto);
+                            return new CarExploreItem
+                            {
+                                Car = car,
+                                Detail = $"Listed {car.CreatedAt:dd MMM yyyy}"
+                            };
+                        }).ToList(),
+                        result.CurrentPage,
+                        result.TotalPages,
+                        result.TotalCount);
+                });
         }
 
         public IActionResult DetailsTwo(int? id)
@@ -514,6 +620,45 @@ namespace FinalProject.MVC.Controllers
         private static bool HasFilterValue(string? value)
         {
             return !string.IsNullOrWhiteSpace(value) && !value.Equals("All", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<IActionResult> ExplorePageAsync(
+            string heading,
+            string intro,
+            string kind,
+            string period,
+            string countLabel,
+            string actionName,
+            int pageNumber,
+            Func<Task<(List<CarExploreItem> Cars, int CurrentPage, int TotalPages, int TotalCount)>> load)
+        {
+            ViewData["Title"] = $"{heading} - AutoVault";
+            var page = new CarExplorePage
+            {
+                Heading = heading,
+                Intro = intro,
+                Kind = kind,
+                Period = period,
+                CountLabel = countLabel,
+                ActionName = actionName,
+                Page = pageNumber < 1 ? 1 : pageNumber
+            };
+            try
+            {
+                var loaded = await load();
+                page.Cars = loaded.Cars;
+                page.Page = loaded.CurrentPage < 1 ? 1 : loaded.CurrentPage;
+                page.TotalPages = loaded.TotalPages;
+                page.TotalCount = loaded.TotalCount;
+                await MarkFavoritesAsync(page.Cars.Select(item => item.Car));
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogError(exception, "{Heading} could not be loaded.", heading);
+                page.ApiUnavailable = true;
+            }
+
+            return View("Explore", page);
         }
 
         private async Task MarkFavoritesAsync(IEnumerable<Car> cars)

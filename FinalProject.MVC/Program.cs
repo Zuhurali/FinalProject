@@ -10,6 +10,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 64 * 1024 * 1024;
+});
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 64 * 1024 * 1024;
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -135,6 +143,7 @@ builder.Services.Configure<DealershipContactSettings>(
     builder.Configuration.GetSection(DealershipContactSettings.SectionName));
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IContactInquiryMailer, ContactInquiryMailer>();
+builder.Services.AddScoped<ICarImageUploadService, CarImageUploadService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();

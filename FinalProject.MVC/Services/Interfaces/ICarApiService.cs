@@ -23,4 +23,14 @@ public interface ICarApiService
     Task DeleteCarAsync(int id, string accessToken, CancellationToken cancellationToken = default);
 
     Task<CarApiDto> CreateCatalogCarAsync(SaveCarDto car, string accessToken, CancellationToken cancellationToken = default);
+
+    Task RecordViewAsync(int id, CancellationToken cancellationToken = default);
+
+    Task<PagedRankedCarsDto> GetMostViewedAsync(string period, int page = 1, int pageSize = 9, CancellationToken cancellationToken = default);
+
+    Task<PagedRankedCarsDto> GetMostFavoritedAsync(int page = 1, int pageSize = 9, CancellationToken cancellationToken = default);
+
+    Task<PagedCarsDto> GetLatestArrivalsAsync(int page = 1, int pageSize = 9, CancellationToken cancellationToken = default);
+
+    Task<CarDiscoveryStatisticsDto> GetDiscoveryStatisticsAsync(string accessToken, CancellationToken cancellationToken = default);
 }

@@ -86,6 +86,10 @@ namespace FinalProject.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccidentHistory")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
                     b.Property<int>("BrandId")
                         .HasColumnType("int");
 
@@ -100,15 +104,40 @@ namespace FinalProject.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CustomsStatus")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int?>("Cylinders")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<int?>("Doors")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DriveType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Engine")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Features")
+                        .HasMaxLength(800)
+                        .HasColumnType("nvarchar(800)");
+
                     b.Property<string>("FuelType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("Horsepower")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
@@ -116,8 +145,16 @@ namespace FinalProject.Data.Migrations
                     b.Property<bool>("IsNew")
                         .HasColumnType("bit");
 
+                    b.Property<string>("MarketOrigin")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
                     b.Property<int>("Mileage")
                         .HasColumnType("int");
+
+                    b.Property<string>("MileageUnit")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Model")
                         .IsRequired()
@@ -131,12 +168,27 @@ namespace FinalProject.Data.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("RepaintedParts")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("ReplacedParts")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<int?>("Seats")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)")
                         .HasDefaultValue("Active");
+
+                    b.Property<string>("Steering")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<string>("Transmission")
                         .IsRequired()
@@ -145,6 +197,10 @@ namespace FinalProject.Data.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Vin")
+                        .HasMaxLength(17)
+                        .HasColumnType("nvarchar(17)");
 
                     b.Property<int>("Year")
                         .HasColumnType("int");
@@ -231,6 +287,31 @@ namespace FinalProject.Data.Migrations
                     b.HasIndex("ReceiverId", "IsRead");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.CarView", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("CarId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ViewedAt")
+                        .HasDatabaseName("IX_CarViews_ViewedAt");
+
+                    b.HasIndex("CarId", "ViewedAt")
+                        .HasDatabaseName("IX_CarViews_CarId_ViewedAt");
+
+                    b.ToTable("CarViews");
                 });
 
             modelBuilder.Entity("FinalProject.Models.Entities.Category", b =>
@@ -753,6 +834,17 @@ namespace FinalProject.Data.Migrations
                     b.Navigation("Receiver");
 
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("FinalProject.Models.Entities.CarView", b =>
+                {
+                    b.HasOne("FinalProject.Models.Entities.Car", "Car")
+                        .WithMany()
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Car");
                 });
 
             modelBuilder.Entity("FinalProject.Models.Entities.Conversation", b =>

@@ -18,6 +18,7 @@ builder.Services.AddDbContext<FinalProjectDbContext>(options =>
         sql => sql.MigrationsHistoryTable(FinalProjectDbContext.MigrationsHistoryTable)));
 
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<ICarDiscoveryService, CarDiscoveryService>();
 builder.Services.AddScoped<IProductRatingService, ProductRatingService>();
 builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
 builder.Services.AddScoped<IMarketplaceService, MarketplaceService>();

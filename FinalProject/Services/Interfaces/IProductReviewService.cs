@@ -25,6 +25,14 @@ public interface IProductReviewService
         string userId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Permanently deletes a review for Admin/SuperAdmin moderation (no ownership check).
+    /// Cascades revision history only; does not delete products or users.
+    /// </summary>
+    Task<bool> DeleteReviewAsAdminAsync(
+        int reviewId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ProductReviewRevisionItem>?> GetHistoryAsync(
         int reviewId,
         CancellationToken cancellationToken = default);

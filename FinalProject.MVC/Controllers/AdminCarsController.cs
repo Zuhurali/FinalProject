@@ -18,6 +18,7 @@ public sealed class AdminCarsController : AdminControllerBase
     private const int DefaultPageSize = 20;
 
     private readonly ICarApiService _cars;
+    private readonly ICarImageUploadService _images;
     private readonly IHubContext<ConversationHub> _conversations;
     private readonly ILogger<AdminCarsController> _logger;
 
@@ -25,11 +26,13 @@ public sealed class AdminCarsController : AdminControllerBase
         UserManager<ApplicationUser> userManager,
         IApiAccessTokenService tokenService,
         ICarApiService carApi,
+        ICarImageUploadService images,
         IHubContext<ConversationHub> conversations,
         ILogger<AdminCarsController> logger)
         : base(userManager, tokenService)
     {
         _cars = carApi;
+        _images = images;
         _conversations = conversations;
         _logger = logger;
     }
@@ -116,17 +119,25 @@ public sealed class AdminCarsController : AdminControllerBase
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CarEditorViewModel model, CancellationToken cancellationToken)
+    [RequestSizeLimit(64 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
+    public async Task<IActionResult> Create(
+        CarEditorViewModel model,
+        IFormFile? imageFile,
+        List<IFormFile>? galleryFiles,
+        CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
+        model.Car.GallerySpecified = true;
+        var uploaded = new List<string>();
+        if (!await PrepareImagesAsync(model, imageFile, galleryFiles, uploaded, requireImage: true, cancellationToken))
         {
-            model.Lookups = await SafeLookupsAsync(cancellationToken);
             return View(model);
         }
 
         var token = await CreateTokenAsync();
         if (token == null)
         {
+            _images.DeleteUploads(uploaded);
             return Challenge();
         }
 
@@ -138,6 +149,13 @@ public sealed class AdminCarsController : AdminControllerBase
         }
         catch (CarApiException exception)
         {
+            _images.DeleteUploads(uploaded);
+            if (uploaded.Contains(model.Car.ImageUrl))
+            {
+                model.Car.ImageUrl = string.Empty;
+            }
+
+            model.Car.AdditionalImageUrls.Clear();
             ModelState.AddModelError(string.Empty, exception.Message);
             model.Lookups = await SafeLookupsAsync(cancellationToken);
             return View(model);
@@ -154,24 +172,35 @@ public sealed class AdminCarsController : AdminControllerBase
 
     [HttpPost("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, CarEditorViewModel model, CancellationToken cancellationToken)
+    [RequestSizeLimit(64 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
+    public async Task<IActionResult> Edit(
+        int id,
+        CarEditorViewModel model,
+        IFormFile? imageFile,
+        List<IFormFile>? galleryFiles,
+        CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
+        model.Id = id;
+        model.Car.GallerySpecified = true;
+        var previousImage = model.Car.ImageUrl;
+        var uploaded = new List<string>();
+        if (!await PrepareImagesAsync(model, imageFile, galleryFiles, uploaded, requireImage: true, cancellationToken))
         {
-            model.Id = id;
-            model.Lookups = await SafeLookupsAsync(cancellationToken);
             return View(model);
         }
 
         var token = await CreateTokenAsync();
         if (token == null)
         {
+            _images.DeleteUploads(uploaded);
             return Challenge();
         }
 
         try
         {
             var update = await _cars.UpdateCarAsync(id, model.Car, token, cancellationToken);
+            _images.DeleteUploads(update.RemovedImageUrls);
             foreach (var notification in update.Notifications)
             {
                 try
@@ -197,9 +226,16 @@ public sealed class AdminCarsController : AdminControllerBase
         }
         catch (CarApiException exception)
         {
+            _images.DeleteUploads(uploaded);
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                model.Car.ImageUrl = previousImage;
+            }
+
+            model.Car.AdditionalImageUrls.Clear();
             ModelState.AddModelError(string.Empty, exception.Message);
             model.Id = id;
-            model.Lookups = await SafeLookupsAsync(cancellationToken);
+            await ReloadEditorAsync(model, cancellationToken);
             return View(model);
         }
     }
@@ -225,6 +261,71 @@ public sealed class AdminCarsController : AdminControllerBase
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<bool> PrepareImagesAsync(
+        CarEditorViewModel model,
+        IFormFile? imageFile,
+        IEnumerable<IFormFile>? galleryFiles,
+        List<string> uploaded,
+        bool requireImage,
+        CancellationToken cancellationToken)
+    {
+        var previousImage = model.Car.ImageUrl;
+        await ApplyImageAsync(model, imageFile, requireImage, cancellationToken);
+        var imageFailed = ModelState["Car.ImageUrl"]?.Errors.Count > 0;
+        if (imageFile != null && imageFile.Length > 0 && !imageFailed)
+        {
+            uploaded.Add(model.Car.ImageUrl);
+        }
+
+        if (!imageFailed && ModelState.IsValid)
+        {
+            var galleryError = await _images.SaveGalleryAsync(model.Car.AdditionalImageUrls, galleryFiles, cancellationToken);
+            if (galleryError != null)
+            {
+                ModelState.AddModelError(string.Empty, galleryError);
+            }
+            else
+            {
+                uploaded.AddRange(model.Car.AdditionalImageUrls);
+            }
+        }
+
+        if (ModelState.IsValid)
+        {
+            return true;
+        }
+
+        _images.DeleteUploads(uploaded);
+        uploaded.Clear();
+        if (imageFile != null && imageFile.Length > 0)
+        {
+            model.Car.ImageUrl = previousImage;
+        }
+
+        model.Car.AdditionalImageUrls.Clear();
+        await ReloadEditorAsync(model, cancellationToken);
+        return false;
+    }
+
+    private async Task ApplyImageAsync(
+        CarEditorViewModel model,
+        IFormFile? imageFile,
+        bool requireImage,
+        CancellationToken cancellationToken)
+    {
+        var error = await _images.ApplyAsync(model.Car, imageFile, requireImage, cancellationToken);
+        if (error != null)
+        {
+            ModelState.AddModelError("Car.ImageUrl", error);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.Car.ImageUrl))
+        {
+            ModelState.Remove("Car.ImageUrl");
+        }
     }
 
     private async Task<CarEditorViewModel?> EditorAsync(int? id, CancellationToken cancellationToken)
@@ -258,9 +359,51 @@ public sealed class AdminCarsController : AdminControllerBase
                 Color = car.Color,
                 Description = car.Description,
                 ImageUrl = car.MainImage,
-                Status = string.IsNullOrWhiteSpace(car.Status) ? "Active" : car.Status
-            }
+                Status = string.IsNullOrWhiteSpace(car.Status) ? "Active" : car.Status,
+                Seats = car.Seats,
+                DriveType = car.DriveType,
+                Engine = car.Engine,
+                MileageUnit = car.MileageUnit,
+                Horsepower = car.Horsepower,
+                Doors = car.Doors,
+                Cylinders = car.Cylinders,
+                Steering = car.Steering,
+                Vin = car.Vin,
+                AccidentHistory = car.AccidentHistory,
+                RepaintedParts = car.RepaintedParts,
+                ReplacedParts = car.ReplacedParts,
+                CustomsStatus = car.CustomsStatus,
+                MarketOrigin = car.MarketOrigin,
+                Condition = car.IsNew ? "New" : "Used",
+                Features = car.Features ?? new List<string>()
+            },
+            Gallery = car.Images
+                .OrderBy(image => image.DisplayOrder)
+                .ThenBy(image => image.Id)
+                .ToList()
         };
+    }
+
+    private async Task ReloadEditorAsync(CarEditorViewModel model, CancellationToken cancellationToken)
+    {
+        model.Lookups = await SafeLookupsAsync(cancellationToken);
+        if (model.Id is not int id)
+        {
+            return;
+        }
+
+        try
+        {
+            var car = await _cars.GetCarByIdAsync(id, cancellationToken);
+            model.Gallery = car?.Images
+                .OrderBy(image => image.DisplayOrder)
+                .ThenBy(image => image.Id)
+                .ToList() ?? new List<CarImageApiDto>();
+        }
+        catch (CarApiException)
+        {
+            ViewData["ServiceUnavailable"] = true;
+        }
     }
 
     private async Task<CarLookupDto> SafeLookupsAsync(CancellationToken cancellationToken)

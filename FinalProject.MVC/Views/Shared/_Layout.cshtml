@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="~/assets/css/style.css">
     <link rel="stylesheet" href="~/css/showroom-shop.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/contact-form.css" asp-append-version="true">
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="@ViewData["BodyClass"]">
     <div class="loader-wrapper">
@@ -112,54 +113,7 @@
                                 <div class="bottom d-flex align-items-center justify-content-between">
                                     <div class="nav-area">
                                         <ul class="">
-                                            <li class="has-dropdown main-nav">
-                                                <a class="main-menu" href="javascript:void(0)">Home</a>
-                                                <ul class="submenu parent-nav">
-                                                    <li><a asp-controller="Home" asp-action="Index">Dealership</a></li>
-                                                    <li><a asp-controller="Home" asp-action="ShopDemo">Shop</a></li>
-                                                </ul>
-                                            </li>
-                                            <li class="main-nav">
-                                                <a class="main-menu" asp-controller="About" asp-action="Index">About Us</a>
-                                            </li>
-                                            <li class="main-nav has-dropdown">
-                                                <a class="main-menu" href="javascript:void(0)">Listing</a>
-                                                <ul class="submenu parent-nav">
-                                                    <li><a asp-controller="Cars" asp-action="CarsOne">Cars One</a></li>
-                                                    <li><a asp-controller="Cars" asp-action="CarsTwo">Cars Two</a></li>
-                                                    <li><a asp-controller="Cars" asp-action="CarsThree">Cars Three</a></li>
-                                                    <li><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Car Single</a></li>
-                                                </ul>
-                                            </li>
-                                            <li class="main-nav has-dropdown">
-                                                <a class="main-menu" href="javascript:void(0)">Page</a>
-                                                <ul class="submenu mega-menu parent-nav">
-                                                    <li><a asp-controller="Services" asp-action="Index">Service</a></li>
-                                                    <li><a asp-controller="Blog" asp-action="Index">Blog</a></li>
-                                                    <li><a asp-controller="Pricing" asp-action="Index">Pricing</a></li>
-                                                    <li><a asp-controller="Blog" asp-action="BlogTwo">Blog Two</a></li>
-                                                    <li><a asp-controller="Faq" asp-action="Index">FAQ</a></li>
-                                                    <li><a asp-controller="Blog" asp-action="Details" asp-route-id="1">Blog Single</a></li>
-                                                    <li><a asp-controller="Cars" asp-action="SoldCar">Sold Car</a></li>
-                                                    <li><a asp-controller="Team" asp-action="Index">Team</a></li>
-                                                    <li><a asp-controller="Calculator" asp-action="Index">Calculator</a></li>
-                                                    <li><a asp-controller="Dealer" asp-action="Index">Car Dealer</a></li>
-                                                    <li><a asp-controller="Account" asp-action="Index">Account</a></li>
-                                                    @if (User.Identity?.IsAuthenticated == true)
-                                                    {
-                                                        <li><a asp-controller="Account" asp-action="Notifications">Notifications</a></li>
-                                                    }
-                                                    <li><a asp-controller="Dealer" asp-action="Details" asp-route-id="1">Dealer Single</a></li>
-                                                </ul>
-                                            </li>
-                                            <li class="main-nav has-dropdown">
-                                                <a class="main-menu" asp-controller="Shop" asp-action="Index">Shop</a>
-                                                <ul class="submenu parent-nav">
-                                                    <li><a asp-controller="Shop" asp-action="Index">Shop</a></li>
-                                                    <li><a asp-controller="Contact" asp-action="Index">Visit Us</a></li>
-                                                </ul>
-                                            </li>
-                                            <li class="main-nav"><a class="main-menu" asp-controller="Contact" asp-action="Index">Contact</a></li>
+                                            <partial name="_PublicNav" model="@("desktop")" />
                                         </ul>
                                     </div>
                                     <div class="bottom-right">
@@ -254,7 +208,7 @@
                                     </div>
                                     <div class="wized-body">
                                         <ul class="menu-nav">
-                                            <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                                            <li><a asp-controller="Home" asp-action="Index">Dealership</a></li>
                                             <li><a asp-controller="About" asp-action="Index">About Us</a></li>
                                             <li><a asp-controller="Cars" asp-action="Index">Listing</a></li>
                                             <li><a asp-controller="Shop" asp-action="Index">Shop</a></li>
@@ -341,52 +295,7 @@
         <div class="mobile-menu-main">
             <nav class="nav-main mainmenu-nav mt--30">
                 <ul class="mainmenu metismenu" id="mobile-menu-active">
-                    <li class="has-droupdown">
-                        <a href="#" class="main">Home</a>
-                        <ul class="submenu mm-collapse">
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="Index">Dealership</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="ShopDemo">Shop</a></li>
-                        </ul>
-                    </li>
-                    <li><a asp-controller="About" asp-action="Index" class="main">About Us</a></li>
-                    <li class="has-droupdown">
-                        <a href="#" class="main">Listing</a>
-                        <ul class="submenu mm-collapse">
-                            <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="CarsOne">Cars One</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="CarsTwo">Cars Two</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="CarsThree">Cars Three</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="Details" asp-route-id="1">Car Single</a></li>
-                        </ul>
-                    </li>
-                    <li class="has-droupdown">
-                        <a href="#" class="main">Page</a>
-                        <ul class="submenu mm-collapse">
-                            <li><a asp-controller="Services" asp-action="Index">Service</a></li>
-                            <li><a asp-controller="Pricing" asp-action="Index">Pricing</a></li>
-                            <li><a asp-controller="Faq" asp-action="Index">FAQ</a></li>
-                            <li><a asp-controller="Cars" asp-action="SoldCar">Sold Car</a></li>
-                            <li><a asp-controller="Calculator" asp-action="Index">Calculator</a></li>
-                            <li><a asp-controller="Blog" asp-action="Index">Blog</a></li>
-                            <li><a asp-controller="Blog" asp-action="BlogTwo">Blog Two</a></li>
-                            <li><a asp-controller="Blog" asp-action="Details" asp-route-id="1">Blog Single</a></li>
-                            <li><a asp-controller="Team" asp-action="Index">Team</a></li>
-                            <li><a asp-controller="Dealer" asp-action="Index">Car Dealer</a></li>
-                            <li><a asp-controller="Account" asp-action="Index">Account</a></li>
-                            @if (User.Identity?.IsAuthenticated == true)
-                            {
-                                <li><a asp-controller="Account" asp-action="Notifications">Notifications</a></li>
-                            }
-                            <li><a asp-controller="Dealer" asp-action="Details" asp-route-id="1">Dealer Single</a></li>
-                        </ul>
-                    </li>
-                    <li class="has-droupdown">
-                        <a href="#" class="main">Shop</a>
-                        <ul class="submenu mm-collapse">
-                            <li><a class="mobile-menu-link" asp-controller="Shop" asp-action="Index">Shop</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Contact" asp-action="Index">Visit Us</a></li>
-                        </ul>
-                    </li>
-                    <li><a asp-controller="Contact" asp-action="Index" class="main">Contact</a></li>
+                    <partial name="_PublicNav" model="@("mobile")" />
                 </ul>
             </nav>
         </div>

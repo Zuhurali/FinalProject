@@ -22,7 +22,7 @@
                     <th>Customer</th>
                     <th>Question</th>
                     <th style="width:100px">Status</th>
-                    <th style="width:180px"></th>
+                    <th style="width:200px"></th>
                 </tr>
             </thead>
             <tbody>
@@ -96,6 +96,19 @@
                             <input type="hidden" name="handled" value="@(!inquiry.IsHandled ? "true" : "false")" />
                             <button type="submit" class="btn btn-sm btn-outline-dark w-100">
                                 @(inquiry.IsHandled ? "Reopen" : "Mark Closed")
+                            </button>
+                        </form>
+
+                        <form asp-action="Delete"
+                              asp-route-id="@inquiry.Id"
+                              method="post"
+                              class="m-0"
+                              onsubmit="return confirm('Permanently delete this product question? The product and customer account will not be deleted.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger w-100"
+                                    aria-label="Delete product question @inquiry.Id">
+                                Delete
                             </button>
                         </form>
                     </td>

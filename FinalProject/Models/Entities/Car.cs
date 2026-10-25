@@ -39,6 +39,51 @@ public class Car
     [MaxLength(50)]
     public string Color { get; set; } = string.Empty;
 
+    [Range(1, 12)]
+    public int? Seats { get; set; }
+
+    [MaxLength(20)]
+    public string? DriveType { get; set; }
+
+    [MaxLength(80)]
+    public string? Engine { get; set; }
+
+    [MaxLength(800)]
+    public string? Features { get; set; }
+
+    [MaxLength(8)]
+    public string? MileageUnit { get; set; }
+
+    [Range(1, 2000)]
+    public int? Horsepower { get; set; }
+
+    [Range(2, 5)]
+    public int? Doors { get; set; }
+
+    [Range(1, 16)]
+    public int? Cylinders { get; set; }
+
+    [MaxLength(8)]
+    public string? Steering { get; set; }
+
+    [MaxLength(17)]
+    public string? Vin { get; set; }
+
+    [MaxLength(40)]
+    public string? AccidentHistory { get; set; }
+
+    [MaxLength(400)]
+    public string? RepaintedParts { get; set; }
+
+    [MaxLength(400)]
+    public string? ReplacedParts { get; set; }
+
+    [MaxLength(40)]
+    public string? CustomsStatus { get; set; }
+
+    [MaxLength(80)]
+    public string? MarketOrigin { get; set; }
+
     [MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 

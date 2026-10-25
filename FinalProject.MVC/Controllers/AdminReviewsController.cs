@@ -91,6 +91,31 @@ public sealed class AdminReviewsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost("Delete/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var token = await CreateTokenAsync();
+            if (token == null)
+            {
+                return Challenge();
+            }
+
+            await _reviews.DeleteReviewAsAdminAsync(id, token, cancellationToken);
+            TempData["Success"] = $"Review #{id} was permanently deleted.";
+        }
+        catch (CarApiException exception)
+        {
+            TempData["Error"] = string.IsNullOrWhiteSpace(exception.Message)
+                ? "The review could not be deleted. Please try again."
+                : exception.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpGet("History/{id:int}")]
     public async Task<IActionResult> History(int id, CancellationToken cancellationToken)
     {

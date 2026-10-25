@@ -16,7 +16,7 @@
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead>
-                    <tr><th>#</th><th>When</th><th>Product</th><th>Qty</th><th>Stock now</th><th>Customer</th><th>Visit date</th><th>Note</th><th>Status</th><th></th></tr>
+                    <tr><th>#</th><th>When</th><th>Product</th><th>Qty</th><th>Stock now</th><th>Customer</th><th>Visit date</th><th>Note</th><th>Status</th><th></th><th></th></tr>
                 </thead>
                 <tbody>
                 @foreach (var request in Model)
@@ -55,6 +55,20 @@
                                     }
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline-dark">Save</button>
+                            </form>
+                        </td>
+                        <td class="text-nowrap">
+                            <form asp-action="Delete"
+                                  asp-route-id="@request.Id"
+                                  method="post"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Delete this purchase request? The product, customer account, and any recorded sales will not be deleted.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        aria-label="Delete purchase request @request.Id">
+                                    Delete
+                                </button>
                             </form>
                         </td>
                     </tr>

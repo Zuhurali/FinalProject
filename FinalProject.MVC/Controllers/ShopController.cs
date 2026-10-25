@@ -216,7 +216,7 @@ namespace FinalProject.MVC.Controllers
                 "Popular" => PopularityRanking.ByPopularity(
                     products,
                     product => product.PopularityScore,
-                    product => product.SalesCount,
+                    product => product.RealSalesCount,
                     product => product.Id).ToList(),
                 "Price Low to High" => products.OrderBy(product => product.EffectivePrice).ThenBy(product => product.Id).ToList(),
                 "Price High to Low" => products.OrderByDescending(product => product.EffectivePrice).ThenBy(product => product.Id).ToList(),
@@ -392,7 +392,7 @@ namespace FinalProject.MVC.Controllers
                     case "Popular":
                         filteredProducts = filteredProducts
                             .OrderByDescending(p => p.PopularityScore)
-                            .ThenByDescending(p => p.SalesCount)
+                            .ThenByDescending(p => p.RealSalesCount)
                             .ThenBy(p => p.Id);
                         break;
                     case "Latest":

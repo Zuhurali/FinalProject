@@ -24,16 +24,21 @@ namespace FinalProject.MVC.Models
         public double Rating { get; set; }
         public int RatingCount { get; set; }
         public int ReviewCount { get; set; }
+        /// <summary>Sum of quantities from recorded in-store sales (IsDemo = false).</summary>
         public int RealSalesCount { get; set; }
+
+        /// <summary>Deprecated: demo sales no longer affect ranking or display. Kept at 0.</summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public int DemoSalesCount { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         [System.Text.Json.Serialization.JsonIgnore]
         public double PopularityScore { get; set; }
 
+        /// <summary>Recorded sales only (alias of <see cref="RealSalesCount"/>).</summary>
         [System.Text.Json.Serialization.JsonIgnore]
-        public int SalesCount => RealSalesCount + DemoSalesCount;
+        public int SalesCount => RealSalesCount;
         public string Description { get; set; } = string.Empty;
         public bool InStock { get; set; } = true;
         public string Color { get; set; } = string.Empty;

@@ -1,0 +1,197 @@
+@model CarExplorePage
+@{
+    string PeriodClass(string period) => Model.Period == period ? "rts-btn btn-primary radius-small" : "rts-btn btn-border radius-small";
+}
+
+<style>
+    .av-explore-grid .project-wrapper2 {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .av-explore-grid .project-wrapper2 .content-area {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .av-explore-grid .project-wrapper2 .content-area .button-area {
+        margin-top: auto;
+    }
+    .av-explore-grid .project-wrapper2 .image-area > a:first-child {
+        display: block;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+    }
+    .av-explore-grid .project-wrapper2 .image-area > a:first-child > img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    #favorite-card-status {
+        position: fixed;
+        right: 20px;
+        bottom: 24px;
+        z-index: 40;
+        margin: 0;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: #1f1f1f;
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(0,0,0,.18);
+        max-width: min(320px, calc(100vw - 40px));
+    }
+    #favorite-card-status.is-error { background: #8a1f1f; }
+</style>
+
+<p id="favorite-card-status" role="status" aria-live="polite" hidden></p>
+
+<div class="rts-breadcrumb-area portfolio jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">@Model.Heading</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">@Model.Heading</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="rts-portfolio-area inner rts-section-gap">
+    <div class="container">
+        <p class="mb-4">@Model.Intro</p>
+        @if (Model.Kind == "viewed")
+        {
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a class="@PeriodClass("today")" asp-action="MostViewed" asp-route-period="today" asp-route-page="1">Today</a>
+                <a class="@PeriodClass("week")" asp-action="MostViewed" asp-route-period="week" asp-route-page="1">Last 7 Days</a>
+                <a class="@PeriodClass("all")" asp-action="MostViewed" asp-route-period="all" asp-route-page="1">All Time</a>
+            </div>
+        }
+        @if (Model.ApiUnavailable)
+        {
+            <div class="car-api-status text-center">
+                <h3 class="title">Cars are temporarily unavailable.</h3>
+                <p>Please try again in a moment.</p>
+            </div>
+        }
+        else if (Model.Cars.Count == 0)
+        {
+            <h3 class="title text-center">No cars match this view yet.</h3>
+        }
+        else
+        {
+            <div class="row g-5 av-explore-grid">
+                @foreach (var item in Model.Cars)
+                {
+                    var car = item.Car;
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="project-wrapper2">
+                            <div class="image-area">
+                                <a asp-action="Details" asp-route-id="@car.Id"><img src="@Url.Content(car.ImagePath)" alt="@car.Name"></a>
+                                <span class="tag">@car.Badge</span>
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <form asp-action="@(car.IsFavorite ? "RemoveFavorite" : "AddFavorite")"
+                                          asp-route-id="@car.Id"
+                                          method="post"
+                                          class="wishlist"
+                                          data-favorite-toggle
+                                          data-is-favorite="@(car.IsFavorite ? "true" : "false")"
+                                          data-add-url="@Url.Action("AddFavorite", "Cars", new { id = car.Id })"
+                                          data-remove-url="@Url.Action("RemoveFavorite", "Cars", new { id = car.Id })">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="returnUrl" value="@($"{Context.Request.Path}{Context.Request.QueryString}")">
+                                        <button type="submit" data-favorite-button aria-pressed="@(car.IsFavorite ? "true" : "false")" title="@(car.IsFavorite ? "Remove from favorites" : "Add to favorites")">
+                                            <i class="@(car.IsFavorite ? "fa-solid" : "fa-regular") fa-heart" data-favorite-icon></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@($"{Context.Request.Path}{Context.Request.QueryString}")" class="wishlist" title="Sign in to favorite"><i class="fa-regular fa-heart"></i></a>
+                                }
+                                <a href="@Url.Content(car.ImagePath)" class="gallery-image">
+                                    <img src="~/assets/images/icon/image.svg" alt="">
+                                    @car.ImageCount
+                                </a>
+                            </div>
+                            <span class="price">$@car.Price.ToString("N0")</span>
+                            <div class="content-area">
+                                <h6 class="title"><a asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
+                                @if (!string.IsNullOrWhiteSpace(item.Detail))
+                                {
+                                    <p class="mb-2">@item.Detail</p>
+                                }
+                                <ul class="feature-area">
+                                    <li>@car.Year</li>
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                                        @car.MileageText
+                                    </li>
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                                        @car.Fuel
+                                    </li>
+                                    <li>
+                                        <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                                        @car.Transmission
+                                    </li>
+                                </ul>
+                                <div class="button-area">
+                                    <p>$@car.Price.ToString("N0")</p>
+                                    <a asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="pagination-area">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
+                                        <a class="page-link"
+                                           asp-action="@Model.ActionName"
+                                           asp-route-period="@(Model.Kind == "viewed" ? Model.Period : null)"
+                                           asp-route-page="@(Model.Page - 1)"
+                                           aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    @for (var i = 1; i <= Model.TotalPages; i++)
+                                    {
+                                        <li class="page-item @(i == Model.Page ? "active" : null)">
+                                            <a class="page-link"
+                                               asp-action="@Model.ActionName"
+                                               asp-route-period="@(Model.Kind == "viewed" ? Model.Period : null)"
+                                               asp-route-page="@i">@i</a>
+                                        </li>
+                                    }
+                                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)">
+                                        <a class="page-link"
+                                           asp-action="@Model.ActionName"
+                                           asp-route-period="@(Model.Kind == "viewed" ? Model.Period : null)"
+                                           asp-route-page="@(Model.Page + 1)"
+                                           aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/car-favorites.js" asp-append-version="true"></script>
+}

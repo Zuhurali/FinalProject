@@ -102,6 +102,18 @@ public sealed class ProductReviewsController : ControllerBase
     }
 
     [Authorize(Roles = "Admin,SuperAdmin")]
+    [HttpDelete("reviews/{reviewId:int}/admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AdminDelete(int reviewId, CancellationToken cancellationToken)
+    {
+        var deleted = await _reviews.DeleteReviewAsAdminAsync(reviewId, cancellationToken);
+        return deleted ? NoContent() : NotFound(new { message = "Review not found." });
+    }
+
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("reviews/{reviewId:int}/history")]
     public async Task<ActionResult<IReadOnlyList<ProductReviewRevisionItem>>> History(
         int reviewId,

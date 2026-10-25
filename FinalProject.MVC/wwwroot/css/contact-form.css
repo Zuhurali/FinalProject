@@ -6,6 +6,150 @@
     overflow: hidden;
 }
 
+.rts-contact-area.inner.av-contact-page {
+    padding-top: 48px;
+    padding-bottom: 36px;
+}
+
+.av-contact-layout {
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-layout .map-area,
+.rts-contact-area.inner.av-contact-page .av-contact-layout .get-in-touch-area {
+    width: 50%;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.rts-contact-area.inner.av-contact-page .contact-map-area-fluid {
+    height: 100%;
+    min-height: 420px;
+    max-height: 520px;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid rgba(85, 85, 85, 0.12);
+    background: #f4f4f4;
+}
+
+.rts-contact-area.inner.av-contact-page .contact-map {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    max-height: 520px;
+    border: 0;
+}
+
+.rts-contact-area.inner.av-contact-page .get-in-touch-area {
+    background: transparent;
+}
+
+.rts-contact-area.inner.av-contact-page .get-in-touch-area .contact-form {
+    max-width: none;
+    height: auto;
+    padding: 28px 30px;
+    background: #fff;
+    border: 1px solid rgba(85, 85, 85, 0.12);
+    border-radius: 12px;
+    box-shadow: 0 16px 32px rgba(158, 158, 158, 0.12);
+    text-align: left;
+}
+
+.av-contact-form-title {
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.av-contact-form-intro {
+    margin-bottom: 22px;
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.av-contact-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #1f1f1f;
+}
+
+.rts-contact-area.inner.av-contact-page .form__control {
+    margin-bottom: 16px;
+}
+
+.rts-contact-area.inner.av-contact-page .form__control .icon {
+    top: 38px;
+}
+
+.rts-contact-area.inner.av-contact-page .form__control input,
+.rts-contact-area.inner.av-contact-page .form__control textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgba(85, 85, 85, 0.18);
+    padding: 12px 16px 12px 46px;
+    min-height: 48px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rts-contact-area.inner.av-contact-page .form__control textarea {
+    min-height: 120px;
+    height: 120px;
+    resize: vertical;
+}
+
+.rts-contact-area.inner.av-contact-page .form__control input:focus,
+.rts-contact-area.inner.av-contact-page .form__control textarea:focus {
+    outline: none;
+    border-color: #ff3600;
+    box-shadow: 0 0 0 3px rgba(255, 54, 0, 0.16);
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-submit {
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: #ff3600;
+    color: #fff;
+    font-weight: 600;
+    padding: 14px 18px;
+    line-height: 1.2;
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-submit:hover,
+.rts-contact-area.inner.av-contact-page .av-contact-submit:focus {
+    background: #e43100;
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-submit:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+@media (max-width: 991px) {
+    .av-contact-layout {
+        flex-direction: column;
+    }
+
+    .rts-contact-area.inner.av-contact-page .av-contact-layout .map-area,
+    .rts-contact-area.inner.av-contact-page .av-contact-layout .get-in-touch-area {
+        width: 100%;
+    }
+
+    .rts-contact-area.inner.av-contact-page .contact-map-area-fluid,
+    .rts-contact-area.inner.av-contact-page .contact-map {
+        min-height: 240px;
+        max-height: 300px;
+    }
+}
+
 .contact-form .av-field-error {
     display: block;
     margin-top: 6px;
@@ -47,4 +191,10 @@
     color: #b71c1c;
     background: rgba(198, 40, 40, 0.08);
     border: 1px solid rgba(198, 40, 40, 0.25);
+}
+
+.contact-form #form-messages.notice {
+    color: #8a4b08;
+    background: rgba(255, 160, 0, 0.12);
+    border: 1px solid rgba(255, 160, 0, 0.35);
 }

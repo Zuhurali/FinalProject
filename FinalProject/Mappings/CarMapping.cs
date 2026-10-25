@@ -1,3 +1,4 @@
+using FinalProject.Commerce;
 using FinalProject.DTOs;
 using FinalProject.Models.Entities;
 
@@ -17,6 +18,21 @@ public static class CarMapping
             FuelType = car.FuelType,
             Transmission = car.Transmission,
             Color = car.Color,
+            Seats = car.Seats,
+            DriveType = car.DriveType,
+            Engine = car.Engine,
+            MileageUnit = car.MileageUnit,
+            Horsepower = car.Horsepower,
+            Doors = car.Doors,
+            Cylinders = car.Cylinders,
+            Steering = car.Steering,
+            Vin = car.Vin,
+            AccidentHistory = car.AccidentHistory,
+            RepaintedParts = car.RepaintedParts,
+            ReplacedParts = car.ReplacedParts,
+            CustomsStatus = car.CustomsStatus,
+            MarketOrigin = car.MarketOrigin,
+            Features = CarFeatureCatalog.ReadKeys(car.Features).ToList(),
             Description = car.Description,
             IsNew = car.IsNew,
             IsFeatured = car.IsFeatured,

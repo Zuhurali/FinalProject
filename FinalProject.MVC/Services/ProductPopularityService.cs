@@ -39,9 +39,9 @@ public sealed class ProductPopularityService : IProductPopularityService
         var sales = await _db.Database.SqlQueryRaw<ProductSalesRow>("""
             SELECT
                 ProductId,
-                CAST(SUM(CASE WHEN IsDemo = 0 THEN Quantity ELSE 0 END) AS int) AS RealSales,
-                CAST(SUM(CASE WHEN IsDemo = 1 THEN Quantity ELSE 0 END) AS int) AS DemoSales
+                CAST(SUM(Quantity) AS int) AS RecordedSales
             FROM InPersonSales
+            WHERE IsDemo = 0
             GROUP BY ProductId
             """).ToListAsync(cancellationToken);
 
@@ -54,14 +54,13 @@ public sealed class ProductPopularityService : IProductPopularityService
             product.Rating = opinion?.AverageRating ?? 0;
             product.RatingCount = opinion?.RatingCount ?? 0;
             product.ReviewCount = opinion?.ReviewCount ?? 0;
-            product.RealSalesCount = sold?.RealSales ?? 0;
-            product.DemoSalesCount = sold?.DemoSales ?? 0;
+            product.RealSalesCount = sold?.RecordedSales ?? 0;
+            product.DemoSalesCount = 0;
             product.PopularityScore = PopularityRanking.Score(
                 product.Rating,
                 product.RatingCount,
                 product.ReviewCount,
-                product.RealSalesCount,
-                product.DemoSalesCount);
+                product.RealSalesCount);
         }
     }
 }
@@ -77,6 +76,5 @@ public sealed class ProductFeedbackRow
 public sealed class ProductSalesRow
 {
     public int ProductId { get; set; }
-    public int RealSales { get; set; }
-    public int DemoSales { get; set; }
+    public int RecordedSales { get; set; }
 }

@@ -19,12 +19,29 @@ namespace FinalProject.MVC.Models
         public int ImageCount { get; set; } = 1;
         public int Year { get; set; }
         public string Color { get; set; } = string.Empty;
+        public string ColorHex { get; set; } = string.Empty;
         public int Seats { get; set; } = 5;
         public string Description { get; set; } = string.Empty;
         public bool InStock { get; set; } = true;
         public decimal MonthlyPayment { get; set; } // For financing
         public string DriveType { get; set; } = string.Empty;
         public string Engine { get; set; } = string.Empty;
+        public string MileageUnit { get; set; } = string.Empty;
+        public int Horsepower { get; set; }
+        public int Doors { get; set; }
+        public int Cylinders { get; set; }
+        public string Steering { get; set; } = string.Empty;
+        public string Vin { get; set; } = string.Empty;
+        public string AccidentHistory { get; set; } = string.Empty;
+        public string RepaintedParts { get; set; } = string.Empty;
+        public string ReplacedParts { get; set; } = string.Empty;
+        public string CustomsStatus { get; set; } = string.Empty;
+        public string MarketOrigin { get; set; } = string.Empty;
+        public IReadOnlyList<string> Features { get; set; } = Array.Empty<string>();
+        public string MileageText =>
+            string.Equals(MileageUnit, "km", StringComparison.OrdinalIgnoreCase)
+                ? $"{Mileage:N0} km"
+                : $"{Mileage:N0} Miles";
         public bool DescriptionIsSpecSummary { get; set; }
         public string? OwnerId { get; set; }
         public string? OwnerDisplayName { get; set; }

@@ -100,8 +100,8 @@ public class ReviewInquiryAndPartsTests
         Assert.Null(reopened.AdminReply);
         Assert.Equal("New", reopened.StatusLabel);
 
-        db.ProductInquiries.Remove(await db.ProductInquiries.SingleAsync(item => item.Id == inquiry.Id));
-        await db.SaveChangesAsync();
+        Assert.True(await catalog.DeleteInquiryAsync(inquiry.Id));
+        Assert.Empty(await db.ProductInquiries.Where(item => item.Id == inquiry.Id).ToListAsync());
     }
 
     [Fact]

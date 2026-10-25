@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
@@ -21,9 +22,9 @@ public static class CarApiMapper
         var name = string.IsNullOrWhiteSpace(description)
             ? fallbackName
             : description.Split(". ", 2, StringSplitOptions.None)[0];
-        var seats = 0;
+        var seats = dto.Seats is > 0 ? dto.Seats.Value : 0;
         var driveType = NormalizeDriveType(dto.DriveType);
-        var engine = string.Empty;
+        var engine = string.IsNullOrWhiteSpace(dto.Engine) ? string.Empty : dto.Engine.Trim();
         var descriptionIsSpecSummary = string.IsNullOrWhiteSpace(description)
             || string.Equals(description.Trim().TrimEnd('.'), name, StringComparison.Ordinal);
         var specIndex = description.IndexOf(". ", StringComparison.Ordinal);
@@ -35,7 +36,10 @@ public static class CarApiMapper
                 .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             if (specParts.Length is > 0 and <= 3 && TryParseSeats(specParts[0], out var parsedSeats))
             {
-                seats = parsedSeats;
+                if (seats == 0)
+                {
+                    seats = parsedSeats;
+                }
                 var recognised = 1;
                 foreach (var part in specParts.Skip(1))
                 {
@@ -62,7 +66,6 @@ public static class CarApiMapper
         return new Car
         {
             Id = dto.Id,
-            Name = name,
             Make = brand,
             Model = model,
             Category = dto.Category?.Name ?? string.Empty,
@@ -71,11 +74,24 @@ public static class CarApiMapper
             Mileage = dto.Mileage,
             Fuel = dto.FuelType,
             Transmission = dto.Transmission,
-            Color = dto.Color,
+            Color = VehicleColorCatalog.DisplayName(dto.Color),
+            ColorHex = VehicleColorCatalog.Hex(dto.Color) ?? string.Empty,
             DriveType = driveType,
             Engine = engine,
+            MileageUnit = dto.MileageUnit ?? string.Empty,
+            Horsepower = dto.Horsepower ?? 0,
+            Doors = dto.Doors ?? 0,
+            Cylinders = dto.Cylinders ?? 0,
+            Steering = dto.Steering ?? string.Empty,
+            Vin = dto.Vin ?? string.Empty,
+            AccidentHistory = dto.AccidentHistory ?? string.Empty,
+            RepaintedParts = VehicleBodyPartCatalog.Display(dto.RepaintedParts),
+            ReplacedParts = VehicleBodyPartCatalog.Display(dto.ReplacedParts),
+            CustomsStatus = dto.CustomsStatus ?? string.Empty,
+            MarketOrigin = dto.MarketOrigin ?? string.Empty,
             DescriptionIsSpecSummary = descriptionIsSpecSummary,
             Description = string.IsNullOrWhiteSpace(description) ? name : description,
+            Features = CarFeatureCatalog.Labels(dto.Features),
             ImagePath = NormalizeImagePath(dto.MainImage),
             GalleryImages = (dto.Images ?? new List<CarImageApiDto>())
                 .OrderByDescending(image => image.IsMain)
@@ -88,6 +104,7 @@ public static class CarApiMapper
             IsNew = dto.IsNew,
             IsFeatured = dto.IsFeatured,
             Badge = dto.IsNew ? "New" : "Used",
+            Name = descriptionIsSpecSummary || string.IsNullOrWhiteSpace(fallbackName) ? name : fallbackName,
             Seats = seats,
             InStock = string.Equals(dto.Status, "Active", StringComparison.OrdinalIgnoreCase),
             OwnerId = dto.OwnerId,
