@@ -1,0 +1,65 @@
+.av-add-new {
+    position: relative;
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.av-add-new__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.av-add-new__caret {
+    flex: 0 0 auto;
+}
+
+.av-add-new__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 1200;
+    min-width: 190px;
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid rgba(16, 42, 67, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(16, 42, 67, 0.16);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+}
+
+.av-add-new:hover .av-add-new__menu,
+.av-add-new:focus-within .av-add-new__menu,
+.av-add-new.is-open .av-add-new__menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.av-add-new__menu a {
+    display: block;
+    padding: 10px 16px;
+    color: #102a43;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.av-add-new__menu a:hover,
+.av-add-new__menu a:focus {
+    background: rgba(255, 54, 0, 0.08);
+    color: #ff3600;
+}
+
+@media (max-width: 991px) {
+    .av-add-new__menu {
+        right: auto;
+        left: 0;
+    }
+}

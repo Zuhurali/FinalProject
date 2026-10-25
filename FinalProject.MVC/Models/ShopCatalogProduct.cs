@@ -17,6 +17,9 @@ public class ShopCatalogProduct
     [MaxLength(100)]
     public string Brand { get; set; } = string.Empty;
 
+    [MaxLength(80)]
+    public string PartNumber { get; set; } = string.Empty;
+
     [MaxLength(300)]
     public string Compatibility { get; set; } = string.Empty;
 

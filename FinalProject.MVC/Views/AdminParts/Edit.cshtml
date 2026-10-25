@@ -3,7 +3,7 @@
     Layout = "_AdminLayout";
     var editing = Model.Id > 0;
 }
-<h1 class="h3 mb-4">@(editing ? "Edit part" : "Add new part")</h1>
+<h1 class="h3 mb-4">@(editing ? "Edit spare part" : "Add spare part")</h1>
 <form asp-action="@(editing ? "Edit" : "Create")" asp-route-id="@(editing ? Model.Id : null)" method="post" enctype="multipart/form-data" class="admin-card">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -13,37 +13,90 @@
         <div class="col-md-6">
             <label asp-for="Name">Name</label>
             <input asp-for="Name" class="form-control" required maxlength="200" />
+            <span asp-validation-for="Name" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="Price">Price</label>
             <input asp-for="Price" class="form-control" type="number" min="0" step="0.01" required />
+            <span asp-validation-for="Price" class="text-danger"></span>
         </div>
         <div class="col-md-3">
             <label asp-for="Quantity">Stock quantity</label>
             <input asp-for="Quantity" class="form-control" type="number" min="0" step="1" required />
-            <div class="form-text">Status is calculated from this number. 0 is out of stock, 1–10 is low stock, and 11 or more is in stock.</div>
+            <div class="form-text">0 is out of stock, 1–10 is low stock, and 11 or more is in stock.</div>
+            <span asp-validation-for="Quantity" class="text-danger"></span>
         </div>
         <div class="col-md-4">
             <label asp-for="Category">Category</label>
             <input asp-for="Category" class="form-control" required maxlength="100" />
+            <span asp-validation-for="Category" class="text-danger"></span>
         </div>
         <div class="col-md-4">
             <label asp-for="Brand">Brand</label>
             <input asp-for="Brand" class="form-control" maxlength="100" />
         </div>
         <div class="col-md-4">
-            <label asp-for="Compatibility">Compatibility</label>
-            <input asp-for="Compatibility" class="form-control" maxlength="300" placeholder="Leave blank when fitment is not known" />
+            <label asp-for="PartNumber">Part number / SKU</label>
+            <input asp-for="PartNumber" class="form-control" maxlength="80" placeholder="Optional OEM or SKU code" />
+            <span asp-validation-for="PartNumber" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="CarMake">Compatible car make</label>
+            <input asp-for="CarMake" class="form-control" maxlength="100" placeholder="e.g. Toyota" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="CarModel">Compatible car model</label>
+            <input asp-for="CarModel" class="form-control" maxlength="100" placeholder="e.g. Camry" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Compatibility">Compatibility notes</label>
+            <input asp-for="Compatibility" class="form-control" maxlength="300" placeholder="Optional fitment notes" />
         </div>
         <div class="col-12">
-            <label for="image">Product image</label>
-            <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" class="form-control" />
+            <label for="image">Product image @(editing ? "" : "(required)")</label>
+            <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" class="form-control" @(editing ? null : "required") />
+            <div class="form-text">
+                @(editing
+                    ? "Choose a new file to replace the saved image, or leave empty to keep the current one."
+                    : "Upload a JPG, PNG, WEBP, or GIF image (max 5 MB).")
+            </div>
+            <img id="image-local-preview" alt="Selected image preview" width="160" class="mt-2" hidden />
             @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
             {
-                <img src="@Url.Content(Model.ImagePath)" alt="Current product image" width="160" class="mt-2" />
+                <div class="mt-2">
+                    <div class="form-text mb-1">@(editing ? "Saved image" : "Image ready to save")</div>
+                    <img src="@Url.Content(Model.ImagePath)" alt="Saved product image" width="160" id="image-saved-preview" />
+                </div>
             }
             <span asp-validation-for="ImagePath" class="text-danger"></span>
         </div>
+        <script>
+            (function () {
+                var input = document.getElementById('image');
+                var localPreview = document.getElementById('image-local-preview');
+                var savedPreview = document.getElementById('image-saved-preview');
+                if (!input || !localPreview) {
+                    return;
+                }
+                input.addEventListener('change', function () {
+                    var file = input.files && input.files[0];
+                    if (!file) {
+                        localPreview.hidden = true;
+                        localPreview.removeAttribute('src');
+                        if (savedPreview) {
+                            savedPreview.hidden = false;
+                        }
+                        return;
+                    }
+                    var url = URL.createObjectURL(file);
+                    localPreview.src = url;
+                    localPreview.hidden = false;
+                    if (savedPreview) {
+                        savedPreview.hidden = true;
+                    }
+                });
+            })();
+        </script>
         <div class="col-12">
             <label asp-for="Description">Description</label>
             <textarea asp-for="Description" class="form-control" rows="4" maxlength="2000"></textarea>

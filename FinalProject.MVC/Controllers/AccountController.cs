@@ -387,6 +387,13 @@ namespace FinalProject.MVC.Controllers
 
         [Authorize(Roles = AppRoles.Admin + "," + AppRoles.SuperAdmin)]
         [HttpGet]
+        public IActionResult AddSparePart()
+        {
+            return RedirectToAction("Create", "AdminParts");
+        }
+
+        [Authorize(Roles = AppRoles.Admin + "," + AppRoles.SuperAdmin)]
+        [HttpGet]
         public async Task<IActionResult> AddCar()
         {
             ViewData["Title"] = "Add Car - AutoVault";

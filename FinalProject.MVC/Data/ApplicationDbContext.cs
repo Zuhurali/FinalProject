@@ -80,7 +80,9 @@ namespace FinalProject.MVC.Data
                 entity.Property(product => product.Fuel).HasMaxLength(50);
                 entity.Property(product => product.SearchKeywords).HasMaxLength(500);
                 entity.Property(product => product.Brand).HasMaxLength(100);
+                entity.Property(product => product.PartNumber).HasMaxLength(80);
                 entity.Property(product => product.Compatibility).HasMaxLength(300);
+                entity.HasIndex(product => product.PartNumber);
                 entity.Property(product => product.IsActive).HasDefaultValue(true);
             });
 

@@ -143,6 +143,32 @@ public class PartStockEditTests
     }
 
     [Fact]
+    public async Task Create_form_does_not_fail_model_validation_only_because_ImagePath_is_empty()
+    {
+        // Regression: non-nullable ImagePath was implicitly [Required], so Create failed with
+        // "The ImagePath field is required." even after ApplyImageAsync saved the upload.
+        var create = await BindAndValidateAsync(new Dictionary<string, string>
+        {
+            ["Id"] = "0",
+            ["Name"] = "Cabin Air Filter",
+            ["Price"] = "29.99",
+            ["Quantity"] = "5",
+            ["Category"] = "Filters",
+            ["Brand"] = "Bosch",
+            ["PartNumber"] = "CAF-100",
+            ["CarMake"] = "Toyota",
+            ["CarModel"] = "Camry",
+            ["Description"] = "Cabin filter for Camry",
+            ["ImagePath"] = "",
+            ["IsActive"] = "true"
+        });
+
+        Assert.True(create.Valid, create.Errors);
+        Assert.True(string.IsNullOrEmpty(create.Part.ImagePath));
+        Assert.DoesNotContain("ImagePath field is required", create.Errors, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Edit_part_view_has_one_active_checkbox_and_hides_the_image_path()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
@@ -155,7 +181,8 @@ public class PartStockEditTests
         var inputAt = edit.IndexOf("asp-for=\"IsActive\"", StringComparison.Ordinal);
         Assert.True(labelAt >= 0 && inputAt > labelAt);
 
-        Assert.DoesNotContain("Current image:", edit, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("enctype=\"multipart/form-data\"", edit, StringComparison.Ordinal);
+        Assert.Contains("name=\"image\"", edit, StringComparison.Ordinal);
         Assert.Contains("Url.Content(Model.ImagePath)", edit, StringComparison.Ordinal);
         Assert.DoesNotContain("Current image:", details, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("<br />@Model.ImagePath", details, StringComparison.Ordinal);

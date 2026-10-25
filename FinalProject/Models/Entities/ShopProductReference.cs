@@ -12,6 +12,8 @@ public class ShopProductReference
 
     public string Brand { get; set; } = string.Empty;
 
+    public string PartNumber { get; set; } = string.Empty;
+
     public string Compatibility { get; set; } = string.Empty;
 
     public string Category { get; set; } = string.Empty;

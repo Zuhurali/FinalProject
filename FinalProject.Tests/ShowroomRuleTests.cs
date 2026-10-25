@@ -162,12 +162,12 @@ public class ShowroomRuleTests
         Assert.Equal("Admin,SuperAdmin", typeof(FinalProject.MVC.Controllers.AdminContactRequestsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         var parts = typeof(FinalProject.MVC.Controllers.AdminPartsController);
         Assert.Equal("Admin,SuperAdmin", parts.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-        Assert.Equal("SuperAdmin", parts.GetMethod("Create", Type.EmptyTypes)!.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal("Admin,SuperAdmin", parts.GetMethod("Create", Type.EmptyTypes)!.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Null(parts.GetMethod("Edit", [typeof(int), typeof(CancellationToken)])!.GetCustomAttribute<AuthorizeAttribute>());
         Assert.Equal(10, FinalProject.MVC.Commerce.ShowroomRules.LowStockMaximum);
         var api = typeof(FinalProject.Controllers.AdminPartsController);
         Assert.Equal("Admin,SuperAdmin", api.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-        Assert.Equal("SuperAdmin", api.GetMethods().Single(method => method.Name == "Create").GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal("Admin,SuperAdmin", api.GetMethods().Single(method => method.Name == "Create").GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Null(api.GetMethods().Single(method => method.Name == "Update").GetCustomAttribute<AuthorizeAttribute>());
         Assert.Null(api.GetMethods().Single(method => method.Name == "Delete").GetCustomAttribute<AuthorizeAttribute>());
         Assert.Null(FinalProject.MVC.Security.AccountNameRules.ValidateUsername("ali92"));

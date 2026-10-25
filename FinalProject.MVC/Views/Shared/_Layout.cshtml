@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="~/assets/css/style.css">
     <link rel="stylesheet" href="~/css/showroom-shop.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/contact-form.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/add-new-dropdown.css" asp-append-version="true">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="@ViewData["BodyClass"]">
@@ -141,21 +142,8 @@
                                                     <button type="submit" class="rts-btn btn-border radius-small">Sign Out</button>
                                                 </form>
                                             }
-                                            @if (CarCreationAccess.CanCreateCars(User))
-                                            {
-                                            <a asp-controller="Account" asp-action="AddCar" class="rts-btn btn-primary radius-small icon">
-                                                Add Car
-                                                <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect width="16" height="16.3902" fill="url(#pattern0_2295_360)" />
-                                                    <defs>
-                                                        <pattern id="pattern0_2295_360" patternContentUnits="objectBoundingBox" width="1" height="1">
-                                                            <use href="#image0_2295_360" transform="matrix(0.0111111 0 0 0.0108466 0 0.0119048)" />
-                                                        </pattern>
-                                                        <image id="image0_2295_360" width="90" height="90" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAYAAAA4qEECAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEDElEQVR4nO3cS4wNWRzH8UOiZ8IkhkksEBI9HiuJxKtJhIQlVhYGsROJJmQ0FjRiQeK1IfHYj47VxEhHxmyEjHgOsZJ4LLBgROL96PCVE/9Odzr31K2qe+vUOeX/STq94Fb9zq9vbp2qOnWNUUoppZRSSimllFKpAROBTuAf4DHwnvK9lyznJduvJlbAZOAs8IXw2Yx/AZNMTIB24CPx+QCsMzEADhO/AyZkQAfV8bsJETAV+ER19ADTTGiAiwmh3wGHgJnA8ACy/gzMko85m83lggkJMCMh7ANgggmUndoBDxPyzzChAE44Qr4CxpnAAeOB144xnDQhAFqA546QnSYSwC7HGF4AP4QQcKkjoD0w/mIiAYxImPsvDSFglyPcGRMZvp0d1tJVdrBhwBtHuOUmMsBvjrG8BX4qM9iKIIM19sZxHRRXmLLIRaNa/jCRAk45xnS2rEAjEw4ei02kgCUJZ4qjygi0NmE61GIiBQxJmK6uLSPQBUeY4yZyuE/A/J6SA6OBz44w803kgAUJNwjG+wyy2RHkCTDYRA4YLGOppcNnkBuOEH+aigDOOMZ40+e9QJenwNA689TJwDw5OdgE7AWOybSqG7gE3AHuA4/k4Nr7Y4/8vXoG/Nsjec0d2Ua3bPOY7GOjPYmSfdsMwxJyDgWeJYxzSmEFp7j40usasBJYDeyRwV6TMkJjM121837JulqyX6/zut0+ir7rqYSQ3QMGFVny9LJHGJDpZcwvv0cniyj4x4TLod+zU7abZt5B+bvsEQXsnD1tb0bRdnqkkh1ttOSFdXag+k7NFzRSdL35pOpzNW/Jc/ttRKXTlqfogyk3rvrsz1P0v6Rj7w/uAFplhtIqi7uTlloNZO/UbLGXXzMHTb6UuzXj8uFGx3IpT9D/Uwab7Xh9W4aAW5tRriOHLRtPY3mWJ2D/K2UuO+psY2fKQY7OHDDbOxtPY+nJEzCN1hQLCGMpuiljyRMwjcSbsHbNWgAfHdt8jiVPwGa8C+wTWWl8lM/SMg+GTRlLnqBpdDZ4kyAkTRlLUUW/c03SgTkZp3hla8pYiiq6N+BOOVi0yO9dgTy4mVXDYymyaNWPFu2JFu2JFu2JFu2JFu2JFu2JFu2JFu2JFu2JFl2hou2640XAMmAVsEa+KGU7sA84Yp9vkaVlp2X98nn5+gm7rOG2rG++L9828GLAT60HR9/U+H8P+23ntmz7ouyrW/bdJVmOSLbtknWNZF8mY5kXXNGmotCi/dCiK1S065noWl6aiqLoHoArGXZw2VQURfcAbMiwg3ZTURTdg9xev5Vi4//F/Ox3ED0AY+vsxG58jKk4fPQgf9H19vNHDgyvZQFke5XfyQNpD0oppZRSSimllFJKKWUa8RUyWTLDvAIcywAAAABJRU5ErkJggg==" />
-                                                    </defs>
-                                                </svg>
-                                            </a>
-                                            }
+
+                                            <partial name="_AddNewDropdown" />
                                         </div>
                                         <div class="menu-btn" id="menu-btn">
                                             <svg width="55" height="55" viewBox="0 0 55 55" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -211,7 +199,7 @@
                                             <li><a asp-controller="Home" asp-action="Index">Dealership</a></li>
                                             <li><a asp-controller="About" asp-action="Index">About Us</a></li>
                                             <li><a asp-controller="Cars" asp-action="Index">Listing</a></li>
-                                            <li><a asp-controller="Shop" asp-action="Index">Shop</a></li>
+                                            <li><a asp-controller="Shop" asp-action="Index">Spare Parts</a></li>
                                             <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
                                         </ul>
                                     </div>
@@ -322,6 +310,7 @@
         <script src="~/js/notifications.js" asp-append-version="true"></script>
     }
     
+    <script src="~/js/plugins/add-new-dropdown.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

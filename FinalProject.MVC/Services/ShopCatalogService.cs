@@ -48,6 +48,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             product.CreatedAt = DateTime.UtcNow;
         }
         product.Brand = product.Brand.Trim();
+        product.PartNumber = product.PartNumber.Trim();
         product.Compatibility = product.Compatibility.Trim();
         product.SearchKeywords = Keywords(product);
         _db.ShopProducts.Add(product);
@@ -76,6 +77,7 @@ public sealed class ShopCatalogService : IShopCatalogService
         existing.InStock = existing.Quantity > 0;
         existing.IsActive = product.IsActive;
         existing.Brand = product.Brand.Trim();
+        existing.PartNumber = product.PartNumber.Trim();
         existing.Compatibility = product.Compatibility.Trim();
         existing.Color = product.Color.Trim();
         existing.Fuel = product.Fuel.Trim();
@@ -152,6 +154,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             Quantity = product.Quantity,
             StockStatus = ShowroomRules.StockStatus(Math.Max(0, product.Quantity)),
             Brand = product.Brand,
+            PartNumber = product.PartNumber,
             Compatibility = product.Compatibility,
             Category = product.Category,
             CarMake = product.CarMake,
@@ -186,6 +189,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             {
                 product.Name,
                 product.Brand,
+                product.PartNumber,
                 product.Category,
                 product.Compatibility,
                 product.CarMake,

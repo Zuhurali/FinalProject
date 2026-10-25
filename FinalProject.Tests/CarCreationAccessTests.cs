@@ -150,22 +150,30 @@ public class CarCreationAccessTests
     public void Public_Add_Car_links_are_role_gated()
     {
         var root = FindRepositoryRoot();
-        var views = new[]
+        var headers = new[]
         {
             Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_Layout.cshtml"),
             Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_HeaderThree.cshtml"),
             Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_HeaderFive.cshtml"),
-            Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_HeaderSix.cshtml"),
-            Path.Combine(root, "FinalProject.MVC", "Views", "Account", "Listings.cshtml")
+            Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_HeaderSix.cshtml")
         };
 
-        foreach (var view in views)
+        foreach (var view in headers)
         {
             var text = File.ReadAllText(view);
-            var links = Count(text, "asp-action=\"AddCar\"");
-            Assert.True(links > 0, view);
-            Assert.Equal(links, Count(text, "CarCreationAccess.CanCreateCars(User)"));
+            Assert.Contains("_AddNewDropdown", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("asp-action=\"AddCar\"", text, StringComparison.Ordinal);
         }
+
+        var dropdown = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_AddNewDropdown.cshtml"));
+        Assert.Contains("CarCreationAccess.CanCreateCars(User)", dropdown, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"AddCar\"", dropdown, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"AddSparePart\"", dropdown, StringComparison.Ordinal);
+
+        var listings = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Account", "Listings.cshtml"));
+        var listingLinks = Count(listings, "asp-action=\"AddCar\"");
+        Assert.True(listingLinks > 0);
+        Assert.Equal(listingLinks, Count(listings, "CarCreationAccess.CanCreateCars(User)"));
 
         var program = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Program.cs"));
         Assert.Contains("ValidationInterval = TimeSpan.Zero", program, StringComparison.Ordinal);

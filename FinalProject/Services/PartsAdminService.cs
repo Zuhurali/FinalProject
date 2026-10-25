@@ -143,7 +143,10 @@ public sealed class PartsAdminService : IPartsAdminService
             query = query.Where(part =>
                 part.Name.Contains(term) ||
                 part.Brand.Contains(term) ||
-                part.Category.Contains(term));
+                part.Category.Contains(term) ||
+                part.PartNumber.Contains(term) ||
+                part.CarMake.Contains(term) ||
+                part.CarModel.Contains(term));
         }
 
         if (!string.IsNullOrWhiteSpace(category))
@@ -197,8 +200,11 @@ public sealed class PartsAdminService : IPartsAdminService
         request.Name = (request.Name ?? string.Empty).Trim();
         request.Category = (request.Category ?? string.Empty).Trim();
         request.Brand = (request.Brand ?? string.Empty).Trim();
+        request.PartNumber = (request.PartNumber ?? string.Empty).Trim();
         request.Description = (request.Description ?? string.Empty).Trim();
         request.Compatibility = (request.Compatibility ?? string.Empty).Trim();
+        request.CarMake = (request.CarMake ?? string.Empty).Trim();
+        request.CarModel = (request.CarModel ?? string.Empty).Trim();
         request.ImagePath = (request.ImagePath ?? string.Empty).Trim();
         if (request.Name.Length is < 2 or > 200)
         {
@@ -208,6 +214,16 @@ public sealed class PartsAdminService : IPartsAdminService
         if (request.Category.Length is < 2 or > 100)
         {
             return "Enter a category.";
+        }
+
+        if (request.PartNumber.Length > 80)
+        {
+            return "Part number / SKU cannot exceed 80 characters.";
+        }
+
+        if (request.CarMake.Length > 100 || request.CarModel.Length > 100)
+        {
+            return "Compatible vehicle fields are too long.";
         }
 
         if (request.Price < 0)
@@ -235,32 +251,27 @@ public sealed class PartsAdminService : IPartsAdminService
         part.Price = request.Price;
         part.Category = request.Category;
         part.Brand = request.Brand ?? string.Empty;
+        part.PartNumber = request.PartNumber ?? string.Empty;
         part.Compatibility = request.Compatibility ?? string.Empty;
+        part.CarMake = request.CarMake ?? string.Empty;
+        part.CarModel = request.CarModel ?? string.Empty;
         part.Quantity = request.Quantity;
         part.ImagePath = request.ImagePath;
         part.InStock = request.Quantity > 0;
         part.IsActive = request.IsActive;
-        part.SearchKeywords = string.Join(" ", new[] { request.Name, request.Brand, request.Category, request.Compatibility }
+        part.SearchKeywords = string.Join(" ", new[]
+            {
+                request.Name,
+                request.Brand,
+                request.PartNumber,
+                request.Category,
+                request.Compatibility,
+                request.CarMake,
+                request.CarModel
+            }
             .Where(value => !string.IsNullOrWhiteSpace(value)));
-        if (part.Color == null)
-        {
-            part.Color = string.Empty;
-        }
-
-        if (part.Fuel == null)
-        {
-            part.Fuel = string.Empty;
-        }
-
-        if (part.CarMake == null)
-        {
-            part.CarMake = string.Empty;
-        }
-
-        if (part.CarModel == null)
-        {
-            part.CarModel = string.Empty;
-        }
+        part.Color ??= string.Empty;
+        part.Fuel ??= string.Empty;
     }
 
     private static PartAdminItem ToItem(
@@ -274,8 +285,11 @@ public sealed class PartsAdminService : IPartsAdminService
             Name = part.Name,
             Category = part.Category,
             Brand = part.Brand,
+            PartNumber = part.PartNumber,
             Description = part.Description,
             Compatibility = part.Compatibility,
+            CarMake = part.CarMake,
+            CarModel = part.CarModel,
             Price = part.Price,
             Quantity = part.Quantity,
             ImagePath = part.ImagePath,

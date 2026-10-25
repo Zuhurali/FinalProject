@@ -41,7 +41,6 @@
         <a class="@topLinkClass" href="javascript:void(0)">Page</a>
     }
     <ul class="@pageSubmenuClass">
-        <li><a class="@childClass" asp-controller="Blog" asp-action="Index">Blog</a></li>
         <li><a class="@childClass" asp-controller="Faq" asp-action="Index">FAQ</a></li>
         <li><a class="@childClass" asp-controller="Calculator" asp-action="Index">Calculator</a></li>
         <li><a class="@childClass" asp-controller="Team" asp-action="Index">Team</a></li>
@@ -49,7 +48,7 @@
     </ul>
 </li>
 <li class="@itemClass">
-    <a class="@topLinkClass" asp-controller="Shop" asp-action="Index">Shop</a>
+    <a class="@topLinkClass" asp-controller="Shop" asp-action="Index">Spare Parts</a>
 </li>
 <partial name="_ExploreNav" model="@(isMobile ? "mobile" : "desktop")" />
 <li class="@itemClass">

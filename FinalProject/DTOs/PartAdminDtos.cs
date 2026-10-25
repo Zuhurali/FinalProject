@@ -12,9 +12,15 @@ public sealed class PartAdminItem
 
     public string Brand { get; set; } = string.Empty;
 
+    public string PartNumber { get; set; } = string.Empty;
+
     public string Description { get; set; } = string.Empty;
 
     public string Compatibility { get; set; } = string.Empty;
+
+    public string CarMake { get; set; } = string.Empty;
+
+    public string CarModel { get; set; } = string.Empty;
 
     public decimal Price { get; set; }
 
@@ -63,8 +69,17 @@ public sealed class SavePartRequest
     [MaxLength(100)]
     public string? Brand { get; set; }
 
+    [MaxLength(80)]
+    public string? PartNumber { get; set; }
+
     [MaxLength(300)]
     public string? Compatibility { get; set; }
+
+    [MaxLength(100)]
+    public string? CarMake { get; set; }
+
+    [MaxLength(100)]
+    public string? CarModel { get; set; }
 
     [Range(0, int.MaxValue)]
     public int Quantity { get; set; }

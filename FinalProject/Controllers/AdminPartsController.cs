@@ -36,7 +36,7 @@ public sealed class AdminPartsController : ControllerBase
         return part == null ? NotFound(new { message = "The part was not found." }) : Ok(part);
     }
 
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost]
     public async Task<ActionResult<PartAdminItem>> Create(
         [FromBody] SavePartRequest request,

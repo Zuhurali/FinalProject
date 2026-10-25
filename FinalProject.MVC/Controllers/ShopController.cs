@@ -63,6 +63,7 @@ namespace FinalProject.MVC.Controllers
                 Quantity = product.Quantity,
                 StockStatus = product.StockStatus,
                 Brand = product.Brand,
+                PartNumber = product.PartNumber,
                 Compatibility = product.Compatibility,
                 HasOffer = product.HasOffer,
                 SalePrice = product.SalePrice,
@@ -167,7 +168,12 @@ namespace FinalProject.MVC.Controllers
                 source = source.Where(product =>
                     product.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                     product.Category.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                    product.Description.Contains(term, StringComparison.OrdinalIgnoreCase));
+                    product.Brand.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    product.PartNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    product.CarMake.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    product.CarModel.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    product.Description.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    product.SearchKeywords.Contains(term, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(category))
@@ -289,9 +295,13 @@ namespace FinalProject.MVC.Controllers
             if (!string.IsNullOrEmpty(request.SearchText))
             {
                 var searchLower = request.SearchText.ToLower();
-                filteredProducts = filteredProducts.Where(p => 
-                    p.Name.ToLower().Contains(searchLower) || 
+                filteredProducts = filteredProducts.Where(p =>
+                    p.Name.ToLower().Contains(searchLower) ||
                     p.Description.ToLower().Contains(searchLower) ||
+                    p.Brand.ToLower().Contains(searchLower) ||
+                    p.PartNumber.ToLower().Contains(searchLower) ||
+                    p.CarMake.ToLower().Contains(searchLower) ||
+                    p.CarModel.ToLower().Contains(searchLower) ||
                     (p.SearchKeywords != null && p.SearchKeywords.ToLower().Contains(searchLower))
                 );
             }

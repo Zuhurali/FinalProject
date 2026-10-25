@@ -170,6 +170,7 @@ public class FinalProjectDbContext : DbContext
             entity.Property(product => product.Name).HasMaxLength(200).IsRequired();
             entity.Property(product => product.Price).HasColumnType("decimal(18,2)");
             entity.Property(product => product.Brand).HasMaxLength(100);
+            entity.Property(product => product.PartNumber).HasMaxLength(80);
             entity.Property(product => product.Compatibility).HasMaxLength(300);
             entity.Property(product => product.Category).HasMaxLength(100).IsRequired();
             entity.Property(product => product.CarMake).HasMaxLength(100);

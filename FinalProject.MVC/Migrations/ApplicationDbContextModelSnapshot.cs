@@ -543,6 +543,11 @@ namespace FinalProject.MVC.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("PartNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
@@ -555,6 +560,8 @@ namespace FinalProject.MVC.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PartNumber");
 
                     b.ToTable("ShopProducts", null, t =>
                         {

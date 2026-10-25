@@ -62,28 +62,36 @@ public sealed class AdminPartsController : AdminControllerBase
         }
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("Create")]
     public IActionResult Create()
     {
-        ViewData["Title"] = "Add part - AutoVault";
+        ViewData["Title"] = "Add spare part - AutoVault";
         return View("Edit", new SavePartDto { IsActive = true });
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(64 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
     public async Task<IActionResult> Create([Bind(Prefix = "")] SavePartDto part, IFormFile? image, CancellationToken cancellationToken)
     {
-        var imageError = await ApplyImageAsync(part, image, required: string.IsNullOrWhiteSpace(part.ImagePath));
+        // New parts require a real uploaded file. Apply it before ModelState.IsValid so a
+        // successful upload is not blocked by an empty hidden ImagePath from the create form.
+        var imageError = await ApplyImageAsync(part, image, required: true);
         if (imageError != null)
         {
-            ModelState.AddModelError(nameof(part.ImagePath), imageError);
+            ModelState.AddModelError(nameof(SavePartDto.ImagePath), imageError);
+        }
+        else
+        {
+            AcceptResolvedImagePath();
         }
 
         if (!ModelState.IsValid)
         {
-            ViewData["Title"] = "Add part - AutoVault";
+            ViewData["Title"] = "Add spare part - AutoVault";
             RememberFormError();
             return View("Edit", part);
         }
@@ -92,8 +100,9 @@ public sealed class AdminPartsController : AdminControllerBase
         {
             var token = await RequireTokenAsync();
             part.IsActive = true;
+            part.ImagePath = part.ImagePath!.Trim();
             await _adminApi.CreatePartAsync(part, token, cancellationToken);
-            TempData["Success"] = "The part was created.";
+            TempData["Success"] = "The spare part was created.";
             return RedirectToAction(nameof(Index));
         }
         catch (CarApiException exception)
@@ -123,13 +132,20 @@ public sealed class AdminPartsController : AdminControllerBase
 
     [HttpPost("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(64 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
     public async Task<IActionResult> Edit(int id, [Bind(Prefix = "")] SavePartDto part, IFormFile? image, CancellationToken cancellationToken)
     {
         part.Id = id;
-        var imageError = await ApplyImageAsync(part, image, required: false);
+        // Keep the existing path when no new file is chosen; replace it when a file is uploaded.
+        var imageError = await ApplyImageAsync(part, image, required: string.IsNullOrWhiteSpace(part.ImagePath));
         if (imageError != null)
         {
-            ModelState.AddModelError(nameof(part.ImagePath), imageError);
+            ModelState.AddModelError(nameof(SavePartDto.ImagePath), imageError);
+        }
+        else
+        {
+            AcceptResolvedImagePath();
         }
 
         if (!ModelState.IsValid)
@@ -195,11 +211,23 @@ public sealed class AdminPartsController : AdminControllerBase
         return token;
     }
 
+    private void AcceptResolvedImagePath()
+    {
+        ModelState.Remove(nameof(SavePartDto.ImagePath));
+        ModelState.Remove("ImagePath");
+        ModelState.Remove("part.ImagePath");
+    }
+
     private async Task<string?> ApplyImageAsync(SavePartDto part, IFormFile? image, bool required)
     {
         if (image == null || image.Length == 0)
         {
-            return required ? "Add a product image." : null;
+            if (!string.IsNullOrWhiteSpace(part.ImagePath))
+            {
+                return null;
+            }
+
+            return required ? "Upload a product image." : null;
         }
 
         var error = PartImageRules.Validate(image.FileName, image.Length);
@@ -212,8 +240,11 @@ public sealed class AdminPartsController : AdminControllerBase
         Directory.CreateDirectory(folder);
         var fileName = $"{Guid.NewGuid():N}{Path.GetExtension(image.FileName).ToLowerInvariant()}";
         var physical = Path.Combine(folder, fileName);
-        await using var stream = System.IO.File.Create(physical);
-        await image.CopyToAsync(stream);
+        await using (var stream = System.IO.File.Create(physical))
+        {
+            await image.CopyToAsync(stream);
+        }
+
         part.ImagePath = $"~/assets/images/portfolio/parts/uploads/{fileName}";
         return null;
     }
@@ -226,7 +257,10 @@ public sealed class AdminPartsController : AdminControllerBase
         Price = part.Price,
         Category = part.Category,
         Brand = part.Brand,
+        PartNumber = part.PartNumber,
         Compatibility = part.Compatibility,
+        CarMake = part.CarMake,
+        CarModel = part.CarModel,
         Quantity = part.Quantity,
         ImagePath = part.ImagePath,
         IsActive = part.IsActive

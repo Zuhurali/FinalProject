@@ -1,0 +1,25 @@
+@using FinalProject.MVC.Security
+@if (CarCreationAccess.CanCreateCars(User))
+{
+    <div class="av-add-new">
+        <button type="button"
+                class="rts-btn btn-primary radius-small icon av-add-new__toggle"
+                id="av-add-new-toggle"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="av-add-new-menu">
+            Add New
+            <svg class="av-add-new__caret" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
+        <ul class="av-add-new__menu" id="av-add-new-menu" role="menu" aria-label="Add New">
+            <li role="none">
+                <a role="menuitem" asp-controller="Account" asp-action="AddCar">Add Car</a>
+            </li>
+            <li role="none">
+                <a role="menuitem" asp-controller="Account" asp-action="AddSparePart">Add Spare Part</a>
+            </li>
+        </ul>
+    </div>
+}

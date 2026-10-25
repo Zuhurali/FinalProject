@@ -8,6 +8,7 @@ namespace FinalProject.MVC.Models
         public int Quantity { get; set; }
         public string StockStatus { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
+        public string PartNumber { get; set; } = string.Empty;
         public string Compatibility { get; set; } = string.Empty;
         public bool HasOffer { get; set; }
         public decimal SalePrice { get; set; }

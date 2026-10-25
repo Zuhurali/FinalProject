@@ -8,10 +8,10 @@
     var pages = window.PageCount;
 }
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Parts</h1>
-    @if (User.IsInRole("SuperAdmin"))
+    <h1 class="h3 mb-0">Spare Parts</h1>
+    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
     {
-        <a class="btn btn-primary" asp-action="Create">Add New Part</a>
+        <a class="btn btn-primary" asp-action="Create">Add Spare Part</a>
     }
 </div>
 <form method="get" class="admin-card mb-3">
@@ -42,12 +42,13 @@
             <tr>
                 <th>Image</th>
                 <th>Name</th>
+                <th>SKU</th>
                 <th>Category</th>
                 <th>Brand</th>
+                <th>Vehicle</th>
                 <th>Price</th>
                 <th>Stock</th>
                 <th>Status</th>
-                <th>Rating</th>
                 <th>Active</th>
                 <th></th>
             </tr>
@@ -69,12 +70,18 @@
                     }
                 </td>
                 <td>@part.Name</td>
+                <td>@(string.IsNullOrWhiteSpace(part.PartNumber) ? "—" : part.PartNumber)</td>
                 <td>@part.Category</td>
                 <td>@(string.IsNullOrWhiteSpace(part.Brand) ? "—" : part.Brand)</td>
+                <td>
+                    @{
+                        var vehicle = string.Join(" ", new[] { part.CarMake, part.CarModel }.Where(value => !string.IsNullOrWhiteSpace(value)));
+                    }
+                    @(string.IsNullOrWhiteSpace(vehicle) ? "—" : vehicle)
+                </td>
                 <td>@part.Price.ToString("C")</td>
                 <td>@part.Quantity</td>
                 <td>@stockText</td>
-                <td>@(part.RatingCount == 0 ? "No ratings" : $"{part.Rating:0.0} ({part.RatingCount})")</td>
                 <td>@(part.IsActive ? "Active" : "Inactive")</td>
                 <td class="text-nowrap">
                     <a asp-action="Details" asp-route-id="@part.Id">View</a>
