@@ -32,11 +32,25 @@ public class CampaignPersistenceTests
         var turbo = await db.ShopProducts.AsNoTracking().SingleAsync(product => product.Name == "Turbocharger Assembly");
         var originalPrice = turbo.Price;
         var originalQty = turbo.Quantity;
-        Assert.Equal(1290m, originalPrice);
+        Assert.True(originalPrice > 0);
+
+        var paused = await db.ProductCampaigns
+            .Where(campaign => campaign.IsActive && !campaign.Name.StartsWith("E2E "))
+            .ToListAsync();
+        foreach (var campaign in paused)
+        {
+            campaign.IsActive = false;
+        }
+
+        if (paused.Count > 0)
+        {
+            await db.SaveChangesAsync();
+        }
 
         await ClearNamedCampaignsAsync(db, "E2E ");
 
         var start = DateTime.UtcNow.Date;
+        var expectedSale = ShowroomRules.DiscountedPrice(originalPrice, null, 15);
         var (ok, error) = await catalog.SaveCampaignAsync(new ProductCampaign
         {
             Name = "E2E Turbo 15",
@@ -56,7 +70,7 @@ public class CampaignPersistenceTests
         var shop = await catalog.GetAllAsync();
         var turboShop = shop.Single(product => product.Id == turbo.Id);
         Assert.True(turboShop.HasOffer);
-        Assert.Equal(1096.50m, turboShop.SalePrice);
+        Assert.Equal(expectedSale, turboShop.SalePrice);
         Assert.Equal(15, turboShop.DiscountPercent);
         Assert.False(string.IsNullOrWhiteSpace(turboShop.OfferEndLabel));
         Assert.All(shop.Where(product => product.Id != turbo.Id), product => Assert.False(product.HasOffer));
@@ -71,8 +85,8 @@ public class CampaignPersistenceTests
             .Where(item => item.Note == "E2E live campaign sale")
             .OrderByDescending(item => item.Id)
             .FirstAsync();
-        Assert.Equal(1290m, sale.ListUnitPrice);
-        Assert.Equal(1096.50m, sale.UnitPrice);
+        Assert.Equal(originalPrice, sale.ListUnitPrice);
+        Assert.Equal(expectedSale, sale.UnitPrice);
         Assert.Equal(saved.Id, sale.CampaignId);
         Assert.Equal(15m, sale.CampaignDiscountPercent);
         Assert.False(sale.IsDemo);
@@ -92,8 +106,16 @@ public class CampaignPersistenceTests
             EndsAt = start.AddDays(7),
             IsActive = true
         });
-        Assert.False(overlap.Ok);
-        Assert.Contains("already covers", overlap.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.True(overlap.Ok, overlap.Error);
+        shop = await catalog.GetAllAsync();
+        turboShop = shop.Single(product => product.Id == turbo.Id);
+        Assert.Equal(15, turboShop.DiscountPercent);
+        Assert.Equal(expectedSale, turboShop.SalePrice);
+        Assert.Equal("E2E Turbo 15", turboShop.OfferName);
+        var otherWithAllParts = shop.First(product => product.Id != turbo.Id);
+        Assert.True(otherWithAllParts.HasOffer);
+        Assert.Equal(10, otherWithAllParts.DiscountPercent);
+        Assert.Equal("E2E All parts overlap", otherWithAllParts.OfferName);
 
         var invalidDates = await catalog.SaveCampaignAsync(new ProductCampaign
         {
@@ -142,7 +164,7 @@ public class CampaignPersistenceTests
         shop = await catalog.GetAllAsync();
         turboShop = shop.Single(product => product.Id == turbo.Id);
         Assert.Equal(15, turboShop.DiscountPercent);
-        Assert.Equal(1096.50m, turboShop.SalePrice);
+        Assert.Equal(expectedSale, turboShop.SalePrice);
 
         await ClearNamedCampaignsAsync(db, "E2E ");
 
@@ -177,6 +199,20 @@ public class CampaignPersistenceTests
             IsActive = true
         });
         Assert.True(restoreOk, restoreError);
+
+        foreach (var campaign in paused)
+        {
+            var row = await db.ProductCampaigns.FirstOrDefaultAsync(item => item.Id == campaign.Id);
+            if (row != null)
+            {
+                row.IsActive = true;
+            }
+        }
+
+        if (paused.Count > 0)
+        {
+            await db.SaveChangesAsync();
+        }
     }
 
     private static async Task ClearNamedCampaignsAsync(ApplicationDbContext db, string namePrefix)

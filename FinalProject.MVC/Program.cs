@@ -48,6 +48,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
+// Validate the security stamp on every request and replace the principal with
+// claims loaded from the store. Role edits do not rotate the stamp, so the
+// session continues and the next request picks up the new roles. A stamp
+// mismatch still rejects the cookie.
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+{
+    options.ValidationInterval = TimeSpan.Zero;
+});
+
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"];
 if (string.IsNullOrWhiteSpace(apiBaseUrl))
 {
@@ -125,6 +134,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.Configure<DealershipContactSettings>(
     builder.Configuration.GetSection(DealershipContactSettings.SectionName));
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
+builder.Services.AddScoped<IContactInquiryMailer, ContactInquiryMailer>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();

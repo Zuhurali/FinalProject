@@ -1,3 +1,4 @@
+using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Exceptions;
@@ -25,13 +26,16 @@ namespace FinalProject.MVC.Controllers
 
         private readonly ILogger<HomeController> _logger;
         private readonly ICarApiService _carApi;
+        private readonly IShopCatalogService _shopCatalog;
 
         public HomeController(
             ILogger<HomeController> logger,
-            ICarApiService carApi)
+            ICarApiService carApi,
+            IShopCatalogService shopCatalog)
         {
             _logger = logger;
             _carApi = carApi;
+            _shopCatalog = shopCatalog;
         }
 
         public async Task<IActionResult> Index()
@@ -80,11 +84,23 @@ namespace FinalProject.MVC.Controllers
                 _logger.LogWarning(exception, "Home brand list could not be loaded.");
             }
 
+            IReadOnlyList<ProductCampaign> homeCampaignBanners = Array.Empty<ProductCampaign>();
+            try
+            {
+                homeCampaignBanners = CampaignBannerSelection.ForHome(
+                    await _shopCatalog.GetLiveCampaignsAsync(HttpContext.RequestAborted));
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Home campaign banners could not be loaded.");
+            }
+
             ViewData["CategoryLabels"] = labels;
             ViewData["SearchMakes"] = makes;
             ViewData["ModelsByMake"] = modelsByMake;
             ViewData["HomeCars"] = cars;
             ViewData["HomeBrands"] = brands;
+            ViewData["LiveCampaigns"] = homeCampaignBanners;
             return View();
         }
 

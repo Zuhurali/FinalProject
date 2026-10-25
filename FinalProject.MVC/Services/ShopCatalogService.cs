@@ -174,6 +174,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             model.OfferEndsAt = offer.EndsAt;
             model.OfferEndLabel = ShowroomRules.InclusiveEndLabel(offer.EndsAt);
             model.OfferName = offer.Name;
+            model.OfferCampaignId = offer.Id;
         }
 
         return model;
@@ -251,6 +252,9 @@ public sealed class ShopCatalogService : IShopCatalogService
             .OrderByDescending(campaign => campaign.StartsAt)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<IReadOnlyList<ProductCampaign>> GetLiveCampaignsAsync(CancellationToken cancellationToken = default) =>
+        LoadLiveCampaignsAsync(DateTime.UtcNow, cancellationToken);
 
     public async Task<ProductCampaign?> GetCampaignAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -395,17 +399,25 @@ public sealed class ShopCatalogService : IShopCatalogService
         return (true, null);
     }
 
-    public async Task<bool> DeleteCampaignAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<(bool Ok, string? Error)> DeleteCampaignAsync(int id, CancellationToken cancellationToken = default)
     {
         var campaign = await _db.ProductCampaigns.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (campaign == null)
         {
-            return false;
+            return (false, "Campaign not found.");
         }
 
-        _db.ProductCampaigns.Remove(campaign);
-        await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        try
+        {
+            // InPersonSales.CampaignId is SetNull, so sale history is kept without cascading deletes.
+            _db.ProductCampaigns.Remove(campaign);
+            await _db.SaveChangesAsync(cancellationToken);
+            return (true, null);
+        }
+        catch (DbUpdateException)
+        {
+            return (false, "The campaign could not be deleted because related records still reference it.");
+        }
     }
 
     private async Task<ProductCampaign?> FindOverlappingActiveCampaignAsync(
@@ -714,6 +726,8 @@ public sealed class ShopCatalogService : IShopCatalogService
         return await _db.ProductCampaigns.AsNoTracking()
             .Include(campaign => campaign.Product)
             .Where(campaign => campaign.IsActive && campaign.StartsAt <= utcNow && campaign.EndsAt > utcNow)
+            .OrderByDescending(campaign => campaign.StartsAt)
+            .ThenBy(campaign => campaign.Id)
             .ToListAsync(cancellationToken);
     }
 
@@ -721,10 +735,22 @@ public sealed class ShopCatalogService : IShopCatalogService
         ShopCatalogProduct product,
         IReadOnlyList<ProductCampaign> liveCampaigns)
     {
-        return liveCampaigns
+        // Never stack offers. A single-product campaign always wins for that product;
+        // otherwise use at most one live all-parts campaign.
+        var specific = liveCampaigns
             .Where(campaign =>
-                campaign.AppliesToAllParts
-                || (campaign.ProductId.HasValue && campaign.ProductId.Value == product.Id))
+                !campaign.AppliesToAllParts
+                && campaign.ProductId.HasValue
+                && campaign.ProductId.Value == product.Id)
+            .OrderBy(campaign => campaign.Id)
+            .FirstOrDefault();
+        if (specific != null)
+        {
+            return specific;
+        }
+
+        return liveCampaigns
+            .Where(campaign => campaign.AppliesToAllParts)
             .OrderBy(campaign => ShowroomRules.DiscountedPrice(
                 product.Price,
                 campaign.DiscountedPrice,

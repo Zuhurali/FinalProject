@@ -15,6 +15,7 @@ namespace FinalProject.MVC.Models
         public DateTime? OfferEndsAt { get; set; }
         public string OfferEndLabel { get; set; } = string.Empty;
         public string OfferName { get; set; } = string.Empty;
+        public int? OfferCampaignId { get; set; }
         public decimal EffectivePrice => HasOffer ? SalePrice : Price;
         public string Category { get; set; } = string.Empty;
         public string CarMake { get; set; } = string.Empty;
@@ -48,6 +49,8 @@ namespace FinalProject.MVC.Models
         public string? SortBy { get; set; }
         public string? SearchText { get; set; }
         public string? Category { get; set; }
+        public int? DiscountPercent { get; set; }
+        public int? CampaignId { get; set; }
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
         public List<string>? SelectedMakes { get; set; }

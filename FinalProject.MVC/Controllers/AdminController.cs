@@ -206,11 +206,9 @@ public sealed class AdminController : AdminControllerBase
             changed = true;
         }
 
-        if (changed && user.Id != currentUserId)
-        {
-            await UserManager.UpdateSecurityStampAsync(user);
-        }
-
+        // Leave the security stamp unchanged. The cookie validator rebuilds role
+        // claims from the store on the next request, so this user stays signed in
+        // and the SuperAdmin who made the change is not signed out either.
         return changed
             ? (true, "The user role was updated.")
             : (true, "That user already has this role.");

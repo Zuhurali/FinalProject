@@ -231,11 +231,11 @@ public sealed class PartsAdminService : IPartsAdminService
     private static void Apply(ShopProductReference part, SavePartRequest request)
     {
         part.Name = request.Name;
-        part.Description = request.Description;
+        part.Description = request.Description ?? string.Empty;
         part.Price = request.Price;
         part.Category = request.Category;
-        part.Brand = request.Brand;
-        part.Compatibility = request.Compatibility;
+        part.Brand = request.Brand ?? string.Empty;
+        part.Compatibility = request.Compatibility ?? string.Empty;
         part.Quantity = request.Quantity;
         part.ImagePath = request.ImagePath;
         part.InStock = request.Quantity > 0;

@@ -12,7 +12,7 @@ public class DealershipContactSettingsTests
 
         Assert.Equal("tel:+994503546767", settings.TelHref);
         Assert.Equal("https://wa.me/994503546767", settings.WhatsAppHref);
-        Assert.Equal("mailto:Autovault@gmail.com", settings.MailtoHref);
+        Assert.Equal("mailto:zuhraliim@code.edu.az", settings.MailtoHref);
         Assert.Equal("+994 50 354 67 67", settings.DisplayPhone);
         Assert.NotEqual(settings.TelHref, settings.WhatsAppHref);
         Assert.StartsWith("tel:", settings.TelHref);

@@ -382,14 +382,10 @@ namespace FinalProject.MVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Admin + "," + AppRoles.SuperAdmin)]
         [HttpGet]
         public async Task<IActionResult> AddCar()
         {
-            if (User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.SuperAdmin))
-            {
-                return Forbid();
-            }
             ViewData["Title"] = "Add Car - AutoVault";
             try
             {
@@ -405,16 +401,11 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Admin + "," + AppRoles.SuperAdmin)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddCar(CarEditorViewModel model)
         {
-            if (User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.SuperAdmin))
-            {
-                return Forbid();
-            }
-
             if (!ModelState.IsValid)
             {
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);

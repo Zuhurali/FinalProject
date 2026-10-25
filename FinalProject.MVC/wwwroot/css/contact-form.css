@@ -1,3 +1,11 @@
+.av-honeypot {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
 .contact-form .av-field-error {
     display: block;
     margin-top: 6px;

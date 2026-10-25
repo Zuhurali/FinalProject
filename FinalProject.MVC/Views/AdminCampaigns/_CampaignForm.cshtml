@@ -82,11 +82,11 @@
         </div>
         <div class="col-md-4">
             <label class="d-block">Status</label>
-            <div class="form-check mt-2">
+            <div class="mt-2">
                 <input type="hidden" name="isActive" value="false" />
-                <input type="checkbox" class="form-check-input" name="isActive" id="isActive" value="true"
+                <label for="isActive">Active (can go Live in the Shop)</label>
+                <input type="checkbox" class="form-check-input ms-2" name="isActive" id="isActive" value="true"
                        @(Model.IsActive ? "checked" : null) />
-                <label class="form-check-label" for="isActive">Active (can go Live in the Shop)</label>
             </div>
         </div>
         <div class="col-12">

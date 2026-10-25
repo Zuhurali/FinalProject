@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FinalProject.MVC.Models.Api;
 
 public sealed class PartAdminItemDto
@@ -48,16 +50,17 @@ public sealed class SavePartDto
 
     public string Name { get; set; } = string.Empty;
 
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
 
     public decimal Price { get; set; }
 
     public string Category { get; set; } = string.Empty;
 
-    public string Brand { get; set; } = string.Empty;
+    public string? Brand { get; set; }
 
-    public string Compatibility { get; set; } = string.Empty;
+    public string? Compatibility { get; set; }
 
+    [Range(0, int.MaxValue, ErrorMessage = "Stock cannot be negative.")]
     public int Quantity { get; set; }
 
     public string ImagePath { get; set; } = string.Empty;

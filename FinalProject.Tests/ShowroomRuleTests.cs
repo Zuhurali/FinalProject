@@ -67,8 +67,9 @@ public class ShowroomRuleTests
         Assert.Equal(1096.50m, ShowroomRules.DiscountedPrice(1290, null, 15));
         Assert.True(ShowroomRules.CampaignWindowsOverlap(start, end, start.AddDays(1), end.AddDays(1)));
         Assert.False(ShowroomRules.CampaignWindowsOverlap(start, end, end, end.AddDays(2)));
-        Assert.True(ShowroomRules.CampaignsConflict(true, null, false, 16));
-        Assert.True(ShowroomRules.CampaignsConflict(false, 16, true, null));
+        Assert.False(ShowroomRules.CampaignsConflict(true, null, false, 16));
+        Assert.False(ShowroomRules.CampaignsConflict(false, 16, true, null));
+        Assert.True(ShowroomRules.CampaignsConflict(true, null, true, null));
         Assert.True(ShowroomRules.CampaignsConflict(false, 16, false, 16));
         Assert.False(ShowroomRules.CampaignsConflict(false, 16, false, 17));
         Assert.Equal("Live", ShowroomRules.CampaignPublicStatus(true, start, end, start.AddHours(1)));

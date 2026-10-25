@@ -180,7 +180,7 @@
         if (name.length < 2) {
             errors.name = 'Enter your name.';
         }
-        if (!email || email.indexOf('@') < 1) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             errors.email = 'Enter a valid email address.';
         }
         if (!isValidPhone(phone)) {

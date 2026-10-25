@@ -1,9 +1,12 @@
 @model FinalProject.MVC.Models.ShopFilterResponse
+@using FinalProject.MVC.Commerce
 @{
     ViewData["Title"] = "Shop - AutoVault";
     var categories = ViewBag.Categories as IReadOnlyList<string> ?? Array.Empty<string>();
     var categoryCounts = ViewBag.CategoryCounts as IReadOnlyDictionary<string, int> ?? new Dictionary<string, int>();
-    var campaign = ViewData["FeaturedCampaign"] as ProductCampaign;
+    var liveCampaigns = ViewData["LiveCampaigns"] as IReadOnlyList<ProductCampaign> ?? Array.Empty<ProductCampaign>();
+    var discountFilter = ViewData["Discount"] as int?;
+    var campaignFilter = ViewData["CampaignId"] as int?;
     var catalogUrl = Url.Action("Index", "Shop") + "#catalog";
 }
             <!-- Banner area start -->
@@ -139,7 +142,11 @@
                 <partial name="_ProductCard" model="product" />
             }
         </div>
-        <p class="av-empty" id="products-empty" @(Model.TotalProducts == 0 ? "" : "hidden")>No parts match this search. Try another word or clear the filters.</p>
+        <p class="av-empty" id="products-empty" @(Model.TotalProducts == 0 ? "" : "hidden")>@(campaignFilter is > 0
+            ? "No active parts currently use this campaign offer."
+            : discountFilter is int emptyDiscount
+                ? $"No active parts currently have a {emptyDiscount}% discount."
+                : "No parts match this search. Try another word or clear the filters.")</p>
         <div class="load-more-container av-load-more" @(Model.HasMorePages ? "" : "hidden")>
             <button type="button" class="rts-btn btn-border radius-big" id="load-more-btn">Load more parts</button>
         </div>
@@ -174,40 +181,41 @@
                 <div class="container">
                     <div class="section-inner">
                         <div class="row g-5">
-                            <div class="col-lg-6 col-md-12">
-                                <div class="cta-wrapper">
-                                    <div class="image-area jarallax jara-mask-1">
-                                        <img src="~/assets/images/cta/01.webp" class="jarallax-img" alt="">
-                                    </div>
-                                    <div class="content">
-                                        @if (campaign != null && campaign.DiscountPercent.HasValue)
-                                        {
-                                            <span class="tag radius-big">@($"{campaign.DiscountPercent.Value:0}% OFF")</span>
-                                            <h4 class="title cw">@campaign.Name</h4>
-                                        }
-                                        else if (campaign != null)
-                                        {
-                                            <span class="tag radius-big">Store offer</span>
-                                            <h4 class="title cw">@campaign.Name</h4>
-                                        }
-                                        else
-                                        {
-                                            <span class="tag radius-big">No delivery</span>
-                                            <h4 class="title cw">Collect in store</h4>
-                                        }
-                                    </div>
+                            @foreach (var liveCampaign in liveCampaigns)
+                            {
+                                var bannerImage = ShowroomRules.CampaignBannerImagePath(
+                                    liveCampaign.Product?.ImagePath,
+                                    liveCampaign.AppliesToAllParts);
+                                var bannerUrl = Url.Action("Index", "Shop", new { campaign = liveCampaign.Id }) + "#catalog";
+                                <div class="col-lg-6 col-md-12">
+                                    <a href="@bannerUrl" class="cta-wrapper d-block text-decoration-none" aria-label="@liveCampaign.Name">
+                                        <div class="image-area jarallax jara-mask-1">
+                                            <img src="@Url.Content(bannerImage)" class="jarallax-img" alt="">
+                                        </div>
+                                        <div class="content">
+                                            @if (liveCampaign.DiscountPercent.HasValue)
+                                            {
+                                                <span class="tag radius-big">@($"{liveCampaign.DiscountPercent.Value:0}% OFF")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="tag radius-big">Store offer</span>
+                                            }
+                                            <h4 class="title cw">@liveCampaign.Name</h4>
+                                        </div>
+                                    </a>
                                 </div>
-                            </div>
+                            }
                             <div class="col-lg-6 col-md-12">
-                                <div class="cta-wrapper">
+                                <a asp-controller="Cars" asp-action="Index" asp-route-condition="used" class="cta-wrapper d-block text-decoration-none" aria-label="Used cars on the floor">
                                     <div class="image-area jarallax jara-mask-1">
                                         <img src="~/assets/images/cta/02.webp" class="jarallax-img" alt="">
                                     </div>
                                     <div class="content">
                                         <span class="tag radius-big">In person</span>
-                                        <h4 class="title cw"><a asp-controller="Cars" asp-action="Index" class="cw">Used cars on the floor</a></h4>
+                                        <h4 class="title cw">Used cars on the floor</h4>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -274,97 +282,6 @@
             </section>
             <!-- Why Choose Us Area End -->
 
-            <!-- Testimonials Area End -->
-            <section class="rts-testimonials-area area-3 bg-primary">
-                <div class="container">
-                    <div class="slider-inner mt--50">
-                        <div class="row align-items-end">
-                            <div class="col-lg-6">
-                                <div class="swiper rts-imageSlider">
-                                    <div class="swiper-wrapper">
-                                        <div class="swiper-slide">
-                                            <div class="testimonial-image-area3">
-                                                <img src="~/assets/images/testimonials/04.webp" width="512" alt="">
-                                                <div class="author-content">
-                                                    <div class="inner">
-                                                        <h5 class="title">Check stock</h5>
-                                                        <p class="desc">Babek Prospekti</p>
-                                                    </div>
-                                                    <div class="top-right"></div>
-                                                    <div class="bottom-left"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="testimonial-image-area3">
-                                                <img src="~/assets/images/testimonials/05.webp" width="512" alt="">
-                                                <div class="author-content">
-                                                    <div class="inner">
-                                                        <h5 class="title">Visit Baku</h5>
-                                                        <p class="desc">Babek Prospekti</p>
-                                                    </div>
-                                                    <div class="top-right"></div>
-                                                    <div class="bottom-left"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="swiper rts-testimonialSlider3">
-                                    <div class="swiper-wrapper">
-                                        <div class="swiper-slide">
-                                            <div class="review-wrapper3">
-                                                <div class="section-title-area">
-                                                    <p class="sub-title cw wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Visit</p>
-                                                    <h2 class="section-title cw wow move-right">How a store visit works</h2>
-                                                </div>
-                                                <div class="inner d-flex align-items-start">
-                                                    <div class="quote"><img src="~/assets/images/testimonials/quote-sm.svg" alt=""></div>
-                                                    <div class="content">
-                                                        <p class="desc cw">
-                                                            Browse prices and availability here. When a part is in stock, come to the store, inspect it, and complete the purchase face to face.
-                                                        </p>
-                                                        <div class="quote-big text-end">
-                                                            <img src="~/assets/images/testimonials/quote-big.svg" alt="">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide">
-                                            <div class="review-wrapper3">
-                                                <div class="section-title-area">
-                                                    <p class="sub-title cw wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Visit</p>
-                                                    <h2 class="section-title cw wow move-right">How a store visit works</h2>
-                                                </div>
-                                                <div class="inner d-flex align-items-start">
-                                                    <div class="quote"><img src="~/assets/images/testimonials/quote-sm.svg" alt=""></div>
-                                                    <div class="content">
-                                                        <p class="desc cw">
-                                                            Used cars and parts are sold in person. AutoVault does not take online payment or hold items through the website.
-                                                        </p>
-                                                        <div class="quote-big text-end">
-                                                            <img src="~/assets/images/testimonials/quote-big.svg" alt="">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="slider-btn-area">
-                    <div class="swiper-btn swiper-button-prev"><i class="fa-regular fa-arrow-left"></i></div>
-                    <div class="swiper-btn swiper-button-next"><i class="fa-regular fa-arrow-right"></i></div>
-                </div>
-            </section>
-            <!-- Testimonials Area End -->
-
             <!-- Blog Area Start -->
             <section class="rts-blog-area rts-section-gap">
                 <div class="container">
@@ -377,26 +294,15 @@
                             <div class="col-lg-6">
                                 <div class="blog-wrapper">
                                     <div class="image-area">
-                                        <a asp-controller="Shop" asp-action="Index" asp-fragment="catalog"><img src="~/assets/images/blog/05.webp" alt=""></a>
+                                        <a href="@catalogUrl"><img src="~/assets/images/blog/05.webp" alt=""></a>
                                     </div>
                                     <div class="content">
                                         <p class="blog-meta">Baku store</p>
-                                        <h5><a asp-controller="Shop" asp-action="Index" asp-fragment="catalog">See which oils, filters, tires, and spare parts are on the floor</a></h5>
+                                        <h5><a href="@catalogUrl">See which oils, filters, tires, and spare parts are on the floor</a></h5>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <div class="blog-list-style mb--30">
-                                    <div class="blog-wrapper d-flex align-items-center">
-                                        <div class="image-area">
-                                            <a asp-controller="Shop" asp-action="Index" asp-fragment="catalog"><img src="~/assets/images/blog/03.webp" width="263" alt=""></a>
-                                        </div>
-                                        <div class="content mt-0">
-                                            <p class="blog-meta">Baku store</p>
-                                            <h6><a asp-controller="Shop" asp-action="Index" asp-fragment="catalog">Stock labels come from the quantity in the store</a></h6>
-                                        </div>
-                                    </div>
-                                </div>
                                 <div class="blog-list-style">
                                     <div class="blog-wrapper d-flex align-items-center">
                                         <div class="image-area">
@@ -591,11 +497,13 @@
         const pageSize = @FinalProject.MVC.Controllers.ShopController.CatalogPageSize;
         const initialSearch = @Json.Serialize(ViewData["Search"] as string ?? "");
         const initialCategory = @Json.Serialize(ViewData["Category"] as string ?? "");
+        const initialDiscount = @Json.Serialize(ViewData["Discount"] as int?);
+        const initialCampaign = @Json.Serialize(ViewData["CampaignId"] as int?);
         let currentPage = @Model.CurrentPage;
         let isFiltering = false;
 
         function filterPayload(page) {
-            return {
+            const payload = {
                 searchText: $('#searchText').val(),
                 category: $('#category').val(),
                 priceRange: $('#priceRange').val(),
@@ -603,6 +511,12 @@
                 page: page,
                 pageSize: pageSize
             };
+            if (initialCampaign) {
+                payload.campaignId = initialCampaign;
+            } else if (initialDiscount) {
+                payload.discountPercent = initialDiscount;
+            }
+            return payload;
         }
 
         function applyFilters() {
@@ -654,7 +568,9 @@
                         pageSize: pageSize,
                         search: initialSearch,
                         category: initialCategory,
-                        sortBy: $('#sortBy').val() || 'Latest'
+                        sortBy: $('#sortBy').val() || 'Latest',
+                        discount: initialDiscount || '',
+                        campaign: initialCampaign || ''
                     },
                     success: function(response) {
                         updateProductsContainer(response, true);

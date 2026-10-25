@@ -95,11 +95,12 @@ public class CarsController : ControllerBase
             : Ok(await _carService.GetOwnedAsync(userId, cancellationToken));
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost]
     [ProducesResponseType(typeof(CarResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CarResponse>> Create(
         [FromBody] SaveCarRequest request,
         CancellationToken cancellationToken)
@@ -108,11 +109,6 @@ public class CarsController : ControllerBase
         if (userId == null)
         {
             return Unauthorized();
-        }
-
-        if (User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
-        {
-            return Forbid();
         }
 
         var car = await _carService.CreateAsync(userId, request, cancellationToken);

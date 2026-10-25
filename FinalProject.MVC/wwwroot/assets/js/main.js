@@ -432,33 +432,6 @@
         });
       });
       $(document).ready(function () {
-        // Check if the sliders exist on the page
-        if ($(".rts-testimonialSlider3").length && $(".rts-imageSlider").length) {
-          var swiper_1 = new Swiper(".rts-testimonialSlider3", {
-            slidesPerView: 1,
-            spaceBetween: 0,
-            speed: 1800,
-            loop: true,
-            navigation: {
-              nextEl: ".swiper-button-next",
-              prevEl: ".swiper-button-prev",
-            },
-          });
-
-          var swiper_2 = new Swiper(".rts-imageSlider", {
-            slidesPerView: 1,
-            spaceBetween: 0,
-            effect: "fade",
-            speed: 1800,
-            loop: true,
-          });
-
-          // Synchronize the two Swipers
-          swiper_1.controller.control = swiper_2;
-          swiper_2.controller.control = swiper_1;
-        }
-      });
-      $(document).ready(function () {
         var swiper6 = new Swiper('.rts-swiper-activation-6', {
           speed: 1000,
           spaceBetween: 30,

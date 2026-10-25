@@ -8,6 +8,7 @@
     var homeCars = ViewData["HomeCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
     var showcaseCars = HomeCarShowcase.ShowcaseCars(homeCars);
     var homeBrands = ViewData["HomeBrands"] as IEnumerable<BrandApiDto> ?? Enumerable.Empty<BrandApiDto>();
+    var liveCampaigns = ViewData["LiveCampaigns"] as IReadOnlyList<ProductCampaign> ?? Array.Empty<ProductCampaign>();
     var newCars = HomeCarShowcase.NewCars(showcaseCars);
     var usedCars = HomeCarShowcase.HomeUsedCarousel(showcaseCars);
     var trendingCars = HomeCarShowcase.TrendingCars(showcaseCars);
@@ -754,6 +755,47 @@
             </section>
             <!-- Portfolio Area End -->
 
+            @if (liveCampaigns.Count > 0)
+            {
+                <!-- Live campaign banners -->
+                <div class="rts-cta-area rts-section-gapBottom">
+                    <div class="container">
+                        <div class="section-title-area2 mb-4">
+                            <p class="sub-title">In-store offers</p>
+                            <h2 class="section-title">Live spare-parts <span>campaigns</span></h2>
+                        </div>
+                        <div class="section-inner">
+                            <div class="row g-5">
+                                @foreach (var liveCampaign in liveCampaigns)
+                                {
+                                    var bannerImage = ShowroomRules.CampaignBannerImagePath(
+                                        liveCampaign.Product?.ImagePath,
+                                        liveCampaign.AppliesToAllParts);
+                                    var bannerUrl = Url.Action("Index", "Shop", new { campaign = liveCampaign.Id }) + "#catalog";
+                                    <div class="@(liveCampaigns.Count == 1 ? "col-lg-12" : "col-lg-6") col-md-12">
+                                        <a href="@bannerUrl" class="cta-wrapper d-block text-decoration-none" aria-label="@liveCampaign.Name">
+                                            <div class="image-area jarallax jara-mask-1">
+                                                <img src="@Url.Content(bannerImage)" class="jarallax-img" alt="">
+                                            </div>
+                                            <div class="content">
+                                                @if (liveCampaign.DiscountPercent.HasValue)
+                                                {
+                                                    <span class="tag radius-big">@($"{liveCampaign.DiscountPercent.Value:0}% OFF")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="tag radius-big">Store offer</span>
+                                                }
+                                                <h4 class="title cw">@liveCampaign.Name</h4>
+                                            </div>
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
 
             <!-- About Area Start -->
             <section class="rts-about-area rts-section-gapBottom">

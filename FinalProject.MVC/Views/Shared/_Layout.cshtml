@@ -115,14 +115,8 @@
                                             <li class="has-dropdown main-nav">
                                                 <a class="main-menu" href="javascript:void(0)">Home</a>
                                                 <ul class="submenu parent-nav">
-                                                    <li><a asp-controller="Home" asp-action="Index">Dealer One</a></li>
-                                                    <li><a asp-controller="Home" asp-action="DealerTwo">Dealer Two</a></li>
-                                                    <li><a asp-controller="Home" asp-action="DealerThree">Dealer Three</a></li>
+                                                    <li><a asp-controller="Home" asp-action="Index">Dealership</a></li>
                                                     <li><a asp-controller="Home" asp-action="ShopDemo">Shop</a></li>
-                                                    <li><a asp-controller="Home" asp-action="DealerSlider">Dealer Slider</a></li>
-                                                    <li><a asp-controller="Home" asp-action="DealerVideo">Dealer Video</a></li>
-                                                    <li><a asp-controller="Home" asp-action="WashDemo">Wash</a></li>
-                                                    <li><a asp-controller="Home" asp-action="RepairDemo">Repair</a></li>
                                                 </ul>
                                             </li>
                                             <li class="main-nav">
@@ -135,7 +129,6 @@
                                                     <li><a asp-controller="Cars" asp-action="CarsTwo">Cars Two</a></li>
                                                     <li><a asp-controller="Cars" asp-action="CarsThree">Cars Three</a></li>
                                                     <li><a asp-controller="Cars" asp-action="Details" asp-route-id="1">Car Single</a></li>
-                                                    <li><a asp-controller="Cars" asp-action="DetailsTwo" asp-route-id="1">Car Single Two</a></li>
                                                 </ul>
                                             </li>
                                             <li class="main-nav has-dropdown">
@@ -194,6 +187,8 @@
                                                     <button type="submit" class="rts-btn btn-border radius-small">Sign Out</button>
                                                 </form>
                                             }
+                                            @if (CarCreationAccess.CanCreateCars(User))
+                                            {
                                             <a asp-controller="Account" asp-action="AddCar" class="rts-btn btn-primary radius-small icon">
                                                 Add Car
                                                 <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -206,6 +201,7 @@
                                                     </defs>
                                                 </svg>
                                             </a>
+                                            }
                                         </div>
                                         <div class="menu-btn" id="menu-btn">
                                             <svg width="55" height="55" viewBox="0 0 55 55" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -348,14 +344,8 @@
                     <li class="has-droupdown">
                         <a href="#" class="main">Home</a>
                         <ul class="submenu mm-collapse">
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="Index">Dealer One</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="DealerTwo">Dealer Two</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="DealerThree">Dealer Three</a></li>
+                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="Index">Dealership</a></li>
                             <li><a class="mobile-menu-link" asp-controller="Home" asp-action="ShopDemo">Shop</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="WashDemo">Wash</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="RepairDemo">Repair</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="DealerSlider">Dealer Slider</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Home" asp-action="DealerVideo">Dealer Video</a></li>
                         </ul>
                     </li>
                     <li><a asp-controller="About" asp-action="Index" class="main">About Us</a></li>
@@ -366,7 +356,6 @@
                             <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="CarsTwo">Cars Two</a></li>
                             <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="CarsThree">Cars Three</a></li>
                             <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="Details" asp-route-id="1">Car Single</a></li>
-                            <li><a class="mobile-menu-link" asp-controller="Cars" asp-action="DetailsTwo" asp-route-id="1">Car Single Two</a></li>
                         </ul>
                     </li>
                     <li class="has-droupdown">

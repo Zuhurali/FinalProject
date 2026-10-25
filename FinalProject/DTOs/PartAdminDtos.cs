@@ -52,7 +52,7 @@ public sealed class SavePartRequest
     public string Name { get; set; } = string.Empty;
 
     [MaxLength(2000)]
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
 
     [Range(0, 1000000)]
     public decimal Price { get; set; }
@@ -61,10 +61,10 @@ public sealed class SavePartRequest
     public string Category { get; set; } = string.Empty;
 
     [MaxLength(100)]
-    public string Brand { get; set; } = string.Empty;
+    public string? Brand { get; set; }
 
     [MaxLength(300)]
-    public string Compatibility { get; set; } = string.Empty;
+    public string? Compatibility { get; set; }
 
     [Range(0, int.MaxValue)]
     public int Quantity { get; set; }

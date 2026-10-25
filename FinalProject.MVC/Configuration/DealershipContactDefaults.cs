@@ -8,7 +8,7 @@ public static class DealershipContactDefaults
     public const string DisplayPhone = "+994 50 354 67 67";
     public const string E164Phone = "+994503546767";
     public const string WhatsAppDigits = "994503546767";
-    public const string Email = "Autovault@gmail.com";
+    public const string Email = "zuhraliim@code.edu.az";
     public const string AddressLine = "Babek Prospekti 22–24, Baku, Azerbaijan";
     public const string MapsQuery = "Baku Auto Mall, Babek Prospekti 22-24, Baku, Azerbaijan";
 }

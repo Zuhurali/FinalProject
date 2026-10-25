@@ -73,7 +73,7 @@ public sealed class AdminPartsController : AdminControllerBase
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(SavePartDto part, IFormFile? image, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([Bind(Prefix = "")] SavePartDto part, IFormFile? image, CancellationToken cancellationToken)
     {
         var imageError = await ApplyImageAsync(part, image, required: string.IsNullOrWhiteSpace(part.ImagePath));
         if (imageError != null)
@@ -84,6 +84,7 @@ public sealed class AdminPartsController : AdminControllerBase
         if (!ModelState.IsValid)
         {
             ViewData["Title"] = "Add part - AutoVault";
+            RememberFormError();
             return View("Edit", part);
         }
 
@@ -98,6 +99,7 @@ public sealed class AdminPartsController : AdminControllerBase
         catch (CarApiException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
+            RememberFormError();
             return View("Edit", part);
         }
     }
@@ -121,8 +123,9 @@ public sealed class AdminPartsController : AdminControllerBase
 
     [HttpPost("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, SavePartDto part, IFormFile? image, CancellationToken cancellationToken)
+    public async Task<IActionResult> Edit(int id, [Bind(Prefix = "")] SavePartDto part, IFormFile? image, CancellationToken cancellationToken)
     {
+        part.Id = id;
         var imageError = await ApplyImageAsync(part, image, required: false);
         if (imageError != null)
         {
@@ -131,7 +134,7 @@ public sealed class AdminPartsController : AdminControllerBase
 
         if (!ModelState.IsValid)
         {
-            part.Id = id;
+            RememberFormError();
             return View(part);
         }
 
@@ -139,13 +142,13 @@ public sealed class AdminPartsController : AdminControllerBase
         {
             var token = await RequireTokenAsync();
             await _adminApi.UpdatePartAsync(id, part, token, cancellationToken);
-            TempData["Success"] = "The part was updated.";
-            return RedirectToAction(nameof(Index));
+            TempData["Success"] = "Part updated successfully.";
+            return RedirectToAction(nameof(Edit), new { id });
         }
         catch (CarApiException exception)
         {
             ModelState.AddModelError(string.Empty, exception.Message);
-            part.Id = id;
+            RememberFormError();
             return View(part);
         }
     }
@@ -166,6 +169,19 @@ public sealed class AdminPartsController : AdminControllerBase
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private void RememberFormError()
+    {
+        var messages = ModelState.Values
+            .SelectMany(entry => entry.Errors)
+            .Select(error => error.ErrorMessage)
+            .Where(message => !string.IsNullOrWhiteSpace(message))
+            .Distinct()
+            .ToList();
+        TempData["Error"] = messages.Count == 0
+            ? "The part could not be saved."
+            : string.Join(" ", messages);
     }
 
     private async Task<string> RequireTokenAsync()

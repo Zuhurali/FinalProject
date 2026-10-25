@@ -154,7 +154,11 @@ namespace FinalProject.MVC.Controllers
 
         public const int CatalogPageSize = 8;
 
-        private List<ShopProduct> MatchCatalog(string? search, string? category)
+        private List<ShopProduct> MatchCatalog(
+            string? search,
+            string? category,
+            int? discountPercent = null,
+            int? campaignId = null)
         {
             IEnumerable<ShopProduct> source = _allProducts;
             if (!string.IsNullOrWhiteSpace(search))
@@ -171,7 +175,38 @@ namespace FinalProject.MVC.Controllers
                 source = source.Where(product => string.Equals(product.Category, category, StringComparison.OrdinalIgnoreCase));
             }
 
+            if (campaignId is int liveCampaignId and > 0)
+            {
+                source = source.Where(product =>
+                    product.HasOffer && product.OfferCampaignId == liveCampaignId);
+            }
+            else if (discountPercent is int percent and > 0)
+            {
+                source = source.Where(product => product.HasOffer && product.DiscountPercent == percent);
+            }
+
             return source.ToList();
+        }
+
+        private static string CatalogResultsText(
+            int matchedCount,
+            int pageSize,
+            int? discountPercent,
+            int? campaignId = null)
+        {
+            if (matchedCount == 0)
+            {
+                if (campaignId is > 0)
+                {
+                    return "No active parts currently use this campaign offer.";
+                }
+
+                return discountPercent is int percent and > 0
+                    ? $"No active parts currently have a {percent}% discount."
+                    : "No matching parts";
+            }
+
+            return $"Showing 1-{Math.Min(pageSize, matchedCount)} of {matchedCount} results";
         }
 
         private static List<ShopProduct> OrderCatalog(List<ShopProduct> products, string? sortBy)
@@ -192,11 +227,18 @@ namespace FinalProject.MVC.Controllers
             };
         }
 
-        public async Task<IActionResult> Index(string? search, string? category, CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(
+            string? search,
+            string? category,
+            int? discount,
+            int? campaign,
+            CancellationToken cancellationToken)
         {
             ViewData["Title"] = "Shop - AutoVault";
             await EnsureCatalogAsync(cancellationToken);
-            var matched = OrderCatalog(MatchCatalog(search, category), "Latest");
+            var discountPercent = discount is > 0 ? discount : null;
+            var campaignId = campaign is > 0 ? campaign : null;
+            var matched = OrderCatalog(MatchCatalog(search, category, discountPercent, campaignId), "Latest");
             var initialProducts = matched.Take(CatalogPageSize).ToList();
             await ApplyRatingsAsync(initialProducts, cancellationToken);
             var response = new ShopFilterResponse
@@ -206,9 +248,7 @@ namespace FinalProject.MVC.Controllers
                 CurrentPage = 1,
                 TotalPages = (int)Math.Ceiling(matched.Count / (double)CatalogPageSize),
                 HasMorePages = matched.Count > CatalogPageSize,
-                ResultsText = matched.Count == 0
-                    ? "No matching parts"
-                    : $"Showing 1-{Math.Min(CatalogPageSize, matched.Count)} of {matched.Count} results"
+                ResultsText = CatalogResultsText(matched.Count, CatalogPageSize, discountPercent, campaignId)
             };
 
             SetShopFilters();
@@ -216,13 +256,12 @@ namespace FinalProject.MVC.Controllers
                 .Where(product => !string.IsNullOrWhiteSpace(product.Category))
                 .GroupBy(product => product.Category)
                 .ToDictionary(group => group.Key, group => group.Count());
-            var now = DateTime.UtcNow;
-            var campaigns = await _shopCatalog.GetCampaignsAsync(cancellationToken);
-            ViewData["FeaturedCampaign"] = campaigns.FirstOrDefault(campaign =>
-                campaign.IsActive && campaign.StartsAt <= now && campaign.EndsAt > now);
+            ViewData["LiveCampaigns"] = await _shopCatalog.GetLiveCampaignsAsync(cancellationToken);
             ViewData["BodyClass"] = "home-four";
             ViewData["Search"] = search;
             ViewData["Category"] = category;
+            ViewData["Discount"] = discountPercent;
+            ViewData["CampaignId"] = campaignId;
             return View(response);
         }
 
@@ -261,6 +300,15 @@ namespace FinalProject.MVC.Controllers
             if (!string.IsNullOrEmpty(request.Category))
             {
                 filteredProducts = filteredProducts.Where(p => p.Category == request.Category);
+            }
+
+            if (request.CampaignId is int requestCampaignId and > 0)
+            {
+                filteredProducts = filteredProducts.Where(p => p.HasOffer && p.OfferCampaignId == requestCampaignId);
+            }
+            else if (request.DiscountPercent is int percent and > 0)
+            {
+                filteredProducts = filteredProducts.Where(p => p.HasOffer && p.DiscountPercent == percent);
             }
 
             // Apply car make filter (single select - backwards compatibility)
@@ -377,9 +425,13 @@ namespace FinalProject.MVC.Controllers
                 CurrentPage = request.Page,
                 TotalPages = totalPages,
                 HasMorePages = request.Page < totalPages,
-                ResultsText = totalFilteredProducts > 0 
+                ResultsText = totalFilteredProducts > 0
                     ? $"Showing {startItem}-{endItem} of {totalFilteredProducts} results"
-                    : "No products found"
+                    : request.CampaignId is > 0
+                        ? "No active parts currently use this campaign offer."
+                        : request.DiscountPercent is int emptyDiscount and > 0
+                            ? $"No active parts currently have a {emptyDiscount}% discount."
+                            : "No products found"
             };
 
             return Json(response);
@@ -392,12 +444,16 @@ namespace FinalProject.MVC.Controllers
             string? search = null,
             string? category = null,
             string? sortBy = null,
+            int? discount = null,
+            int? campaign = null,
             CancellationToken cancellationToken = default)
         {
             await EnsureCatalogAsync(cancellationToken);
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 48);
-            var matched = OrderCatalog(MatchCatalog(search, category), sortBy);
+            var discountPercent = discount is > 0 ? discount : null;
+            var campaignId = campaign is > 0 ? campaign : null;
+            var matched = OrderCatalog(MatchCatalog(search, category, discountPercent, campaignId), sortBy);
             var products = matched
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -416,7 +472,7 @@ namespace FinalProject.MVC.Controllers
                 HasMorePages = page < totalPages,
                 ResultsText = matched.Count > 0
                     ? $"Showing 1-{endItem} of {matched.Count} results"
-                    : "No products found"
+                    : CatalogResultsText(0, pageSize, discountPercent, campaignId)
             };
 
             return Json(response);

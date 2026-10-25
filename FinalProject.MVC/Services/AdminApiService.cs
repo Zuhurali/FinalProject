@@ -161,6 +161,32 @@ public sealed class AdminApiService : IAdminApiService
             {
                 message = value.GetString()!;
             }
+            else if (document.RootElement.TryGetProperty("errors", out var errors)
+                && errors.ValueKind == JsonValueKind.Object)
+            {
+                var details = new List<string>();
+                foreach (var property in errors.EnumerateObject())
+                {
+                    if (property.Value.ValueKind != JsonValueKind.Array)
+                    {
+                        continue;
+                    }
+
+                    foreach (var item in property.Value.EnumerateArray())
+                    {
+                        var text = item.GetString();
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            details.Add(text);
+                        }
+                    }
+                }
+
+                if (details.Count > 0)
+                {
+                    message = string.Join(" ", details.Distinct());
+                }
+            }
         }
         catch (JsonException)
         {

@@ -21,9 +21,8 @@
         <div class="col-md-4">
             @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
             {
-                <img src="@Url.Content(Model.ImagePath)" alt="" class="img-fluid" />
+                <img src="@Url.Content(Model.ImagePath)" alt="@Model.Name" class="img-fluid" />
             }
-            <p class="mt-2 mb-0"><strong>Image</strong><br />@Model.ImagePath</p>
         </div>
         <div class="col-md-8">
             <dl class="row mb-0">

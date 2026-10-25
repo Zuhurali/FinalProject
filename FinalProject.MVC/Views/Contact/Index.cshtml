@@ -42,6 +42,10 @@
                           id="contact-form"
                           novalidate>
                         @Html.AntiForgeryToken()
+                        <div class="av-honeypot" aria-hidden="true">
+                            <label for="company">Company</label>
+                            <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" value="">
+                        </div>
                         <div class="form__control">
                             <span class="icon">
                                 <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">

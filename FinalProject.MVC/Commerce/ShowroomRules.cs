@@ -97,9 +97,16 @@ public static class ShowroomRules
         bool bAppliesToAllParts,
         int? bProductId)
     {
-        if (aAppliesToAllParts || bAppliesToAllParts)
+        // All-parts + single-product can both stay active: the product campaign
+        // takes precedence for that part, and the all-parts campaign covers the rest.
+        if (aAppliesToAllParts && bAppliesToAllParts)
         {
             return true;
+        }
+
+        if (aAppliesToAllParts || bAppliesToAllParts)
+        {
+            return false;
         }
 
         return aProductId.HasValue
@@ -110,6 +117,18 @@ public static class ShowroomRules
     public static bool OfferIsVisible(bool isActive, DateTime startsAt, DateTime endsAt, DateTime utcNow)
     {
         return isActive && utcNow >= startsAt && utcNow < endsAt;
+    }
+
+    public const string AllPartsCampaignImagePath = "~/assets/images/cta/01.webp";
+
+    public static string CampaignBannerImagePath(string? productImagePath, bool appliesToAllParts)
+    {
+        if (!appliesToAllParts && !string.IsNullOrWhiteSpace(productImagePath))
+        {
+            return productImagePath;
+        }
+
+        return AllPartsCampaignImagePath;
     }
 
     public static bool CampaignWindowsOverlap(DateTime aStartsAt, DateTime aEndsAt, DateTime bStartsAt, DateTime bEndsAt)

@@ -92,9 +92,9 @@
                     <td class="text-nowrap">
                         <a asp-action="Details" asp-route-id="@campaign.Id">View</a>
                         <a asp-action="Edit" asp-route-id="@campaign.Id">Edit</a>
-                        <form asp-action="Active" asp-route-id="@campaign.Id" method="post" class="d-inline">
+                        <form asp-action="Active" asp-route-id="@campaign.Id" method="post" class="d-inline" data-campaign-active-form>
                             @Html.AntiForgeryToken()
-                            <input type="hidden" name="isActive" value="@(!campaign.IsActive)" />
+                            <input type="hidden" name="isActive" value="@(campaign.IsActive ? "false" : "true")" />
                             <button class="btn btn-link p-0" type="submit">@(campaign.IsActive ? "Deactivate" : "Activate")</button>
                         </form>
                         <form asp-action="Delete" asp-route-id="@campaign.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this campaign? Product prices and stock stay the same.');">
@@ -108,3 +108,15 @@
         </table>
     }
 </div>
+@section Scripts {
+<script>
+    document.querySelectorAll('form[data-campaign-active-form]').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            var button = form.querySelector('button[type="submit"]');
+            if (button) {
+                button.disabled = true;
+            }
+        });
+    });
+</script>
+}

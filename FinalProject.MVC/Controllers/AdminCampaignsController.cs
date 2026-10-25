@@ -176,7 +176,7 @@ public sealed class AdminCampaignsController : Controller
 
     [HttpPost("Active/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Active(int id, bool isActive, CancellationToken cancellationToken)
+    public async Task<IActionResult> Active(int id, [FromForm] bool isActive, CancellationToken cancellationToken)
     {
         var (ok, error) = await _catalog.SetCampaignActiveAsync(id, isActive, cancellationToken);
         if (!ok)
@@ -185,7 +185,33 @@ public sealed class AdminCampaignsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        TempData["Success"] = isActive ? "The campaign is active." : "The campaign is inactive.";
+        if (!isActive)
+        {
+            TempData["Success"] = "The campaign is inactive.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var campaign = await _catalog.GetCampaignAsync(id, cancellationToken);
+        if (campaign == null)
+        {
+            TempData["Success"] = "The campaign is active.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var status = ShowroomRules.CampaignPublicStatus(
+            campaign.IsActive,
+            campaign.StartsAt,
+            campaign.EndsAt,
+            DateTime.UtcNow);
+        TempData["Success"] = status switch
+        {
+            "Live" => "The campaign is active and Live in the Shop.",
+            "Scheduled" =>
+                "The campaign is active, but it is Scheduled. It becomes Live when its UTC start date is reached.",
+            "Expired" =>
+                "The campaign is active, but its UTC date window has expired, so it is not Live in the Shop. Update the dates to make it Live.",
+            _ => "The campaign is active."
+        };
         return RedirectToAction(nameof(Index));
     }
 
@@ -193,9 +219,10 @@ public sealed class AdminCampaignsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        if (!await _catalog.DeleteCampaignAsync(id, cancellationToken))
+        var (ok, error) = await _catalog.DeleteCampaignAsync(id, cancellationToken);
+        if (!ok)
         {
-            TempData["Error"] = "The campaign could not be deleted.";
+            TempData["Error"] = error ?? "The campaign could not be deleted.";
             return RedirectToAction(nameof(Index));
         }
 
