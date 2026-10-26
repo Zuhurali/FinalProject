@@ -123,6 +123,30 @@ public sealed class SaveCarDto : IValidatableObject
         {
             yield return result;
         }
+
+        if (!string.IsNullOrWhiteSpace(ImageUrl) && !IsSafeImageReference(ImageUrl))
+        {
+            yield return new ValidationResult("The primary image path is not allowed.", [nameof(ImageUrl)]);
+        }
+    }
+
+    private static bool IsSafeImageReference(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return false;
+        }
+
+        var text = url.Trim();
+        if (text.Length > 500 || text.Contains("..", StringComparison.Ordinal) || text.Contains('\\'))
+        {
+            return false;
+        }
+
+        return text.StartsWith("~/", StringComparison.Ordinal)
+            || text.StartsWith("/", StringComparison.Ordinal)
+            || text.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            || text.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -149,6 +173,29 @@ public sealed class FavoriteDto
     public DateTime CreatedAt { get; set; }
 
     public CarApiDto Car { get; set; } = new();
+}
+
+public sealed class ProductFavoriteDto
+{
+    public int Id { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public int ProductId { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public decimal Price { get; set; }
+
+    public string Category { get; set; } = string.Empty;
+
+    public string Brand { get; set; } = string.Empty;
+
+    public string ImagePath { get; set; } = string.Empty;
+
+    public int Quantity { get; set; }
+
+    public bool InStock { get; set; }
 }
 
 public sealed class AccountActivityDto

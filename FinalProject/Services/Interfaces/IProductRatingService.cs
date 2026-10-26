@@ -12,6 +12,9 @@ public interface IProductRatingService
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ProductRatingItem>> GetAllForAdminAsync(
+        CancellationToken cancellationToken = default);
+
     Task<CurrentUserProductRating?> GetUserRatingAsync(
         int productId,
         string userId,

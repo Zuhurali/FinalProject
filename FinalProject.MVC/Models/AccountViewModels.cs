@@ -18,6 +18,8 @@ public sealed class AccountListingsViewModel
 public sealed class AccountFavoritesViewModel
 {
     public IReadOnlyList<FavoriteDto> Favorites { get; set; } = Array.Empty<FavoriteDto>();
+
+    public IReadOnlyList<ProductFavoriteDto> ProductFavorites { get; set; } = Array.Empty<ProductFavoriteDto>();
 }
 
 public sealed class AccountMessagesViewModel
@@ -38,6 +40,55 @@ public sealed class AccountProfileViewModel
 
     [Phone, MaxLength(50)]
     public string? PhoneNumber { get; set; }
+}
+
+public sealed class ChangePasswordViewModel
+{
+    [Required]
+    [DataType(DataType.Password)]
+    [Display(Name = "Current password")]
+    public string CurrentPassword { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(100, MinimumLength = 6)]
+    [DataType(DataType.Password)]
+    [Display(Name = "New password")]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [Required]
+    [DataType(DataType.Password)]
+    [Display(Name = "Confirm new password")]
+    [Compare(nameof(NewPassword), ErrorMessage = "The new password and confirmation password do not match.")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public sealed class ForgotPasswordViewModel
+{
+    [Required]
+    [EmailAddress]
+    [Display(Name = "Email")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public sealed class ResetPasswordViewModel
+{
+    [Required]
+    public string UserId { get; set; } = string.Empty;
+
+    [Required]
+    public string Token { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(100, MinimumLength = 6)]
+    [DataType(DataType.Password)]
+    [Display(Name = "New password")]
+    public string Password { get; set; } = string.Empty;
+
+    [Required]
+    [DataType(DataType.Password)]
+    [Display(Name = "Confirm password")]
+    [Compare(nameof(Password), ErrorMessage = "The password and confirmation password do not match.")]
+    public string ConfirmPassword { get; set; } = string.Empty;
 }
 
 public sealed class CarEditorViewModel

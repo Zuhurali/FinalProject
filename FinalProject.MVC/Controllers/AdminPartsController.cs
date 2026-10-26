@@ -29,15 +29,21 @@ public sealed class AdminPartsController : AdminControllerBase
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(string? search, string? category, int page = 1, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(
+        string? search,
+        string? category,
+        string? brand,
+        int page = 1,
+        CancellationToken cancellationToken = default)
     {
         ViewData["Title"] = "Parts - AutoVault";
         ViewData["Search"] = search;
         ViewData["Category"] = category;
+        ViewData["Brand"] = brand;
         try
         {
             var token = await RequireTokenAsync();
-            return View(await _adminApi.GetPartsAsync(search, category, page, token, cancellationToken));
+            return View(await _adminApi.GetPartsAsync(search, category, page, token, cancellationToken, brand));
         }
         catch (CarApiException exception)
         {
@@ -224,7 +230,7 @@ public sealed class AdminPartsController : AdminControllerBase
         {
             if (!string.IsNullOrWhiteSpace(part.ImagePath))
             {
-                return null;
+                return PartImagePathRules.ValidateStoredPath(part.ImagePath);
             }
 
             return required ? "Upload a product image." : null;
@@ -246,7 +252,7 @@ public sealed class AdminPartsController : AdminControllerBase
         }
 
         part.ImagePath = $"~/assets/images/portfolio/parts/uploads/{fileName}";
-        return null;
+        return PartImagePathRules.ValidateStoredPath(part.ImagePath);
     }
 
     private static SavePartDto ToForm(PartAdminItemDto part) => new()

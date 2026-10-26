@@ -9,7 +9,9 @@ public interface IContactRequestService
         string? userId = null,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ContactRequest>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ContactRequest>> GetAllAsync(
+        string? status = null,
+        CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ContactRequest>> GetForUserAsync(string userId, CancellationToken cancellationToken = default);
 

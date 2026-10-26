@@ -18,7 +18,13 @@ public interface IAdminApiService
 
     Task DeleteCategoryAsync(int id, string accessToken, CancellationToken cancellationToken = default);
 
-    Task<PartAdminListDto> GetPartsAsync(string? search, string? category, int page, string accessToken, CancellationToken cancellationToken = default);
+    Task<PartAdminListDto> GetPartsAsync(
+        string? search,
+        string? category,
+        int page,
+        string accessToken,
+        CancellationToken cancellationToken = default,
+        string? brand = null);
 
     Task<PartAdminItemDto> GetPartAsync(int id, string accessToken, CancellationToken cancellationToken = default);
 

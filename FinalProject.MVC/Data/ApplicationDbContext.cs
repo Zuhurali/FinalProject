@@ -11,6 +11,7 @@ namespace FinalProject.MVC.Data
         {
         }
 
+        public DbSet<Coupon> Coupons { get; set; }
         public DbSet<CouponUsage> CouponUsages { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
@@ -21,9 +22,81 @@ namespace FinalProject.MVC.Data
         public DbSet<ShowroomPurchaseRequest> ShowroomPurchaseRequests { get; set; }
         public DbSet<ContactRequest> ContactRequests { get; set; }
 
+        public DbSet<SiteSettings> SiteSettings { get; set; }
+
+        public DbSet<FaqItem> FaqItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<FaqItem>(entity =>
+            {
+                entity.Property(item => item.Question).HasMaxLength(300).IsRequired();
+                entity.Property(item => item.Answer).HasMaxLength(4000).IsRequired();
+                entity.HasIndex(item => item.SortOrder);
+                entity.HasIndex(item => item.IsPublished);
+                entity.ToTable("FaqItems", table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_FaqItems_QuestionLength",
+                        "LEN([Question]) >= 3 AND LEN([Question]) <= 300");
+                    table.HasCheckConstraint(
+                        "CK_FaqItems_AnswerLength",
+                        "LEN([Answer]) >= 3 AND LEN([Answer]) <= 4000");
+                });
+            });
+
+            builder.Entity<SiteSettings>(entity =>
+            {
+                entity.ToTable("SiteSettings");
+                entity.HasKey(settings => settings.Id);
+                entity.Property(settings => settings.Id).ValueGeneratedNever();
+                entity.Property(settings => settings.SiteName).HasMaxLength(120).IsRequired();
+                entity.Property(settings => settings.DisplayPhone).HasMaxLength(40).IsRequired();
+                entity.Property(settings => settings.E164Phone).HasMaxLength(20).IsRequired();
+                entity.Property(settings => settings.WhatsAppDigits).HasMaxLength(20).IsRequired();
+                entity.Property(settings => settings.Email).HasMaxLength(200).IsRequired();
+                entity.Property(settings => settings.AddressLine).HasMaxLength(300).IsRequired();
+                entity.Property(settings => settings.MapsQuery).HasMaxLength(300).IsRequired();
+                entity.Property(settings => settings.LogoPath).HasMaxLength(500);
+                entity.Property(settings => settings.FooterLogoPath).HasMaxLength(500);
+                entity.Property(settings => settings.FaviconPath).HasMaxLength(500);
+                entity.Property(settings => settings.FooterText).HasMaxLength(500).IsRequired();
+                entity.Property(settings => settings.CopyrightText).HasMaxLength(200).IsRequired();
+                entity.Property(settings => settings.FacebookUrl).HasMaxLength(300);
+                entity.Property(settings => settings.InstagramUrl).HasMaxLength(300);
+                entity.Property(settings => settings.YoutubeUrl).HasMaxLength(300);
+                entity.Property(settings => settings.TwitterUrl).HasMaxLength(300);
+                entity.Property(settings => settings.DefaultSeoTitle).HasMaxLength(160).IsRequired();
+                entity.Property(settings => settings.DefaultMetaDescription).HasMaxLength(320).IsRequired();
+            });
+
+            builder.Entity<Coupon>(entity =>
+            {
+                entity.Property(coupon => coupon.Code).HasMaxLength(50).IsRequired();
+                entity.Property(coupon => coupon.Name).HasMaxLength(200).IsRequired();
+                entity.Property(coupon => coupon.DiscountPercent).HasColumnType("decimal(5,2)");
+                entity.Property(coupon => coupon.MinimumPurchaseAmount).HasColumnType("decimal(18,2)");
+                entity.HasIndex(coupon => coupon.Code).IsUnique();
+                entity.HasOne(coupon => coupon.Product)
+                    .WithMany()
+                    .HasForeignKey(coupon => coupon.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
+                entity.ToTable("Coupons", table =>
+                {
+                    table.HasCheckConstraint(
+                        "CK_Coupons_DiscountPercent",
+                        "[DiscountPercent] > 0 AND [DiscountPercent] <= 100");
+                    table.HasCheckConstraint(
+                        "CK_Coupons_Scope",
+                        "([AppliesToAllParts] = 1 AND [ProductId] IS NULL) OR ([AppliesToAllParts] = 0 AND [ProductId] IS NOT NULL)");
+                    table.HasCheckConstraint(
+                        "CK_Coupons_MaxUsesPerUser",
+                        "[MaxUsesPerUser] >= 1");
+                });
+            });
 
             // Configure CouponUsage entity
             builder.Entity<CouponUsage>(entity =>
@@ -110,6 +183,7 @@ namespace FinalProject.MVC.Data
                 entity.Property(sale => sale.CampaignDiscountPercent).HasColumnType("decimal(5,2)");
                 entity.Property(sale => sale.RecordedByUserId).HasMaxLength(450).IsRequired();
                 entity.Property(sale => sale.Note).HasMaxLength(500);
+                entity.Property(sale => sale.VoidedByUserId).HasMaxLength(450);
                 entity.HasOne(sale => sale.Product)
                     .WithMany()
                     .HasForeignKey(sale => sale.ProductId)
@@ -119,6 +193,7 @@ namespace FinalProject.MVC.Data
                     .HasForeignKey(sale => sale.CampaignId)
                     .OnDelete(DeleteBehavior.SetNull)
                     .IsRequired(false);
+                entity.HasIndex(sale => sale.VoidedAt);
                 entity.ToTable("InPersonSales", table => table.HasCheckConstraint(
                     "CK_InPersonSales_Quantity",
                     "[Quantity] >= 1"));
@@ -134,7 +209,9 @@ namespace FinalProject.MVC.Data
                     .WithMany()
                     .HasForeignKey(inquiry => inquiry.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
+                entity.Property(inquiry => inquiry.UserId).HasMaxLength(450);
                 entity.HasIndex(inquiry => inquiry.ProductId);
+                entity.HasIndex(inquiry => inquiry.UserId);
                 entity.ToTable("ProductInquiries", table => table.HasCheckConstraint(
                     "CK_ProductInquiries_MessageLength",
                     "LEN([Message]) >= 10 AND LEN([Message]) <= 1000"));
@@ -147,6 +224,7 @@ namespace FinalProject.MVC.Data
                 entity.Property(request => request.Phone).HasMaxLength(40).IsRequired();
                 entity.Property(request => request.Note).HasMaxLength(500);
                 entity.Property(request => request.Status).HasMaxLength(20).IsRequired();
+                entity.Property(request => request.UserId).HasMaxLength(450);
                 entity.Property(request => request.PreferredVisitDate).HasColumnType("date");
                 entity.HasOne(request => request.Product)
                     .WithMany()
@@ -154,6 +232,7 @@ namespace FinalProject.MVC.Data
                     .OnDelete(DeleteBehavior.Restrict);
                 entity.HasIndex(request => request.ProductId);
                 entity.HasIndex(request => request.SubmissionKey).IsUnique();
+                entity.HasIndex(request => request.UserId);
                 entity.HasIndex(request => new { request.Email, request.ProductId, request.Status });
                 entity.ToTable("ShowroomPurchaseRequests", table =>
                 {

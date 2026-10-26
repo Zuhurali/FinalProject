@@ -123,6 +123,11 @@ public sealed class SaveCarRequest : IValidatableObject
         {
             yield return result;
         }
+
+        if (!Commerce.CarGalleryRules.IsSafeReference(ImageUrl))
+        {
+            yield return new ValidationResult("The primary image path is not allowed.", [nameof(ImageUrl)]);
+        }
     }
 }
 
@@ -134,6 +139,18 @@ public sealed record CarLookupResponse(
 public sealed record BrandModelResponse(int BrandId, string Name);
 
 public sealed record FavoriteResponse(int Id, DateTime CreatedAt, CarResponse Car);
+
+public sealed record ProductFavoriteResponse(
+    int Id,
+    DateTime CreatedAt,
+    int ProductId,
+    string Name,
+    decimal Price,
+    string Category,
+    string Brand,
+    string ImagePath,
+    int Quantity,
+    bool InStock);
 
 public sealed class StartConversationRequest
 {

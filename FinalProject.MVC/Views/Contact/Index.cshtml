@@ -29,7 +29,7 @@
         <div class="section-inner av-contact-layout">
             <div class="map-area">
                 <div class="contact-map-area-fluid">
-                    <iframe class="contact-map" title="Baku Auto Mall, Babek Prospekti 22â€“24, Baku, Azerbaijan" src="https://maps.google.com/maps?q=Baku%20Auto%20Mall%2C%20Babek%20Prospekti%2022-24%2C%20Baku%2C%20Azerbaijan&amp;ll=40.390506,49.899982&amp;z=16&amp;hl=en&amp;output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe class="contact-map" title="Baku Auto Mall, Babek Prospekti 22–24, Baku, Azerbaijan" src="https://maps.google.com/maps?q=Baku%20Auto%20Mall%2C%20Babek%20Prospekti%2022-24%2C%20Baku%2C%20Azerbaijan&amp;ll=40.390506,49.899982&amp;z=16&amp;hl=en&amp;output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
             <div class="get-in-touch-area">
@@ -128,7 +128,7 @@
                 </div>
                 <h5 class="title">Location</h5>
                 <ul>
-                    <li><a href="@DealershipContactOptions.Value.MapsHref" target="_blank" rel="noopener">@DealershipContactOptions.Value.AddressLine</a></li>
+                    <li><a href="@Site.Contact.MapsHref" target="_blank" rel="noopener">@Site.Contact.AddressLine</a></li>
                 </ul>
             </div>
             <div class="contact-wrapper">
@@ -137,8 +137,8 @@
                 </div>
                 <h5 class="title">Phone</h5>
                 <ul>
-                    <li><a href="@DealershipContactOptions.Value.TelHref" data-contact-action="call" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">@DealershipContactOptions.Value.DisplayPhone</a></li>
-                    <li><a href="@DealershipContactOptions.Value.WhatsAppHref" data-contact-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Open a WhatsApp chat with AutoVault (not a phone call)">WhatsApp</a></li>
+                    <li><a href="@Site.Contact.TelHref" data-contact-action="call" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">@Site.Contact.DisplayPhone</a></li>
+                    <li><a href="@Site.Contact.WhatsAppHref" data-contact-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Open a WhatsApp chat with AutoVault (not a phone call)">WhatsApp</a></li>
                 </ul>
             </div>
             <div class="contact-wrapper">
@@ -147,7 +147,7 @@
                 </div>
                 <h5 class="title">Email</h5>
                 <ul>
-                    <li><a href="@DealershipContactOptions.Value.MailtoHref">@DealershipContactOptions.Value.Email</a></li>
+                    <li><a href="@Site.Contact.MailtoHref">@Site.Contact.Email</a></li>
                 </ul>
             </div>
         </div>

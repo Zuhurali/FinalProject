@@ -52,11 +52,12 @@
     else
     {
         <table class="table">
-            <thead><tr><th>When (UTC)</th><th>Product</th><th>Qty</th><th>List</th><th>Unit charged</th><th>Campaign</th><th>Note</th></tr></thead>
+            <thead><tr><th>#</th><th>When (UTC)</th><th>Product</th><th>Qty</th><th>List</th><th>Unit charged</th><th>Campaign</th><th>Note</th><th></th></tr></thead>
             <tbody>
             @foreach (var sale in Model)
             {
                 <tr>
+                    <td>@sale.Id</td>
                     <td>@sale.SoldAt.ToString("yyyy-MM-dd HH:mm")</td>
                     <td>@(sale.Product?.Name ?? $"Product #{sale.ProductId}")</td>
                     <td>@sale.Quantity</td>
@@ -77,6 +78,16 @@
                         }
                     </td>
                     <td>@sale.Note</td>
+                    <td>
+                        <form asp-action="Void"
+                              asp-route-id="@sale.Id"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Void sale #@sale.Id and restore @sale.Quantity to stock?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Void</button>
+                        </form>
+                    </td>
                 </tr>
             }
             </tbody>

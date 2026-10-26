@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/x-icon" href="~/fav.svg">
-    <title>@ViewData["Title"] - AutoVault Car Dealer</title>
-    <meta name="description" content="Your trusted source for expert automotive services and quality cars. Find your perfect vehicle with our extensive inventory and professional service.">
+    <link rel="shortcut icon" type="image/x-icon" href="@Url.Content(Site.Current.FaviconPath)">
+    <title>@(string.IsNullOrWhiteSpace(ViewData["Title"] as string) ? Site.Current.DefaultSeoTitle : ViewData["Title"])</title>
+    <meta name="description" content="@Site.Current.DefaultMetaDescription">
     
     <!-- Autovault CSS -->
     <link rel="stylesheet" href="~/assets/css/plugins/plugins.css">
@@ -70,7 +70,7 @@
                         <div class="header-wrapper-1">
                             <div class="logo-area-start">
                                 <a asp-controller="Home" asp-action="Index" class="logo">
-                                    <img src="~/assets/images/logo/logo.svg" alt="AutoVault Logo">
+                                    <img src="@Url.Content(Site.Current.LogoPath)" alt="@Site.Current.SiteName Logo">
                                 </a>
                             </div>
                             <div class="header-right d-block">
@@ -84,7 +84,7 @@
                                             </div>
                                             <div class="text">
                                                 <p>Call Us Now</p>
-                                                <a href="@DealershipContactOptions.Value.TelHref" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">@DealershipContactOptions.Value.DisplayPhone</a>
+                                                <a href="@Site.Contact.TelHref" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">@Site.Contact.DisplayPhone</a>
                                             </div>
                                         </div>
                                         <div class="map-area">
@@ -95,7 +95,7 @@
                                             </div>
                                             <div class="text">
                                                 <p>Send US Email</p>
-                                                <a href="@DealershipContactOptions.Value.MailtoHref">@DealershipContactOptions.Value.Email</a>
+                                                <a href="@Site.Contact.MailtoHref">@Site.Contact.Email</a>
                                             </div>
                                         </div>
                                         <div class="map-area">
@@ -106,7 +106,7 @@
                                             </div>
                                             <div class="text">
                                                 <p>Our Location</p>
-                                                <a href="@DealershipContactOptions.Value.MapsHref" target="_blank" rel="noopener">@DealershipContactOptions.Value.AddressLine</a>
+                                                <a href="@Site.Contact.MapsHref" target="_blank" rel="noopener">@Site.Contact.AddressLine</a>
                                             </div>
                                         </div>
                                     </div>
@@ -186,9 +186,30 @@
                             <div class="footer-wrapper-style-between">
                                 <div class="single-wized logo-area">
                                     <a asp-controller="Home" asp-action="Index" class="logo">
-                                        <img src="~/assets/images/logo/footer-logo.svg" width="99" alt="AutoVault">
+                                        <img src="@Url.Content(Site.Current.FooterLogoPath)" width="99" alt="@Site.Current.SiteName">
                                     </a>
-                                    <p class="desc">Your trusted partner for quality vehicles and exceptional service. Find your perfect car with confidence at AutoVault.</p>
+                                    <p class="desc">@Site.Current.FooterText</p>
+                                    @if (Site.Current.HasSocialLinks)
+                                    {
+                                        <div class="d-flex flex-wrap gap-2 mt-3">
+                                            @if (!string.IsNullOrWhiteSpace(Site.Current.FacebookUrl))
+                                            {
+                                                <a href="@Site.Current.FacebookUrl" target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(Site.Current.InstagramUrl))
+                                            {
+                                                <a href="@Site.Current.InstagramUrl" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(Site.Current.YoutubeUrl))
+                                            {
+                                                <a href="@Site.Current.YoutubeUrl" target="_blank" rel="noopener noreferrer" aria-label="YouTube">YouTube</a>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(Site.Current.TwitterUrl))
+                                            {
+                                                <a href="@Site.Current.TwitterUrl" target="_blank" rel="noopener noreferrer" aria-label="Twitter">Twitter</a>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                                 <div class="single-wized">
                                     <div class="wized-title">
@@ -214,7 +235,7 @@
                                                 <i class="rt-icon-phone"></i>
                                                 <div class="content">
                                                     <span>Call the store</span>
-                                                    <a class="number" href="@DealershipContactOptions.Value.TelHref" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">@DealershipContactOptions.Value.DisplayPhone</a>
+                                                    <a class="number" href="@Site.Contact.TelHref" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">@Site.Contact.DisplayPhone</a>
                                                 </div>
                                             </div>
                                             <div class="single-contact">
@@ -222,7 +243,7 @@
                                                 <div class="content">
                                                     <span>WhatsApp</span>
                                                     <a class="number"
-                                                       href="@DealershipContactOptions.Value.WhatsAppHref"
+                                                       href="@Site.Contact.WhatsAppHref"
                                                        data-contact-action="whatsapp"
                                                        target="_blank"
                                                        rel="noopener noreferrer"
@@ -233,14 +254,14 @@
                                                 <i class="rt-icon-mail"></i>
                                                 <div class="content">
                                                     <span>Email</span>
-                                                    <a class="number" href="@DealershipContactOptions.Value.MailtoHref">@DealershipContactOptions.Value.Email</a>
+                                                    <a class="number" href="@Site.Contact.MailtoHref">@Site.Contact.Email</a>
                                                 </div>
                                             </div>
                                             <div class="single-contact">
                                                 <i class="rt-icon-location"></i>
                                                 <div class="content">
                                                     <span>Location</span>
-                                                    <a class="number" href="@DealershipContactOptions.Value.MapsHref" target="_blank" rel="noopener">@DealershipContactOptions.Value.AddressLine</a>
+                                                    <a class="number" href="@Site.Contact.MapsHref" target="_blank" rel="noopener">@Site.Contact.AddressLine</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -253,7 +274,7 @@
                 <div class="copyright-area">
                     <div class="container">
                         <div class="copyright-area-inner d-flex align-items-center justify-content-between">
-                            <p>Copyright © @DateTime.Now.Year AutoVault. All rights reserved.</p>
+                            <p>@Site.Current.FormatCopyright(DateTime.Now.Year)</p>
                             <div class="menu">
                                 <ul>
                                     <li><a href="#">Terms & Conditions</a></li>

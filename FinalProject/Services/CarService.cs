@@ -70,9 +70,10 @@ public class CarService : ICarService
         var carNames = await _dbContext.Cars
             .AsNoTracking()
             .Where(car =>
-                car.Description.ToLower().Contains(term)
-                || car.Model.ToLower().Contains(term)
-                || car.Brand.Name.ToLower().Contains(term))
+                car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower()
+                && (car.Description.ToLower().Contains(term)
+                    || car.Model.ToLower().Contains(term)
+                    || car.Brand.Name.ToLower().Contains(term)))
             .Select(car => car.Description)
             .Where(name => name != "")
             .Distinct()
@@ -133,6 +134,7 @@ public class CarService : ICarService
         }
 
         await EnsureModelMatchesBrandAsync(request.BrandId, request.Model, cancellationToken);
+        EnsurePrimaryImageSafe(request);
 
         var now = DateTime.UtcNow;
         var car = new Models.Entities.Car
@@ -179,6 +181,7 @@ public class CarService : ICarService
         }
 
         await EnsureModelMatchesBrandAsync(request.BrandId, request.Model, cancellationToken);
+        EnsurePrimaryImageSafe(request);
 
         var now = DateTime.UtcNow;
         var car = new Models.Entities.Car
@@ -226,6 +229,7 @@ public class CarService : ICarService
         }
 
         await EnsureModelMatchesBrandAsync(request.BrandId, request.Model, cancellationToken);
+        EnsurePrimaryImageSafe(request);
 
         var car = await _dbContext.Cars
             .Include(item => item.Images)
@@ -630,6 +634,14 @@ public class CarService : ICarService
             .ToListAsync(cancellationToken);
         var shared = new HashSet<string>(referenced, StringComparer.OrdinalIgnoreCase);
         return candidates.Where(url => !shared.Contains(url)).ToList();
+    }
+
+    private static void EnsurePrimaryImageSafe(SaveCarRequest request)
+    {
+        if (!CarGalleryRules.IsSafeReference(request.ImageUrl))
+        {
+            throw new CarGalleryException("The primary image path is not allowed.");
+        }
     }
 
     private static IReadOnlyList<string> NormalizeAdditionalUrls(SaveCarRequest request, int existingCount)

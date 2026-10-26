@@ -26,6 +26,10 @@ public class ProductInquiry
 
     public bool IsHandled { get; set; }
 
+    /// <summary>Optional Identity user when the question was submitted while signed in.</summary>
+    [MaxLength(450)]
+    public string? UserId { get; set; }
+
     // ── Admin reply ──────────────────────────────────────────────────────────
     /// <summary>The admin's written reply. Null means no reply has been sent yet.</summary>
     [MaxLength(2000)]

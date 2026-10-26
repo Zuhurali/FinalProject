@@ -12,6 +12,24 @@ public interface IMarketplaceService
 
     Task<bool> RemoveFavoriteAsync(string userId, int carId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ProductFavoriteResponse>> GetProductFavoritesAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<int>> GetProductFavoriteIdsAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<ProductFavoriteResponse?> AddProductFavoriteAsync(
+        string userId,
+        int productId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> RemoveProductFavoriteAsync(
+        string userId,
+        int productId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ConversationSummaryResponse>> GetConversationsAsync(
         string userId,
         bool asStoreStaff = false,
@@ -43,5 +61,8 @@ public interface IMarketplaceService
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default);
 
-    Task<AccountSummaryResponse> GetSummaryAsync(string userId, CancellationToken cancellationToken = default);
+    Task<AccountSummaryResponse> GetSummaryAsync(
+        string userId,
+        bool asStoreStaff = false,
+        CancellationToken cancellationToken = default);
 }

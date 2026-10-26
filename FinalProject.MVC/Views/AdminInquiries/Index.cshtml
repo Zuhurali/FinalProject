@@ -1,16 +1,28 @@
 @model IReadOnlyList<ProductInquiry>
 @{
     Layout = "_AdminLayout";
+    var statusFilter = ViewBag.StatusFilter as string;
+    var statuses = (IReadOnlyList<string>)ViewBag.Statuses;
 }
-<div class="d-flex justify-content-between mb-4">
-    <h1 class="h3">Product questions</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <h1 class="h3 mb-0">Product questions</h1>
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <label class="form-label mb-0 small text-muted" for="inq-status-filter">Status</label>
+        <select id="inq-status-filter" name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All</option>
+            @foreach (var status in statuses)
+            {
+                <option value="@status" selected="@(string.Equals(status, statusFilter, StringComparison.OrdinalIgnoreCase))">@status</option>
+            }
+        </select>
+    </form>
 </div>
 
 <div class="admin-card">
-    <p>Customers send these from a product page. They are questions about availability or fitment, not orders or payments.</p>
+    <p>Customers send these from a product page. They are questions about availability or fitment, not orders or payments. Customer emails are Admin/SuperAdmin only.</p>
     @if (Model.Count == 0)
     {
-        <p>No questions yet.</p>
+        <p>No questions@(string.IsNullOrEmpty(statusFilter) ? "" : $" with status {statusFilter}") yet.</p>
     }
     else
     {

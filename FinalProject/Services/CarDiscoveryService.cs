@@ -18,7 +18,10 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
 
     public async Task<bool> RecordViewAsync(int carId, DateTime? viewedAtUtc = null, CancellationToken cancellationToken = default)
     {
-        if (carId <= 0 || !await _db.Cars.AnyAsync(car => car.Id == carId, cancellationToken))
+        if (carId <= 0
+            || !await _db.Cars.AnyAsync(
+                car => car.Id == carId && car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower(),
+                cancellationToken))
         {
             return false;
         }
@@ -82,7 +85,8 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         CancellationToken cancellationToken = default)
     {
         (page, pageSize) = CarDiscoveryRules.NormalizePaging(page, pageSize);
-        var query = _db.Cars.AsNoTracking();
+        var query = _db.Cars.AsNoTracking()
+            .Where(car => car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower());
         var totalCount = await query.CountAsync(cancellationToken);
         var totalPages = totalCount == 0 ? 0 : (int)Math.Ceiling(totalCount / (double)pageSize);
         if (totalPages > 0 && page > totalPages)
@@ -177,7 +181,9 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         var carIds = rankedIds.Select(item => item.CarId).ToList();
         var createdAt = await _db.Cars
             .AsNoTracking()
-            .Where(car => carIds.Contains(car.Id))
+            .Where(car =>
+                carIds.Contains(car.Id)
+                && car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower())
             .Select(car => new { car.Id, car.CreatedAt })
             .ToDictionaryAsync(car => car.Id, car => car.CreatedAt, cancellationToken);
 

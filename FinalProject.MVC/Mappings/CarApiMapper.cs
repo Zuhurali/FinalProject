@@ -116,7 +116,7 @@ public static class CarApiMapper
 
     public static async Task<IReadOnlyList<Car>> LoadCarsAsync(ICarApiService carApi, CancellationToken cancellationToken = default)
     {
-        var cars = await carApi.GetAllCarsAsync(cancellationToken: cancellationToken);
+        var cars = await carApi.GetAllCarsAsync(CarPublicListing.CreateActiveQuery(), cancellationToken);
         return cars.Select(ToCar).ToList();
     }
 

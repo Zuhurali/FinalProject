@@ -25,6 +25,9 @@ namespace FinalProject.MVC.Models
         public double Rating { get; set; }
         public int RatingCount { get; set; }
         public int ReviewCount { get; set; }
+
+        /// <summary>True when the signed-in user has this spare part in ProductFavorites.</summary>
+        public bool IsFavorite { get; set; }
         /// <summary>Sum of quantities from recorded in-store sales (IsDemo = false).</summary>
         public int RealSalesCount { get; set; }
 
@@ -55,6 +58,7 @@ namespace FinalProject.MVC.Models
         public string? SortBy { get; set; }
         public string? SearchText { get; set; }
         public string? Category { get; set; }
+        public string? Brand { get; set; }
         public int? DiscountPercent { get; set; }
         public int? CampaignId { get; set; }
         public decimal? MinPrice { get; set; }

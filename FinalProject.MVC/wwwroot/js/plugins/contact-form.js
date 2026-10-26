@@ -135,7 +135,7 @@
 
         return {
             success: success,
-            emailSent: parsed.emailSent !== false,
+            emailSent: parsed.emailSent === true,
             message: safeMessage(
                 message,
                 success ? SUCCESS_FALLBACK : (hasErrors ? VALIDATION_SUMMARY : GENERIC_ERROR)
@@ -159,7 +159,7 @@
     }
 
     function applySuccess($form, $messages, payload) {
-        var emailed = !payload || payload.emailSent !== false;
+        var emailed = !!(payload && payload.emailSent === true);
         $messages.removeClass('error success notice').addClass(emailed ? 'success' : 'notice');
         $messages.text(safeMessage(payload && payload.message, SUCCESS_FALLBACK));
         $form.find('#name, #email, #phone, #car, #message').val('');

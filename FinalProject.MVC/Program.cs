@@ -43,6 +43,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     // Sign-in settings
     options.SignIn.RequireConfirmedEmail = true;
     options.SignIn.RequireConfirmedAccount = true;
+
+    // Lock out after repeated failed password attempts.
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -131,6 +136,7 @@ builder.Services.AddHttpClient<IAdminApiService, AdminApiService>(client =>
     PooledConnectionLifetime = TimeSpan.FromSeconds(30),
     ConnectTimeout = TimeSpan.FromSeconds(5)
 });
+_ = ApiSigningKey.RequireConfigured(builder.Configuration);
 builder.Services.AddSingleton<IApiAccessTokenService, ApiAccessTokenService>();
 builder.Services.AddAuthorization(options =>
 {
@@ -146,9 +152,13 @@ builder.Services.AddScoped<IContactInquiryMailer, ContactInquiryMailer>();
 builder.Services.AddScoped<ICarImageUploadService, CarImageUploadService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
+builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
 builder.Services.AddScoped<IProductPopularityService, ProductPopularityService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ISiteSettingsService, SiteSettingsService>();
+builder.Services.AddScoped<ICurrentSiteSettings, CurrentSiteSettings>();
+builder.Services.AddScoped<IFaqService, FaqService>();
 builder.Services.AddScoped<AccountActivityHistory>();
 
 builder.Services.AddDistributedMemoryCache();
@@ -164,7 +174,13 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DevelopmentApiHost));
-    await DevelopmentApiHost.EnsureStartedAsync(app.Environment.ContentRootPath, apiBaseUrl, app.Lifetime, startupLogger);
+    var apiSigningKey = ApiSigningKey.RequireConfigured(app.Configuration);
+    await DevelopmentApiHost.EnsureStartedAsync(
+        app.Environment.ContentRootPath,
+        apiBaseUrl,
+        app.Lifetime,
+        startupLogger,
+        apiSigningKey);
 }
 
 if (!app.Environment.IsDevelopment())
@@ -196,8 +212,10 @@ static async Task SeedApplicationAsync(WebApplication app)
 {
     await using (var catalogScope = app.Services.CreateAsyncScope())
     {
-        var catalog = catalogScope.ServiceProvider.GetRequiredService<IShopCatalogService>();
-        await catalog.EnsureSeedAsync();
+        var services = catalogScope.ServiceProvider;
+        await services.GetRequiredService<IShopCatalogService>().EnsureSeedAsync();
+        await services.GetRequiredService<ICouponService>().EnsureSeedAsync();
+        await services.GetRequiredService<ISiteSettingsService>().EnsureSeedAsync();
     }
 
     var seed = app.Configuration.GetSection("AdminSeed");

@@ -14,6 +14,18 @@ public interface IMarketplaceApiService
 
     Task RemoveFavoriteAsync(int carId, string accessToken, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ProductFavoriteDto>> GetProductFavoritesAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<int>> GetProductFavoriteIdsAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
+    Task AddProductFavoriteAsync(int productId, string accessToken, CancellationToken cancellationToken = default);
+
+    Task RemoveProductFavoriteAsync(int productId, string accessToken, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ConversationSummaryDto>> GetConversationsAsync(string accessToken, CancellationToken cancellationToken = default);
 
     Task<ConversationDetailsDto?> GetConversationAsync(int id, string accessToken, CancellationToken cancellationToken = default);

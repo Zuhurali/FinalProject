@@ -36,13 +36,13 @@
                         <p class="desc wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s">Welcome to Autovault where innovation drives every journey. Discover a range of designed to elevate your driving experience. Please arrive a few minutes early, and if you need to make any changes to your appointment, don't hesitate to give us a call. We look forward to servicing your vehicle and keeping it running smoothly.</p>
                         <div class="button-area">
                             <a asp-controller="Contact" asp-action="Index" class="rts-btn btn-primary radius-small">Contact Us</a>
-                            <a href="@DealershipContactOptions.Value.TelHref" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">
+                            <a href="@Site.Contact.TelHref" class="rts-btn call-btn wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">
                                 <span>
                                     <i class="fa-regular fa-phone"></i>
                                 </span>
                                 <div class="content">
                                     <h6>Call Us Now</h6>
-                                    <p>@DealershipContactOptions.Value.DisplayPhone</p>
+                                    <p>@Site.Contact.DisplayPhone</p>
                                 </div>
                             </a>
                         </div>

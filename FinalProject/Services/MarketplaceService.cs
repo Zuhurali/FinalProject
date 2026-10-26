@@ -31,7 +31,9 @@ public sealed class MarketplaceService : IMarketplaceService
     {
         var favorites = await _context.Favorites
             .AsNoTracking()
-            .Where(favorite => favorite.UserId == userId)
+            .Where(favorite =>
+                favorite.UserId == userId
+                && favorite.Car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower())
             .OrderByDescending(favorite => favorite.CreatedAt)
             .Include(favorite => favorite.Car.Brand)
             .Include(favorite => favorite.Car.Category)
@@ -54,7 +56,9 @@ public sealed class MarketplaceService : IMarketplaceService
     {
         return await _context.Favorites
             .AsNoTracking()
-            .Where(favorite => favorite.UserId == userId)
+            .Where(favorite =>
+                favorite.UserId == userId
+                && favorite.Car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower())
             .OrderBy(favorite => favorite.CarId)
             .Select(favorite => favorite.CarId)
             .ToListAsync(cancellationToken);
@@ -66,7 +70,9 @@ public sealed class MarketplaceService : IMarketplaceService
         CancellationToken cancellationToken = default)
     {
         if (!await UserExistsAsync(userId, cancellationToken)
-            || !await _context.Cars.AnyAsync(car => car.Id == carId, cancellationToken))
+            || !await _context.Cars.AnyAsync(
+                car => car.Id == carId && car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower(),
+                cancellationToken))
         {
             return null;
         }
@@ -100,6 +106,112 @@ public sealed class MarketplaceService : IMarketplaceService
             favorite.Id,
             favorite.CreatedAt,
             favorite.Car.ToResponse());
+    }
+
+    public async Task<IReadOnlyList<ProductFavoriteResponse>> GetProductFavoritesAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var favorites = await _context.ProductFavorites
+            .AsNoTracking()
+            .Where(favorite => favorite.UserId == userId)
+            .OrderByDescending(favorite => favorite.CreatedAt)
+            .Join(
+                _context.ShopProducts.AsNoTracking().Where(product => product.IsActive),
+                favorite => favorite.ProductId,
+                product => product.Id,
+                (favorite, product) => new { favorite, product })
+            .ToListAsync(cancellationToken);
+
+        return favorites
+            .Select(item => MapProductFavorite(item.favorite.Id, item.favorite.CreatedAt, item.product))
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<int>> GetProductFavoriteIdsAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.ProductFavorites
+            .AsNoTracking()
+            .Where(favorite => favorite.UserId == userId)
+            .Join(
+                _context.ShopProducts.AsNoTracking().Where(product => product.IsActive),
+                favorite => favorite.ProductId,
+                product => product.Id,
+                (favorite, product) => product.Id)
+            .OrderBy(id => id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ProductFavoriteResponse?> AddProductFavoriteAsync(
+        string userId,
+        int productId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await UserExistsAsync(userId, cancellationToken))
+        {
+            return null;
+        }
+
+        var product = await _context.ShopProducts.AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == productId && item.IsActive, cancellationToken);
+        if (product == null)
+        {
+            return null;
+        }
+
+        var existing = await _context.ProductFavorites
+            .SingleOrDefaultAsync(
+                favorite => favorite.UserId == userId && favorite.ProductId == productId,
+                cancellationToken);
+        if (existing == null)
+        {
+            existing = new ProductFavorite
+            {
+                UserId = userId,
+                ProductId = productId,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ProductFavorites.Add(existing);
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                _context.ChangeTracker.Clear();
+                existing = await _context.ProductFavorites
+                    .SingleOrDefaultAsync(
+                        favorite => favorite.UserId == userId && favorite.ProductId == productId,
+                        cancellationToken);
+                if (existing == null)
+                {
+                    throw;
+                }
+            }
+        }
+
+        return MapProductFavorite(existing.Id, existing.CreatedAt, product);
+    }
+
+    public async Task<bool> RemoveProductFavoriteAsync(
+        string userId,
+        int productId,
+        CancellationToken cancellationToken = default)
+    {
+        var favorite = await _context.ProductFavorites
+            .SingleOrDefaultAsync(
+                item => item.UserId == userId && item.ProductId == productId,
+                cancellationToken);
+        if (favorite == null)
+        {
+            return false;
+        }
+
+        _context.ProductFavorites.Remove(favorite);
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<bool> RemoveFavoriteAsync(
@@ -239,7 +351,9 @@ public sealed class MarketplaceService : IMarketplaceService
         var car = await _context.Cars
             .AsNoTracking()
             .Include(item => item.Brand)
-            .SingleOrDefaultAsync(item => item.Id == carId, cancellationToken);
+            .SingleOrDefaultAsync(
+                item => item.Id == carId && item.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower(),
+                cancellationToken);
         if (car == null || !await UserExistsAsync(buyerId, cancellationToken))
         {
             return null;
@@ -449,17 +563,39 @@ public sealed class MarketplaceService : IMarketplaceService
 
     public async Task<AccountSummaryResponse> GetSummaryAsync(
         string userId,
+        bool asStoreStaff = false,
         CancellationToken cancellationToken = default)
     {
         var activeListings = await _context.Cars
             .CountAsync(
                 car => car.OwnerId == userId && car.Status == "Active",
                 cancellationToken);
-        var favorites = await _context.Favorites
-            .CountAsync(favorite => favorite.UserId == userId, cancellationToken);
+        var carFavorites = await _context.Favorites
+            .CountAsync(
+                favorite =>
+                    favorite.UserId == userId
+                    && favorite.Car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower(),
+                cancellationToken);
+        var partFavorites = await _context.ProductFavorites
+            .CountAsync(
+                favorite =>
+                    favorite.UserId == userId
+                    && _context.ShopProducts.Any(product => product.Id == favorite.ProductId && product.IsActive),
+                cancellationToken);
+        var favorites = carFavorites + partFavorites;
+        var storeInboxId = asStoreStaff
+            ? await ResolveStoreInboxUserIdAsync(cancellationToken)
+            : null;
         var unreadMessages = await _context.Messages
             .CountAsync(
-                message => message.ReceiverId == userId && !message.IsRead,
+                message =>
+                    !message.IsRead
+                    && (message.ReceiverId == userId
+                        || (storeInboxId != null
+                            && message.ReceiverId == storeInboxId
+                            && _context.Conversations.Any(conversation =>
+                                conversation.Id == message.ConversationId
+                                && conversation.SellerId == storeInboxId))),
                 cancellationToken);
 
         var listingActivities = await _context.Cars
@@ -475,9 +611,11 @@ public sealed class MarketplaceService : IMarketplaceService
                 Url = $"/Cars/Details/{car.Id}"
             })
             .ToListAsync(cancellationToken);
-        var favoriteActivities = await _context.Favorites
+        var carFavoriteActivities = await _context.Favorites
             .AsNoTracking()
-            .Where(favorite => favorite.UserId == userId)
+            .Where(favorite =>
+                favorite.UserId == userId
+                && favorite.Car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower())
             .OrderByDescending(favorite => favorite.CreatedAt)
             .Take(5)
             .Select(favorite => new
@@ -488,6 +626,26 @@ public sealed class MarketplaceService : IMarketplaceService
                 Url = $"/Cars/Details/{favorite.CarId}"
             })
             .ToListAsync(cancellationToken);
+        var partFavoriteActivities = await (
+            from favorite in _context.ProductFavorites.AsNoTracking()
+            join product in _context.ShopProducts.AsNoTracking()
+                on favorite.ProductId equals product.Id
+            where favorite.UserId == userId && product.IsActive
+            orderby favorite.CreatedAt descending
+            select new
+            {
+                Type = "favorite",
+                Description = $"Favorited {product.Name}",
+                favorite.CreatedAt,
+                Url = $"/Shop/Details/{product.Id}"
+            })
+            .Take(5)
+            .ToListAsync(cancellationToken);
+        var favoriteActivities = carFavoriteActivities
+            .Concat(partFavoriteActivities)
+            .OrderByDescending(item => item.CreatedAt)
+            .Take(5)
+            .ToList();
         var messageActivities = await _context.Messages
             .AsNoTracking()
             .Where(message => message.SenderId == userId || message.ReceiverId == userId)
@@ -536,6 +694,22 @@ public sealed class MarketplaceService : IMarketplaceService
 
         _context.ConversationHides.RemoveRange(hides);
     }
+
+    private static ProductFavoriteResponse MapProductFavorite(
+        int id,
+        DateTime createdAt,
+        ShopProductReference product) =>
+        new(
+            id,
+            createdAt,
+            product.Id,
+            product.Name,
+            product.Price,
+            product.Category,
+            product.Brand,
+            product.ImagePath,
+            product.Quantity,
+            product.InStock);
 
     private async Task<bool> UserExistsAsync(
         string userId,

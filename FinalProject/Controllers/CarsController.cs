@@ -75,6 +75,12 @@ public class CarsController : ControllerBase
             return NotFound();
         }
 
+        // Public callers only see Active cars. Owners and Admin/SuperAdmin may load Draft/Sold for management.
+        if (!CarPublicListing.IsPubliclyListed(car.Status) && !CanManage(car.OwnerId))
+        {
+            return NotFound();
+        }
+
         return Ok(car);
     }
 

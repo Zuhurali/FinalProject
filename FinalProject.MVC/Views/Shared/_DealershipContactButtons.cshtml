@@ -1,6 +1,6 @@
 @{
-    var contact = DealershipContactOptions.Value;
-    // Keep Call (tel:) and WhatsApp (wa.me chat) as sibling anchors â€” never nest or share an href.
+    var contact = Site.Contact;
+    // Keep Call (tel:) and WhatsApp (wa.me chat) as sibling anchors — never nest or share an href.
     var callHref = contact.TelHref;
     var whatsAppHref = contact.WhatsAppHref;
 }
@@ -53,7 +53,7 @@
         filter: brightness(0.95);
         color: #fff !important;
     }
-    /* Theme CSS targets .whatsapp / .phone â€” keep aliases without sharing hit targets. */
+    /* Theme CSS targets .whatsapp / .phone — keep aliases without sharing hit targets. */
     .side-box.contact .contact-inner .contact-button-area .dealership-contact-buttons {
         gap: 12px;
     }

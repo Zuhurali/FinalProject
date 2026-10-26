@@ -1,3 +1,4 @@
+using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.DTOs;
 using FinalProject.Models.Entities;
@@ -20,13 +21,14 @@ public sealed class PartsAdminService : IPartsAdminService
     public async Task<PartAdminListResponse> ListAsync(
         string? search,
         string? category,
+        string? brand,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default)
     {
         page = Math.Max(1, page);
         pageSize = pageSize is < 1 or > 50 ? DefaultPageSize : pageSize;
-        var query = Filtered(search, category);
+        var query = Filtered(search, category, brand);
         var total = await query.CountAsync(cancellationToken);
         var lastPage = total == 0 ? 1 : (int)Math.Ceiling(total / (double)pageSize);
         if (page > lastPage)
@@ -46,6 +48,12 @@ public sealed class PartsAdminService : IPartsAdminService
             Categories = await _db.ShopProducts.AsNoTracking()
                 .Where(part => part.Category != "")
                 .Select(part => part.Category)
+                .Distinct()
+                .OrderBy(name => name)
+                .ToListAsync(cancellationToken),
+            Brands = await _db.ShopProducts.AsNoTracking()
+                .Where(part => part.Brand != "")
+                .Select(part => part.Brand)
                 .Distinct()
                 .OrderBy(name => name)
                 .ToListAsync(cancellationToken),
@@ -82,9 +90,18 @@ public sealed class PartsAdminService : IPartsAdminService
             CreatedAt = DateTime.UtcNow
         };
         Apply(part, request);
+        // New spare parts enter the public catalog as active (existing product policy).
         part.IsActive = true;
         _db.ShopProducts.Add(part);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return (null, "The part could not be saved. Check price, stock, and image path.");
+        }
+
         return (ToItem(part, new Dictionary<int, (double Average, int Count)>()), null);
     }
 
@@ -106,7 +123,15 @@ public sealed class PartsAdminService : IPartsAdminService
         }
 
         Apply(part, request);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return (null, "The part could not be updated. Check price, stock, and image path.");
+        }
+
         var ratings = await RatingsAsync([id], cancellationToken);
         return (ToItem(part, ratings), null);
     }
@@ -125,16 +150,32 @@ public sealed class PartsAdminService : IPartsAdminService
         if (dependents > 0)
         {
             part.IsActive = false;
-            await _db.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                return (true, "error", "The part could not be marked inactive.");
+            }
+
             return (true, "inactive", "This part has related records, so it was marked inactive instead of deleted.");
         }
 
         _db.ShopProducts.Remove(part);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return (true, "error", "The part could not be deleted.");
+        }
+
         return (true, "deleted", "The part was deleted.");
     }
 
-    private IQueryable<ShopProductReference> Filtered(string? search, string? category)
+    private IQueryable<ShopProductReference> Filtered(string? search, string? category, string? brand)
     {
         var query = _db.ShopProducts.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(search))
@@ -152,6 +193,11 @@ public sealed class PartsAdminService : IPartsAdminService
         if (!string.IsNullOrWhiteSpace(category))
         {
             query = query.Where(part => part.Category == category);
+        }
+
+        if (!string.IsNullOrWhiteSpace(brand))
+        {
+            query = query.Where(part => part.Brand == brand);
         }
 
         return query;
@@ -189,7 +235,8 @@ public sealed class PartsAdminService : IPartsAdminService
                 + (SELECT COUNT(*) FROM ProductInquiries WHERE ProductId = {0})
                 + (SELECT COUNT(*) FROM InPersonSales WHERE ProductId = {0})
                 + (SELECT COUNT(*) FROM ShowroomPurchaseRequests WHERE ProductId = {0})
-                + (SELECT COUNT(*) FROM ProductCampaigns WHERE ProductId = {0}) AS Value
+                + (SELECT COUNT(*) FROM ProductCampaigns WHERE ProductId = {0})
+                + (SELECT COUNT(*) FROM ProductFavorites WHERE ProductId = {0}) AS Value
             """,
             id).ToListAsync(cancellationToken);
         return counts.FirstOrDefault();
@@ -236,9 +283,10 @@ public sealed class PartsAdminService : IPartsAdminService
             return "Stock cannot be negative.";
         }
 
-        if (string.IsNullOrWhiteSpace(request.ImagePath) || request.ImagePath.Length > 500)
+        var imageError = PartImagePathRules.Validate(request.ImagePath);
+        if (imageError != null)
         {
-            return "Add a product image.";
+            return imageError;
         }
 
         return null;
@@ -256,7 +304,7 @@ public sealed class PartsAdminService : IPartsAdminService
         part.CarMake = request.CarMake ?? string.Empty;
         part.CarModel = request.CarModel ?? string.Empty;
         part.Quantity = request.Quantity;
-        part.ImagePath = request.ImagePath;
+        part.ImagePath = request.ImagePath!.Trim();
         part.InStock = request.Quantity > 0;
         part.IsActive = request.IsActive;
         part.SearchKeywords = string.Join(" ", new[]

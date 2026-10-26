@@ -61,11 +61,6 @@ public sealed class ProductReviewService : IProductReviewService
             return (null, error);
         }
 
-        if (!await ProductExistsAsync(productId, cancellationToken))
-        {
-            return (null, "Product not found.");
-        }
-
         if (!await _context.IdentityUsers.AsNoTracking().AnyAsync(user => user.Id == userId, cancellationToken))
         {
             return (null, "User not found.");
@@ -74,6 +69,11 @@ public sealed class ProductReviewService : IProductReviewService
         ProductReview review;
         if (reviewId.HasValue)
         {
+            if (!await ProductExistsAsync(productId, cancellationToken))
+            {
+                return (null, "Product not found.");
+            }
+
             var existing = await _context.ProductReviews
                 .FirstOrDefaultAsync(item => item.Id == reviewId.Value && item.ProductId == productId, cancellationToken);
             if (existing == null)
@@ -91,6 +91,11 @@ public sealed class ProductReviewService : IProductReviewService
         }
         else
         {
+            if (!await ProductIsActiveAsync(productId, cancellationToken))
+            {
+                return (null, "Product not found.");
+            }
+
             var existingForUser = await _context.ProductReviews
                 .FirstOrDefaultAsync(item => item.ProductId == productId && item.UserId == userId, cancellationToken);
             if (existingForUser != null)
@@ -241,4 +246,8 @@ public sealed class ProductReviewService : IProductReviewService
 
         return await _context.ShopProducts.AsNoTracking().AnyAsync(product => product.Id == productId, cancellationToken);
     }
+
+    private Task<bool> ProductIsActiveAsync(int productId, CancellationToken cancellationToken) =>
+        _context.ShopProducts.AsNoTracking()
+            .AnyAsync(product => product.Id == productId && product.IsActive, cancellationToken);
 }

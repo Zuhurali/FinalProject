@@ -353,7 +353,7 @@ public class CarCreationAccessTests
             string role)
         {
             var users = _provider.GetRequiredService<UserManager<ApplicationUser>>();
-            var controller = new AdminController(users, null!, null!, null!)
+            var controller = new AdminController(users, null!, null!, null!, null!)
             {
                 ControllerContext = new ControllerContext
                 {

@@ -5,15 +5,15 @@
                 <div class="left d-flex align-items-center">
                     <div class="map-area">
                         <i class="rt-icon-phone-flip"></i>
-                        <a href="@DealershipContactOptions.Value.TelHref" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">@DealershipContactOptions.Value.DisplayPhone</a>
+                        <a href="@Site.Contact.TelHref" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">@Site.Contact.DisplayPhone</a>
                     </div>
                     <div class="map-area">
                         <i class="rt-icon-envelope"></i>
-                        <a href="@DealershipContactOptions.Value.MailtoHref">@DealershipContactOptions.Value.Email</a>
+                        <a href="@Site.Contact.MailtoHref">@Site.Contact.Email</a>
                     </div>
                     <div class="map-area">
                         <i class="rt-icon-marker"></i>
-                        <a href="@DealershipContactOptions.Value.MapsHref" target="_blank" rel="noopener">@DealershipContactOptions.Value.AddressLine</a>
+                        <a href="@Site.Contact.MapsHref" target="_blank" rel="noopener">@Site.Contact.AddressLine</a>
                     </div>
                 </div>
             </div>
@@ -26,7 +26,7 @@
                     <div class="header-wrapper-1">
                         <div class="logo-area-start">
                             <a asp-controller="Home" asp-action="Index" class="logo">
-                                <img src="~/assets/images/logo/logo.svg" width="99" alt="logo_area">
+                                <img src="@Url.Content(Site.Current.LogoPath)" width="99" alt="@Site.Current.SiteName">
                             </a>
                         </div>
                         <div class="header-right d-block">

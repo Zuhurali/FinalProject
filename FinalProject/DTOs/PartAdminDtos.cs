@@ -43,6 +43,8 @@ public sealed class PartAdminListResponse
 
     public List<string> Categories { get; set; } = new();
 
+    public List<string> Brands { get; set; } = new();
+
     public int Total { get; set; }
 
     public int Page { get; set; }
@@ -81,11 +83,14 @@ public sealed class SavePartRequest
     [MaxLength(100)]
     public string? CarModel { get; set; }
 
-    [Range(0, int.MaxValue)]
+    [Range(0, int.MaxValue, ErrorMessage = "Stock cannot be negative.")]
     public int Quantity { get; set; }
 
-    [Required, MaxLength(500)]
-    public string ImagePath { get; set; } = string.Empty;
+    /// <summary>
+    /// Nullable so API model binding does not emit a generic Required message before service validation.
+    /// </summary>
+    [MaxLength(500)]
+    public string? ImagePath { get; set; }
 
     public bool IsActive { get; set; } = true;
 }

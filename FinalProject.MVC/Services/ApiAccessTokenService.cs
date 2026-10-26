@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using FinalProject.MVC.Security;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
@@ -23,11 +24,7 @@ public sealed class ApiAccessTokenService : IApiAccessTokenService
             throw new InvalidOperationException("An authenticated user id is required.");
         }
 
-        var signingKey = _configuration["ApiAuthentication:SigningKey"];
-        if (string.IsNullOrWhiteSpace(signingKey) || signingKey.Length < 32)
-        {
-            throw new InvalidOperationException("ApiAuthentication:SigningKey must contain at least 32 characters.");
-        }
+        var signingKey = ApiSigningKey.RequireConfigured(_configuration);
 
         var claims = new List<Claim>
         {

@@ -40,6 +40,19 @@ public sealed class ProductRatingApiService : IProductRatingApiService
         return await GetRatingsAsync(request, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProductRatingItemDto>> GetAllForAdminAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = Authorized(HttpMethod.Get, "api/products/ratings/admin", accessToken);
+        using var response = await SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<ProductRatingItemDto>>(
+                   JsonOptions,
+                   cancellationToken)
+               ?? [];
+    }
+
     private async Task<ProductRatingSummaryDto?> GetRatingsAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)

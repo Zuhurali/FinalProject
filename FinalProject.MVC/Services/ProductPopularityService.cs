@@ -41,7 +41,7 @@ public sealed class ProductPopularityService : IProductPopularityService
                 ProductId,
                 CAST(SUM(Quantity) AS int) AS RecordedSales
             FROM InPersonSales
-            WHERE IsDemo = 0
+            WHERE IsDemo = 0 AND VoidedAt IS NULL
             GROUP BY ProductId
             """).ToListAsync(cancellationToken);
 

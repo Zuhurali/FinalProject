@@ -12,6 +12,8 @@ public sealed class AdminSummaryDto
 
     public int TotalRatings { get; set; }
 
+    public int TotalReviews { get; set; }
+
     public List<string> RecentActivity { get; set; } = new();
 }
 

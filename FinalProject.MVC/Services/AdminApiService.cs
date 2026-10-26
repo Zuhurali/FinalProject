@@ -43,7 +43,8 @@ public sealed class AdminApiService : IAdminApiService
         string? category,
         int page,
         string accessToken,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? brand = null)
     {
         var query = new List<string> { $"page={page}" };
         if (!string.IsNullOrWhiteSpace(search))
@@ -54,6 +55,11 @@ public sealed class AdminApiService : IAdminApiService
         if (!string.IsNullOrWhiteSpace(category))
         {
             query.Add("category=" + Uri.EscapeDataString(category));
+        }
+
+        if (!string.IsNullOrWhiteSpace(brand))
+        {
+            query.Add("brand=" + Uri.EscapeDataString(brand));
         }
 
         return GetAsync<PartAdminListDto>("api/admin/parts?" + string.Join("&", query), accessToken, cancellationToken);

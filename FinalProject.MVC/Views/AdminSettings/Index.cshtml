@@ -1,0 +1,123 @@
+@model SiteSettingsEditViewModel
+@{
+    Layout = "_AdminLayout";
+}
+<h1 class="h3 mb-4">Site Settings</h1>
+<p class="text-muted">These values appear in the header, footer, contact areas, and default SEO tags across the public site.</p>
+
+<form asp-action="Index" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <h2 class="h5">Brand</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label asp-for="SiteName" class="form-label"></label>
+            <input asp-for="SiteName" class="form-control" />
+            <span asp-validation-for="SiteName" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="DefaultSeoTitle" class="form-label"></label>
+            <input asp-for="DefaultSeoTitle" class="form-control" />
+            <span asp-validation-for="DefaultSeoTitle" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="DefaultMetaDescription" class="form-label"></label>
+            <textarea asp-for="DefaultMetaDescription" class="form-control" rows="2"></textarea>
+            <span asp-validation-for="DefaultMetaDescription" class="text-danger"></span>
+        </div>
+    </div>
+
+    <h2 class="h5">Contact</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="DisplayPhone" class="form-label"></label>
+            <input asp-for="DisplayPhone" class="form-control" />
+            <span asp-validation-for="DisplayPhone" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="E164Phone" class="form-label"></label>
+            <input asp-for="E164Phone" class="form-control" />
+            <span asp-validation-for="E164Phone" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="WhatsAppDigits" class="form-label"></label>
+            <input asp-for="WhatsAppDigits" class="form-control" />
+            <span asp-validation-for="WhatsAppDigits" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="AddressLine" class="form-label"></label>
+            <input asp-for="AddressLine" class="form-control" />
+            <span asp-validation-for="AddressLine" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="MapsQuery" class="form-label"></label>
+            <input asp-for="MapsQuery" class="form-control" />
+            <span asp-validation-for="MapsQuery" class="text-danger"></span>
+        </div>
+    </div>
+
+    <h2 class="h5">Footer</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <label asp-for="FooterText" class="form-label"></label>
+            <textarea asp-for="FooterText" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="FooterText" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="CopyrightText" class="form-label"></label>
+            <input asp-for="CopyrightText" class="form-control" />
+            <div class="form-text">Use <code>{year}</code> for the current year.</div>
+            <span asp-validation-for="CopyrightText" class="text-danger"></span>
+        </div>
+    </div>
+
+    <h2 class="h5">Social links</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label asp-for="FacebookUrl" class="form-label"></label>
+            <input asp-for="FacebookUrl" class="form-control" placeholder="https://" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="InstagramUrl" class="form-label"></label>
+            <input asp-for="InstagramUrl" class="form-control" placeholder="https://" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="YoutubeUrl" class="form-label"></label>
+            <input asp-for="YoutubeUrl" class="form-control" placeholder="https://" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="TwitterUrl" class="form-label"></label>
+            <input asp-for="TwitterUrl" class="form-control" placeholder="https://" />
+        </div>
+    </div>
+
+    <h2 class="h5">Logos &amp; favicon</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Header logo</label>
+            <div class="mb-2"><img src="@Url.Content(Model.LogoPath)" alt="" style="max-height:48px;" /></div>
+            <input type="hidden" asp-for="LogoPath" />
+            <input type="file" name="logoFile" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,.ico,image/*" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Footer logo</label>
+            <div class="mb-2"><img src="@Url.Content(Model.FooterLogoPath)" alt="" style="max-height:48px;" /></div>
+            <input type="hidden" asp-for="FooterLogoPath" />
+            <input type="file" name="footerLogoFile" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,.ico,image/*" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Favicon</label>
+            <div class="mb-2"><img src="@Url.Content(Model.FaviconPath)" alt="" style="max-height:32px;" /></div>
+            <input type="hidden" asp-for="FaviconPath" />
+            <input type="file" name="faviconFile" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,.ico,image/*" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Save settings</button>
+</form>

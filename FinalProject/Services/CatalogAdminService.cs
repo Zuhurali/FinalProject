@@ -17,6 +17,13 @@ public sealed class CatalogAdminService : ICatalogAdminService
 
     public async Task<AdminSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
     {
+        var totalCars = await _db.Cars.CountAsync(cancellationToken);
+        var activeListings = await _db.Cars.CountAsync(car => car.Status == "Active", cancellationToken);
+        var totalConversations = await _db.Conversations.CountAsync(cancellationToken);
+        var unreadMessages = await _db.Messages.CountAsync(message => !message.IsRead, cancellationToken);
+        var totalRatings = await _db.ProductRatings.CountAsync(cancellationToken);
+        var totalReviews = await _db.ProductReviews.CountAsync(cancellationToken);
+
         var recentCars = await _db.Cars.AsNoTracking()
             .OrderByDescending(car => car.CreatedAt)
             .Take(5)
@@ -27,18 +34,23 @@ public sealed class CatalogAdminService : ICatalogAdminService
             .Take(5)
             .Select(message => new { message.CreatedAt, message.ConversationId })
             .ToListAsync(cancellationToken);
+
         var activity = recentCars
-            .Select(car => $"{car.CreatedAt:yyyy-MM-dd} · {car.Year} {car.Brand} {car.Model}")
-            .Concat(recentMessages.Select(message => $"{message.CreatedAt:yyyy-MM-dd} · Message in conversation #{message.ConversationId}"))
+            .Select(car => (car.CreatedAt, Text: $"{car.CreatedAt:yyyy-MM-dd} · Listing · {car.Year} {car.Brand} {car.Model}"))
+            .Concat(recentMessages.Select(message =>
+                (message.CreatedAt, Text: $"{message.CreatedAt:yyyy-MM-dd} · Message · conversation #{message.ConversationId}")))
+            .OrderByDescending(item => item.CreatedAt)
             .Take(8)
+            .Select(item => item.Text)
             .ToList();
 
         return new AdminSummaryResponse(
-            await _db.Cars.CountAsync(cancellationToken),
-            await _db.Cars.CountAsync(car => car.Status == "Active", cancellationToken),
-            await _db.Conversations.CountAsync(cancellationToken),
-            await _db.Messages.CountAsync(message => !message.IsRead, cancellationToken),
-            await _db.ProductRatings.CountAsync(cancellationToken),
+            totalCars,
+            activeListings,
+            totalConversations,
+            unreadMessages,
+            totalRatings,
+            totalReviews,
             activity);
     }
 

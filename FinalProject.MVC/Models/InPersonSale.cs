@@ -34,4 +34,10 @@ public class InPersonSale
     public DateTime SoldAt { get; set; }
 
     public bool IsDemo { get; set; }
+
+    /// <summary>When set, the sale was voided and stock was restored.</summary>
+    public DateTime? VoidedAt { get; set; }
+
+    [MaxLength(450)]
+    public string? VoidedByUserId { get; set; }
 }

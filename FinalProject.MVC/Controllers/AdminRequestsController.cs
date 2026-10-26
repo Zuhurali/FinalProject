@@ -1,5 +1,8 @@
+using FinalProject.MVC.Commerce;
+using FinalProject.MVC.Models;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject.MVC.Controllers;
@@ -9,27 +12,48 @@ namespace FinalProject.MVC.Controllers;
 public sealed class AdminRequestsController : Controller
 {
     private readonly IShopCatalogService _catalog;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public AdminRequestsController(IShopCatalogService catalog)
+    public AdminRequestsController(IShopCatalogService catalog, UserManager<ApplicationUser> userManager)
     {
         _catalog = catalog;
+        _userManager = userManager;
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? status, CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Purchase requests - AutoVault";
-        return View(await _catalog.GetPurchaseRequestsAsync(cancellationToken));
+        ViewBag.StatusFilter = status;
+        ViewBag.Statuses = ShowroomRequestStatus.All;
+        return View(await _catalog.GetPurchaseRequestsAsync(status, cancellationToken));
     }
 
     [HttpPost("Status")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Status(int id, string status, CancellationToken cancellationToken)
     {
-        var updated = await _catalog.SetPurchaseRequestStatusAsync(id, status, cancellationToken);
-        TempData[updated ? "Success" : "Error"] = updated
+        var (ok, error) = await _catalog.SetPurchaseRequestStatusAsync(id, status, cancellationToken);
+        TempData[ok ? "Success" : "Error"] = ok
             ? $"Request #{id} marked {status}."
-            : "Request not found or status not allowed.";
+            : error ?? "Request not found or status not allowed.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("CompleteSale/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CompleteSale(int id, string? note, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Challenge();
+        }
+
+        var (ok, error) = await _catalog.CompletePurchaseRequestWithSaleAsync(id, user.Id, note, cancellationToken);
+        TempData[ok ? "Success" : "Error"] = ok
+            ? $"Request #{id} completed and the in-store sale was recorded. Stock was reduced."
+            : error ?? "Could not complete that request with a sale.";
         return RedirectToAction(nameof(Index));
     }
 

@@ -36,9 +36,9 @@ public sealed class ShopCatalogService : IShopCatalogService
         CancellationToken cancellationToken = default)
     {
         product.Id = 0;
-        if (product.Quantity < 0)
+        if (product.Quantity < 0 || product.Price < 0)
         {
-            product.Quantity = 0;
+            throw new ArgumentOutOfRangeException(nameof(product), "Price and stock cannot be negative.");
         }
 
         product.InStock = product.Quantity > 0;
@@ -66,6 +66,11 @@ public sealed class ShopCatalogService : IShopCatalogService
             return false;
         }
 
+        if (product.Quantity < 0 || product.Price < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(product), "Price and stock cannot be negative.");
+        }
+
         existing.Name = product.Name.Trim();
         existing.Price = product.Price;
         existing.Category = product.Category.Trim();
@@ -73,7 +78,7 @@ public sealed class ShopCatalogService : IShopCatalogService
         existing.CarModel = product.CarModel.Trim();
         existing.ImagePath = product.ImagePath.Trim();
         existing.Description = product.Description.Trim();
-        existing.Quantity = Math.Max(0, product.Quantity);
+        existing.Quantity = product.Quantity;
         existing.InStock = existing.Quantity > 0;
         existing.IsActive = product.IsActive;
         existing.Brand = product.Brand.Trim();
@@ -118,7 +123,8 @@ public sealed class ShopCatalogService : IShopCatalogService
             """
             SELECT
                 (SELECT COUNT(*) FROM ProductRatings WHERE ProductId = {0})
-                + (SELECT COUNT(*) FROM ProductReviews WHERE ProductId = {0}) AS Value
+                + (SELECT COUNT(*) FROM ProductReviews WHERE ProductId = {0})
+                + (SELECT COUNT(*) FROM ProductFavorites WHERE ProductId = {0}) AS Value
             """,
             id).ToListAsync(cancellationToken);
         return campaigns + sales + inquiries + requests + feedback.FirstOrDefault();
@@ -301,10 +307,12 @@ public sealed class ShopCatalogService : IShopCatalogService
             }
 
             product = await _db.ShopProducts.AsNoTracking()
-                .FirstOrDefaultAsync(item => item.Id == campaign.ProductId.Value, cancellationToken);
+                .FirstOrDefaultAsync(
+                    item => item.Id == campaign.ProductId.Value && item.IsActive,
+                    cancellationToken);
             if (product == null)
             {
-                return (false, "Choose a spare part from the catalog.");
+                return (false, "Choose an active spare part from the catalog.");
             }
 
             var error = ShowroomRules.ValidateCampaign(
@@ -478,14 +486,22 @@ public sealed class ShopCatalogService : IShopCatalogService
 
     public async Task<IReadOnlyList<InPersonSale>> GetSalesAsync(CancellationToken cancellationToken = default)
     {
-        // Recorded sales only — simulated/demo rows are excluded from the admin history.
+        // Recorded sales only — simulated/demo and voided rows are excluded from the admin history.
         return await _db.InPersonSales.AsNoTracking()
-            .Where(sale => !sale.IsDemo)
+            .Where(sale => !sale.IsDemo && sale.VoidedAt == null)
             .Include(sale => sale.Product)
             .Include(sale => sale.Campaign)
             .OrderByDescending(sale => sale.SoldAt)
             .Take(200)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<InPersonSale?> GetSaleAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _db.InPersonSales.AsNoTracking()
+            .Include(sale => sale.Product)
+            .Include(sale => sale.Campaign)
+            .FirstOrDefaultAsync(sale => sale.Id == id, cancellationToken);
     }
 
     public async Task<(bool Ok, string? Error)> RecordSaleAsync(
@@ -495,11 +511,21 @@ public sealed class ShopCatalogService : IShopCatalogService
         string? note,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(recordedByUserId))
+        {
+            return (false, "Recorded-by user is required.");
+        }
+
         var product = await _db.ShopProducts.AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == productId, cancellationToken);
         if (product == null)
         {
             return (false, "Product not found.");
+        }
+
+        if (!product.IsActive)
+        {
+            return (false, "Inactive products cannot be sold in store.");
         }
 
         var error = ShowroomRules.ValidateSaleQuantity(quantity, product.Quantity);
@@ -534,7 +560,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             CampaignDiscountPercent = priced.HasOffer && priced.DiscountPercent.HasValue
                 ? priced.DiscountPercent.Value
                 : null,
-            RecordedByUserId = recordedByUserId,
+            RecordedByUserId = recordedByUserId.Trim(),
             Note = (note ?? string.Empty).Trim(),
             SoldAt = DateTime.UtcNow,
             IsDemo = false
@@ -544,12 +570,123 @@ public sealed class ShopCatalogService : IShopCatalogService
         return (true, null);
     }
 
-    public async Task<IReadOnlyList<ProductInquiry>> GetInquiriesAsync(CancellationToken cancellationToken = default)
+    public async Task<(bool Ok, string? Error)> VoidSaleAsync(
+        int saleId,
+        string voidedByUserId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(voidedByUserId))
+        {
+            return (false, "Voided-by user is required.");
+        }
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var sale = await _db.InPersonSales.FirstOrDefaultAsync(
+            item => item.Id == saleId && !item.IsDemo && item.VoidedAt == null,
+            cancellationToken);
+        if (sale == null)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return (false, "Sale not found or already voided.");
+        }
+
+        var affected = await _db.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE ShopProducts
+            SET Quantity = Quantity + {sale.Quantity},
+                InStock = CASE WHEN Quantity + {sale.Quantity} > 0 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
+            WHERE Id = {sale.ProductId}
+            """, cancellationToken);
+        if (affected != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return (false, "Could not restore stock for that sale.");
+        }
+
+        sale.VoidedAt = DateTime.UtcNow;
+        sale.VoidedByUserId = voidedByUserId.Trim();
+        await _db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return (true, null);
+    }
+
+    public async Task<IReadOnlyList<ProductInquiry>> GetInquiriesAsync(
+        string? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _db.ProductInquiries.AsNoTracking()
+            .Include(inquiry => inquiry.Product)
+            .AsQueryable();
+
+        query = status?.Trim().ToLowerInvariant() switch
+        {
+            "new" => query.Where(inquiry =>
+                !inquiry.IsHandled && (inquiry.AdminReply == null || inquiry.AdminReply == "")),
+            "answered" => query.Where(inquiry =>
+                inquiry.AdminReply != null && inquiry.AdminReply != ""),
+            "closed" => query.Where(inquiry =>
+                inquiry.IsHandled && (inquiry.AdminReply == null || inquiry.AdminReply == "")),
+            _ => query
+        };
+
+        return await query
+            .OrderByDescending(inquiry => inquiry.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ProductInquiry?> GetInquiryAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _db.ProductInquiries.AsNoTracking()
             .Include(inquiry => inquiry.Product)
+            .FirstOrDefaultAsync(inquiry => inquiry.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProductInquiry>> GetInquiriesForUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Array.Empty<ProductInquiry>();
+        }
+
+        return await _db.ProductInquiries.AsNoTracking()
+            .Include(inquiry => inquiry.Product)
+            .Where(inquiry => inquiry.UserId == userId)
             .OrderByDescending(inquiry => inquiry.CreatedAt)
+            .ThenByDescending(inquiry => inquiry.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> ClaimOrphanedInquiriesByEmailAsync(
+        string userId,
+        string accountEmail,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(accountEmail))
+        {
+            return 0;
+        }
+
+        var targetEmail = accountEmail.Trim().ToLowerInvariant();
+        var orphans = await _db.ProductInquiries
+            .Where(inquiry =>
+                inquiry.UserId == null
+                && inquiry.Email != null
+                && inquiry.Email.ToLower() == targetEmail)
+            .ToListAsync(cancellationToken);
+
+        if (orphans.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var orphan in orphans)
+        {
+            orphan.UserId = userId.Trim();
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return orphans.Count;
     }
 
     public async Task<(bool Ok, string? Error)> SaveInquiryAsync(
@@ -563,15 +700,20 @@ public sealed class ShopCatalogService : IShopCatalogService
         }
 
         var productExists = await _db.ShopProducts.AsNoTracking()
-            .AnyAsync(product => product.Id == inquiry.ProductId, cancellationToken);
+            .AnyAsync(product => product.Id == inquiry.ProductId && product.IsActive, cancellationToken);
         if (!productExists)
         {
             return (false, "Product not found.");
         }
 
         inquiry.Id = 0;
+        inquiry.Product = null;
+        inquiry.UserId = string.IsNullOrWhiteSpace(inquiry.UserId) ? null : inquiry.UserId.Trim();
         inquiry.CreatedAt = DateTime.UtcNow;
         inquiry.IsHandled = false;
+        inquiry.AdminReply = null;
+        inquiry.AdminRepliedAt = null;
+        inquiry.AdminUserId = null;
         _db.ProductInquiries.Add(inquiry);
         await _db.SaveChangesAsync(cancellationToken);
         return (true, null);
@@ -644,13 +786,83 @@ public sealed class ShopCatalogService : IShopCatalogService
         return true;
     }
 
-    public async Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(
+        string? status = null,
+        CancellationToken cancellationToken = default)
     {
-        return await _db.ShowroomPurchaseRequests.AsNoTracking()
+        var query = _db.ShowroomPurchaseRequests.AsNoTracking()
             .Include(request => request.Product)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status) && ShowroomRequestStatus.All.Contains(status))
+        {
+            query = query.Where(request => request.Status == status);
+        }
+
+        return await query
             .OrderBy(request => request.Status == ShowroomRequestStatus.New ? 0 : request.Status == ShowroomRequestStatus.Contacted ? 1 : 2)
             .ThenByDescending(request => request.CreatedAt)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ShowroomPurchaseRequest?> GetPurchaseRequestAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _db.ShowroomPurchaseRequests.AsNoTracking()
+            .Include(request => request.Product)
+            .FirstOrDefaultAsync(request => request.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsForUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Array.Empty<ShowroomPurchaseRequest>();
+        }
+
+        return await _db.ShowroomPurchaseRequests.AsNoTracking()
+            .Include(request => request.Product)
+            .Where(request => request.UserId == userId)
+            .OrderByDescending(request => request.CreatedAt)
+            .ThenByDescending(request => request.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> ClaimOrphanedPurchaseRequestsByEmailAsync(
+        string userId,
+        string accountEmail,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(accountEmail))
+        {
+            return 0;
+        }
+
+        var targetEmail = accountEmail.Trim();
+        var candidates = await _db.ShowroomPurchaseRequests
+            .Where(request => request.UserId == null)
+            .ToListAsync(cancellationToken);
+
+        var orphans = candidates
+            .Where(request =>
+                !string.IsNullOrWhiteSpace(request.Email)
+                && string.Equals(request.Email.Trim(), targetEmail, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (orphans.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (var orphan in orphans)
+        {
+            orphan.UserId = userId;
+            orphan.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return orphans.Count;
     }
 
     public async Task<PurchaseRequestResult> SavePurchaseRequestAsync(
@@ -680,7 +892,7 @@ public sealed class ShopCatalogService : IShopCatalogService
             return PurchaseRequestResult.Failed(error);
         }
 
-        var email = request.Email.ToLower();
+        var email = request.Email.Trim().ToLowerInvariant();
         var openRequest = await _db.ShowroomPurchaseRequests.AsNoTracking()
             .Where(item => item.ProductId == request.ProductId &&
                            item.Email.ToLower() == email &&
@@ -695,6 +907,11 @@ public sealed class ShopCatalogService : IShopCatalogService
 
         request.Id = 0;
         request.Product = null;
+        request.CustomerName = request.CustomerName.Trim();
+        request.Email = request.Email.Trim();
+        request.Phone = request.Phone.Trim();
+        request.Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
+        request.UserId = string.IsNullOrWhiteSpace(request.UserId) ? null : request.UserId.Trim();
         request.Status = ShowroomRequestStatus.New;
         request.CreatedAt = DateTime.UtcNow;
         request.UpdatedAt = null;
@@ -719,23 +936,119 @@ public sealed class ShopCatalogService : IShopCatalogService
         return PurchaseRequestResult.Created(request.Id);
     }
 
-    public async Task<bool> SetPurchaseRequestStatusAsync(int id, string status, CancellationToken cancellationToken = default)
+    public async Task<(bool Ok, string? Error)> SetPurchaseRequestStatusAsync(
+        int id,
+        string status,
+        CancellationToken cancellationToken = default)
     {
         if (!ShowroomRequestStatus.All.Contains(status))
         {
-            return false;
+            return (false, "Status is not allowed.");
         }
 
         var request = await _db.ShowroomPurchaseRequests.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (request == null)
         {
-            return false;
+            return (false, "Request not found.");
+        }
+
+        if (!ShowroomRequestRules.CanTransition(request.Status, status))
+        {
+            return (false, $"Cannot change status from {request.Status} to {status}.");
         }
 
         request.Status = status;
         request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return (true, null);
+    }
+
+    public async Task<(bool Ok, string? Error)> CompletePurchaseRequestWithSaleAsync(
+        int requestId,
+        string recordedByUserId,
+        string? note,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(recordedByUserId))
+        {
+            return (false, "Recorded-by user is required.");
+        }
+
+        var request = await _db.ShowroomPurchaseRequests.FirstOrDefaultAsync(
+            item => item.Id == requestId,
+            cancellationToken);
+        if (request == null)
+        {
+            return (false, "Request not found.");
+        }
+
+        if (!ShowroomRequestStatus.IsOpen(request.Status))
+        {
+            return (false, $"Request #{requestId} is {request.Status} and cannot be completed with a sale.");
+        }
+
+        var saleNote = string.IsNullOrWhiteSpace(note)
+            ? $"From purchase request #{request.Id}"
+            : note.Trim();
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var product = await _db.ShopProducts.AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == request.ProductId, cancellationToken);
+        if (product == null)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return (false, "Product not found.");
+        }
+
+        if (!product.IsActive)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return (false, "Inactive products cannot be sold in store.");
+        }
+
+        var qtyError = ShowroomRules.ValidateSaleQuantity(request.Quantity, product.Quantity);
+        if (qtyError != null)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return (false, qtyError);
+        }
+
+        var liveOffers = await LoadLiveCampaignsAsync(DateTime.UtcNow, cancellationToken);
+        var offer = PickOffer(product, liveOffers);
+        var priced = ToModel(product, offer);
+        var affected = await _db.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE ShopProducts
+            SET Quantity = Quantity - {request.Quantity},
+                InStock = CASE WHEN Quantity - {request.Quantity} > 0 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
+            WHERE Id = {request.ProductId} AND Quantity >= {request.Quantity}
+            """, cancellationToken);
+        if (affected != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return (false, "That sale is larger than the available quantity.");
+        }
+
+        _db.InPersonSales.Add(new InPersonSale
+        {
+            ProductId = request.ProductId,
+            Quantity = request.Quantity,
+            UnitPrice = priced.EffectivePrice,
+            ListUnitPrice = product.Price,
+            CampaignId = offer?.Id,
+            CampaignDiscountPercent = priced.HasOffer && priced.DiscountPercent.HasValue
+                ? priced.DiscountPercent.Value
+                : null,
+            RecordedByUserId = recordedByUserId.Trim(),
+            Note = saleNote,
+            SoldAt = DateTime.UtcNow,
+            IsDemo = false
+        });
+
+        request.Status = ShowroomRequestStatus.Completed;
+        request.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return (true, null);
     }
 
     public async Task<bool> DeletePurchaseRequestAsync(int id, CancellationToken cancellationToken = default)

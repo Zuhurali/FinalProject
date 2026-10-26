@@ -34,8 +34,9 @@ public sealed class AdminSalesController : Controller
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         ViewData["Title"] = "In-Person Sales - AutoVault";
-        ViewBag.Products = await _catalog.GetAllAsync(cancellationToken);
-        var ranked = (await _catalog.GetAllAsync(cancellationToken)).ToList();
+        var products = (await _catalog.GetAllAsync(cancellationToken)).ToList();
+        ViewBag.Products = products;
+        var ranked = products.ToList();
         await _popularity.ApplyAsync(ranked, cancellationToken);
         ViewBag.Ranking = PopularityRanking.ByPopularity(
             ranked,
@@ -86,6 +87,23 @@ public sealed class AdminSalesController : Controller
             TempData["Error"] = error;
         }
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("Void/{id:int}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Challenge();
+        }
+
+        var (ok, error) = await _catalog.VoidSaleAsync(id, user.Id, cancellationToken);
+        TempData[ok ? "Success" : "Error"] = ok
+            ? $"Sale #{id} was voided and stock was restored."
+            : error ?? "Sale not found or already voided.";
         return RedirectToAction(nameof(Index));
     }
 }

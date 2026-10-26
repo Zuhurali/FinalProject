@@ -4,6 +4,7 @@
     Layout = "_AdminLayout";
     var search = ViewData["Search"] as string;
     var category = ViewData["Category"] as string;
+    var brand = ViewData["Brand"] as string;
     var window = PageWindow.Describe(Model.Page, Model.PageSize == 0 ? 10 : Model.PageSize, Model.Items.Count, Model.Total);
     var pages = window.PageCount;
 }
@@ -16,11 +17,11 @@
 </div>
 <form method="get" class="admin-card mb-3">
     <div class="row g-2 align-items-end">
-        <div class="col-md-5">
-            <label for="search">Search</label>
-            <input id="search" name="search" value="@search" class="form-control" placeholder="Name, brand, or category" />
-        </div>
         <div class="col-md-4">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Name, SKU, or keyword" />
+        </div>
+        <div class="col-md-3">
             <label for="category">Category</label>
             <select id="category" name="category" class="form-select">
                 <option value="">All categories</option>
@@ -31,6 +32,16 @@
             </select>
         </div>
         <div class="col-md-3">
+            <label for="brand">Brand</label>
+            <select id="brand" name="brand" class="form-select">
+                <option value="">All brands</option>
+                @foreach (var name in Model.Brands)
+                {
+                    <option value="@name" selected="@(name == brand)">@name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
             <button class="btn btn-primary" type="submit">Filter</button>
             <a class="btn btn-link" asp-action="Index">Clear</a>
         </div>

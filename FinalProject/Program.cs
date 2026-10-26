@@ -1,5 +1,6 @@
 using FinalProject.Data;
 using FinalProject.Hosting;
+using FinalProject.Security;
 using FinalProject.Services;
 using FinalProject.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -25,12 +26,9 @@ builder.Services.AddScoped<IMarketplaceService, MarketplaceService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICatalogAdminService, CatalogAdminService>();
 builder.Services.AddScoped<IPartsAdminService, PartsAdminService>();
+builder.Services.AddScoped<IShowroomAdminService, ShowroomAdminService>();
 builder.Services.AddAuthorization();
-var jwtKey = builder.Configuration["ApiAuthentication:SigningKey"];
-if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
-{
-    throw new InvalidOperationException("ApiAuthentication:SigningKey must contain at least 32 characters.");
-}
+var jwtKey = ApiSigningKey.RequireConfigured(builder.Configuration);
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

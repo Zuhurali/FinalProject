@@ -1,0 +1,85 @@
+@model IReadOnlyList<ShowroomPurchaseRequest>
+@{
+    ViewData["Title"] = "My Purchase Requests - AutoVault";
+    ViewData["BodyClass"] = "account-page-body";
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">My Purchase Requests</h1>
+            <div class="nav-bread-crumb">
+                <a asp-action="Index">Account</a>
+                <a href="#" class="current">Purchase Requests</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="rts-contact-page-form-area rts-section-gapNew account">
+    <div class="container">
+        <div class="row g-4 g-lg-5">
+            <div class="col-12 col-md-5 col-lg-4">
+                <partial name="_AccountNavigation" />
+            </div>
+            <div class="col-12 col-md-7 col-lg-8">
+                <div class="mian-wrapper-form">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                        <h3 class="title mb-0">Spare-part requests</h3>
+                        <a asp-controller="Shop" asp-action="Index" class="rts-btn btn-primary radius-small">Browse parts</a>
+                    </div>
+                    <p class="text-muted mb-4">These are showroom purchase requests for spare parts. They do not hold stock. Purchase is completed in person at the store. Car inquiries use Contact Requests.</p>
+
+                    @if (Model.Count == 0)
+                    {
+                        <div class="account-empty-state text-center">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <h4>No purchase requests yet</h4>
+                            <p>Submit a Request to Buy on a spare-parts product page while signed in (or using this account’s email), and it will appear here with its status.</p>
+                            <a asp-controller="Shop" asp-action="Index" class="rts-btn btn-primary radius-small mt-2">Go to Shop</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Submitted</th>
+                                        <th>Product</th>
+                                        <th>Qty</th>
+                                        <th>Visit</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var request in Model)
+                                {
+                                    <tr>
+                                        <td>@request.Id</td>
+                                        <td>@request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                        <td>
+                                            @if (request.Product != null)
+                                            {
+                                                <a asp-controller="Shop" asp-action="Details" asp-route-id="@request.ProductId">@request.Product.Name</a>
+                                            }
+                                            else
+                                            {
+                                                @($"Product {request.ProductId}")
+                                            }
+                                        </td>
+                                        <td>@request.Quantity</td>
+                                        <td>@(request.PreferredVisitDate?.ToString("dd MMM yyyy") ?? "—")</td>
+                                        <td><strong>@request.Status</strong></td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

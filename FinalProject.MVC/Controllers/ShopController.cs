@@ -21,6 +21,8 @@ namespace FinalProject.MVC.Controllers
         private readonly IShopCatalogService _shopCatalog;
         private readonly IProductReviewApiService _reviewApiService;
         private readonly IProductPopularityService _popularity;
+        private readonly IMarketplaceApiService _marketplaceApi;
+        private readonly ICouponService _coupons;
 
         public ShopController(
             ApplicationDbContext context,
@@ -29,7 +31,9 @@ namespace FinalProject.MVC.Controllers
             UserManager<ApplicationUser> userManager,
             IShopCatalogService shopCatalog,
             IProductReviewApiService reviewApiService,
-            IProductPopularityService popularity)
+            IProductPopularityService popularity,
+            IMarketplaceApiService marketplaceApi,
+            ICouponService coupons)
         {
             _context = context;
             _ratingApiService = ratingApiService;
@@ -38,6 +42,8 @@ namespace FinalProject.MVC.Controllers
             _shopCatalog = shopCatalog;
             _reviewApiService = reviewApiService;
             _popularity = popularity;
+            _marketplaceApi = marketplaceApi;
+            _coupons = coupons;
         }
 
         private static ShopProduct CopyPart(ShopProduct product)
@@ -47,6 +53,7 @@ namespace FinalProject.MVC.Controllers
                 Id = product.Id,
                 Name = product.Name,
                 Price = product.Price,
+                IsFavorite = product.IsFavorite,
                 Category = product.Category,
                 CarMake = product.CarMake,
                 CarModel = product.CarModel,
@@ -119,6 +126,12 @@ namespace FinalProject.MVC.Controllers
                 .Distinct()
                 .OrderBy(category => category)
                 .ToList();
+            ViewBag.Brands = _allProducts
+                .Select(product => product.Brand)
+                .Where(brand => !string.IsNullOrWhiteSpace(brand))
+                .Distinct()
+                .OrderBy(brand => brand)
+                .ToList();
         }
 
         private async Task ApplyRatingsAsync(
@@ -158,6 +171,7 @@ namespace FinalProject.MVC.Controllers
         private List<ShopProduct> MatchCatalog(
             string? search,
             string? category,
+            string? brand = null,
             int? discountPercent = null,
             int? campaignId = null)
         {
@@ -179,6 +193,11 @@ namespace FinalProject.MVC.Controllers
             if (!string.IsNullOrWhiteSpace(category))
             {
                 source = source.Where(product => string.Equals(product.Category, category, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(brand))
+            {
+                source = source.Where(product => string.Equals(product.Brand, brand, StringComparison.OrdinalIgnoreCase));
             }
 
             if (campaignId is int liveCampaignId and > 0)
@@ -236,6 +255,7 @@ namespace FinalProject.MVC.Controllers
         public async Task<IActionResult> Index(
             string? search,
             string? category,
+            string? brand,
             int? discount,
             int? campaign,
             CancellationToken cancellationToken)
@@ -244,7 +264,9 @@ namespace FinalProject.MVC.Controllers
             await EnsureCatalogAsync(cancellationToken);
             var discountPercent = discount is > 0 ? discount : null;
             var campaignId = campaign is > 0 ? campaign : null;
-            var matched = OrderCatalog(MatchCatalog(search, category, discountPercent, campaignId), "Latest");
+            var matched = OrderCatalog(
+                MatchCatalog(search, category, brand, discountPercent, campaignId),
+                "Latest");
             var initialProducts = matched.Take(CatalogPageSize).ToList();
             await ApplyRatingsAsync(initialProducts, cancellationToken);
             var response = new ShopFilterResponse
@@ -266,6 +288,7 @@ namespace FinalProject.MVC.Controllers
             ViewData["BodyClass"] = "home-four";
             ViewData["Search"] = search;
             ViewData["Category"] = category;
+            ViewData["Brand"] = brand;
             ViewData["Discount"] = discountPercent;
             ViewData["CampaignId"] = campaignId;
             return View(response);
@@ -310,6 +333,12 @@ namespace FinalProject.MVC.Controllers
             if (!string.IsNullOrEmpty(request.Category))
             {
                 filteredProducts = filteredProducts.Where(p => p.Category == request.Category);
+            }
+
+            if (!string.IsNullOrEmpty(request.Brand))
+            {
+                filteredProducts = filteredProducts.Where(p =>
+                    string.Equals(p.Brand, request.Brand, StringComparison.OrdinalIgnoreCase));
             }
 
             if (request.CampaignId is int requestCampaignId and > 0)
@@ -453,6 +482,7 @@ namespace FinalProject.MVC.Controllers
             int pageSize = CatalogPageSize,
             string? search = null,
             string? category = null,
+            string? brand = null,
             string? sortBy = null,
             int? discount = null,
             int? campaign = null,
@@ -463,7 +493,9 @@ namespace FinalProject.MVC.Controllers
             pageSize = Math.Clamp(pageSize, 1, 48);
             var discountPercent = discount is > 0 ? discount : null;
             var campaignId = campaign is > 0 ? campaign : null;
-            var matched = OrderCatalog(MatchCatalog(search, category, discountPercent, campaignId), sortBy);
+            var matched = OrderCatalog(
+                MatchCatalog(search, category, brand, discountPercent, campaignId),
+                sortBy);
             var products = matched
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -576,6 +608,8 @@ namespace FinalProject.MVC.Controllers
                             cancellationToken);
                         ViewBag.UserRating   = userRating?.Rating ?? 0;
                         ViewBag.UserRatingId = userRating?.Id ?? 0;
+                        ViewBag.AskEmail = user.Email ?? string.Empty;
+                        ViewBag.AskDisplayName = $"{user.FirstName} {user.LastName}".Trim();
                     }
                 }
             }
@@ -616,12 +650,86 @@ namespace FinalProject.MVC.Controllers
             ViewBag.SubmissionKey = Guid.NewGuid();
 
             // Load answered inquiries so the product page can display admin replies
-            var inquiries = await _shopCatalog.GetInquiriesAsync(cancellationToken);
+            var inquiries = await _shopCatalog.GetInquiriesAsync(status: null, cancellationToken);
             ViewBag.ProductInquiries = inquiries
                 .Where(q => q.ProductId == product.Id && q.HasReply)
                 .ToList();
 
+            await MarkProductFavoriteAsync(product, cancellationToken);
+
             return View(product);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> AddFavorite(int id, string? returnUrl = null) =>
+            SetProductFavoriteAsync(id, favorite: true, returnUrl);
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> RemoveFavorite(int id, string? returnUrl = null) =>
+            SetProductFavoriteAsync(id, favorite: false, returnUrl);
+
+        private async Task<IActionResult> SetProductFavoriteAsync(int id, bool favorite, string? returnUrl)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = _tokenService.CreateToken(User, roles);
+                if (favorite)
+                {
+                    await _marketplaceApi.AddProductFavoriteAsync(id, token, HttpContext.RequestAborted);
+                }
+                else
+                {
+                    await _marketplaceApi.RemoveProductFavoriteAsync(id, token, HttpContext.RequestAborted);
+                }
+            }
+            catch (CarApiException exception)
+            {
+                TempData["FavoriteError"] = exception.Message;
+            }
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        private async Task MarkProductFavoriteAsync(ShopProduct product, CancellationToken cancellationToken)
+        {
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                return;
+            }
+
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return;
+                }
+
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = _tokenService.CreateToken(User, roles);
+                var ids = await _marketplaceApi.GetProductFavoriteIdsAsync(token, cancellationToken);
+                product.IsFavorite = ids.Contains(product.Id);
+            }
+            catch (CarApiException)
+            {
+                ViewData["FavoriteServiceUnavailable"] = true;
+            }
         }
 
         [Authorize]
@@ -864,6 +972,30 @@ namespace FinalProject.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Ask(ProductInquiry inquiry, CancellationToken cancellationToken)
         {
+            // Never trust a posted UserId — bind ownership only from the signed-in account.
+            inquiry.UserId = null;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                inquiry.UserId = user?.Id;
+                if (user != null)
+                {
+                    if (string.IsNullOrWhiteSpace(inquiry.Email) && !string.IsNullOrWhiteSpace(user.Email))
+                    {
+                        inquiry.Email = user.Email;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(inquiry.CustomerName))
+                    {
+                        var display = $"{user.FirstName} {user.LastName}".Trim();
+                        if (!string.IsNullOrWhiteSpace(display))
+                        {
+                            inquiry.CustomerName = display;
+                        }
+                    }
+                }
+            }
+
             var (ok, error) = await _shopCatalog.SaveInquiryAsync(inquiry, cancellationToken);
             TempData[ok ? "Success" : "Error"] = ok
                 ? "Your question was sent to the store. Visit Babek Prospekti to inspect the item before you buy."
@@ -875,6 +1007,14 @@ namespace FinalProject.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RequestToBuy(ShowroomPurchaseRequest request, CancellationToken cancellationToken)
         {
+            // Never trust a posted UserId — bind ownership only from the signed-in account.
+            request.UserId = null;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                request.UserId = user?.Id;
+            }
+
             var result = await _shopCatalog.SavePurchaseRequestAsync(request, cancellationToken);
             if (result.Ok)
             {
@@ -939,6 +1079,7 @@ namespace FinalProject.MVC.Controllers
                 });
             }
 
+            await RecalculateSessionCouponAsync(cart, cancellationToken);
             SaveCartToSession(cart);
 
             return Json(new
@@ -951,7 +1092,9 @@ namespace FinalProject.MVC.Controllers
         }
 
         [HttpPost]
-        public JsonResult UpdateQuantity([FromBody] UpdateQuantityRequest request)
+        public async Task<JsonResult> UpdateQuantity(
+            [FromBody] UpdateQuantityRequest request,
+            CancellationToken cancellationToken)
         {
             if (request.Quantity < 1)
             {
@@ -967,6 +1110,7 @@ namespace FinalProject.MVC.Controllers
             }
 
             item.Quantity = request.Quantity;
+            await RecalculateSessionCouponAsync(cart, cancellationToken);
             SaveCartToSession(cart);
 
             return Json(new
@@ -974,12 +1118,16 @@ namespace FinalProject.MVC.Controllers
                 success = true,
                 itemSubtotal = item.Subtotal,
                 cartSubtotal = cart.Subtotal,
-                cartTotal = cart.Total
+                cartDiscount = cart.DiscountAmount,
+                cartTotal = cart.Total,
+                couponCode = cart.CouponCode
             });
         }
 
         [HttpPost]
-        public JsonResult RemoveItem([FromBody] int productId)
+        public async Task<JsonResult> RemoveItem(
+            [FromBody] int productId,
+            CancellationToken cancellationToken)
         {
             var cart = GetCartFromSession();
             var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
@@ -987,6 +1135,7 @@ namespace FinalProject.MVC.Controllers
             if (item != null)
             {
                 cart.Items.Remove(item);
+                await RecalculateSessionCouponAsync(cart, cancellationToken);
                 SaveCartToSession(cart);
             }
 
@@ -994,35 +1143,26 @@ namespace FinalProject.MVC.Controllers
             {
                 success = true,
                 cartSubtotal = cart.Subtotal,
+                cartDiscount = cart.DiscountAmount,
                 cartTotal = cart.Total,
+                couponCode = cart.CouponCode,
                 isEmpty = cart.IsEmpty
             });
         }
 
         [HttpPost]
-        public async Task<JsonResult> ApplyCoupon([FromBody] ApplyCouponRequest request)
+        public async Task<JsonResult> ApplyCoupon(
+            [FromBody] ApplyCouponRequest request,
+            CancellationToken cancellationToken)
         {
             var cart = GetCartFromSession();
 
-            // Validate coupon code
-            if (string.IsNullOrWhiteSpace(request.CouponCode) || request.CouponCode.ToUpper() != "CARS100")
-            {
-                return Json(new CouponResult
-                {
-                    Success = false,
-                    Message = "Invalid coupon code",
-                    DiscountAmount = 0,
-                    NewTotal = cart.Total
-                });
-            }
-
-            // Check if user is authenticated
             if (!User.Identity?.IsAuthenticated ?? true)
             {
                 return Json(new CouponResult
                 {
                     Success = false,
-                    Message = "Please sign in to use this coupon.",
+                    Message = "Please sign in to use a coupon.",
                     DiscountAmount = 0,
                     NewTotal = cart.Total
                 });
@@ -1040,81 +1180,84 @@ namespace FinalProject.MVC.Controllers
                 });
             }
 
-            // Check if user has already used this coupon
-            var existingUsage = await _context.CouponUsages
-                .FirstOrDefaultAsync(cu => cu.UserId == userId && cu.CouponCode == "CARS100");
+            var (ok, message, discount, code) = await _coupons.PreviewApplyAsync(
+                request.CouponCode,
+                userId,
+                cart,
+                cancellationToken);
 
-            if (existingUsage != null)
+            if (!ok || code == null)
             {
+                // Leave any previously applied session coupon untouched on failure.
                 return Json(new CouponResult
                 {
                     Success = false,
-                    Message = "You have already used this coupon!",
-                    DiscountAmount = 0,
-                    NewTotal = cart.Total
-                });
-            }
-
-            // Apply 10% discount
-            var discountAmount = cart.Subtotal * 0.10m;
-            cart.DiscountAmount = discountAmount;
-            cart.CouponCode = "CARS100";
-            SaveCartToSession(cart);
-
-            // Record coupon usage in database
-            try
-            {
-                var couponUsage = new CouponUsage
-                {
-                    UserId = userId,
-                    CouponCode = "CARS100",
-                    UsedAt = DateTime.UtcNow,
-                    DiscountAmount = discountAmount
-                };
-
-                _context.CouponUsages.Add(couponUsage);
-                await _context.SaveChangesAsync();
-
-                return Json(new CouponResult
-                {
-                    Success = true,
-                    Message = "Coupon CARS100 applied! 10% discount has been added.",
+                    Message = message,
                     DiscountAmount = cart.DiscountAmount,
                     NewTotal = cart.Total
                 });
             }
-            catch (DbUpdateException ex)
+
+            cart.CouponCode = code;
+            cart.DiscountAmount = discount;
+            SaveCartToSession(cart);
+
+            return Json(new CouponResult
             {
-                // Handle potential unique constraint violation (race condition)
-                if (ex.InnerException?.Message.Contains("IX_CouponUsage_UserId_CouponCode") ?? false)
-                {
-                    // Remove discount from session since it wasn't saved
-                    cart.DiscountAmount = 0;
-                    cart.CouponCode = null;
-                    SaveCartToSession(cart);
+                Success = true,
+                Message = message,
+                DiscountAmount = cart.DiscountAmount,
+                NewTotal = cart.Total
+            });
+        }
 
-                    return Json(new CouponResult
-                    {
-                        Success = false,
-                        Message = "You have already used this coupon!",
-                        DiscountAmount = 0,
-                        NewTotal = cart.Total
-                    });
-                }
+        [HttpPost]
+        public JsonResult RemoveCoupon()
+        {
+            var cart = GetCartFromSession();
+            cart.CouponCode = null;
+            cart.DiscountAmount = 0;
+            SaveCartToSession(cart);
 
-                // Remove discount from session on any other error
+            return Json(new CouponResult
+            {
+                Success = true,
+                Message = "Coupon removed.",
+                DiscountAmount = 0,
+                NewTotal = cart.Total
+            });
+        }
+
+        private async Task RecalculateSessionCouponAsync(CartViewModel cart, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(cart.CouponCode))
+            {
                 cart.DiscountAmount = 0;
-                cart.CouponCode = null;
-                SaveCartToSession(cart);
-
-                return Json(new CouponResult
-                {
-                    Success = false,
-                    Message = "An error occurred while applying the coupon. Please try again.",
-                    DiscountAmount = 0,
-                    NewTotal = cart.Total
-                });
+                return;
             }
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                cart.CouponCode = null;
+                cart.DiscountAmount = 0;
+                return;
+            }
+
+            var (ok, _, discount, code) = await _coupons.PreviewApplyAsync(
+                cart.CouponCode,
+                userId,
+                cart,
+                cancellationToken);
+            if (!ok || code == null)
+            {
+                cart.CouponCode = null;
+                cart.DiscountAmount = 0;
+                return;
+            }
+
+            cart.CouponCode = code;
+            cart.DiscountAmount = discount;
         }
 
         // Helper methods for session management

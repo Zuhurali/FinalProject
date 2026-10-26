@@ -108,8 +108,13 @@
                                                 <div class="coupon">
                                                     <input type="text" name="coupon_code" class="input-text" id="coupon_code" value="@Model.CouponCode" placeholder="Coupon code">
                                                     <button type="button" class="button rts-btn btn-primary" id="apply-coupon-btn">Apply coupon</button>
+                                                    @if (!string.IsNullOrWhiteSpace(Model.CouponCode))
+                                                    {
+                                                        <button type="button" class="button rts-btn btn-primary" id="remove-coupon-btn" style="margin-left:8px;background:#1f1f1f;">Remove</button>
+                                                    }
                                                     <span id="coupon-message" style="margin-left: 15px; font-weight: 500;"></span>
                                                 </div>
+                                                <p class="small text-muted mt-2 mb-0">Coupons preview a store courtesy discount. They are not permanently used until an order is completed. Online checkout is not available — contact the store to finish your purchase.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -283,6 +288,23 @@
                 },
                 error: function() {
                     $('#coupon-message').text('Error applying coupon').css('color', '#dc3545');
+                }
+            });
+        });
+
+        $('#remove-coupon-btn').on('click', function() {
+            $.ajax({
+                url: '@Url.Action("RemoveCoupon", "Shop")',
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        $('#coupon-message').text(response.message || 'Could not remove coupon').css('color', '#dc3545');
+                    }
+                },
+                error: function() {
+                    $('#coupon-message').text('Error removing coupon').css('color', '#dc3545');
                 }
             });
         });

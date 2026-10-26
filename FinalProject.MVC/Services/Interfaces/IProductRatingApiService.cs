@@ -13,6 +13,10 @@ public interface IProductRatingApiService
         string accessToken,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ProductRatingItemDto>> GetAllForAdminAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ProductRatingSummaryItemDto>> GetSummariesAsync(
         IEnumerable<int> productIds,
         CancellationToken cancellationToken = default);

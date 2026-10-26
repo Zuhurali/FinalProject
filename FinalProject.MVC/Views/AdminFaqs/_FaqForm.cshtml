@@ -1,0 +1,29 @@
+@model FaqItemEditViewModel
+@using FinalProject.MVC.Commerce
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="mb-3">
+    <label asp-for="Question" class="form-label"></label>
+    <input asp-for="Question" class="form-control" maxlength="@FaqContentRules.QuestionMaxLength" />
+    <div class="form-text">@FaqContentRules.QuestionMinLength–@FaqContentRules.QuestionMaxLength characters.</div>
+    <span asp-validation-for="Question" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Answer" class="form-label"></label>
+    <textarea asp-for="Answer" class="form-control" rows="6" maxlength="@FaqContentRules.AnswerMaxLength"></textarea>
+    <div class="form-text">@FaqContentRules.AnswerMinLength–@FaqContentRules.AnswerMaxLength characters.</div>
+    <span asp-validation-for="Answer" class="text-danger"></span>
+</div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="SortOrder" class="form-label"></label>
+        <input asp-for="SortOrder" class="form-control" />
+        <div class="form-text">Use 0 on create to append automatically.</div>
+        <span asp-validation-for="SortOrder" class="text-danger"></span>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+        <div class="form-check mb-2">
+            <input asp-for="IsPublished" class="form-check-input" />
+            <label asp-for="IsPublished" class="form-check-label"></label>
+        </div>
+    </div>
+</div>

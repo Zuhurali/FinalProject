@@ -10,6 +10,10 @@
 *.userosscache
 *.sln.docstates
 
+# .NET user secrets (never commit signing keys / passwords)
+**/secrets.json
+.microsoft/usersecrets/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -62,6 +66,11 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+
+# Local build output folders (may contain copied secrets from user secrets / env)
+build-out/
+build-out*/
+
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt

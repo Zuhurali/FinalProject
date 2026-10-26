@@ -30,6 +30,8 @@ public class FinalProjectDbContext : DbContext
 
     public DbSet<Favorite> Favorites => Set<Favorite>();
 
+    public DbSet<ProductFavorite> ProductFavorites => Set<ProductFavorite>();
+
     public DbSet<CarView> CarViews => Set<CarView>();
 
     public DbSet<Conversation> Conversations => Set<Conversation>();
@@ -41,6 +43,12 @@ public class FinalProjectDbContext : DbContext
     public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
 
     public DbSet<ShopProductReference> ShopProducts => Set<ShopProductReference>();
+
+    public DbSet<ShowroomPurchaseRequestReference> ShowroomPurchaseRequests => Set<ShowroomPurchaseRequestReference>();
+
+    public DbSet<InPersonSaleReference> InPersonSales => Set<InPersonSaleReference>();
+
+    public DbSet<ProductCampaignReference> ProductCampaigns => Set<ProductCampaignReference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -182,6 +190,48 @@ public class FinalProjectDbContext : DbContext
             entity.Property(product => product.SearchKeywords).HasMaxLength(500);
         });
 
+        modelBuilder.Entity<ShowroomPurchaseRequestReference>(entity =>
+        {
+            entity.ToTable("ShowroomPurchaseRequests", table => table.ExcludeFromMigrations());
+            entity.HasKey(request => request.Id);
+            entity.Property(request => request.CustomerName).HasMaxLength(80).IsRequired();
+            entity.Property(request => request.Email).HasMaxLength(200).IsRequired();
+            entity.Property(request => request.Phone).HasMaxLength(40).IsRequired();
+            entity.Property(request => request.Note).HasMaxLength(500);
+            entity.Property(request => request.Status).HasMaxLength(20).IsRequired();
+            entity.Property(request => request.UserId).HasMaxLength(450);
+            entity.Property(request => request.PreferredVisitDate).HasColumnType("date");
+            entity.HasOne(request => request.Product)
+                .WithMany()
+                .HasForeignKey(request => request.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<InPersonSaleReference>(entity =>
+        {
+            entity.ToTable("InPersonSales", table => table.ExcludeFromMigrations());
+            entity.HasKey(sale => sale.Id);
+            entity.Property(sale => sale.UnitPrice).HasColumnType("decimal(18,2)");
+            entity.Property(sale => sale.ListUnitPrice).HasColumnType("decimal(18,2)");
+            entity.Property(sale => sale.CampaignDiscountPercent).HasColumnType("decimal(5,2)");
+            entity.Property(sale => sale.RecordedByUserId).HasMaxLength(450).IsRequired();
+            entity.Property(sale => sale.Note).HasMaxLength(500);
+            entity.Property(sale => sale.VoidedByUserId).HasMaxLength(450);
+            entity.HasOne(sale => sale.Product)
+                .WithMany()
+                .HasForeignKey(sale => sale.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductCampaignReference>(entity =>
+        {
+            entity.ToTable("ProductCampaigns", table => table.ExcludeFromMigrations());
+            entity.HasKey(campaign => campaign.Id);
+            entity.Property(campaign => campaign.Name).HasMaxLength(120);
+            entity.Property(campaign => campaign.DiscountedPrice).HasColumnType("decimal(18,2)");
+            entity.Property(campaign => campaign.DiscountPercent).HasColumnType("decimal(5,2)");
+        });
+
         modelBuilder.Entity<CarView>(entity =>
         {
             entity.HasIndex(view => view.ViewedAt)
@@ -208,6 +258,22 @@ public class FinalProjectDbContext : DbContext
                 .WithMany(car => car.Favorites)
                 .HasForeignKey(favorite => favorite.CarId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProductFavorite>(entity =>
+        {
+            entity.ToTable("ProductFavorites");
+            entity.Property(favorite => favorite.UserId).IsRequired().HasMaxLength(450);
+            entity.HasIndex(favorite => new { favorite.UserId, favorite.ProductId })
+                .IsUnique()
+                .HasDatabaseName("UX_ProductFavorites_UserId_ProductId");
+            entity.HasIndex(favorite => favorite.ProductId);
+            entity.HasOne(favorite => favorite.User)
+                .WithMany()
+                .HasForeignKey(favorite => favorite.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // ShopProducts is MVC-owned (ExcludeFromMigrations). Persist ProductId only; join in queries.
+            entity.Ignore(favorite => favorite.Product);
         });
 
         modelBuilder.Entity<Conversation>(entity =>

@@ -32,6 +32,7 @@ namespace FinalProject.MVC.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly AccountActivityHistory _activityHistory;
         private readonly IContactRequestService _contactRequests;
+        private readonly IShopCatalogService _shopCatalog;
         private readonly ICarImageUploadService _carImages;
 
         public AccountController(
@@ -49,6 +50,7 @@ namespace FinalProject.MVC.Controllers
             ILogger<AccountController> logger,
             AccountActivityHistory activityHistory,
             IContactRequestService contactRequests,
+            IShopCatalogService shopCatalog,
             ICarImageUploadService carImages)
         {
             _userManager = userManager;
@@ -65,6 +67,7 @@ namespace FinalProject.MVC.Controllers
             _logger = logger;
             _activityHistory = activityHistory;
             _contactRequests = contactRequests;
+            _shopCatalog = shopCatalog;
             _carImages = carImages;
         }
 
@@ -195,8 +198,8 @@ namespace FinalProject.MVC.Controllers
                 return InvalidLogin();
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, password, rememberMe, lockoutOnFailure: false);
-            
+            var result = await _signInManager.PasswordSignInAsync(user, password, rememberMe, lockoutOnFailure: true);
+
             if (result.Succeeded)
             {
                 if (IsSafeReturnUrl(returnUrl))
@@ -207,13 +210,19 @@ namespace FinalProject.MVC.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            if (result.IsLockedOut)
+            {
+                TempData["Error"] = "This account is temporarily locked after too many failed sign-in attempts. Try again later.";
+                return InvalidLogin();
+            }
+
             if (result.IsNotAllowed)
             {
                 TempData["Error"] = "Please confirm your email before signing in.";
                 TempData["UnconfirmedEmail"] = user.Email;
                 return InvalidLogin();
             }
-            
+
             TempData["Error"] = "The email, username, or password is incorrect.";
             return InvalidLogin();
         }
@@ -385,6 +394,178 @@ namespace FinalProject.MVC.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["Title"] = "Forgot Password - AutoVault";
+            return View(new ForgotPasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["Title"] = "Forgot Password - AutoVault";
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var email = model.Email.Trim();
+            var cacheKey = $"password-reset:{email.ToLowerInvariant()}";
+            if (_cache.TryGetValue(cacheKey, out _))
+            {
+                TempData["Error"] = "Please wait a minute before requesting another password reset.";
+                return RedirectToAction(nameof(ForgotPasswordConfirmation), new { email });
+            }
+
+            _cache.Set(cacheKey, true, TimeSpan.FromMinutes(1));
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                await SendPasswordResetAsync(user);
+            }
+
+            // Same outcome whether or not the account exists — do not reveal membership.
+            return RedirectToAction(nameof(ForgotPasswordConfirmation), new { email });
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPasswordConfirmation(string? email)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["Title"] = "Check Your Email - AutoVault";
+            ViewData["Email"] = email;
+            ViewData["EmailConfigured"] = _emailSender.IsConfigured;
+            if (!string.IsNullOrWhiteSpace(email)
+                && _cache.TryGetValue(DevelopmentResetLinkKey(email), out string? link))
+            {
+                ViewData["DevelopmentResetLink"] = link;
+            }
+
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string? userId, string? token)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["Title"] = "Reset Password - AutoVault";
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
+            {
+                TempData["Error"] = "That password reset link is invalid or incomplete.";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            return View(new ResetPasswordViewModel
+            {
+                UserId = userId,
+                Token = token
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["Title"] = "Reset Password - AutoVault";
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user == null)
+            {
+                // Do not reveal whether the user id was valid.
+                TempData["Success"] = "If the account exists, the password has been updated. You can sign in now.";
+                return RedirectToAction(nameof(SignIn));
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, PasswordResetMessage(error));
+                }
+
+                return View(model);
+            }
+
+            await _userManager.ResetAccessFailedCountAsync(user);
+            TempData["Success"] = "Your password was updated. You can sign in now.";
+            return RedirectToAction(nameof(SignIn));
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            ViewData["Title"] = "Change Password - AutoVault";
+            ViewData["BodyClass"] = "account-page-body";
+            return View(new ChangePasswordViewModel());
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            ViewData["Title"] = "Change Password - AutoVault";
+            ViewData["BodyClass"] = "account-page-body";
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, PasswordResetMessage(error));
+                }
+
+                return View(model);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["Success"] = "Your password was changed.";
+            return RedirectToAction(nameof(ChangePassword));
+        }
+
         [Authorize(Roles = AppRoles.Admin + "," + AppRoles.SuperAdmin)]
         [HttpGet]
         public IActionResult AddSparePart()
@@ -514,7 +695,31 @@ namespace FinalProject.MVC.Controllers
             }
 
             model.Car.AdditionalImageUrls.Clear();
-            model.Car.GallerySpecified = false;
+            model.Car.GallerySpecified = model.Id != null;
+        }
+
+        private async Task ReloadListingGalleryAsync(CarEditorViewModel model, ApplicationUser user)
+        {
+            if (model.Id is not int id)
+            {
+                return;
+            }
+
+            try
+            {
+                var car = await _carApi.GetCarByIdAsync(
+                    id,
+                    await CreateAccessTokenAsync(user),
+                    HttpContext.RequestAborted);
+                model.Gallery = car?.Images
+                    .OrderBy(image => image.DisplayOrder)
+                    .ThenBy(image => image.Id)
+                    .ToList() ?? new List<CarImageApiDto>();
+            }
+            catch (CarApiException)
+            {
+                // Keep posted gallery state if reload fails.
+            }
         }
 
         [Authorize]
@@ -560,7 +765,10 @@ namespace FinalProject.MVC.Controllers
                 return Forbid();
             }
 
-            car ??= await _carApi.GetCarByIdAsync(id, HttpContext.RequestAborted);
+            car ??= await _carApi.GetCarByIdAsync(
+                id,
+                await CreateAccessTokenAsync(user),
+                HttpContext.RequestAborted);
             if (car == null)
             {
                 return NotFound();
@@ -583,6 +791,8 @@ namespace FinalProject.MVC.Controllers
                     Description = car.Description,
                     ImageUrl = car.MainImage,
                     Status = car.Status,
+                    PrimaryImageId = car.Images.FirstOrDefault(image => image.IsMain)?.Id
+                        ?? car.Images.OrderBy(image => image.DisplayOrder).ThenBy(image => image.Id).FirstOrDefault()?.Id,
                     Seats = car.Seats,
                     DriveType = car.DriveType,
                     Engine = car.Engine,
@@ -600,6 +810,10 @@ namespace FinalProject.MVC.Controllers
                     Condition = car.IsNew ? "New" : "Used",
                     Features = car.Features ?? new List<string>()
                 },
+                Gallery = car.Images
+                    .OrderBy(image => image.DisplayOrder)
+                    .ThenBy(image => image.Id)
+                    .ToList(),
                 Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted)
             });
         }
@@ -618,11 +832,13 @@ namespace FinalProject.MVC.Controllers
             }
 
             model.Id = id;
+            model.Car.GallerySpecified = true;
             var uploaded = await PrepareListingImagesAsync(model, imageFile, galleryFiles, requireImage: true);
             if (!ModelState.IsValid)
             {
                 DiscardUploads(model, uploaded);
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                await ReloadListingGalleryAsync(model, user);
                 return View(model);
             }
 
@@ -633,6 +849,7 @@ namespace FinalProject.MVC.Controllers
                     model.Car,
                     await CreateAccessTokenAsync(user),
                     HttpContext.RequestAborted);
+                _carImages.DeleteUploads(update.RemovedImageUrls);
                 await BroadcastNotificationsAsync(update.Notifications);
                 TempData["Success"] = "Your listing was updated.";
                 return RedirectToAction(nameof(Listings));
@@ -643,6 +860,7 @@ namespace FinalProject.MVC.Controllers
                 ModelState.AddModelError(string.Empty, exception.Message);
                 model.Id = id;
                 model.Lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                await ReloadListingGalleryAsync(model, user);
                 return View(model);
             }
         }
@@ -686,10 +904,16 @@ namespace FinalProject.MVC.Controllers
             ViewData["Title"] = "Favorites - AutoVault";
             try
             {
-                var favorites = await _marketplaceApi.GetFavoritesAsync(
-                    await CreateAccessTokenAsync(user),
+                var token = await CreateAccessTokenAsync(user);
+                var favorites = await _marketplaceApi.GetFavoritesAsync(token, HttpContext.RequestAborted);
+                var productFavorites = await _marketplaceApi.GetProductFavoritesAsync(
+                    token,
                     HttpContext.RequestAborted);
-                return View(new AccountFavoritesViewModel { Favorites = favorites });
+                return View(new AccountFavoritesViewModel
+                {
+                    Favorites = favorites,
+                    ProductFavorites = productFavorites
+                });
             }
             catch (CarApiException)
             {
@@ -1003,6 +1227,56 @@ namespace FinalProject.MVC.Controllers
 
         [Authorize]
         [HttpGet]
+        public async Task<IActionResult> PurchaseRequests(CancellationToken cancellationToken)
+        {
+            ViewData["Title"] = "My Purchase Requests - AutoVault";
+            ViewData["BodyClass"] = "account-page-body";
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await _shopCatalog.ClaimOrphanedPurchaseRequestsByEmailAsync(
+                    user.Id,
+                    user.Email,
+                    cancellationToken);
+            }
+
+            var requests = await _shopCatalog.GetPurchaseRequestsForUserAsync(user.Id, cancellationToken);
+            return View(requests);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> ProductQuestions(CancellationToken cancellationToken)
+        {
+            ViewData["Title"] = "My Product Questions - AutoVault";
+            ViewData["BodyClass"] = "account-page-body";
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await _shopCatalog.ClaimOrphanedInquiriesByEmailAsync(
+                    user.Id,
+                    user.Email,
+                    cancellationToken);
+            }
+
+            var questions = await _shopCatalog.GetInquiriesForUserAsync(user.Id, cancellationToken);
+            return View(questions);
+        }
+
+        [Authorize]
+        [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -1117,8 +1391,51 @@ namespace FinalProject.MVC.Controllers
             await _emailSender.SendAsync(user.Email, "Confirm your AutoVault account", html, text);
         }
 
+        private async Task SendPasswordResetAsync(ApplicationUser user)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var link = Url.Action(
+                nameof(ResetPassword),
+                "Account",
+                new { userId = user.Id, token },
+                Request.Scheme);
+            if (string.IsNullOrWhiteSpace(link) || string.IsNullOrWhiteSpace(user.Email))
+            {
+                return;
+            }
+
+            if (!_emailSender.IsConfigured)
+            {
+                if (_environment.IsDevelopment())
+                {
+                    _cache.Set(DevelopmentResetLinkKey(user.Email), link, TimeSpan.FromMinutes(30));
+                }
+
+                return;
+            }
+
+            var text = $"Reset your AutoVault password: {link}";
+            var html = $"<p>Reset your AutoVault password.</p><p><a href=\"{link}\">Reset password</a></p>";
+            await _emailSender.SendAsync(user.Email, "Reset your AutoVault password", html, text);
+        }
+
         private static string DevelopmentLinkKey(string email) =>
             $"dev-confirm:{email.Trim().ToLowerInvariant()}";
+
+        private static string DevelopmentResetLinkKey(string email) =>
+            $"dev-reset:{email.Trim().ToLowerInvariant()}";
+
+        private static string PasswordResetMessage(IdentityError error) =>
+            error.Code switch
+            {
+                "PasswordMismatch" => "The current password is incorrect.",
+                "PasswordTooShort" => "Password must be at least 6 characters.",
+                "PasswordRequiresDigit" => "Password must include a number.",
+                "PasswordRequiresLower" => "Password must include a lowercase letter.",
+                "PasswordRequiresUpper" => "Password must include an uppercase letter.",
+                "InvalidToken" => "That password reset link is invalid or has expired.",
+                _ => error.Description
+            };
 
         private bool IsSafeReturnUrl(string? returnUrl)
         {
@@ -1135,7 +1452,9 @@ namespace FinalProject.MVC.Controllers
 
             path = path.TrimEnd('/');
             return !path.Equals("/Account/SignIn", StringComparison.OrdinalIgnoreCase)
-                && !path.Equals("/Account/Register", StringComparison.OrdinalIgnoreCase);
+                && !path.Equals("/Account/Register", StringComparison.OrdinalIgnoreCase)
+                && !path.Equals("/Account/ForgotPassword", StringComparison.OrdinalIgnoreCase)
+                && !path.Equals("/Account/ResetPassword", StringComparison.OrdinalIgnoreCase);
         }
 
         private async Task<string> CreateAccessTokenAsync(ApplicationUser user)

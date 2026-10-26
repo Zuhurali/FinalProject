@@ -22,11 +22,12 @@ public sealed class AdminPartsController : ControllerBase
     public async Task<ActionResult<PartAdminListResponse>> List(
         [FromQuery] string? search,
         [FromQuery] string? category,
+        [FromQuery] string? brand,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = PartsAdminService.DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
-        return Ok(await _parts.ListAsync(search, category, page, pageSize, cancellationToken));
+        return Ok(await _parts.ListAsync(search, category, brand, page, pageSize, cancellationToken));
     }
 
     [HttpGet("{id:int}")]

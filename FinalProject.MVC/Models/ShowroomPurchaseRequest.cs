@@ -31,6 +31,10 @@ public class ShowroomPurchaseRequest
     [MaxLength(20)]
     public string Status { get; set; } = ShowroomRequestStatus.New;
 
+    /// <summary>Optional Identity user when the request was submitted while signed in.</summary>
+    [MaxLength(450)]
+    public string? UserId { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }

@@ -1,23 +1,27 @@
 @model IReadOnlyList<ContactRequest>
 @{
     Layout = "_AdminLayout";
+    var statusFilter = ViewBag.StatusFilter as string;
+    var statuses = (IReadOnlyList<string>)ViewBag.Statuses;
 }
-<div class="d-flex justify-content-between mb-4">
-    <h1 class="h3">Contact Requests</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <h1 class="h3 mb-0">Contact Requests</h1>
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <label class="form-label mb-0 small text-muted" for="status-filter">Status</label>
+        <select id="status-filter" name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All</option>
+            @foreach (var status in statuses)
+            {
+                <option value="@status" selected="@(status == statusFilter)">@status</option>
+            }
+        </select>
+    </form>
 </div>
 <div class="admin-card">
-    <p>Messages submitted from the Contact page and the Shop “Get In Touch” form. Update the status as you follow up.</p>
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
+    <p>Messages submitted from the Contact page and the Shop “Get In Touch” form. Update the status as you follow up. Customer details are visible to Admin/SuperAdmin only.</p>
     @if (Model.Count == 0)
     {
-        <p>No contact requests yet.</p>
+        <p>No contact requests@(string.IsNullOrEmpty(statusFilter) ? "" : $" with status {statusFilter}") yet.</p>
     }
     else
     {
@@ -43,7 +47,13 @@
                     <tr>
                         <td>@request.Id</td>
                         <td>@request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
-                        <td>@request.CustomerName</td>
+                        <td>
+                            @request.CustomerName
+                            @if (!string.IsNullOrEmpty(request.UserId))
+                            {
+                                <div class="small text-muted">Linked account</div>
+                            }
+                        </td>
                         <td><a href="mailto:@request.Email">@request.Email</a></td>
                         <td><a href="@DealershipContactSettings.TelHrefFor(request.Phone)">@request.Phone</a></td>
                         <td>@request.Interest</td>

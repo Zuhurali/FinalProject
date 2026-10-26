@@ -110,10 +110,10 @@ public class ReviewInquiryAndPartsTests
         var options = new DbContextOptionsBuilder<FinalProjectDbContext>().UseSqlServer(ConnectionString).Options;
         await using var db = new FinalProjectDbContext(options);
         var parts = new PartsAdminService(db);
-        var first = await parts.ListAsync(null, null, 1, 10);
-        var second = await parts.ListAsync(null, null, 2, 10);
-        var third = await parts.ListAsync(null, null, 3, 10);
-        var beyond = await parts.ListAsync(null, null, 99, 10);
+        var first = await parts.ListAsync(null, null, null, 1, 10);
+        var second = await parts.ListAsync(null, null, null, 2, 10);
+        var third = await parts.ListAsync(null, null, null, 3, 10);
+        var beyond = await parts.ListAsync(null, null, null, 99, 10);
 
         var firstWindow = PageWindow.Describe(first.Page, first.PageSize, first.Items.Count, first.Total);
         var secondWindow = PageWindow.Describe(second.Page, second.PageSize, second.Items.Count, second.Total);

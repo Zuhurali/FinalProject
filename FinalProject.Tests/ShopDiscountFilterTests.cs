@@ -39,15 +39,20 @@ public class ShopDiscountFilterTests
     }
 
     [Fact]
-    public void Promo_card_links_to_discount_filtered_shop_catalog()
+    public void Promo_card_links_to_campaign_filtered_shop_catalog()
     {
+        // Intended behavior (also asserted in CampaignBannerAndDeleteTests): live campaign
+        // banners deep-link by campaign id, not by a shared discount-percent query.
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
         var shop = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shop", "Index.cshtml"));
 
-        Assert.Contains("campaignCatalogUrl", shop, StringComparison.Ordinal);
+        Assert.Contains("campaign = liveCampaign.Id", shop, StringComparison.Ordinal);
+        Assert.Contains("bannerUrl", shop, StringComparison.Ordinal);
+        Assert.Contains("#catalog", shop, StringComparison.Ordinal);
         Assert.Contains("asp-route-condition=\"used\"", shop, StringComparison.Ordinal);
-        Assert.Contains("discount = offerPercent", shop, StringComparison.Ordinal);
         Assert.Contains("class=\"cta-wrapper d-block text-decoration-none\"", shop, StringComparison.Ordinal);
+        Assert.DoesNotContain("discount = offerPercent", shop, StringComparison.Ordinal);
+        Assert.DoesNotContain("campaignCatalogUrl", shop, StringComparison.Ordinal);
         Assert.DoesNotContain("<div class=\"cta-wrapper\">\r\n                                    <div class=\"image-area jarallax jara-mask-1\">\r\n                                        <img src=\"~/assets/images/cta/01.webp\"", shop, StringComparison.Ordinal);
     }
 }

@@ -6,6 +6,7 @@ public sealed record AdminSummaryResponse(
     int TotalConversations,
     int UnreadMessages,
     int TotalRatings,
+    int TotalReviews,
     IReadOnlyList<string> RecentActivity);
 
 public sealed class SaveLookupRequest

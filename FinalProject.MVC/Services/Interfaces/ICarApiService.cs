@@ -8,7 +8,7 @@ public interface ICarApiService
 
     Task<IReadOnlyList<CarApiDto>> GetAllCarsAsync(CarApiQuery? query = null, CancellationToken cancellationToken = default);
 
-    Task<CarApiDto?> GetCarByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<CarApiDto?> GetCarByIdAsync(int id, string? accessToken = null, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<CarSuggestionDto>> GetSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default);
 

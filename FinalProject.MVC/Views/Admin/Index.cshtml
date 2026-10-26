@@ -1,45 +1,77 @@
 @model AdminDashboardViewModel
 @{
     Layout = "_AdminLayout";
+    string Stat(int? value) => value.HasValue ? value.Value.ToString() : "—";
 }
 <h1 class="h3 mb-4">Dashboard</h1>
 @if (Model.ServiceUnavailable)
 {
-    <div class="alert alert-warning">Some catalog statistics are temporarily unavailable.</div>
-}
-<div class="admin-card mb-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <div class="text-muted">Customer messages</div>
-            <strong>Contact Requests</strong>
-            <p class="mb-0 text-muted small">View submissions from the Contact page and Shop Get In Touch form.</p>
-        </div>
-        <a asp-controller="AdminContactRequests" asp-action="Index" class="btn btn-dark">Open Contact Requests</a>
+    <div class="alert alert-warning">
+        Catalog and messaging statistics from the API are temporarily unavailable.
+        Showroom counts below still come from SQL Server.
     </div>
-</div>
-<div class="row g-3">
-    @foreach (var card in new[]
-    {
-        ("Total Cars", Model.Summary.TotalCars),
-        ("Active Listings", Model.Summary.ActiveListings),
-        ("Total Members", Model.TotalMembers),
-        ("Total Products", Model.TotalProducts),
-        ("Total Ratings", Model.Summary.TotalRatings),
-        ("Conversations", Model.Summary.TotalConversations),
-        ("Unread Messages", Model.Summary.UnreadMessages)
-    })
+}
+
+<div class="row g-3 mb-2">
+    @{
+        var catalogCards = new (string Label, int? Value)[]
+        {
+            ("Total Cars", Model.CatalogSummaryAvailable ? Model.Summary.TotalCars : null),
+            ("Active Listings", Model.CatalogSummaryAvailable ? Model.Summary.ActiveListings : null),
+            ("Total Members", Model.TotalMembers),
+            ("Spare Parts", Model.TotalSpareParts),
+            ("Active Parts", Model.ActiveSpareParts),
+            ("Product Ratings", Model.CatalogSummaryAvailable ? Model.Summary.TotalRatings : null),
+            ("Product Reviews", Model.CatalogSummaryAvailable ? Model.Summary.TotalReviews : null),
+            ("Conversations", Model.CatalogSummaryAvailable ? Model.Summary.TotalConversations : null),
+            ("Unread Messages", Model.CatalogSummaryAvailable ? Model.Summary.UnreadMessages : null),
+            ("In-Store Sales", Model.RecordedSales),
+            ("Active Campaigns", Model.ActiveCampaigns)
+        };
+    }
+    @foreach (var card in catalogCards)
     {
         <div class="col-md-4 col-xl-3">
             <div class="admin-card">
-                <div class="text-muted">@card.Item1</div>
-                <div class="admin-stat">@card.Item2</div>
+                <div class="text-muted">@card.Label</div>
+                <div class="admin-stat">@Stat(card.Value)</div>
             </div>
         </div>
     }
 </div>
+
+<h2 class="h5 mt-4 mb-3">Needs attention</h2>
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="admin-card h-100">
+            <div class="text-muted">New contact requests</div>
+            <div class="admin-stat">@Model.NewContactRequests</div>
+            <a asp-controller="AdminContactRequests" asp-action="Index" class="btn btn-sm btn-outline-dark mt-2">Open</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-card h-100">
+            <div class="text-muted">Open product questions</div>
+            <div class="admin-stat">@Model.OpenProductQuestions</div>
+            <a asp-controller="AdminInquiries" asp-action="Index" class="btn btn-sm btn-outline-dark mt-2">Open</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-card h-100">
+            <div class="text-muted">Open purchase requests</div>
+            <div class="admin-stat">@Model.OpenPurchaseRequests</div>
+            <a asp-controller="AdminRequests" asp-action="Index" class="btn btn-sm btn-outline-dark mt-2">Open</a>
+        </div>
+    </div>
+</div>
+
 <h2 class="h5 mt-4 mb-3">Recent activity</h2>
 <div class="admin-card">
-    @if (Model.Summary.RecentActivity.Count == 0)
+    @if (!Model.CatalogSummaryAvailable)
+    {
+        <p class="mb-0 text-muted">Recent listing and message activity is unavailable while the API is offline.</p>
+    }
+    else if (Model.Summary.RecentActivity.Count == 0)
     {
         <p class="mb-0">No recent activity yet.</p>
     }

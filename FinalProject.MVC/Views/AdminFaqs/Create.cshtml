@@ -1,0 +1,19 @@
+@model FaqItemEditViewModel
+@{
+    Layout = "_AdminLayout";
+}
+<h1 class="h3 mb-4">Create FAQ</h1>
+<form asp-action="Create" method="post" class="admin-card">
+    @Html.AntiForgeryToken()
+    <partial name="_FaqForm" />
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-dark">Create</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

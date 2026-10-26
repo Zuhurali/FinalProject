@@ -2,7 +2,6 @@ using System.Net;
 using FinalProject.MVC.Configuration;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Services.Interfaces;
-using Microsoft.Extensions.Options;
 
 namespace FinalProject.MVC.Services;
 
@@ -15,16 +14,16 @@ public sealed class ContactInquiryMailer : IContactInquiryMailer
         "We couldn't send your message right now. Please try again, or email zuhraliim@code.edu.az directly.";
 
     private readonly IEmailSender _emailSender;
-    private readonly DealershipContactSettings _contact;
+    private readonly ISiteSettingsService _siteSettings;
     private readonly ILogger<ContactInquiryMailer> _logger;
 
     public ContactInquiryMailer(
         IEmailSender emailSender,
-        IOptions<DealershipContactSettings> contact,
+        ISiteSettingsService siteSettings,
         ILogger<ContactInquiryMailer> logger)
     {
         _emailSender = emailSender;
-        _contact = contact.Value;
+        _siteSettings = siteSettings;
         _logger = logger;
     }
 
@@ -32,9 +31,10 @@ public sealed class ContactInquiryMailer : IContactInquiryMailer
         ContactFormModel model,
         CancellationToken cancellationToken = default)
     {
-        var inbox = string.IsNullOrWhiteSpace(_contact.Email)
+        var contact = _siteSettings.GetContactSettings();
+        var inbox = string.IsNullOrWhiteSpace(contact.Email)
             ? DealershipContactDefaults.Email
-            : _contact.Email.Trim();
+            : contact.Email.Trim();
 
         if (!_emailSender.IsConfigured)
         {

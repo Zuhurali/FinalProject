@@ -4,7 +4,13 @@ namespace FinalProject.Services.Interfaces;
 
 public interface IPartsAdminService
 {
-    Task<PartAdminListResponse> ListAsync(string? search, string? category, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<PartAdminListResponse> ListAsync(
+        string? search,
+        string? category,
+        string? brand,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 
     Task<PartAdminItem?> GetAsync(int id, CancellationToken cancellationToken = default);
 

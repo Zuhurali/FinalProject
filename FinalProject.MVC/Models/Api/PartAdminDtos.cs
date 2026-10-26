@@ -43,6 +43,8 @@ public sealed class PartAdminListDto
 
     public List<string> Categories { get; set; } = new();
 
+    public List<string> Brands { get; set; } = new();
+
     public int Total { get; set; }
 
     public int Page { get; set; }

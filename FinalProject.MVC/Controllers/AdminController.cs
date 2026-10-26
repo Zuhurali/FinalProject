@@ -1,3 +1,4 @@
+using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Security;
@@ -14,28 +15,26 @@ namespace FinalProject.MVC.Controllers;
 public sealed class AdminController : AdminControllerBase
 {
     private readonly IAdminApiService _adminApi;
-    private readonly IShopCatalogService _shopCatalog;
+    private readonly ApplicationDbContext _db;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
     public AdminController(
         UserManager<ApplicationUser> userManager,
         IApiAccessTokenService tokenService,
         IAdminApiService adminApi,
-        IShopCatalogService shopCatalog)
+        ApplicationDbContext db,
+        RoleManager<IdentityRole> roleManager)
         : base(userManager, tokenService)
     {
         _adminApi = adminApi;
-        _shopCatalog = shopCatalog;
+        _db = db;
+        _roleManager = roleManager;
     }
 
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Admin Dashboard - AutoVault";
-        var model = new AdminDashboardViewModel
-        {
-            TotalMembers = (await UserManager.GetUsersInRoleAsync(AppRoles.Member)).Count,
-            TotalProducts = await _shopCatalog.CountAsync(cancellationToken)
-        };
 
         var token = await CreateTokenAsync();
         if (token == null)
@@ -43,16 +42,52 @@ public sealed class AdminController : AdminControllerBase
             return Challenge();
         }
 
+        var model = new AdminDashboardViewModel
+        {
+            TotalMembers = await CountMembersAsync(cancellationToken),
+            TotalSpareParts = await _db.ShopProducts.CountAsync(cancellationToken),
+            ActiveSpareParts = await _db.ShopProducts.CountAsync(product => product.IsActive, cancellationToken),
+            NewContactRequests = await _db.ContactRequests.CountAsync(
+                request => request.Status == ContactRequestStatus.New,
+                cancellationToken),
+            OpenProductQuestions = await _db.ProductInquiries.CountAsync(
+                inquiry => !inquiry.IsHandled && inquiry.AdminReply == null,
+                cancellationToken),
+            OpenPurchaseRequests = await _db.ShowroomPurchaseRequests.CountAsync(
+                request => request.Status == ShowroomRequestStatus.New
+                    || request.Status == ShowroomRequestStatus.Contacted,
+                cancellationToken),
+            RecordedSales = await _db.InPersonSales.CountAsync(
+                sale => !sale.IsDemo && sale.VoidedAt == null,
+                cancellationToken),
+            ActiveCampaigns = await _db.ProductCampaigns.CountAsync(
+                campaign => campaign.IsActive,
+                cancellationToken)
+        };
+
         try
         {
             model.Summary = await _adminApi.GetSummaryAsync(token, cancellationToken);
+            model.CatalogSummaryAvailable = true;
         }
         catch (CarApiException)
         {
             model.ServiceUnavailable = true;
+            model.CatalogSummaryAvailable = false;
         }
 
         return View(model);
+    }
+
+    private async Task<int> CountMembersAsync(CancellationToken cancellationToken)
+    {
+        var role = await _roleManager.FindByNameAsync(AppRoles.Member);
+        if (role == null)
+        {
+            return 0;
+        }
+
+        return await _db.UserRoles.CountAsync(userRole => userRole.RoleId == role.Id, cancellationToken);
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]

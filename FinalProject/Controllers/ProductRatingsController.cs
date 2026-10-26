@@ -47,6 +47,17 @@ public sealed class ProductRatingsController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    [HttpGet("ratings/admin")]
+    [ProducesResponseType<IReadOnlyList<ProductRatingItem>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<IReadOnlyList<ProductRatingItem>>> GetAllForAdmin(
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _ratingService.GetAllForAdminAsync(cancellationToken));
+    }
+
     [Authorize]
     [HttpGet("{productId:int}/ratings/my")]
     [ProducesResponseType<CurrentUserProductRating>(StatusCodes.Status200OK)]

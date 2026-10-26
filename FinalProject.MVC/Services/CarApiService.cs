@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Services.Interfaces;
@@ -39,7 +40,14 @@ public class CarApiService : ICarApiService
 
     public async Task<IReadOnlyList<CarApiDto>> GetAllCarsAsync(CarApiQuery? query = null, CancellationToken cancellationToken = default)
     {
+        // Public bulk loads default to Active. Callers that need another status must set it explicitly.
+        // Admin listing uses GetCarsAsync (not this method) so Draft/Sold remain visible there.
         var firstQuery = Copy(query);
+        if (string.IsNullOrWhiteSpace(firstQuery.Status))
+        {
+            firstQuery.Status = CarPublicListing.ActiveStatus;
+        }
+
         firstQuery.Page = 1;
         firstQuery.PageSize = CarApiQuery.MaxPageSize;
 
@@ -53,7 +61,7 @@ public class CarApiService : ICarApiService
 
         for (var pageNumber = 2; pageNumber <= totalPages && cars.Count < firstPage.TotalCount; pageNumber++)
         {
-            var nextQuery = Copy(query);
+            var nextQuery = Copy(firstQuery);
             nextQuery.Page = pageNumber;
             nextQuery.PageSize = CarApiQuery.MaxPageSize;
             var nextPage = await GetCarsAsync(nextQuery, cancellationToken);
@@ -150,9 +158,15 @@ public class CarApiService : ICarApiService
             ?? new CarDiscoveryStatisticsDto();
     }
 
-    public async Task<CarApiDto?> GetCarByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<CarApiDto?> GetCarByIdAsync(
+        int id,
+        string? accessToken = null,
+        CancellationToken cancellationToken = default)
     {
-        using var response = await SendAsync($"api/cars/{id}", cancellationToken);
+        // Authenticated callers (admin/owner) can load Draft/Sold; anonymous public calls cannot.
+        using var response = string.IsNullOrWhiteSpace(accessToken)
+            ? await SendAsync($"api/cars/{id}", cancellationToken)
+            : await SendAuthorizedAsync(HttpMethod.Get, $"api/cars/{id}", accessToken, null, cancellationToken);
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
             return null;

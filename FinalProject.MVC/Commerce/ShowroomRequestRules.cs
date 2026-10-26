@@ -9,6 +9,48 @@ public static class ShowroomRequestRules
     public const int MaxVisitDaysAhead = 60;
     public const int MaxNoteLength = 500;
 
+    /// <summary>
+    /// Allowed admin status transitions for showroom purchase requests.
+    /// Completed and Cancelled are terminal.
+    /// </summary>
+    public static bool CanTransition(string? fromStatus, string? toStatus)
+    {
+        if (string.IsNullOrWhiteSpace(fromStatus) || string.IsNullOrWhiteSpace(toStatus))
+        {
+            return false;
+        }
+
+        if (!ShowroomRequestStatus.All.Contains(toStatus))
+        {
+            return false;
+        }
+
+        if (string.Equals(fromStatus, toStatus, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return fromStatus switch
+        {
+            ShowroomRequestStatus.New => toStatus is ShowroomRequestStatus.Contacted
+                or ShowroomRequestStatus.Completed
+                or ShowroomRequestStatus.Cancelled,
+            ShowroomRequestStatus.Contacted => toStatus is ShowroomRequestStatus.Completed
+                or ShowroomRequestStatus.Cancelled,
+            _ => false
+        };
+    }
+
+    public static IReadOnlyList<string> AllowedNextStatuses(string? fromStatus)
+    {
+        if (string.IsNullOrWhiteSpace(fromStatus) || !ShowroomRequestStatus.All.Contains(fromStatus))
+        {
+            return Array.Empty<string>();
+        }
+
+        return ShowroomRequestStatus.All.Where(status => CanTransition(fromStatus, status)).ToList();
+    }
+
     public static string? Validate(ShowroomPurchaseRequest request, int availableQuantity, DateTime todayLocal)
     {
         request.CustomerName = (request.CustomerName ?? string.Empty).Trim();

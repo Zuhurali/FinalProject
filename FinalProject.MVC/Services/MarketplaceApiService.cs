@@ -61,6 +61,44 @@ public sealed class MarketplaceApiService : IMarketplaceApiService
         await EnsureSuccessAsync(response, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProductFavoriteDto>> GetProductFavoritesAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default) =>
+        await GetAsync<List<ProductFavoriteDto>>("api/product-favorites", accessToken, cancellationToken);
+
+    public async Task<IReadOnlyList<int>> GetProductFavoriteIdsAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default) =>
+        await GetAsync<List<int>>("api/product-favorites/ids", accessToken, cancellationToken);
+
+    public async Task AddProductFavoriteAsync(
+        int productId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(
+            HttpMethod.Post,
+            $"api/products/{productId}/favorite",
+            accessToken,
+            null,
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+    }
+
+    public async Task RemoveProductFavoriteAsync(
+        int productId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(
+            HttpMethod.Delete,
+            $"api/products/{productId}/favorite",
+            accessToken,
+            null,
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ConversationSummaryDto>> GetConversationsAsync(
         string accessToken,
         CancellationToken cancellationToken = default) =>

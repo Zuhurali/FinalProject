@@ -2,8 +2,8 @@ using FinalProject.MVC.Configuration;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace FinalProject.Tests;
@@ -63,7 +63,7 @@ public class ContactInquiryMailerTests
     private static ContactInquiryMailer Create(FakeEmailSender sender) =>
         new(
             sender,
-            Options.Create(new DealershipContactSettings { Email = DealershipContactDefaults.Email }),
+            new FixedSiteSettingsService(),
             NullLogger<ContactInquiryMailer>.Instance);
 
     private static ContactFormModel ValidModel() => new()
@@ -74,6 +74,26 @@ public class ContactInquiryMailerTests
         Car = "Brake pads",
         Message = "Please call me about a filter."
     };
+
+    private sealed class FixedSiteSettingsService : ISiteSettingsService
+    {
+        public SitePublicSettings GetPublic() => new()
+        {
+            Contact = new DealershipContactSettings { Email = DealershipContactDefaults.Email }
+        };
+
+        public DealershipContactSettings GetContactSettings() => GetPublic().Contact;
+
+        public Task EnsureSeedAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<(bool Ok, string? Error)> SaveAsync(
+            SiteSettingsEditViewModel model,
+            IFormFile? logoFile,
+            IFormFile? footerLogoFile,
+            IFormFile? faviconFile,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<(bool, string?)>((false, "not used"));
+    }
 
     private sealed class FakeEmailSender : IEmailSender
     {

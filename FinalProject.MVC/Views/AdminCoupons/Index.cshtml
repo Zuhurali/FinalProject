@@ -1,0 +1,79 @@
+@model IReadOnlyList<Coupon>
+@{
+    Layout = "_AdminLayout";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Coupons</h1>
+        <p class="text-muted mb-0">Showroom courtesy codes for spare-parts inquiry carts. Applying a coupon only previews the discount; usage is recorded when an order is successfully placed.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">New coupon</a>
+</div>
+<div class="admin-card">
+    @if (Model.Count == 0)
+    {
+        <p class="mb-0">No coupons yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>%</th>
+                        <th>Min purchase</th>
+                        <th>Scope</th>
+                        <th>Expires (UTC)</th>
+                        <th>Limits</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var coupon in Model)
+                {
+                    <tr>
+                        <td><code>@coupon.Code</code></td>
+                        <td>@coupon.Name</td>
+                        <td>@coupon.DiscountPercent.ToString("0.##")%</td>
+                        <td>@coupon.MinimumPurchaseAmount.ToString("C")</td>
+                        <td>
+                            @if (coupon.AppliesToAllParts)
+                            {
+                                <text>All parts</text>
+                            }
+                            else
+                            {
+                                @(coupon.Product?.Name ?? $"Product #{coupon.ProductId}")
+                            }
+                        </td>
+                        <td>@(coupon.ExpiresAt?.ToString("yyyy-MM-dd HH:mm") ?? "Never")</td>
+                        <td>
+                            Per user: @coupon.MaxUsesPerUser
+                            @if (coupon.MaxTotalUses.HasValue)
+                            {
+                                <div class="small text-muted">Total: @coupon.MaxTotalUses</div>
+                            }
+                        </td>
+                        <td>@(coupon.IsActive ? "Active" : "Inactive")</td>
+                        <td class="text-nowrap">
+                            <a asp-action="Edit" asp-route-id="@coupon.Id" class="btn btn-sm btn-outline-dark">Edit</a>
+                            <form asp-action="Active" asp-route-id="@coupon.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="isActive" value="@(!coupon.IsActive)" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">@(coupon.IsActive ? "Deactivate" : "Activate")</button>
+                            </form>
+                            <form asp-action="Delete" asp-route-id="@coupon.Id" method="post" class="d-inline" onsubmit="return confirm('Delete or deactivate this coupon?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

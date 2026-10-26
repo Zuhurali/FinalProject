@@ -17,10 +17,12 @@ public sealed class AdminContactRequestsController : Controller
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? status, CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Contact Requests - AutoVault";
-        return View(await _contactRequests.GetAllAsync(cancellationToken));
+        ViewBag.StatusFilter = status;
+        ViewBag.Statuses = ContactRequestStatus.All;
+        return View(await _contactRequests.GetAllAsync(status, cancellationToken));
     }
 
     [HttpPost("Status")]

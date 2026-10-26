@@ -45,15 +45,7 @@ public sealed class AdminRatingsController : Controller
 
             var roles = await _userManager.GetRolesAsync(user);
             var accessToken = _tokenService.CreateToken(User, roles);
-            var requests = catalog.Select(product =>
-                _ratingApiService.GetRatingsForAdminAsync(
-                    product.Id,
-                    accessToken,
-                    cancellationToken));
-            var summaries = await Task.WhenAll(requests);
-            var ratings = summaries
-                .Where(summary => summary != null)
-                .SelectMany(summary => summary!.Ratings)
+            var ratings = (await _ratingApiService.GetAllForAdminAsync(accessToken, cancellationToken))
                 .Select(rating => new AdminProductRatingViewModel
                 {
                     Id = rating.Id,

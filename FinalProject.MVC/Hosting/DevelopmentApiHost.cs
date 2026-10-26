@@ -34,6 +34,7 @@ internal static class DevelopmentApiHost
         string apiBaseUrl,
         IHostApplicationLifetime lifetime,
         ILogger logger,
+        string? apiSigningKey = null,
         CancellationToken cancellationToken = default)
     {
         if (await IsReadyAsync(apiBaseUrl, cancellationToken))
@@ -67,7 +68,7 @@ internal static class DevelopmentApiHost
         var applicationUrls = ReadHttpsApplicationUrls(apiProjectDirectory, apiBaseUrl);
         logger.LogInformation("Starting FinalProject API in the background at {ApplicationUrls}. Swagger will not be opened.", applicationUrls);
 
-        var process = StartApiProcess(apiProjectPath, apiProjectDirectory, applicationUrls);
+        var process = StartApiProcess(apiProjectPath, apiProjectDirectory, applicationUrls, apiSigningKey);
         _ownedProcess = process;
         WindowsProcessJob.TryAssign(process, logger);
         lifetime.ApplicationStopping.Register(StopOwnedProcess);
@@ -175,7 +176,11 @@ internal static class DevelopmentApiHost
         }
     }
 
-    private static Process StartApiProcess(string apiProjectPath, string apiProjectDirectory, string applicationUrls)
+    private static Process StartApiProcess(
+        string apiProjectPath,
+        string apiProjectDirectory,
+        string applicationUrls,
+        string? apiSigningKey)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -193,6 +198,12 @@ internal static class DevelopmentApiHost
         startInfo.Environment["ASPNETCORE_URLS"] = applicationUrls;
         startInfo.Environment["ASPNETCORE_HTTPS_PORT"] = new Uri(applicationUrls.Split(';', 2)[0]).Port.ToString();
         startInfo.Environment.Remove("DOTNET_LAUNCH_PROFILE");
+        // Pass the signing key via env so the child API can validate JWTs without reading
+        // committed appsettings. Never log this value.
+        if (!string.IsNullOrWhiteSpace(apiSigningKey))
+        {
+            startInfo.Environment["ApiAuthentication__SigningKey"] = apiSigningKey;
+        }
 
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, eventArgs) => AppendError(eventArgs.Data);

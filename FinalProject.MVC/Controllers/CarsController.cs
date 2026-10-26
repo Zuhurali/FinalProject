@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
@@ -56,7 +57,7 @@ namespace FinalProject.MVC.Controllers
 
             try
             {
-                var catalog = await _carApi.GetAllCarsAsync(cancellationToken: HttpContext.RequestAborted);
+                var catalog = await _carApi.GetAllCarsAsync(CarPublicListing.CreateActiveQuery(), HttpContext.RequestAborted);
                 var listing = await BuildListingAsync(query, catalog);
                 await MarkFavoritesAsync(listing.Cars);
                 return View(listing);
@@ -96,7 +97,7 @@ namespace FinalProject.MVC.Controllers
             IReadOnlyList<CarApiDto> catalogDtos = Array.Empty<CarApiDto>();
             try
             {
-                catalogDtos = await _carApi.GetAllCarsAsync(cancellationToken: HttpContext.RequestAborted);
+                catalogDtos = await _carApi.GetAllCarsAsync(CarPublicListing.CreateActiveQuery(), HttpContext.RequestAborted);
             }
             catch (CarApiException exception)
             {
@@ -128,7 +129,7 @@ namespace FinalProject.MVC.Controllers
         {
             try
             {
-                var catalog = await _carApi.GetAllCarsAsync(cancellationToken: HttpContext.RequestAborted);
+                var catalog = await _carApi.GetAllCarsAsync(CarPublicListing.CreateActiveQuery(), HttpContext.RequestAborted);
                 var filteredCars = await LoadMatchingCarsAsync(new CarListingQuery
                 {
                     Category = request.Category,
@@ -179,15 +180,14 @@ namespace FinalProject.MVC.Controllers
 
             try
             {
-                var carDto = await _carApi.GetCarByIdAsync(id.Value, HttpContext.RequestAborted);
-                if (carDto == null)
+                var carDto = await _carApi.GetCarByIdAsync(id.Value, cancellationToken: HttpContext.RequestAborted);
+                if (carDto == null || !CarPublicListing.IsPubliclyListed(carDto.Status))
                 {
-                    TempData["Error"] = "Car not found";
-                    return RedirectToAction(nameof(Index));
+                    return NotFound();
                 }
 
                 var cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
-                var car = CarApiMapper.ToCar(carDto);
+                var car = CarApiMapper.ToCar(carDto!);
                 ViewData["RelatedCars"] = cars
                     .Where(item => item.Id != car.Id)
                     .GroupBy(item => item.Id)
@@ -319,7 +319,9 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult DetailsTwo(int? id)
         {
-            return RedirectToAction(nameof(Details), new { id = id ?? 1 });
+            return id is > 0
+                ? RedirectToAction(nameof(Details), new { id })
+                : RedirectToAction(nameof(Index));
         }
 
         public IActionResult SoldCar()
@@ -521,11 +523,11 @@ namespace FinalProject.MVC.Controllers
 
         private static bool TryCreateApiQuery(CarListingQuery query, IReadOnlyList<CarApiDto> catalog, int pageSize, int? brandId, out CarApiQuery apiQuery)
         {
-            apiQuery = new CarApiQuery
+            apiQuery = CarPublicListing.WithActiveStatus(new CarApiQuery
             {
                 Page = query.Page < 1 ? 1 : query.Page,
                 PageSize = pageSize
-            };
+            });
 
             if (!string.IsNullOrWhiteSpace(query.Category))
             {

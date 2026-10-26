@@ -77,6 +77,25 @@ public sealed class ProductRatingService : IProductRatingService
             .ToList();
     }
 
+    public async Task<IReadOnlyList<ProductRatingItem>> GetAllForAdminAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await (
+            from rating in _context.ProductRatings.AsNoTracking()
+            join user in _context.IdentityUsers.AsNoTracking()
+                on rating.UserId equals user.Id
+            orderby rating.UpdatedAt descending
+            select new ProductRatingItem(
+                rating.Id,
+                rating.ProductId,
+                rating.UserId,
+                user.Email ?? user.UserName ?? "User",
+                rating.Rating,
+                rating.CreatedAt,
+                rating.UpdatedAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<CurrentUserProductRating?> GetUserRatingAsync(
         int productId,
         string userId,
@@ -105,7 +124,7 @@ public sealed class ProductRatingService : IProductRatingService
         int rating,
         CancellationToken cancellationToken = default)
     {
-        if (!await ProductExistsAsync(productId, cancellationToken) ||
+        if (!await ProductIsActiveAsync(productId, cancellationToken) ||
             rating is < 1 or > 5 ||
             !await UserExistsAsync(userId, cancellationToken))
         {
@@ -216,20 +235,26 @@ public sealed class ProductRatingService : IProductRatingService
             .AnyAsync(product => product.Id == productId, cancellationToken);
     }
 
+    private Task<bool> ProductIsActiveAsync(int productId, CancellationToken cancellationToken) =>
+        _context.ShopProducts.AsNoTracking()
+            .AnyAsync(product => product.Id == productId && product.IsActive, cancellationToken);
+
     private async Task<int[]> ValidProductIdsAsync(
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken)
     {
         var distinct = productIds.Distinct().ToArray();
-        var known = distinct.Where(_productIds.Contains).ToHashSet();
-        var extras = distinct.Where(id => !known.Contains(id)).ToArray();
-        if (extras.Length > 0)
+        var active = await _context.ShopProducts.AsNoTracking()
+            .Where(product => distinct.Contains(product.Id) && product.IsActive)
+            .Select(product => product.Id)
+            .ToListAsync(cancellationToken);
+        var known = active.ToHashSet();
+
+        foreach (var id in distinct.Where(id => _productIds.Contains(id) && !known.Contains(id)))
         {
-            var found = await _context.ShopProducts.AsNoTracking()
-                .Where(product => extras.Contains(product.Id))
-                .Select(product => product.Id)
-                .ToListAsync(cancellationToken);
-            foreach (var id in found)
+            var inDb = await _context.ShopProducts.AsNoTracking()
+                .AnyAsync(product => product.Id == id, cancellationToken);
+            if (!inDb)
             {
                 known.Add(id);
             }

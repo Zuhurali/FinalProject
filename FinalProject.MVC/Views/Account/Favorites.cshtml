@@ -15,49 +15,94 @@
     <div class="container"><div class="row g-4 g-lg-5">
         <div class="col-12 col-md-5 col-lg-4"><partial name="_AccountNavigation" /></div>
         <div class="col-12 col-md-7 col-lg-8">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <h3 class="title mb-0">Favorite Cars</h3>
-                <a asp-controller="Cars" asp-action="Index" class="rts-btn btn-primary radius-small">Browse Cars</a>
-            </div>
             @if (ViewData["AccountServiceUnavailable"] != null)
             {
                 <div class="alert alert-warning">Favorites are temporarily unavailable.</div>
             }
-            else if (Model.Favorites.Count == 0)
-            {
-                <div class="account-empty-state text-center">
-                    <i class="fa-regular fa-heart"></i><h4>No favorite cars yet.</h4>
-                    <p>Save cars from the catalog and they will appear here.</p>
-                </div>
-            }
             else
             {
-                <div class="row g-4">
-                    @foreach (var favorite in Model.Favorites)
-                    {
-                        <div class="col-md-6">
-                            <div class="project-wrapper2">
-                                <div class="image-area">
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@favorite.Car.Id">
-                                        <img src="@Url.Content(favorite.Car.MainImage)" alt="@favorite.Car.Brand?.Name @favorite.Car.Model">
-                                    </a>
-                                </div>
-                                <div class="content-area">
-                                    <span class="price">$@favorite.Car.Price.ToString("N0")</span>
-                                    <h6 class="title">@favorite.Car.Brand?.Name @favorite.Car.Model</h6>
-                                    <div class="favorites-card-actions">
-                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@favorite.Car.Id" class="rts-btn btn-primary radius-small">View</a>
-                                        <form asp-controller="Cars" asp-action="RemoveFavorite" asp-route-id="@favorite.Car.Id" method="post" class="favorites-remove-form">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path">
-                                            <button class="rts-btn radius-small favorites-remove-btn" type="submit">Remove</button>
-                                        </form>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <h3 class="title mb-0">Favorite Cars</h3>
+                    <a asp-controller="Cars" asp-action="Index" class="rts-btn btn-primary radius-small">Browse Cars</a>
+                </div>
+                @if (Model.Favorites.Count == 0)
+                {
+                    <div class="account-empty-state text-center mb-5">
+                        <i class="fa-regular fa-heart"></i><h4>No favorite cars yet.</h4>
+                        <p>Save cars from the catalog and they will appear here.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4 mb-5">
+                        @foreach (var favorite in Model.Favorites)
+                        {
+                            <div class="col-md-6">
+                                <div class="project-wrapper2">
+                                    <div class="image-area">
+                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@favorite.Car.Id">
+                                            <img src="@Url.Content(favorite.Car.MainImage)" alt="@favorite.Car.Brand?.Name @favorite.Car.Model">
+                                        </a>
+                                    </div>
+                                    <div class="content-area">
+                                        <span class="price">$@favorite.Car.Price.ToString("N0")</span>
+                                        <h6 class="title">@favorite.Car.Brand?.Name @favorite.Car.Model</h6>
+                                        <div class="favorites-card-actions">
+                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@favorite.Car.Id" class="rts-btn btn-primary radius-small">View</a>
+                                            <form asp-controller="Cars" asp-action="RemoveFavorite" asp-route-id="@favorite.Car.Id" method="post" class="favorites-remove-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path">
+                                                <button class="rts-btn radius-small favorites-remove-btn" type="submit">Remove</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
+                }
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <h3 class="title mb-0">Favorite Spare Parts</h3>
+                    <a asp-controller="Shop" asp-action="Index" class="rts-btn btn-primary radius-small">Browse Parts</a>
                 </div>
+                @if (Model.ProductFavorites.Count == 0)
+                {
+                    <div class="account-empty-state text-center">
+                        <i class="fa-regular fa-heart"></i><h4>No favorite parts yet.</h4>
+                        <p>Save spare parts from the shop and they will appear here.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        @foreach (var favorite in Model.ProductFavorites)
+                        {
+                            <div class="col-md-6">
+                                <div class="project-wrapper2">
+                                    <div class="image-area">
+                                        <a asp-controller="Shop" asp-action="Details" asp-route-id="@favorite.ProductId">
+                                            <img src="@Url.Content(favorite.ImagePath)" alt="@favorite.Name">
+                                        </a>
+                                    </div>
+                                    <div class="content-area">
+                                        <span class="price">@favorite.Price.ToString("C")</span>
+                                        <h6 class="title">@favorite.Name</h6>
+                                        <p class="small text-muted mb-2 px-4">@favorite.Brand · @favorite.Category</p>
+                                        <div class="favorites-card-actions">
+                                            <a asp-controller="Shop" asp-action="Details" asp-route-id="@favorite.ProductId" class="rts-btn btn-primary radius-small">View</a>
+                                            <form asp-controller="Shop" asp-action="RemoveFavorite" asp-route-id="@favorite.ProductId" method="post" class="favorites-remove-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path">
+                                                <button class="rts-btn radius-small favorites-remove-btn" type="submit">Remove</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
             }
         </div>
     </div></div>
@@ -100,12 +145,10 @@
     .account-favorites .favorites-remove-btn:hover,
     .account-favorites .favorites-remove-btn:focus,
     .account-favorites .favorites-remove-btn:active {
-        background: #000000 !important;
-        border-color: #000000 !important;
+        background: #111111 !important;
+        border-color: #111111 !important;
     }
     .account-favorites .favorites-remove-btn::after {
-        content: none !important;
         display: none !important;
-        transform: none !important;
     }
 </style>

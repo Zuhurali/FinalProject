@@ -1,5 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
+using FinalProject.MVC.Security;
 using FinalProject.MVC.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject.MVC.Controllers
 {
@@ -27,19 +29,21 @@ namespace FinalProject.MVC.Controllers
             return RedirectToAction("Index", "Contact");
         }
 
+        /// <summary>
+        /// Legacy order confirmation. Online checkout no longer creates orders; if a row exists,
+        /// only the owning user (or Admin/SuperAdmin) may view it. Others get 404 without PII.
+        /// </summary>
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> Confirmation(int id)
+        public async Task<IActionResult> Confirmation(int id, CancellationToken cancellationToken)
         {
-            ViewData["Title"] = "Order Confirmation - AutoVault";
-
-            var order = await _orders.GetOrderAsync(id);
-
-            if (order == null)
+            var order = await _orders.GetOrderAsync(id, cancellationToken);
+            if (order == null || !OrderConfirmationAccess.CanView(order.UserId, User))
             {
-                TempData["Error"] = "Order not found.";
-                return RedirectToAction("Index", "Home");
+                return NotFound();
             }
 
+            ViewData["Title"] = "Order Confirmation - AutoVault";
             return View(order);
         }
     }

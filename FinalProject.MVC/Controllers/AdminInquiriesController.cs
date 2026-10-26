@@ -17,10 +17,12 @@ public sealed class AdminInquiriesController : Controller
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? status, CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Product questions - AutoVault";
-        return View(await _catalog.GetInquiriesAsync(cancellationToken));
+        ViewBag.StatusFilter = status;
+        ViewBag.Statuses = new[] { "New", "Answered", "Closed" };
+        return View(await _catalog.GetInquiriesAsync(status, cancellationToken));
     }
 
     [HttpPost("Handled")]
@@ -65,9 +67,7 @@ public sealed class AdminInquiriesController : Controller
             return Json(new { ok = false, error });
         }
 
-        // Return the saved reply and timestamp so the client can update the DOM
-        var inquiry = (await _catalog.GetInquiriesAsync(cancellationToken))
-            .FirstOrDefault(q => q.Id == id);
+        var inquiry = await _catalog.GetInquiryAsync(id, cancellationToken);
 
         return Json(new
         {

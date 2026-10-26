@@ -8,10 +8,12 @@ namespace FinalProject.MVC.Services;
 public sealed class OrderService : IOrderService
 {
     private readonly ApplicationDbContext _db;
+    private readonly ICouponService _coupons;
 
-    public OrderService(ApplicationDbContext db)
+    public OrderService(ApplicationDbContext db, ICouponService coupons)
     {
         _db = db;
+        _coupons = coupons;
     }
 
     public async Task<Order> PlaceOrderAsync(
@@ -29,6 +31,26 @@ public sealed class OrderService : IOrderService
         CartViewModel cart,
         CancellationToken cancellationToken = default)
     {
+        // Recalculate coupon discount on the server — never trust session amounts alone.
+        decimal discount = 0m;
+        string? couponCode = null;
+        if (!string.IsNullOrWhiteSpace(cart.CouponCode) && !string.IsNullOrWhiteSpace(userId))
+        {
+            var (ok, error, amount, code) = await _coupons.PreviewApplyAsync(
+                cart.CouponCode,
+                userId,
+                cart,
+                cancellationToken);
+            if (!ok || code == null)
+            {
+                throw new InvalidOperationException(error ?? "The applied coupon is no longer valid.");
+            }
+
+            discount = amount;
+            couponCode = code;
+        }
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         var order = new Order
         {
             UserId = userId,
@@ -43,9 +65,9 @@ public sealed class OrderService : IOrderService
             CompanyName = companyName,
             OrderNotes = orderNotes,
             Subtotal = cart.Subtotal,
-            DiscountAmount = cart.DiscountAmount,
-            CouponCode = cart.CouponCode,
-            Total = cart.Total,
+            DiscountAmount = discount,
+            CouponCode = couponCode,
+            Total = cart.Subtotal - discount,
             OrderDate = DateTime.UtcNow,
             OrderStatus = "Pending"
         };
@@ -65,6 +87,22 @@ public sealed class OrderService : IOrderService
 
         _db.Orders.Add(order);
         await _db.SaveChangesAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(userId) && !string.IsNullOrWhiteSpace(couponCode))
+        {
+            var (redeemed, redeemError) = await _coupons.RedeemAsync(
+                userId,
+                couponCode,
+                discount,
+                cancellationToken);
+            if (!redeemed)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw new InvalidOperationException(redeemError ?? "Coupon could not be redeemed.");
+            }
+        }
+
+        await transaction.CommitAsync(cancellationToken);
         return order;
     }
 

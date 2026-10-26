@@ -32,6 +32,8 @@ public interface IShopCatalogService
 
     Task<IReadOnlyList<InPersonSale>> GetSalesAsync(CancellationToken cancellationToken = default);
 
+    Task<InPersonSale?> GetSaleAsync(int id, CancellationToken cancellationToken = default);
+
     Task<(bool Ok, string? Error)> RecordSaleAsync(
         int productId,
         int quantity,
@@ -39,7 +41,25 @@ public interface IShopCatalogService
         string? note,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ProductInquiry>> GetInquiriesAsync(CancellationToken cancellationToken = default);
+    Task<(bool Ok, string? Error)> VoidSaleAsync(
+        int saleId,
+        string voidedByUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ProductInquiry>> GetInquiriesAsync(
+        string? status = null,
+        CancellationToken cancellationToken = default);
+
+    Task<ProductInquiry?> GetInquiryAsync(int id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ProductInquiry>> GetInquiriesForUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<int> ClaimOrphanedInquiriesByEmailAsync(
+        string userId,
+        string accountEmail,
+        CancellationToken cancellationToken = default);
 
     Task<(bool Ok, string? Error)> SaveInquiryAsync(ProductInquiry inquiry, CancellationToken cancellationToken = default);
 
@@ -53,11 +73,33 @@ public interface IShopCatalogService
 
     Task<bool> DeleteInquiryAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsAsync(
+        string? status = null,
+        CancellationToken cancellationToken = default);
+
+    Task<ShowroomPurchaseRequest?> GetPurchaseRequestAsync(int id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ShowroomPurchaseRequest>> GetPurchaseRequestsForUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<int> ClaimOrphanedPurchaseRequestsByEmailAsync(
+        string userId,
+        string accountEmail,
+        CancellationToken cancellationToken = default);
 
     Task<PurchaseRequestResult> SavePurchaseRequestAsync(ShowroomPurchaseRequest request, CancellationToken cancellationToken = default);
 
-    Task<bool> SetPurchaseRequestStatusAsync(int id, string status, CancellationToken cancellationToken = default);
+    Task<(bool Ok, string? Error)> SetPurchaseRequestStatusAsync(
+        int id,
+        string status,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Ok, string? Error)> CompletePurchaseRequestWithSaleAsync(
+        int requestId,
+        string recordedByUserId,
+        string? note,
+        CancellationToken cancellationToken = default);
 
     Task<bool> DeletePurchaseRequestAsync(int id, CancellationToken cancellationToken = default);
 }

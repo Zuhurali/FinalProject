@@ -15,7 +15,7 @@
                     <div class="showroom-hero">
                         <img class="showroom-hero__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes-hero.jpg" width="2048" height="1364" fetchpriority="high" alt="Grey BMW coupe and black Mercedes sedan in the AutoVault store">
                         <div class="showroom-hero__content">
-                            <p class="showroom-hero__eyebrow">Babek Prospekti 22â€“24, Baku</p>
+                            <p class="showroom-hero__eyebrow">Babek Prospekti 22–24, Baku</p>
                             <h1 class="showroom-hero__title">Used Cars and Parts in Baku</h1>
                             <p class="showroom-hero__text">Check prices and stock for oils, filters, tires, and spare parts online, then inspect and buy face to face at the store.</p>
                             <div class="showroom-hero__actions">
@@ -104,6 +104,22 @@
                             else
                             {
                                 <option value="@category">@category</option>
+                            }
+                        }
+                    </select>
+                </form>
+                <form class="filter-form">
+                    <select name="brand" id="brand" class="mySelect" aria-label="Brand">
+                        <option value="">All brands</option>
+                        @foreach (var brandName in (IEnumerable<string>)ViewBag.Brands)
+                        {
+                            if (string.Equals(brandName, ViewData["Brand"] as string, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@brandName" selected>@brandName</option>
+                            }
+                            else
+                            {
+                                <option value="@brandName">@brandName</option>
                             }
                         }
                     </select>
@@ -402,7 +418,7 @@
                                             </div>
                                             <div id="item__five" class="accordion-collapse collapse" aria-labelledby="five" data-bs-parent="#rts-accordion">
                                                 <div class="accordion-body">
-                                                    @DealershipContactOptions.Value.AddressLine. Call @DealershipContactOptions.Value.DisplayPhone before you travel if you want the team to confirm an item is still on the floor.
+                                                    @Site.Contact.AddressLine. Call @Site.Contact.DisplayPhone before you travel if you want the team to confirm an item is still on the floor.
                                                 </div>
                                             </div>
                                         </div>
@@ -492,9 +508,9 @@
                     <div class="cta-inner">
                         <h2 class="title">If you have any questions Please Call.</h2>
                         <div class="contact">
-                <a href="@DealershipContactOptions.Value.TelHref" aria-label="Call AutoVault at @DealershipContactOptions.Value.DisplayPhone">
+                <a href="@Site.Contact.TelHref" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">
                     <img src="~/assets/images/cta/call.svg" alt="">
-                                @DealershipContactOptions.Value.DisplayPhone</a>
+                                @Site.Contact.DisplayPhone</a>
                         </div>
                         <img class="shape one" src="~/assets/images/cta/round.svg" alt="">
                         <img class="shape two" src="~/assets/images/cta/line.svg" alt="">
@@ -509,6 +525,7 @@
         const pageSize = @FinalProject.MVC.Controllers.ShopController.CatalogPageSize;
         const initialSearch = @Json.Serialize(ViewData["Search"] as string ?? "");
         const initialCategory = @Json.Serialize(ViewData["Category"] as string ?? "");
+        const initialBrand = @Json.Serialize(ViewData["Brand"] as string ?? "");
         const initialDiscount = @Json.Serialize(ViewData["Discount"] as int?);
         const initialCampaign = @Json.Serialize(ViewData["CampaignId"] as int?);
         let currentPage = @Model.CurrentPage;
@@ -518,6 +535,7 @@
             const payload = {
                 searchText: $('#searchText').val(),
                 category: $('#category').val(),
+                brand: $('#brand').val(),
                 priceRange: $('#priceRange').val(),
                 sortBy: $('#sortBy').val(),
                 page: page,
@@ -580,6 +598,7 @@
                         pageSize: pageSize,
                         search: initialSearch,
                         category: initialCategory,
+                        brand: $('#brand').val() || initialBrand,
                         sortBy: $('#sortBy').val() || 'Latest',
                         discount: initialDiscount || '',
                         campaign: initialCampaign || ''
@@ -634,7 +653,7 @@
             const stockModifier = product.stockStatus === 'Out of Stock' ? 'out' : product.stockStatus === 'Low Stock' ? 'low' : 'in';
             const stockText = quantity <= 0
                 ? 'Out of stock'
-                : product.stockStatus === 'Low Stock' ? `Low stock Â· ${quantity} left` : `In stock Â· ${quantity} available`;
+                : product.stockStatus === 'Low Stock' ? `Low stock · ${quantity} left` : `In stock · ${quantity} available`;
             const money = value => '$' + Number(value).toFixed(2);
             const reviewCount = Number(product.reviewCount) || 0;
             const ratingCount = Number(product.ratingCount) || 0;
@@ -694,7 +713,7 @@
         }
 
         // Event handlers for filters
-        $('#category, #priceRange, #sortBy').on('change', function() {
+        $('#category, #brand, #priceRange, #sortBy').on('change', function() {
             markListingTab($('#sortBy').val());
             applyFilters();
         });

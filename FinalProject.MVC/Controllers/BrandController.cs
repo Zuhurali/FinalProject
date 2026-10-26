@@ -1,3 +1,4 @@
+using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Exceptions;
@@ -48,7 +49,9 @@ public class BrandController : Controller
         IReadOnlyList<Car> cars;
         try
         {
-            var catalog = await _carApi.GetAllCarsAsync(new CarApiQuery { BrandId = brand.Id }, HttpContext.RequestAborted);
+            var catalog = await _carApi.GetAllCarsAsync(
+                CarPublicListing.WithActiveStatus(new CarApiQuery { BrandId = brand.Id }),
+                HttpContext.RequestAborted);
             cars = catalog.Select(CarApiMapper.ToCar).OrderBy(car => car.Name).ToList();
         }
         catch (CarApiException)

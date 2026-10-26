@@ -98,7 +98,10 @@ public sealed class AdminCarsController : AdminControllerBase
         ViewData["Title"] = "Car Details - AutoVault";
         try
         {
-            var car = await _cars.GetCarByIdAsync(id, cancellationToken);
+            var token = await CreateTokenAsync();
+            var car = token == null
+                ? null
+                : await _cars.GetCarByIdAsync(id, token, cancellationToken);
             return car == null ? NotFound() : View(car);
         }
         catch (CarApiException)
@@ -336,7 +339,10 @@ public sealed class AdminCarsController : AdminControllerBase
             return new CarEditorViewModel { Lookups = lookups };
         }
 
-        var car = await _cars.GetCarByIdAsync(id.Value, cancellationToken);
+        var token = await CreateTokenAsync();
+        var car = token == null
+            ? null
+            : await _cars.GetCarByIdAsync(id.Value, token, cancellationToken);
         if (car == null)
         {
             return null;
@@ -394,7 +400,10 @@ public sealed class AdminCarsController : AdminControllerBase
 
         try
         {
-            var car = await _cars.GetCarByIdAsync(id, cancellationToken);
+            var token = await CreateTokenAsync();
+            var car = token == null
+                ? null
+                : await _cars.GetCarByIdAsync(id, token, cancellationToken);
             model.Gallery = car?.Images
                 .OrderBy(image => image.DisplayOrder)
                 .ThenBy(image => image.Id)

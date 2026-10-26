@@ -46,9 +46,17 @@ public sealed class ContactRequestService : IContactRequestService
         return (true, entity.Id, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase), null);
     }
 
-    public async Task<IReadOnlyList<ContactRequest>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ContactRequest>> GetAllAsync(
+        string? status = null,
+        CancellationToken cancellationToken = default)
     {
-        return await _db.ContactRequests.AsNoTracking()
+        var query = _db.ContactRequests.AsNoTracking().AsQueryable();
+        if (!string.IsNullOrWhiteSpace(status) && ContactRequestStatus.IsValid(status))
+        {
+            query = query.Where(request => request.Status == status);
+        }
+
+        return await query
             .OrderByDescending(request => request.CreatedAt)
             .ThenByDescending(request => request.Id)
             .ToListAsync(cancellationToken);
@@ -80,16 +88,13 @@ public sealed class ContactRequestService : IContactRequestService
             return 0;
         }
 
-        var targetEmail = accountEmail.Trim();
-        var candidates = await _db.ContactRequests
-            .Where(request => request.UserId == null)
-            .ToListAsync(cancellationToken);
-
-        var orphans = candidates
+        var targetEmail = accountEmail.Trim().ToLowerInvariant();
+        var orphans = await _db.ContactRequests
             .Where(request =>
-                !string.IsNullOrWhiteSpace(request.Email)
-                && string.Equals(request.Email.Trim(), targetEmail, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+                request.UserId == null
+                && request.Email != null
+                && request.Email.ToLower() == targetEmail)
+            .ToListAsync(cancellationToken);
 
         if (orphans.Count == 0)
         {

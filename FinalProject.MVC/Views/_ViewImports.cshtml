@@ -5,6 +5,6 @@
 @using FinalProject.MVC.Models
 @using FinalProject.MVC.Models.Api
 @using FinalProject.MVC.Security
-@using Microsoft.Extensions.Options
-@inject IOptions<DealershipContactSettings> DealershipContactOptions
+@using FinalProject.MVC.Services.Interfaces
+@inject ICurrentSiteSettings Site
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

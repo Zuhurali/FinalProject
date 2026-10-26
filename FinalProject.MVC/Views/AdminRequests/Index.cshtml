@@ -1,15 +1,27 @@
 @model IReadOnlyList<ShowroomPurchaseRequest>
 @{
     Layout = "_AdminLayout";
+    var statusFilter = ViewBag.StatusFilter as string;
+    var statuses = (IReadOnlyList<string>)ViewBag.Statuses;
 }
-<div class="d-flex justify-content-between mb-4">
-    <h1 class="h3">Purchase requests</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <h1 class="h3 mb-0">Purchase requests</h1>
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <label class="form-label mb-0 small text-muted" for="status-filter">Status</label>
+        <select id="status-filter" name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All</option>
+            @foreach (var status in statuses)
+            {
+                <option value="@status" selected="@(status == statusFilter)">@status</option>
+            }
+        </select>
+    </form>
 </div>
 <div class="admin-card">
-    <p>Customers send these from a product page when they want to buy in person. A request does not hold stock and is not a sale. Contact the customer, then record the sale under In-Store Sales when they buy at the store.</p>
+    <p>Customers send these from a product page when they want to buy in person. A request does not hold stock and is not a sale. Contact the customer, then record the sale under In-Store Sales when they buy at the store — or use <strong>Complete &amp; record sale</strong> to do both atomically.</p>
     @if (Model.Count == 0)
     {
-        <p>No purchase requests yet.</p>
+        <p>No purchase requests@(string.IsNullOrEmpty(statusFilter) ? "" : $" with status {statusFilter}") yet.</p>
     }
     else
     {
@@ -21,6 +33,7 @@
                 <tbody>
                 @foreach (var request in Model)
                 {
+                    var nextStatuses = ShowroomRequestRules.AllowedNextStatuses(request.Status);
                     <tr>
                         <td>@request.Id</td>
                         <td>@request.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
@@ -40,22 +53,40 @@
                             @request.CustomerName<br />
                             <a href="mailto:@request.Email">@request.Email</a><br />
                             <a href="tel:@request.Phone">@request.Phone</a>
+                            @if (!string.IsNullOrEmpty(request.UserId))
+                            {
+                                <div class="small text-muted">Linked account</div>
+                            }
                         </td>
                         <td>@(request.PreferredVisitDate?.ToString("dd MMM yyyy") ?? "Not given")</td>
                         <td style="max-width:280px;white-space:pre-wrap;">@request.Note</td>
                         <td><strong>@request.Status</strong></td>
-                        <td>
-                            <form asp-action="Status" method="post" class="d-flex gap-2">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@request.Id" />
-                                <select name="status" class="form-select form-select-sm" aria-label="Status for request @request.Id">
-                                    @foreach (var status in ShowroomRequestStatus.All)
-                                    {
-                                        <option value="@status" selected="@(status == request.Status)">@status</option>
-                                    }
-                                </select>
-                                <button type="submit" class="btn btn-sm btn-outline-dark">Save</button>
-                            </form>
+                        <td class="text-nowrap">
+                            @if (nextStatuses.Count > 0)
+                            {
+                                <form asp-action="Status" method="post" class="d-flex gap-2 mb-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@request.Id" />
+                                    <select name="status" class="form-select form-select-sm" aria-label="Status for request @request.Id">
+                                        @foreach (var status in nextStatuses)
+                                        {
+                                            <option value="@status" selected="@(status == request.Status)">@status</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-dark">Save</button>
+                                </form>
+                            }
+                            @if (ShowroomRequestStatus.IsOpen(request.Status))
+                            {
+                                <form asp-action="CompleteSale"
+                                      asp-route-id="@request.Id"
+                                      method="post"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Record an in-store sale for qty @request.Quantity and mark request #@request.Id completed? Stock will decrease.');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-primary">Complete &amp; record sale</button>
+                                </form>
+                            }
                         </td>
                         <td class="text-nowrap">
                             <form asp-action="Delete"

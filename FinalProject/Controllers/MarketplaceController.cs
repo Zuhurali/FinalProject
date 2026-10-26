@@ -24,7 +24,7 @@ public sealed class MarketplaceController : ControllerBase
         var userId = CurrentUserId();
         return userId == null
             ? Unauthorized()
-            : Ok(await _marketplace.GetSummaryAsync(userId, cancellationToken));
+            : Ok(await _marketplace.GetSummaryAsync(userId, IsStoreStaff(), cancellationToken));
     }
 
     [HttpGet("api/favorites")]
@@ -76,6 +76,58 @@ public sealed class MarketplaceController : ControllerBase
         }
 
         await _marketplace.RemoveFavoriteAsync(userId, carId, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("api/product-favorites")]
+    public async Task<ActionResult<IReadOnlyList<ProductFavoriteResponse>>> GetProductFavorites(
+        CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        return userId == null
+            ? Unauthorized()
+            : Ok(await _marketplace.GetProductFavoritesAsync(userId, cancellationToken));
+    }
+
+    [HttpGet("api/product-favorites/ids")]
+    public async Task<ActionResult<IReadOnlyList<int>>> GetProductFavoriteIds(
+        CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        return userId == null
+            ? Unauthorized()
+            : Ok(await _marketplace.GetProductFavoriteIdsAsync(userId, cancellationToken));
+    }
+
+    [HttpPost("api/products/{productId:int}/favorite")]
+    public async Task<ActionResult<ProductFavoriteResponse>> AddProductFavorite(
+        int productId,
+        CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var favorite = await _marketplace.AddProductFavoriteAsync(userId, productId, cancellationToken);
+        return favorite == null
+            ? NotFound(new { message = "Product or user not found." })
+            : Ok(favorite);
+    }
+
+    [HttpDelete("api/products/{productId:int}/favorite")]
+    public async Task<IActionResult> RemoveProductFavorite(
+        int productId,
+        CancellationToken cancellationToken)
+    {
+        var userId = CurrentUserId();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        await _marketplace.RemoveProductFavoriteAsync(userId, productId, cancellationToken);
         return NoContent();
     }
 

@@ -8,7 +8,21 @@ public sealed class AdminDashboardViewModel
 
     public int TotalMembers { get; set; }
 
-    public int TotalProducts { get; set; }
+    public int TotalSpareParts { get; set; }
+
+    public int ActiveSpareParts { get; set; }
+
+    public int NewContactRequests { get; set; }
+
+    public int OpenProductQuestions { get; set; }
+
+    public int OpenPurchaseRequests { get; set; }
+
+    public int RecordedSales { get; set; }
+
+    public int ActiveCampaigns { get; set; }
+
+    public bool CatalogSummaryAvailable { get; set; }
 
     public bool ServiceUnavailable { get; set; }
 }
