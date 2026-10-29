@@ -1,0 +1,32 @@
+@model AboutPageContentEditViewModel
+@{ Layout = "_AdminLayout"; ViewData["Title"] = "About Page - AutoVault"; }
+<h1 class="h3 mb-4">About Page</h1>
+<form asp-controller="AdminAbout" asp-action="Index" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="PageTitle" class="form-label"></label><input asp-for="PageTitle" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="SeoTitle" class="form-label"></label><input asp-for="SeoTitle" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="BreadcrumbTitle" class="form-label"></label><input asp-for="BreadcrumbTitle" class="form-control" /></div>
+        <div class="col-12"><label asp-for="SeoDescription" class="form-label"></label><textarea asp-for="SeoDescription" class="form-control" rows="2"></textarea></div>
+        <div class="col-md-3"><label asp-for="Eyebrow" class="form-label"></label><input asp-for="Eyebrow" class="form-control" /></div>
+        <div class="col-md-5"><label asp-for="HeadingBefore" class="form-label"></label><input asp-for="HeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="HeadingHighlight" class="form-label"></label><input asp-for="HeadingHighlight" class="form-control" /></div>
+        <div class="col-12"><label asp-for="Body" class="form-label"></label><textarea asp-for="Body" class="form-control" rows="4"></textarea></div>
+        <div class="col-md-4"><label asp-for="CallCtaLabel" class="form-label"></label><input asp-for="CallCtaLabel" class="form-control" /></div>
+        <div class="col-md-4"><label class="form-label">Left image</label><input type="hidden" asp-for="ImageLeftPath" /><input type="file" name="imageLeft" class="form-control" accept="image/*" /></div>
+        <div class="col-md-4"><label class="form-label">Right image</label><input type="hidden" asp-for="ImageRightPath" /><input type="file" name="imageRight" class="form-control" accept="image/*" /></div>
+        <div class="col-md-4"><label asp-for="ShowcaseEyebrow" class="form-label"></label><input asp-for="ShowcaseEyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="ShowcaseTitle" class="form-label"></label><input asp-for="ShowcaseTitle" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="ShowcaseDescription" class="form-label"></label><input asp-for="ShowcaseDescription" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="Showcase1Name" class="form-label"></label><input asp-for="Showcase1Name" class="form-control" /><input type="hidden" asp-for="Showcase1ImagePath" /><input type="file" name="showcase1Image" class="form-control mt-1" accept="image/*" /></div>
+        <div class="col-md-4"><label asp-for="Showcase2Name" class="form-label"></label><input asp-for="Showcase2Name" class="form-control" /><input type="hidden" asp-for="Showcase2ImagePath" /><input type="file" name="showcase2Image" class="form-control mt-1" accept="image/*" /></div>
+        <div class="col-md-4"><label asp-for="Showcase3Name" class="form-label"></label><input asp-for="Showcase3Name" class="form-control" /><input type="hidden" asp-for="Showcase3ImagePath" /><input type="file" name="showcase3Image" class="form-control mt-1" accept="image/*" /></div>
+        <div class="col-md-4"><label asp-for="Showcase1Descriptor" class="form-label"></label><input asp-for="Showcase1Descriptor" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="Showcase2Descriptor" class="form-label"></label><input asp-for="Showcase2Descriptor" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="Showcase3Descriptor" class="form-label"></label><input asp-for="Showcase3Descriptor" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="Showcase4Name" class="form-label"></label><input asp-for="Showcase4Name" class="form-control" /><input type="hidden" asp-for="Showcase4ImagePath" /><input type="file" name="showcase4Image" class="form-control mt-1" accept="image/*" /></div>
+        <div class="col-md-8"><label asp-for="Showcase4Descriptor" class="form-label"></label><input asp-for="Showcase4Descriptor" class="form-control" /></div>
+    </div>
+    <button type="submit" class="btn btn-dark">Save about page</button>
+</form>

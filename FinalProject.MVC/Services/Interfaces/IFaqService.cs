@@ -4,7 +4,11 @@ namespace FinalProject.MVC.Services.Interfaces;
 
 public interface IFaqService
 {
+    Task EnsureSeedAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<FaqItem>> GetPublishedAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<FaqItem>> GetShopPublishedAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<FaqItem>> GetAllAsync(CancellationToken cancellationToken = default);
 

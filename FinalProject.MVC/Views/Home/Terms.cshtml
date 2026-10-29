@@ -1,0 +1,23 @@
+@using FinalProject.MVC.Services.Interfaces
+@{
+    var legal = ViewData["Legal"] as LegalPagePublicContent ?? LegalPage.Current;
+    ViewData["Title"] = legal.TermsSeoTitle;
+}
+
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">@legal.TermsTitle</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">@legal.TermsTitle</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="rts-section-gapBottom">
+    <div class="container">
+        <div class="legal-body" style="white-space: pre-wrap;">@legal.TermsBody</div>
+    </div>
+</section>

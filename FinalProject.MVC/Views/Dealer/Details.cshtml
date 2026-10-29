@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = $"{Model.Dealer.Name} - AutoVault";
     var dealer = Model.Dealer;
+    var features = (dealer.FeatureList ?? string.Empty)
+        .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
 
 <div class="rts-portfolio-area inner pt--80">
@@ -44,18 +46,16 @@
                     <h2 class="mb--30">Company Description</h2>
                     <p class="mb--30">@dealer.Description</p>
                     <p>@dealer.DescriptionExtra</p>
-                    <h2 class="mb--30">Company Features</h2>
-                    <ul class="feature-list mb--40">
-                        <li><i class="fa-regular fa-circle-check"></i> Engine Type</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Horsepower</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Automatic Climate Control</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Touchscreen Display</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Navigation System</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Fog Lights</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Start-Stop Technology</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Automatic Headlights</li>
-                        <li><i class="fa-regular fa-circle-check"></i> Navigation System</li>
-                    </ul>
+                    @if (features.Length > 0)
+                    {
+                        <h2 class="mb--30">Company Features</h2>
+                        <ul class="feature-list mb--40">
+                            @foreach (var feature in features)
+                            {
+                                <li><i class="fa-regular fa-circle-check"></i> @feature</li>
+                            }
+                        </ul>
+                    }
                     <h2 class="mb--30">Key Specs</h2>
                     <ul class="specs-list mb--40">
                         <li>
@@ -285,7 +285,7 @@
                             <h2>Contacts</h2>
                             <div class="contact-inner">
                                 <div class="author-img">
-                                    <img src="~/assets/images/portfolio/author.webp" alt="">
+                                    <img src="@Url.Content(Site.Current.LogoPath)" alt="@dealer.ContactName">
                                 </div>
                                 <h5>@dealer.ContactName</h5>
                                 <p>@dealer.ContactRole</p>

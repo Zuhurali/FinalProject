@@ -25,4 +25,10 @@ public sealed class FaqItemEditViewModel
 
     [Display(Name = "Published")]
     public bool IsPublished { get; set; } = true;
+
+    [Display(Name = "Show on FAQ page")]
+    public bool ShowOnFaqPage { get; set; } = true;
+
+    [Display(Name = "Show on shop page")]
+    public bool ShowOnShop { get; set; }
 }

@@ -153,6 +153,25 @@ namespace FinalProject.MVC.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Compatible alias for older bookmarks and external links that still use /Account/Login.
+        /// Canonical route remains /Account/SignIn (cookie LoginPath).
+        /// </summary>
+        [HttpGet]
+        public IActionResult Login(string? returnUrl = null) =>
+            RedirectToAction(nameof(SignIn), new { returnUrl });
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> Login(
+            string? identifier,
+            string password,
+            bool rememberMe = true,
+            string? returnUrl = null,
+            bool fromAccount = false,
+            string? email = null) =>
+            SignIn(identifier, password, rememberMe, returnUrl, fromAccount, email);
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignIn(string? identifier, string password, bool rememberMe = true, string? returnUrl = null, bool fromAccount = false, string? email = null)
@@ -597,9 +616,9 @@ namespace FinalProject.MVC.Controllers
         [ValidateAntiForgeryToken]
         [RequestSizeLimit(64 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
-        public async Task<IActionResult> AddCar(CarEditorViewModel model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
+        public async Task<IActionResult> AddCar(CarEditorViewModel model, List<IFormFile>? vehiclePhotos)
         {
-            var uploaded = await PrepareListingImagesAsync(model, imageFile, galleryFiles, requireImage: true);
+            var uploaded = await PrepareListingImagesAsync(model, vehiclePhotos, requireImage: true);
             if (!ModelState.IsValid)
             {
                 DiscardUploads(model, uploaded);
@@ -632,46 +651,33 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
-        private async Task ApplyListingImageAsync(CarEditorViewModel model, IFormFile? imageFile, bool requireImage)
-        {
-            var error = await _carImages.ApplyAsync(model.Car, imageFile, requireImage, HttpContext.RequestAborted);
-            if (error != null)
-            {
-                ModelState.AddModelError("Car.ImageUrl", error);
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(model.Car.ImageUrl))
-            {
-                ModelState.Remove("Car.ImageUrl");
-            }
-        }
-
         private async Task<List<string>> PrepareListingImagesAsync(
             CarEditorViewModel model,
-            IFormFile? imageFile,
-            IEnumerable<IFormFile>? galleryFiles,
+            IEnumerable<IFormFile>? vehiclePhotos,
             bool requireImage)
         {
             var uploaded = new List<string>();
             var previousImage = model.Car.ImageUrl;
-            await ApplyListingImageAsync(model, imageFile, requireImage);
-            var imageFailed = ModelState["Car.ImageUrl"]?.Errors.Count > 0;
-            if (imageFile is { Length: > 0 } && !imageFailed && !string.IsNullOrWhiteSpace(model.Car.ImageUrl))
+            var photos = (vehiclePhotos ?? Array.Empty<IFormFile>())
+                .Where(file => file is { Length: > 0 })
+                .ToList();
+            var error = await _carImages.ApplyVehiclePhotosAsync(
+                model.Car,
+                photos,
+                requireImage,
+                HttpContext.RequestAborted);
+            if (error != null)
             {
-                uploaded.Add(model.Car.ImageUrl);
+                ModelState.AddModelError("Car.ImageUrl", error);
+            }
+            else if (!string.IsNullOrWhiteSpace(model.Car.ImageUrl))
+            {
+                ModelState.Remove("Car.ImageUrl");
             }
 
-            var galleryError = await _carImages.SaveGalleryAsync(
-                model.Car.AdditionalImageUrls,
-                galleryFiles,
-                HttpContext.RequestAborted);
-            if (galleryError != null)
+            if (photos.Count > 0 && ModelState["Car.ImageUrl"]?.Errors.Count is null or 0)
             {
-                ModelState.AddModelError(string.Empty, galleryError);
-            }
-            else
-            {
+                uploaded.Add(model.Car.ImageUrl);
                 uploaded.AddRange(model.Car.AdditionalImageUrls);
                 if (model.Car.AdditionalImageUrls.Count > 0)
                 {
@@ -823,7 +829,7 @@ namespace FinalProject.MVC.Controllers
         [ValidateAntiForgeryToken]
         [RequestSizeLimit(64 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
-        public async Task<IActionResult> EditListing(int id, CarEditorViewModel model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
+        public async Task<IActionResult> EditListing(int id, CarEditorViewModel model, List<IFormFile>? vehiclePhotos)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -833,7 +839,7 @@ namespace FinalProject.MVC.Controllers
 
             model.Id = id;
             model.Car.GallerySpecified = true;
-            var uploaded = await PrepareListingImagesAsync(model, imageFile, galleryFiles, requireImage: true);
+            var uploaded = await PrepareListingImagesAsync(model, vehiclePhotos, requireImage: true);
             if (!ModelState.IsValid)
             {
                 DiscardUploads(model, uploaded);
@@ -1452,6 +1458,7 @@ namespace FinalProject.MVC.Controllers
 
             path = path.TrimEnd('/');
             return !path.Equals("/Account/SignIn", StringComparison.OrdinalIgnoreCase)
+                && !path.Equals("/Account/Login", StringComparison.OrdinalIgnoreCase)
                 && !path.Equals("/Account/Register", StringComparison.OrdinalIgnoreCase)
                 && !path.Equals("/Account/ForgotPassword", StringComparison.OrdinalIgnoreCase)
                 && !path.Equals("/Account/ResetPassword", StringComparison.OrdinalIgnoreCase);
@@ -1557,6 +1564,7 @@ namespace FinalProject.MVC.Controllers
 
             var action = context.RouteData.Values["action"]?.ToString();
             if (!string.Equals(action, "SignIn", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(action, "Login", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(action, "Register", StringComparison.OrdinalIgnoreCase))
             {
                 return;

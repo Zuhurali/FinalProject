@@ -12,17 +12,20 @@ public class ContactController : Controller
 {
     private readonly IContactRequestService _contactRequests;
     private readonly IContactInquiryMailer _mailer;
+    private readonly IContactPageContentService _contactPage;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<ContactController> _logger;
 
     public ContactController(
         IContactRequestService contactRequests,
         IContactInquiryMailer mailer,
+        IContactPageContentService contactPage,
         UserManager<ApplicationUser> userManager,
         ILogger<ContactController> logger)
     {
         _contactRequests = contactRequests;
         _mailer = mailer;
+        _contactPage = contactPage;
         _userManager = userManager;
         _logger = logger;
     }
@@ -30,7 +33,10 @@ public class ContactController : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        ViewData["Title"] = "Contact - AutoVault";
+        var page = _contactPage.GetPublic();
+        ViewData["Title"] = string.IsNullOrWhiteSpace(page.SeoTitle) ? page.PageTitle : page.SeoTitle;
+        ViewData["MetaDescription"] = page.SeoDescription;
+        ViewData["ContactPage"] = page;
         return View(new ContactFormModel());
     }
 

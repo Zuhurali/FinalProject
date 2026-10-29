@@ -127,7 +127,7 @@ public class CarListingSelectionTests
         Assert.Contains("id=\"vehicle-type\"", form, StringComparison.Ordinal);
         Assert.Contains("VehicleTypeCatalog.Types", form, StringComparison.Ordinal);
         Assert.Contains("data-combo=\"model\"", form, StringComparison.Ordinal);
-        Assert.Contains("galleryFiles", form, StringComparison.Ordinal);
+        Assert.Contains("vehiclePhotos", form, StringComparison.Ordinal);
         Assert.Contains("id=\"Car_Year\"", form, StringComparison.Ordinal);
         Assert.Contains("class=\"input-form av-native-select\"", form, StringComparison.Ordinal);
         Assert.Contains("modelYear >= 1900", form, StringComparison.Ordinal);
@@ -135,10 +135,13 @@ public class CarListingSelectionTests
         Assert.Contains("av-native-select", form, StringComparison.Ordinal);
         Assert.DoesNotContain("data-combo=\"year\"", form, StringComparison.Ordinal);
         Assert.DoesNotContain("data-combo=\"category\"", form, StringComparison.Ordinal);
-        Assert.Contains("av-admin-preview-frame", admin, StringComparison.Ordinal);
-        Assert.Contains("object-fit: contain", admin, StringComparison.Ordinal);
+        Assert.Contains("vehicle-photos-preview", admin, StringComparison.Ordinal);
+        Assert.Contains("av-vehicle-photos-grid", admin, StringComparison.Ordinal);
+        Assert.Contains("av-vehicle-photos-grid", form, StringComparison.Ordinal);
+        Assert.Contains("grid-template-columns: repeat(auto-fill, minmax(140px, 160px))", admin, StringComparison.Ordinal);
+        Assert.Contains("object-fit: cover", admin, StringComparison.Ordinal);
         Assert.Contains("width: 28px", admin, StringComparison.Ordinal);
-        Assert.Contains("Remove image", admin, StringComparison.Ordinal);
+        Assert.Contains("Remove photo", admin, StringComparison.Ordinal);
     }
 
     private static SaveCarRequest Request(int year, string model, int brandId = 1, int categoryId = 1) => new()

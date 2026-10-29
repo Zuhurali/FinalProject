@@ -66,6 +66,80 @@ public class InStoreSalesAndRankingTests
     }
 
     [Fact]
+    public async Task RecordSaleAsync_with_coupon_persists_CouponUsage_in_sql()
+    {
+        await using var db = CreateDb();
+        var coupons = new CouponService(db);
+        var catalog = new ShopCatalogService(db, coupons);
+        await coupons.EnsureSeedAsync();
+
+        var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 1 && item.Price > 0);
+        var originalQty = product.Quantity;
+        var userId = await db.Users.AsNoTracking().Select(user => user.Id).FirstAsync();
+        var marker = "INS-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        var note = "Coupon sale " + Guid.NewGuid().ToString("N");
+
+        var (saved, saveError) = await coupons.SaveAsync(new FinalProject.MVC.Models.Coupon
+        {
+            Code = marker,
+            Name = "In-store redeem test",
+            DiscountPercent = 10m,
+            IsActive = true,
+            AppliesToAllParts = true,
+            MaxUsesPerUser = 1,
+            MinimumPurchaseAmount = 0m
+        });
+        Assert.True(saved, saveError);
+
+        try
+        {
+            var usagesBefore = await db.CouponUsages.CountAsync(item => item.CouponCode == marker);
+            var (ok, error) = await catalog.RecordSaleAsync(
+                product.Id,
+                1,
+                "e2e-coupon-sale",
+                note,
+                Guid.NewGuid(),
+                marker,
+                userId);
+            Assert.True(ok, error);
+
+            Assert.Equal(usagesBefore + 1, await db.CouponUsages.CountAsync(item => item.CouponCode == marker && item.UserId == userId));
+            var sale = await db.InPersonSales.AsNoTracking().SingleAsync(item => item.Note.Contains(note));
+            Assert.Contains(marker, sale.Note, StringComparison.OrdinalIgnoreCase);
+
+            var after = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
+            Assert.Equal(originalQty - 1, after.Quantity);
+        }
+        finally
+        {
+            var notePattern = "%" + note + "%";
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                UPDATE ShopProducts
+                SET Quantity = {originalQty},
+                    InStock = CASE WHEN {originalQty} > 0 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
+                WHERE Id = {product.Id};
+                DELETE FROM InPersonSales WHERE Note LIKE {notePattern};
+                DELETE FROM CouponUsages WHERE CouponCode = {marker};
+                DELETE FROM Coupons WHERE Code = {marker};
+                """);
+        }
+    }
+
+    [Fact]
+    public void Public_checkout_redirects_to_Contact_and_does_not_call_PlaceOrderAsync()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var checkout = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "CheckoutController.cs"));
+        var shop = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "ShopController.cs"));
+        Assert.Contains("RedirectToAction(\"Index\", \"Contact\")", checkout, StringComparison.Ordinal);
+        Assert.Contains("Online checkout is not available", checkout, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlaceOrderAsync", checkout, StringComparison.Ordinal);
+        Assert.Contains("RedirectToAction(\"Index\", \"Contact\")", shop, StringComparison.Ordinal);
+        Assert.Contains("public IActionResult Checkout()", shop, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task GetSalesAsync_excludes_confirmed_demo_rows()
     {
         await using var db = CreateDb();

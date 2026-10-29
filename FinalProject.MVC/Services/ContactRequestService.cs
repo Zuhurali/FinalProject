@@ -111,23 +111,33 @@ public sealed class ContactRequestService : IContactRequestService
         return orphans.Count;
     }
 
-    public async Task<bool> SetStatusAsync(int id, string status, CancellationToken cancellationToken = default)
+    public async Task<(bool Ok, string? Error)> SetStatusAsync(int id, string status, CancellationToken cancellationToken = default)
     {
         if (!ContactRequestStatus.IsValid(status))
         {
-            return false;
+            return (false, "Status is not allowed.");
         }
 
         var request = await _db.ContactRequests.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         if (request is null)
         {
-            return false;
+            return (false, "Contact request not found.");
+        }
+
+        if (!ContactRequestStatus.CanTransition(request.Status, status))
+        {
+            return (false, $"Cannot change status from {request.Status} to {status}.");
+        }
+
+        if (string.Equals(request.Status, status, StringComparison.Ordinal))
+        {
+            return (true, null);
         }
 
         request.Status = status;
         request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
-        return true;
+        return (true, null);
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)

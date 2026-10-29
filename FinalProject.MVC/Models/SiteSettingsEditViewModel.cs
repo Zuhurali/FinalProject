@@ -71,4 +71,8 @@ public sealed class SiteSettingsEditViewModel
     [Required, MaxLength(320)]
     [Display(Name = "Default meta description")]
     public string DefaultMetaDescription { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    [Display(Name = "Call CTA headline")]
+    public string CallCtaHeadline { get; set; } = "If you have any questions Please Call.";
 }

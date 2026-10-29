@@ -126,13 +126,12 @@ public sealed class AdminCarsController : AdminControllerBase
     [RequestFormLimits(MultipartBodyLengthLimit = 64 * 1024 * 1024)]
     public async Task<IActionResult> Create(
         CarEditorViewModel model,
-        IFormFile? imageFile,
-        List<IFormFile>? galleryFiles,
+        List<IFormFile>? vehiclePhotos,
         CancellationToken cancellationToken)
     {
         model.Car.GallerySpecified = true;
         var uploaded = new List<string>();
-        if (!await PrepareImagesAsync(model, imageFile, galleryFiles, uploaded, requireImage: true, cancellationToken))
+        if (!await PrepareImagesAsync(model, vehiclePhotos, uploaded, requireImage: true, cancellationToken))
         {
             return View(model);
         }
@@ -180,15 +179,14 @@ public sealed class AdminCarsController : AdminControllerBase
     public async Task<IActionResult> Edit(
         int id,
         CarEditorViewModel model,
-        IFormFile? imageFile,
-        List<IFormFile>? galleryFiles,
+        List<IFormFile>? vehiclePhotos,
         CancellationToken cancellationToken)
     {
         model.Id = id;
         model.Car.GallerySpecified = true;
         var previousImage = model.Car.ImageUrl;
         var uploaded = new List<string>();
-        if (!await PrepareImagesAsync(model, imageFile, galleryFiles, uploaded, requireImage: true, cancellationToken))
+        if (!await PrepareImagesAsync(model, vehiclePhotos, uploaded, requireImage: true, cancellationToken))
         {
             return View(model);
         }
@@ -230,7 +228,7 @@ public sealed class AdminCarsController : AdminControllerBase
         catch (CarApiException exception)
         {
             _images.DeleteUploads(uploaded);
-            if (imageFile != null && imageFile.Length > 0)
+            if (uploaded.Count > 0)
             {
                 model.Car.ImageUrl = previousImage;
             }
@@ -268,41 +266,39 @@ public sealed class AdminCarsController : AdminControllerBase
 
     private async Task<bool> PrepareImagesAsync(
         CarEditorViewModel model,
-        IFormFile? imageFile,
-        IEnumerable<IFormFile>? galleryFiles,
+        IEnumerable<IFormFile>? vehiclePhotos,
         List<string> uploaded,
         bool requireImage,
         CancellationToken cancellationToken)
     {
         var previousImage = model.Car.ImageUrl;
-        await ApplyImageAsync(model, imageFile, requireImage, cancellationToken);
-        var imageFailed = ModelState["Car.ImageUrl"]?.Errors.Count > 0;
-        if (imageFile != null && imageFile.Length > 0 && !imageFailed)
+        var photos = (vehiclePhotos ?? Array.Empty<IFormFile>())
+            .Where(file => file is { Length: > 0 })
+            .ToList();
+        var error = await _images.ApplyVehiclePhotosAsync(model.Car, photos, requireImage, cancellationToken);
+        if (error != null)
         {
-            uploaded.Add(model.Car.ImageUrl);
+            ModelState.AddModelError("Car.ImageUrl", error);
         }
-
-        if (!imageFailed && ModelState.IsValid)
+        else if (!string.IsNullOrWhiteSpace(model.Car.ImageUrl))
         {
-            var galleryError = await _images.SaveGalleryAsync(model.Car.AdditionalImageUrls, galleryFiles, cancellationToken);
-            if (galleryError != null)
-            {
-                ModelState.AddModelError(string.Empty, galleryError);
-            }
-            else
-            {
-                uploaded.AddRange(model.Car.AdditionalImageUrls);
-            }
+            ModelState.Remove("Car.ImageUrl");
         }
 
         if (ModelState.IsValid)
         {
+            if (photos.Count > 0)
+            {
+                uploaded.Add(model.Car.ImageUrl);
+                uploaded.AddRange(model.Car.AdditionalImageUrls);
+            }
+
             return true;
         }
 
         _images.DeleteUploads(uploaded);
         uploaded.Clear();
-        if (imageFile != null && imageFile.Length > 0)
+        if (photos.Count > 0)
         {
             model.Car.ImageUrl = previousImage;
         }
@@ -310,25 +306,6 @@ public sealed class AdminCarsController : AdminControllerBase
         model.Car.AdditionalImageUrls.Clear();
         await ReloadEditorAsync(model, cancellationToken);
         return false;
-    }
-
-    private async Task ApplyImageAsync(
-        CarEditorViewModel model,
-        IFormFile? imageFile,
-        bool requireImage,
-        CancellationToken cancellationToken)
-    {
-        var error = await _images.ApplyAsync(model.Car, imageFile, requireImage, cancellationToken);
-        if (error != null)
-        {
-            ModelState.AddModelError("Car.ImageUrl", error);
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(model.Car.ImageUrl))
-        {
-            ModelState.Remove("Car.ImageUrl");
-        }
     }
 
     private async Task<CarEditorViewModel?> EditorAsync(int? id, CancellationToken cancellationToken)
@@ -366,6 +343,7 @@ public sealed class AdminCarsController : AdminControllerBase
                 Description = car.Description,
                 ImageUrl = car.MainImage,
                 Status = string.IsNullOrWhiteSpace(car.Status) ? "Active" : car.Status,
+                IsFeatured = car.IsFeatured,
                 Seats = car.Seats,
                 DriveType = car.DriveType,
                 Engine = car.Engine,

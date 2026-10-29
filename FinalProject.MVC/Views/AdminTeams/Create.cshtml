@@ -1,0 +1,8 @@
+@model TeamMemberEditViewModel
+@{ Layout = "_AdminLayout"; ViewData["Title"] = "Add team member"; }
+<h1 class="h3 mb-4">Add team member</h1>
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <partial name="_TeamForm" />
+    <button type="submit" class="btn btn-dark mt-3">Create</button>
+</form>

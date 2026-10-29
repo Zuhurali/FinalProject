@@ -27,7 +27,8 @@ public interface ICouponService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Persists a redemption after a successful business operation (e.g. placed order).
+    /// Persists a redemption after a successful in-person sale (or equivalent store workflow).
+    /// Not used for online checkout — AutoVault does not take online payment.
     /// Idempotent for the same user+code under the unique usage index.
     /// </summary>
     Task<(bool Ok, string? Error)> RedeemAsync(
@@ -37,4 +38,9 @@ public interface ICouponService
         CancellationToken cancellationToken = default);
 
     Task EnsureSeedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Redemption counts from CouponUsages keyed by normalized coupon code.</summary>
+    Task<IReadOnlyDictionary<string, int>> GetUsageCountsByCodeAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CouponUsage>> GetRecentUsagesAsync(int take = 50, CancellationToken cancellationToken = default);
 }

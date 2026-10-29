@@ -1,0 +1,30 @@
+@model IReadOnlyList<Dealer>
+@{ Layout = "_AdminLayout"; }
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Dealers</h1>
+    <a class="btn btn-dark" asp-action="Create">Add dealer</a>
+</div>
+<div class="admin-card table-responsive">
+    <table class="table align-middle mb-0">
+        <thead><tr><th>Order</th><th>Name</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        @for (var i = 0; i < Model.Count; i++)
+        {
+            var item = Model[i];
+            <tr>
+                <td>
+                    <form asp-action="Move" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="direction" value="-1" /><button type="submit" class="btn btn-sm btn-outline-secondary" @(i == 0 ? "disabled" : null)>↑</button></form>
+                    <form asp-action="Move" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="direction" value="1" /><button type="submit" class="btn btn-sm btn-outline-secondary" @(i == Model.Count - 1 ? "disabled" : null)>↓</button></form>
+                </td>
+                <td>@item.Name</td>
+                <td>@(item.IsPublished ? "Published" : "Draft")</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-dark" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <form asp-action="Publish" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="publish" value="@(item.IsPublished ? "false" : "true")" /><button type="submit" class="btn btn-sm btn-outline-secondary">@(item.IsPublished ? "Unpublish" : "Publish")</button></form>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this dealer?');">@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-outline-danger">Delete</button></form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

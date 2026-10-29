@@ -40,6 +40,15 @@ public class ShowroomRuleTests
     }
 
     [Fact]
+    public void Walk_in_sale_must_leave_stock_for_open_reservations()
+    {
+        Assert.Equal(2, ShowroomRequestRules.UnreservedQuantity(5, 3));
+        Assert.Null(ShowroomRequestRules.ValidateSaleAgainstReservations(2, 5, 3));
+        Assert.NotNull(ShowroomRequestRules.ValidateSaleAgainstReservations(3, 5, 3));
+        Assert.Null(ShowroomRequestRules.ValidateSaleAgainstReservations(1, 5, 0));
+    }
+
+    [Fact]
     public void Expired_or_inactive_campaigns_are_hidden()
     {
         var start = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc);

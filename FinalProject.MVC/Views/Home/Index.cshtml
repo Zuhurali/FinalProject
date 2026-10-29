@@ -1,8 +1,10 @@
 @using System.Text.Json
 @using FinalProject.MVC.Commerce
 @{
-    ViewData["Title"] = "Home - AutoVault";
-    var categoryLabels = ViewData["CategoryLabels"] as IReadOnlyDictionary<string, string>;
+    ViewData["Title"] = Site.Current.DefaultSeoTitle;
+    ViewData["MetaDescription"] = Site.Current.DefaultMetaDescription;
+    var home = HomePage.Current;
+    var homeCategories = ViewData["HomeCategories"] as IReadOnlyList<HomeCategoryStripItem> ?? Array.Empty<HomeCategoryStripItem>();
     var searchMakes = ViewData["SearchMakes"] as IEnumerable<string> ?? Enumerable.Empty<string>();
     var modelsByMake = ViewData["ModelsByMake"] as IReadOnlyDictionary<string, string[]> ?? new Dictionary<string, string[]>();
     var homeCars = ViewData["HomeCars"] as IReadOnlyList<Car> ?? Array.Empty<Car>();
@@ -13,21 +15,11 @@
     var usedCars = HomeCarShowcase.HomeUsedCarousel(showcaseCars);
     var trendingCars = HomeCarShowcase.TrendingCars(showcaseCars);
     var stockCars = HomeCarShowcase.InStockCars(showcaseCars);
-    var featuredCars = HomeCarShowcase.PremiumCars(showcaseCars);
+    // Use the full Active home catalog (not catalog-path-only showcase) so IsFeatured cars appear.
+    var featuredCars = HomeCarShowcase.PremiumCars(homeCars);
     BrandApiDto? MatchBrand(string name) =>
         homeBrands.FirstOrDefault(brand => string.Equals(brand.Name, name, StringComparison.OrdinalIgnoreCase));
-    string CategoryLabel(string name) =>
-        categoryLabels != null && categoryLabels.TryGetValue(name, out var label) ? label : "—";
-    var premiumBrands = new (string? Image, string Name, string Delay)[]
-    {
-        ("~/assets/images/brand/01-w.svg", "Jeep", ".2s"),
-        ("~/assets/images/brand/02.svg", "Ford", ".4s"),
-        (null, "Mazda", ".6s"),
-        ("~/assets/images/brand/04.svg", "BMW", ".8s"),
-        ("~/assets/images/brand/05.svg", "Honda", "1s"),
-        ("~/assets/images/brand/06.svg", "Audi", "1.2s"),
-        ("~/assets/images/brand/07.svg", "Nissan", "1.4s")
-    };
+    var partnerBrands = Partners.Items;
 }
 
 <style>
@@ -540,16 +532,14 @@
 </style>
             <section class="rts-banner-area bg_image_one home-x5-hero">
                 <div class="home-x5-hero__stage">
-                    <img class="home-x5-hero__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes-hero.jpg" width="2048" height="1364" fetchpriority="high" alt="Grey BMW coupe and black Mercedes sedan in the store">
+                    <img class="home-x5-hero__photo" src="@Url.Content(home.HeroImagePath)" width="2048" height="1364" fetchpriority="high" alt="@home.HeroImageAlt">
                 </div>
                 <div class="container">
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="banner-area-one bg_image">
                                 <div class="banner-content-area">
-                                    <h1 class="title wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s">Discover
-                                        Our Best Deals On
-                                        New And Used <span>Cars</span></h1>
+                                    <h1 class="title wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s">@home.HeroTitle <span>@home.HeroHighlight</span></h1>
                                     <form id="heroSearchForm" method="get" asp-controller="Cars" asp-action="Index" class="hero-search-form wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s" data-suggestions-url="@Url.Action("Suggestions", "Cars")" onsubmit="this.querySelectorAll('[name]').forEach(function (field) { if (!field.value || !field.value.trim()) field.disabled = true; });">
                                         <div class="hero-search-primary">
                                             <svg width="18" height="18" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -603,69 +593,30 @@
             <section class="rts-category-area rts-section-gap">
                 <div class="container">
                     <div class="section-title-area">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Car Category</p>
-                        <h2 class="section-title wow move-right">Browse By <span>Car</span> Type</h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">@home.CategoriesEyebrow</p>
+                        <h2 class="section-title wow move-right">@home.CategoriesHeadingBefore <span>@home.CategoriesHeadingHighlight</span>@(string.IsNullOrWhiteSpace(home.CategoriesHeadingAfter) ? null : " " + home.CategoriesHeadingAfter.Trim())</h2>
                     </div>
                     <div class="section-inner wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
-                        <div class="swiper category-slider">
-                            <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/01.svg" alt="">
+                        @if (homeCategories.Count > 0)
+                        {
+                            <div class="swiper category-slider">
+                                <div class="swiper-wrapper">
+                                    @foreach (var category in homeCategories)
+                                    {
+                                        <div class="swiper-slide">
+                                            <div class="category-wrapper">
+                                                <div class="icon">
+                                                    <img src="@Url.Content(category.IconPath)" alt="">
+                                                </div>
+                                                <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@category.Slug">@category.Name</a></h6>
+                                                <p class="desc">@category.CountLabel</p>
+                                            </div>
                                         </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Hatchback")">Hatchback</a></h6>
-                                        <p class="desc">@CategoryLabel("Hatchback")</p>
-                                    </div>
+                                    }
                                 </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/02.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Minivans")">Minivans</a></h6>
-                                        <p class="desc">@CategoryLabel("Minivans")</p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/03.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Luxury Cars")">Luxury Cars</a></h6>
-                                        <p class="desc">@CategoryLabel("Luxury Cars")</p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/04.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Sedans")">Sedans</a></h6>
-                                        <p class="desc">@CategoryLabel("Sedans")</p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/05.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Convertible")">Convertible</a></h6>
-                                        <p class="desc">@CategoryLabel("Convertible")</p>
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="category-wrapper">
-                                        <div class="icon">
-                                            <img src="~/assets/images/category/06.svg" alt="">
-                                        </div>
-                                        <h6 class="title"><a asp-controller="Cars" asp-action="Index" asp-route-category="@CarCategories.Slug("Sports Car")">Sports Car</a></h6>
-                                        <p class="desc">@CategoryLabel("Sports Car")</p>
-                                    </div>
-                                </div>
+                                <div class="swiper-pagination"></div>
                             </div>
-                            <div class="swiper-pagination"></div>
-                        </div>
+                        }
                     </div>
                 </div>
                 <div class="bg-shape-area">
@@ -679,8 +630,8 @@
             <section class="rts-portfolio-area home-cars-area rts-section-gap">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Select Car</p>
-                        <h2 class="section-title wow move-right">Our Amazing <span>Car</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">@home.PortfolioEyebrow</p>
+                        <h2 class="section-title wow move-right">@home.PortfolioHeadingBefore <span>@home.PortfolioHeadingHighlight</span></h2>
                     </div>
                     <div class="tab-area">
                         <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -761,8 +712,8 @@
                 <div class="rts-cta-area rts-section-gapBottom">
                     <div class="container">
                         <div class="section-title-area2 mb-4">
-                            <p class="sub-title">In-store offers</p>
-                            <h2 class="section-title">Live spare-parts <span>campaigns</span></h2>
+                            <p class="sub-title">@home.CampaignsEyebrow</p>
+                            <h2 class="section-title">@home.CampaignsHeadingBefore <span>@home.CampaignsHeadingHighlight</span></h2>
                         </div>
                         <div class="section-inner">
                             <div class="row g-5">
@@ -805,26 +756,22 @@
                             <div class="col-lg-5">
                                 <div class="about-image-area">
                                     <div class="image-main">
-                                        <img class="wow scaleIn" data-wow-delay=".5s" data-wow-duration="1.5s" src="~/assets/images/about/03.webp" width="371" alt="">
+                                        <img class="wow scaleIn" data-wow-delay=".5s" data-wow-duration="1.5s" src="@Url.Content(home.AboutImageMainPath)" width="371" alt="">
                                     </div>
-                                    <img src="~/assets/images/about/01.webp" alt="" width="223" class="floating-img-01 wow scaleIn" data-wow-delay=".5s" data-wow-duration="1.5s">
-                                    <img src="~/assets/images/about/02.webp" alt="" width="266" class="floating-img-02 wow scaleIn" data-wow-delay=".5s" data-wow-duration="1.5s">
+                                    <img src="@Url.Content(home.AboutImageFloat1Path)" alt="" width="223" class="floating-img-01 wow scaleIn" data-wow-delay=".5s" data-wow-duration="1.5s">
+                                    <img src="@Url.Content(home.AboutImageFloat2Path)" alt="" width="266" class="floating-img-02 wow scaleIn" data-wow-delay=".5s" data-wow-duration="1.5s">
                                 </div>
                             </div>
                             <div class="col-lg-7">
                                 <div class="about-content-area">
                                     <div class="section-title-area">
-                                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">About
-                                            Us</p>
-                                        <h2 class="section-title wow move-right">Driven by Excellence: Your Trusted Partner
-                                            for Premium
-                                            <span>Vehicles</span>
+                                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">@home.AboutEyebrow</p>
+                                        <h2 class="section-title wow move-right">@home.AboutHeadingBefore
+                                            <span>@home.AboutHeadingHighlight</span>
                                         </h2>
                                     </div>
-                                    <p class="desc">Welcome to Autovault where innovation drives every journey. Discover a
-                                        range
-                                        of designed to elevate your driving experience.</p>
-                                    <a asp-controller="About" asp-action="Index" class="rts-btn btn-primary radius-big">Learn More</a>
+                                    <p class="desc">@home.AboutBody</p>
+                                    <a asp-controller="About" asp-action="Index" class="rts-btn btn-primary radius-big">@home.AboutCtaLabel</a>
                                 </div>
                             </div>
                         </div>
@@ -837,53 +784,34 @@
             <section class="rts-brand-area home-brand-area rts-section-gap">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Car Brand</p>
-                        <h2 class="section-title wow move-right">Our Premium <span>Brands</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">@home.BrandsEyebrow</p>
+                        <h2 class="section-title wow move-right">@home.BrandsHeadingBefore <span>@home.BrandsHeadingHighlight</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <ul>
-                            @foreach (var brand in premiumBrands)
+                            @{ var homeBrandDelay = 0.2; }
+                            @foreach (var brand in partnerBrands)
                             {
                                 var match = MatchBrand(brand.Name);
-                                var openBmwListing = string.Equals(brand.Name, "BMW", StringComparison.OrdinalIgnoreCase);
-                                <li class="wow fadeInUp" data-wow-delay="@brand.Delay" data-wow-duration="1s">
-                                    @if (openBmwListing)
-                                    {
-                                        <a asp-controller="Cars" asp-action="Index" asp-route-make="BMW" aria-label="@brand.Name">
-                                            @if (brand.Image != null)
-                                            {
-                                                <img src="@Url.Content(brand.Image)" alt="@brand.Name logo">
-                                            }
-                                            else
-                                            {
-                                                <span class="home-brand-wordmark">@brand.Name</span>
-                                            }
-                                        </a>
-                                    }
-                                    else if (match != null)
+                                var delayText = $"{homeBrandDelay.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}s";
+                                homeBrandDelay += 0.2;
+                                <li class="wow fadeInUp" data-wow-delay="@delayText" data-wow-duration="1s">
+                                    @if (match != null)
                                     {
                                         <a asp-controller="Brand" asp-action="Details" asp-route-id="@match.Id" aria-label="@brand.Name">
-                                            @if (brand.Image != null)
-                                            {
-                                                <img src="@Url.Content(brand.Image)" alt="@brand.Name logo">
-                                            }
-                                            else
-                                            {
-                                                <span class="home-brand-wordmark">@brand.Name</span>
-                                            }
+                                            <img src="@Url.Content(brand.LogoPath)" alt="@brand.Name logo">
+                                        </a>
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(brand.LinkUrl))
+                                    {
+                                        <a href="@brand.LinkUrl" aria-label="@brand.Name">
+                                            <img src="@Url.Content(brand.LogoPath)" alt="@brand.Name logo">
                                         </a>
                                     }
                                     else
                                     {
                                         <a asp-controller="Cars" asp-action="Index" asp-route-make="@brand.Name" aria-label="@brand.Name">
-                                            @if (brand.Image != null)
-                                            {
-                                                <img src="@Url.Content(brand.Image)" alt="@brand.Name logo">
-                                            }
-                                            else
-                                            {
-                                                <span class="home-brand-wordmark">@brand.Name</span>
-                                            }
+                                            <img src="@Url.Content(brand.LogoPath)" alt="@brand.Name logo">
                                         </a>
                                     }
                                 </li>
@@ -897,7 +825,7 @@
             <!-- Why Choose Us Area End -->
             <section class="rts-why-choose-us">
                 <div class="right-image jarallax jara-mask-1">
-                    <img src="~/assets/images/about/why-choose-bg.webp" width="886" class="jarallax-img" alt="">
+                    <img src="@Url.Content(home.WhyChooseBackgroundPath)" width="886" class="jarallax-img" alt="">
                 </div>
                 <div class="container">
                     <div class="section-inner">
@@ -905,43 +833,38 @@
                             <div class="col-lg-6">
                                 <div class="content-area">
                                     <div class="section-title-area">
-                                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Why
-                                            Choose Us</p>
-                                        <h2 class="section-title cw wow move-right">Why Choose
-                                            <span>Us</span>
+                                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">@home.WhyChooseEyebrow</p>
+                                        <h2 class="section-title cw wow move-right">@home.WhyChooseHeadingBefore
+                                            <span>@home.WhyChooseHeadingHighlight</span>
                                         </h2>
                                     </div>
                                     <ul class="why-choose-feature-list mt--60">
                                         <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s">
-                                            <div class="icon"><img src="~/assets/images/why-choose/icon-01.svg" alt=""></div>
+                                            <div class="icon"><img src="@Url.Content(home.Feature1IconPath)" alt=""></div>
                                             <div class="content">
-                                                <h6 class="title cw">Competitive Pricing</h6>
-                                                <p class="desc">Whether you're looking for a brand-new model or a certified
-                                                    pre-owned vehicle, we have a diverse.</p>
+                                                <h6 class="title cw">@home.Feature1Title</h6>
+                                                <p class="desc">@home.Feature1Description</p>
                                             </div>
                                         </li>
                                         <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s">
-                                            <div class="icon"><img src="~/assets/images/why-choose/icon-02.svg" alt=""></div>
+                                            <div class="icon"><img src="@Url.Content(home.Feature2IconPath)" alt=""></div>
                                             <div class="content">
-                                                <h6 class="title cw">24 Hour Support</h6>
-                                                <p class="desc">Whether you're looking for a brand-new model or a certified
-                                                    pre-owned vehicle, we have a diverse.</p>
+                                                <h6 class="title cw">@home.Feature2Title</h6>
+                                                <p class="desc">@home.Feature2Description</p>
                                             </div>
                                         </li>
                                         <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s">
-                                            <div class="icon"><img src="~/assets/images/why-choose/icon-03.svg" alt=""></div>
+                                            <div class="icon"><img src="@Url.Content(home.Feature3IconPath)" alt=""></div>
                                             <div class="content">
-                                                <h6 class="title cw">GPS on Every Vehicle</h6>
-                                                <p class="desc">Whether you're looking for a brand-new model or a certified
-                                                    pre-owned vehicle, we have a diverse.</p>
+                                                <h6 class="title cw">@home.Feature3Title</h6>
+                                                <p class="desc">@home.Feature3Description</p>
                                             </div>
                                         </li>
                                         <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
-                                            <div class="icon"><img src="~/assets/images/why-choose/icon-04.svg" alt=""></div>
+                                            <div class="icon"><img src="@Url.Content(home.Feature4IconPath)" alt=""></div>
                                             <div class="content">
-                                                <h6 class="title cw">Expert Maintenance</h6>
-                                                <p class="desc">Whether you're looking for a brand-new model or a certified
-                                                    pre-owned vehicle, we have a diverse.</p>
+                                                <h6 class="title cw">@home.Feature4Title</h6>
+                                                <p class="desc">@home.Feature4Description</p>
                                             </div>
                                         </li>
                                     </ul>
@@ -957,8 +880,8 @@
             <section class="rts-feature-area rts-section-gap">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Featured Car</p>
-                        <h2 class="section-title wow move-right">Our Featured <span>Car</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">@home.FeaturedEyebrow</p>
+                        <h2 class="section-title wow move-right">@home.FeaturedHeadingBefore <span>@home.FeaturedHeadingHighlight</span></h2>
                     </div>
                     <div class="slider-area mt--80 wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
                             <div class="swiper featureSlider">

@@ -1,7 +1,11 @@
 @model FinalProject.MVC.Models.ShopFilterResponse
 @using FinalProject.MVC.Commerce
+@using FinalProject.MVC.Services.Interfaces
 @{
-    ViewData["Title"] = "Shop - AutoVault";
+    var marketing = ViewData["ShopMarketing"] as ShopMarketingPublicContent ?? ShopMarketing.Current;
+    var shopFaqs = ViewData["ShopFaqs"] as IReadOnlyList<FaqItem> ?? Array.Empty<FaqItem>();
+    ViewData["Title"] = marketing.SeoTitle;
+    ViewData["MetaDescription"] = marketing.SeoDescription;
     var categories = ViewBag.Categories as IReadOnlyList<string> ?? Array.Empty<string>();
     var categoryCounts = ViewBag.CategoryCounts as IReadOnlyDictionary<string, int> ?? new Dictionary<string, int>();
     var liveCampaigns = ViewData["LiveCampaigns"] as IReadOnlyList<ProductCampaign> ?? Array.Empty<ProductCampaign>();
@@ -13,15 +17,15 @@
             <section class="showroom-demo-hero">
                 <div class="container">
                     <div class="showroom-hero">
-                        <img class="showroom-hero__photo" src="~/assets/images/catalog/hero/showroom-bmw-mercedes-hero.jpg" width="2048" height="1364" fetchpriority="high" alt="Grey BMW coupe and black Mercedes sedan in the AutoVault store">
+                        <img class="showroom-hero__photo" src="@Url.Content(marketing.HeroImagePath)" width="2048" height="1364" fetchpriority="high" alt="@marketing.HeroImageAlt">
                         <div class="showroom-hero__content">
-                            <p class="showroom-hero__eyebrow">Babek Prospekti 22–24, Baku</p>
-                            <h1 class="showroom-hero__title">Used Cars and Parts in Baku</h1>
-                            <p class="showroom-hero__text">Check prices and stock for oils, filters, tires, and spare parts online, then inspect and buy face to face at the store.</p>
+                            <p class="showroom-hero__eyebrow">@marketing.HeroEyebrow</p>
+                            <h1 class="showroom-hero__title">@marketing.HeroTitle</h1>
+                            <p class="showroom-hero__text">@marketing.HeroText</p>
                             <div class="showroom-hero__actions">
-                                <a href="@catalogUrl" class="rts-btn btn-primary radius-big">Browse Parts</a>
-                                <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">Browse Used Cars</a>
-                                <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">Visit Us</a>
+                                <a href="@catalogUrl" class="rts-btn btn-primary radius-big">@marketing.HeroCtaBrowseParts</a>
+                                <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">@marketing.HeroCtaBrowseCars</a>
+                                <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">@marketing.HeroCtaVisit</a>
                             </div>
                         </div>
                     </div>
@@ -46,8 +50,8 @@
             <section class="rts-category-area2 rts-section-gapTop">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">Parts Category</p>
-                        <h2 class="section-title wow move-right">Shop By <span>Categories</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration=".8s">@marketing.CategoriesEyebrow</p>
+                        <h2 class="section-title wow move-right">@marketing.CategoriesHeadingBefore <span>@marketing.CategoriesHeadingHighlight</span></h2>
                     </div>
                     <div class="section-inner wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
                         <div class="swiper categorySlider2">
@@ -76,10 +80,10 @@
 <section class="rts-shop-area inner rts-section-gapTop rts-section-gapBottom" id="catalog">
     <div class="container">
         <div class="section-title-area">
-            <p class="sub-title">Available Stock</p>
-            <h2 class="section-title">Parts in the <span>Shop</span></h2>
+            <p class="sub-title">@marketing.CatalogEyebrow</p>
+            <h2 class="section-title">@marketing.CatalogHeadingBefore <span>@marketing.CatalogHeadingHighlight</span></h2>
         </div>
-        <p class="mb-4">The shop lists photographed automotive parts and workshop supplies for collection at the Baku store. Engine oils, filters, brake parts, plugs, wipers, and fluids can be added by the store when a matching product photo is on file. Fitment is shown only when it is stored for that product.</p>
+        <p class="mb-4">@marketing.CatalogIntro</p>
         @if (TempData["Success"] != null)
         {
             <div class="alert alert-success">@TempData["Success"]</div>
@@ -175,18 +179,26 @@
             <section class="rts-brand-area shop-brand-area rts-section-gapBottom">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title">Store</p>
-                        <h2 class="section-title">Collected in <span>Baku</span></h2>
+                        <p class="sub-title">@marketing.BrandStripEyebrow</p>
+                        <h2 class="section-title">@marketing.BrandStripHeadingBefore <span>@marketing.BrandStripHeadingHighlight</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <ul>
-                            <li><img src="~/assets/images/brand/01-w.svg" alt="Jeep"></li>
-                            <li><img src="~/assets/images/brand/02.svg" alt="Ford"></li>
-                            <li><img src="~/assets/images/brand/03.svg" alt="Mazda"></li>
-                            <li><img src="~/assets/images/brand/04.svg" alt="BMW"></li>
-                            <li><img src="~/assets/images/brand/05.svg" alt="Honda"></li>
-                            <li><img src="~/assets/images/brand/06.svg" alt="Audi"></li>
-                            <li><img src="~/assets/images/brand/07.svg" alt="Nissan"></li>
+                            @foreach (var partner in Partners.Items)
+                            {
+                                <li>
+                                    @if (!string.IsNullOrWhiteSpace(partner.LinkUrl))
+                                    {
+                                        <a href="@partner.LinkUrl" aria-label="@partner.Name">
+                                            <img src="@Url.Content(partner.LogoPath)" alt="@partner.Name">
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <img src="@Url.Content(partner.LogoPath)" alt="@partner.Name">
+                                    }
+                                </li>
+                            }
                         </ul>
                     </div>
                 </div>
@@ -235,13 +247,13 @@
                                 </div>
                             }
                             <div class="col-lg-6 col-md-12">
-                                <a asp-controller="Cars" asp-action="Index" asp-route-condition="used" class="cta-wrapper d-block text-decoration-none" aria-label="Used cars on the floor">
+                                <a asp-controller="Cars" asp-action="Index" asp-route-condition="used" class="cta-wrapper d-block text-decoration-none" aria-label="@marketing.UsedCarsPromoTitle">
                                     <div class="image-area jarallax jara-mask-1">
-                                        <img src="~/assets/images/cta/02.webp" class="jarallax-img" alt="">
+                                        <img src="@Url.Content(marketing.UsedCarsPromoImagePath)" class="jarallax-img" alt="">
                                     </div>
                                     <div class="content">
-                                        <span class="tag radius-big">In person</span>
-                                        <h4 class="title cw">Used cars on the floor</h4>
+                                        <span class="tag radius-big">@marketing.UsedCarsPromoTag</span>
+                                        <h4 class="title cw">@marketing.UsedCarsPromoTitle</h4>
                                     </div>
                                 </a>
                             </div>
@@ -255,15 +267,15 @@
             <section class="rts-why-choose-us3 rts-section-gap">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Why Choose Us</p>
-                        <h2 class="section-title wow move-right">Why Choose <span>Us</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">@marketing.WhyChooseEyebrow</p>
+                        <h2 class="section-title wow move-right">@marketing.WhyChooseHeadingBefore <span>@marketing.WhyChooseHeadingHighlight</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <div class="row g-5">
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Our Prices</h6>
-                                    <p class="desc">Prices and stock on this page are the quantities held at Babek Prospekti.</p>
+                                    <h6 class="title">@marketing.Why1Title</h6>
+                                    <p class="desc">@marketing.Why1Description</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-05.svg" alt="">
                                         <div class="left"></div>
@@ -273,8 +285,8 @@
                             </div>
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Inspect before you buy</h6>
-                                    <p class="desc">Check a part or car online, then inspect it in the store before you pay.</p>
+                                    <h6 class="title">@marketing.Why2Title</h6>
+                                    <p class="desc">@marketing.Why2Description</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-06.svg" alt="">
                                         <div class="left"></div>
@@ -284,8 +296,8 @@
                             </div>
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Available Products</h6>
-                                    <p class="desc">There is no shipping or courier. Purchases are collected in Baku.</p>
+                                    <h6 class="title">@marketing.Why3Title</h6>
+                                    <p class="desc">@marketing.Why3Description</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-07.svg" alt="">
                                         <div class="left"></div>
@@ -295,8 +307,8 @@
                             </div>
                             <div class="col-xl-3 col-lg-6 col-md-6">
                                 <div class="why-choose-us-wrapper">
-                                    <h6 class="title">Staff on site</h6>
-                                    <p class="desc">Ask our team about fitment. Compatibility is listed only when it is known.</p>
+                                    <h6 class="title">@marketing.Why4Title</h6>
+                                    <p class="desc">@marketing.Why4Description</p>
                                     <div class="icon">
                                         <img src="~/assets/images/why-choose/icon-08.svg" alt="">
                                         <div class="left"></div>
@@ -314,19 +326,19 @@
             <section class="rts-blog-area rts-section-gap">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Before you visit</p>
-                        <h2 class="section-title wow move-right">Plan your <span>visit</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">@marketing.VisitEyebrow</p>
+                        <h2 class="section-title wow move-right">@marketing.VisitHeadingBefore <span>@marketing.VisitHeadingHighlight</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <div class="row g-5">
                             <div class="col-lg-6">
                                 <div class="blog-wrapper">
                                     <div class="image-area">
-                                        <a href="@catalogUrl"><img src="~/assets/images/blog/05.webp" alt=""></a>
+                                        <a href="@catalogUrl"><img src="@Url.Content(marketing.VisitTip1ImagePath)" alt=""></a>
                                     </div>
                                     <div class="content">
-                                        <p class="blog-meta">Baku store</p>
-                                        <h5><a href="@catalogUrl">See which oils, filters, tires, and spare parts are on the floor</a></h5>
+                                        <p class="blog-meta">@marketing.VisitTip1Meta</p>
+                                        <h5><a href="@catalogUrl">@marketing.VisitTip1Title</a></h5>
                                     </div>
                                 </div>
                             </div>
@@ -334,11 +346,11 @@
                                 <div class="blog-list-style">
                                     <div class="blog-wrapper d-flex align-items-center">
                                         <div class="image-area">
-                                            <a asp-controller="Cars" asp-action="Index"><img src="~/assets/images/blog/04.webp" width="263" alt=""></a>
+                                            <a asp-controller="Cars" asp-action="Index"><img src="@Url.Content(marketing.VisitTip2ImagePath)" width="263" alt=""></a>
                                         </div>
                                         <div class="content mt-0">
-                                            <p class="blog-meta">Baku store</p>
-                                            <h6><a asp-controller="Cars" asp-action="Index">Used cars are listed separately and are also sold in person</a></h6>
+                                            <p class="blog-meta">@marketing.VisitTip2Meta</p>
+                                            <h6><a asp-controller="Cars" asp-action="Index">@marketing.VisitTip2Title</a></h6>
                                         </div>
                                     </div>
                                 </div>
@@ -353,81 +365,40 @@
             <section class="rts-faq-area two rts-section-gapBottom">
                 <div class="container">
                     <div class="section-title-area2">
-                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">FAQ</p>
-                        <h2 class="section-title wow move-right">Frequently Asked <span>Question</span></h2>
+                        <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">@marketing.FaqSectionEyebrow</p>
+                        <h2 class="section-title wow move-right">@marketing.FaqSectionHeadingBefore <span>@marketing.FaqSectionHeadingHighlight</span></h2>
                     </div>
                     <div class="section-inner mt--80">
                         <div class="row g-5">
                             <div class="col-xl-7 col-lg-6">
                                 <div class="rts-faq__accordion">
                                     <div class="accordion accordion-flush" id="rts-accordion">
-                                        <div class="accordion-item active">
-                                            <div class="accordion-header" id="first">
-                                                <h4 class="accordion-button collapse show" data-bs-toggle="collapse" data-bs-target="#item__one" aria-expanded="false" aria-controls="item__one">
-                                                    Do you deliver parts or cars?
-                                                </h4>
-                                            </div>
-                                            <div id="item__one" class="accordion-collapse collapse collapse show" aria-labelledby="first" data-bs-parent="#rts-accordion">
-                                                <div class="accordion-body">
-                                                    No. AutoVault does not ship or offer courier delivery. You collect the car or part from the Baku store.
+                                        @{ var faqIndex = 0; }
+                                        @foreach (var faq in shopFaqs)
+                                        {
+                                            faqIndex++;
+                                            var headerId = $"shop-faq-{faq.Id}";
+                                            var panelId = $"shop-faq-panel-{faq.Id}";
+                                            var isFirst = faqIndex == 1;
+                                            <div class="accordion-item@(isFirst ? " active" : "")">
+                                                <div class="accordion-header" id="@headerId">
+                                                    <h4 class="accordion-button@(isFirst ? " collapse show" : " collapsed")" data-bs-toggle="collapse" data-bs-target="#@panelId" aria-expanded="@(isFirst ? "true" : "false")" aria-controls="@panelId">
+                                                        @faq.Question
+                                                    </h4>
+                                                </div>
+                                                <div id="@panelId" class="accordion-collapse collapse@(isFirst ? " collapse show" : "")" aria-labelledby="@headerId" data-bs-parent="#rts-accordion">
+                                                    <div class="accordion-body">
+                                                        @faq.Answer
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="accordion-item">
-                                            <div class="accordion-header" id="two">
-                                                <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__two" aria-expanded="false" aria-controls="item__two">
-                                                    Can I pay on the website?
-                                                </h4>
-                                            </div>
-                                            <div id="item__two" class="accordion-collapse collapse" aria-labelledby="two" data-bs-parent="#rts-accordion">
-                                                <div class="accordion-body">
-                                                    No. There is no online checkout. You pay when you buy the item in person.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="accordion-item">
-                                            <div class="accordion-header" id="three">
-                                                <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__three" aria-expanded="false" aria-controls="item__three">
-                                                    How do I know a part is available?
-                                                </h4>
-                                            </div>
-                                            <div id="item__three" class="accordion-collapse collapse" aria-labelledby="three" data-bs-parent="#rts-accordion">
-                                                <div class="accordion-body">
-                                                    Each product shows In Stock, Low Stock, or Out of Stock from the quantity stored for the store.
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="accordion-item">
-                                            <div class="accordion-header" id="four">
-                                                <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__four" aria-expanded="false" aria-controls="item__four">
-                                                    Do you reserve items online?
-                                                </h4>
-                                            </div>
-                                            <div id="item__four" class="accordion-collapse collapse" aria-labelledby="four" data-bs-parent="#rts-accordion">
-                                                <div class="accordion-body">
-                                                    No. You can send a purchase request from a product page, and our team will contact you to confirm availability. The item is not held, and the sale is completed at the store.
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="accordion-item">
-                                            <div class="accordion-header" id="five">
-                                                <h4 class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#item__five" aria-expanded="false" aria-controls="item__four">
-                                                    Where is the store?
-                                                </h4>
-                                            </div>
-                                            <div id="item__five" class="accordion-collapse collapse" aria-labelledby="five" data-bs-parent="#rts-accordion">
-                                                <div class="accordion-body">
-                                                    @Site.Contact.AddressLine. Call @Site.Contact.DisplayPhone before you travel if you want the team to confirm an item is still on the floor.
-                                                </div>
-                                            </div>
-                                        </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
                             <div class="col-xl-5 col-lg-6">
                                 <div class="contact-form">
-                                    <h5>Get In Touch</h5>
+                                    <h5>@marketing.ContactFormTitle</h5>
                                     <form class="form__content av-contact-form"
                                           asp-controller="Contact"
                                           asp-action="Send"

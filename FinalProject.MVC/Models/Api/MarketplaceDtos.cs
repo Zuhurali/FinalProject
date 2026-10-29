@@ -86,7 +86,7 @@ public sealed class SaveCarDto : IValidatableObject
     [Required, MaxLength(4000)]
     public string Description { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Enter an image path or URL, or choose a local image file."), MaxLength(500)]
+    [Required(ErrorMessage = "Choose at least one vehicle photo."), MaxLength(500)]
     public string ImageUrl { get; set; } = string.Empty;
 
     public bool GallerySpecified { get; set; }
@@ -99,6 +99,9 @@ public sealed class SaveCarDto : IValidatableObject
 
     [Required, RegularExpression("^(Active|Sold|Draft)$", ErrorMessage = "Select a listing status.")]
     public string Status { get; set; } = "Active";
+
+    /// <summary>When true, prefer this Active listing in the home Featured / Premium carousel.</summary>
+    public bool IsFeatured { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

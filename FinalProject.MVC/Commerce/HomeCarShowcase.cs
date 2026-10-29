@@ -55,7 +55,6 @@ public static class HomeCarShowcase
 
     /// <summary>
     /// Newest catalog vehicles, matching the original Home carousel.
-    /// IsFeatured is not used: the catalog seeds every car with IsFeatured = false.
     /// </summary>
     public static IReadOnlyList<Car> TrendingCars(IEnumerable<Car> cars) =>
         cars
@@ -65,15 +64,35 @@ public static class HomeCarShowcase
             .ToList();
 
     /// <summary>
-    /// Original Featured / Premium carousel: Mercedes-Benz first, then newest year, then name.
+    /// Homepage Featured carousel. When any Active listing has <see cref="Car.IsFeatured"/>,
+    /// only those cars are shown (so Admin "Show on homepage" is a visible change).
+    /// When none are featured, fall back to the Mercedes / newest-year premium heuristic.
     /// </summary>
-    public static IReadOnlyList<Car> PremiumCars(IEnumerable<Car> cars) =>
-        cars
+    public static IReadOnlyList<Car> PremiumCars(IEnumerable<Car> cars)
+    {
+        var eligible = cars
+            .Where(car => !string.IsNullOrWhiteSpace(car.ImagePath))
+            .GroupBy(car => car.Id)
+            .Select(group => group.First())
+            .ToList();
+
+        var featured = eligible.Where(car => car.IsFeatured).ToList();
+        if (featured.Count > 0)
+        {
+            return featured
+                .OrderByDescending(car => car.Year)
+                .ThenBy(car => car.Name, StringComparer.OrdinalIgnoreCase)
+                .Take(6)
+                .ToList();
+        }
+
+        return eligible
             .OrderByDescending(car => car.Make.Contains("Mercedes", StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(car => car.Year)
             .ThenBy(car => car.Name, StringComparer.OrdinalIgnoreCase)
             .Take(6)
             .ToList();
+    }
 
     /// <summary>
     /// Available for sale. Catalog status is Active, Sold, or Draft.

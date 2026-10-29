@@ -1,4 +1,5 @@
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Models.Api;
 
 namespace FinalProject.MVC.Data;
 
@@ -51,6 +52,9 @@ public class CarListingResult
 
     public IReadOnlyList<string> Models { get; set; } = Array.Empty<string>();
 
+    /// <summary>SQL-backed category options for the listing filter dropdown.</summary>
+    public IReadOnlyList<CategoryApiDto> Categories { get; set; } = Array.Empty<CategoryApiDto>();
+
     public bool HasActiveFilters =>
         CategoryRequested
         || HasValue(Query.Make)
@@ -75,13 +79,7 @@ public static class CarListingFilter
 
         if (!string.IsNullOrWhiteSpace(query.Category))
         {
-            var category = CarCategories.Resolve(query.Category);
-            if (category == null)
-            {
-                return Array.Empty<Car>();
-            }
-
-            cars = cars.Where(car => car.Category.Equals(category.Value, StringComparison.OrdinalIgnoreCase));
+            cars = cars.Where(car => CarCategories.Matches(car.Category, query.Category));
         }
 
         if (HasValue(query.Make))
@@ -115,7 +113,6 @@ public static class CarListingFilter
 
     public static CarListingResult Page(IReadOnlyList<Car> matches, CarListingQuery query, IReadOnlyList<Car> catalog)
     {
-        var requestedCategory = CarCategories.Resolve(query.Category);
         var pageSize = CarListingResult.PageSize;
         var totalPages = matches.Count == 0 ? 0 : (int)Math.Ceiling(matches.Count / (double)pageSize);
         var page = query.Page < 1 ? 1 : query.Page;
@@ -128,6 +125,14 @@ public static class CarListingFilter
             ? Array.Empty<Car>()
             : matches.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
+        var categoryName = catalog
+            .Select(car => car.Category)
+            .FirstOrDefault(name => CarCategories.Matches(name, query.Category));
+        if (string.IsNullOrWhiteSpace(categoryName) && !string.IsNullOrWhiteSpace(query.Category))
+        {
+            categoryName = query.Category.Trim().Replace('-', ' ');
+        }
+
         return new CarListingResult
         {
             Cars = cars,
@@ -136,10 +141,17 @@ public static class CarListingFilter
             TotalCount = matches.Count,
             TotalPages = totalPages,
             CategoryRequested = !string.IsNullOrWhiteSpace(query.Category),
-            CategorySlug = requestedCategory?.Slug ?? query.Category,
-            CategoryDisplay = requestedCategory?.DisplayName ?? query.Category,
+            CategorySlug = string.IsNullOrWhiteSpace(categoryName) ? query.Category : CarCategories.Slug(categoryName),
+            CategoryDisplay = categoryName ?? query.Category,
             Makes = catalog.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList(),
-            Models = catalog.Select(car => car.Model).Where(model => !string.IsNullOrWhiteSpace(model)).Distinct().OrderBy(model => model).ToList()
+            Models = catalog.Select(car => car.Model).Where(model => !string.IsNullOrWhiteSpace(model)).Distinct().OrderBy(model => model).ToList(),
+            Categories = catalog
+                .Select(car => car.Category)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .Select(name => new CategoryApiDto { Name = name })
+                .ToList()
         };
     }
 

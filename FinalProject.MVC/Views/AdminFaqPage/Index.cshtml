@@ -1,0 +1,22 @@
+@model FaqPageContentEditViewModel
+@{ Layout = "_AdminLayout"; }
+<h1 class="h3 mb-4">FAQ Page</h1>
+<form asp-action="Index" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="row g-3">
+        <div class="col-md-4"><label asp-for="BreadcrumbTitle" class="form-label"></label><input asp-for="BreadcrumbTitle" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="Eyebrow" class="form-label"></label><input asp-for="Eyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="HeadingBefore" class="form-label"></label><input asp-for="HeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="HeadingHighlight" class="form-label"></label><input asp-for="HeadingHighlight" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="SeoTitle" class="form-label"></label><input asp-for="SeoTitle" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="SeoDescription" class="form-label"></label><input asp-for="SeoDescription" class="form-control" /></div>
+        <div class="col-md-6">
+            <label class="form-label">Banner image</label>
+            <input type="hidden" asp-for="BannerImagePath" />
+            <img src="@Url.Content(Model.BannerImagePath)" alt="" style="max-height:80px;display:block;" class="mb-1" />
+            <input type="file" name="banner" class="form-control" accept="image/*" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-dark mt-3">Save FAQ page</button>
+</form>

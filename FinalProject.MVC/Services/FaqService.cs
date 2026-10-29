@@ -16,9 +16,44 @@ public sealed class FaqService : IFaqService
         _db = db;
     }
 
+    public async Task EnsureSeedAsync(CancellationToken cancellationToken = default)
+    {
+        if (await _db.FaqItems.AnyAsync(item => item.ShowOnShop, cancellationToken))
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        var sort = 100;
+        foreach (var (question, answer) in ShopFaqSeedDefaults.Items)
+        {
+            _db.FaqItems.Add(new FaqItem
+            {
+                Question = question,
+                Answer = answer,
+                SortOrder = sort,
+                IsPublished = true,
+                ShowOnFaqPage = false,
+                ShowOnShop = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+            sort += 10;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<FaqItem>> GetPublishedAsync(CancellationToken cancellationToken = default) =>
         await _db.FaqItems.AsNoTracking()
-            .Where(item => item.IsPublished)
+            .Where(item => item.IsPublished && item.ShowOnFaqPage)
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.Id)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<FaqItem>> GetShopPublishedAsync(CancellationToken cancellationToken = default) =>
+        await _db.FaqItems.AsNoTracking()
+            .Where(item => item.IsPublished && item.ShowOnShop)
             .OrderBy(item => item.SortOrder)
             .ThenBy(item => item.Id)
             .ToListAsync(cancellationToken);
@@ -56,6 +91,8 @@ public sealed class FaqService : IFaqService
             Answer = model.Answer.Trim(),
             SortOrder = sortOrder,
             IsPublished = model.IsPublished,
+            ShowOnFaqPage = model.ShowOnFaqPage,
+            ShowOnShop = model.ShowOnShop,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -92,6 +129,8 @@ public sealed class FaqService : IFaqService
         entity.Answer = model.Answer.Trim();
         entity.SortOrder = model.SortOrder;
         entity.IsPublished = model.IsPublished;
+        entity.ShowOnFaqPage = model.ShowOnFaqPage;
+        entity.ShowOnShop = model.ShowOnShop;
         entity.UpdatedAt = DateTime.UtcNow;
         try
         {

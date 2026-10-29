@@ -47,6 +47,31 @@ public static class CarCategories
         return Find(text);
     }
 
+    /// <summary>
+    /// True when a SQL/API category name matches a request value (name, slug, or legacy alias).
+    /// </summary>
+    public static bool Matches(string? storedCategoryName, string? requested)
+    {
+        if (string.IsNullOrWhiteSpace(storedCategoryName) || string.IsNullOrWhiteSpace(requested))
+        {
+            return false;
+        }
+
+        var stored = storedCategoryName.Trim();
+        var request = requested.Trim();
+        if (stored.Equals(request, StringComparison.OrdinalIgnoreCase)
+            || Slug(stored).Equals(request, StringComparison.OrdinalIgnoreCase)
+            || stored.Equals(request.Replace('-', ' '), StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var alias = Resolve(request);
+        return alias != null
+            && (stored.Equals(alias.Value, StringComparison.OrdinalIgnoreCase)
+                || stored.Equals(alias.DisplayName, StringComparison.OrdinalIgnoreCase));
+    }
+
     private static CarCategoryDefinition? Find(string text)
     {
         var normalized = text.Trim().Replace('-', ' ');

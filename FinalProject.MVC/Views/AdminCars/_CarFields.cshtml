@@ -38,7 +38,6 @@
     var colorName = VehicleColorCatalog.DisplayName(Model.Car.Color);
     var colorHex = VehicleColorCatalog.Hex(Model.Car.Color);
     var selectedFeatures = Model.Car.Features ?? new List<string>();
-    var preview = string.IsNullOrWhiteSpace(Model.Car.ImageUrl) ? null : Url.Content(Model.Car.ImageUrl);
 }
 
 @Html.AntiForgeryToken()
@@ -91,7 +90,7 @@
         <input id="Car_Price" name="Car.Price" class="form-control" inputmode="decimal" min="0.01" step="0.01" placeholder="Enter price" value="@price" required>
         <span asp-validation-for="Car.Price" class="text-danger"></span>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <label for="Car_Status">Listing Status</label>
         <select id="Car_Status" name="Car.Status" class="form-select av-native-select">
             @foreach (var status in CarListingRules.Statuses)
@@ -99,6 +98,12 @@
                 <option value="@status" selected="@(string.Equals(Model.Car.Status, status, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@status</option>
             }
         </select>
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" asp-for="Car.IsFeatured" />
+            <label class="form-check-label" asp-for="Car.IsFeatured">Show on homepage</label>
+        </div>
     </div>
 </div>
 
@@ -325,40 +330,9 @@
     }
 </div>
 
-<h2 class="h5 mt-4">Images</h2>
-<div class="row g-3">
-    <div class="col-12">
-        <label for="Car_ImageUrl">Image path or URL</label>
-        <div class="av-car-image-row d-flex flex-column flex-md-row gap-2 align-items-stretch">
-            <input asp-for="Car.ImageUrl"
-                   id="Car_ImageUrl"
-                   class="form-control flex-grow-1"
-                   placeholder="~/assets/images/... or https://"
-                   autocomplete="off">
-            <div class="av-car-image-picker d-flex flex-shrink-0">
-                <input type="file"
-                       id="car-image-file"
-                       name="imageFile"
-                       class="av-file-input"
-                       accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-                <label for="car-image-file" class="btn btn-outline-secondary mb-0 w-100 text-nowrap">Choose File</label>
-            </div>
-        </div>
-        <div id="car-image-file-name" class="form-text mt-1" aria-live="polite"></div>
-        <div class="form-text">JPG, JPEG, PNG, or WEBP up to 5 MB. A chosen file replaces the primary image and leaves the other gallery images in place. Leave the file empty when editing to keep the current primary image.</div>
-        <span asp-validation-for="Car.ImageUrl" class="text-danger"></span>
-        <div class="av-admin-preview-frame mt-2">
-            <img id="car-image-preview"
-                 src="@preview"
-                 alt="Car image preview"
-                 class="av-admin-preview"
-                 style="@(preview == null ? "display:none;" : null)" />
-        </div>
-    </div>
-</div>
-
-<h2 class="h5 mt-4">Car Gallery Images</h2>
+<h2 class="h5 mt-4">Vehicle Photos</h2>
 <input type="hidden" name="Car.GallerySpecified" value="true" />
+<input asp-for="Car.ImageUrl" id="Car_ImageUrl" type="hidden" />
 @{
     var removedIds = new HashSet<int>(Model.Car.RemoveImageIds ?? new List<int>());
     string GallerySrc(string? url)
@@ -377,37 +351,35 @@
         return text;
     }
 }
+<p class="text-muted mb-2">Choose one or more photos in a single step. The first selected photo becomes the primary image used on listings and details; the rest are saved as additional photos. Existing photos stay until you remove them. JPG, JPEG, PNG, or WEBP up to 5 MB each.</p>
 @if (Model.Gallery.Count > 0)
 {
-    <p class="text-muted">Every image saved for this car is shown below. Choose Primary for the photo used on car cards and as the main details image. Existing images stay until you remove them.</p>
-    <div class="row g-3" id="car-gallery">
+    <div class="av-vehicle-photos-grid mb-3" id="car-gallery">
         @foreach (var image in Model.Gallery.OrderBy(item => item.DisplayOrder).ThenBy(item => item.Id))
         {
             var removed = removedIds.Contains(image.Id);
             var isPrimary = Model.Car.PrimaryImageId is int selected
                 ? selected == image.Id
                 : image.IsMain;
-            <div class="col-6 col-md-4 col-xl-3 gallery-item@(removed ? " d-none" : string.Empty)" data-image-id="@image.Id">
+            <div class="av-vehicle-photo-card gallery-item@(removed ? " d-none" : string.Empty)" data-image-id="@image.Id">
                 @if (removed)
                 {
                     <input type="hidden" name="Car.RemoveImageIds" value="@image.Id" />
                 }
-                <div class="position-relative border rounded p-1 h-100 bg-white">
-                    <div class="av-admin-thumb">
-                        <img src="@GallerySrc(image.ImageUrl)" alt="" class="av-admin-thumb-img" />
-                    </div>
-                    <button type="button" class="gallery-remove" title="Remove image" aria-label="Remove image">&times;</button>
-                    <div class="form-check mt-2 mb-1">
-                        <input class="form-check-input gallery-primary"
-                               type="radio"
-                               name="Car.PrimaryImageId"
-                               id="primary-@image.Id"
-                               value="@image.Id"
-                               data-url="@image.ImageUrl"
-                               @(isPrimary && !removed ? "checked" : null)
-                               @(removed ? "disabled" : null) />
-                        <label class="form-check-label" for="primary-@image.Id">@(image.IsMain ? "Primary image" : "Set as primary")</label>
-                    </div>
+                <div class="av-vehicle-photo-card__media">
+                    <img src="@GallerySrc(image.ImageUrl)" alt="" class="av-vehicle-photo-card__thumb" />
+                    <button type="button" class="gallery-remove" title="Remove photo" aria-label="Remove photo">&times;</button>
+                </div>
+                <div class="form-check av-vehicle-photo-card__meta">
+                    <input class="form-check-input gallery-primary"
+                           type="radio"
+                           name="Car.PrimaryImageId"
+                           id="primary-@image.Id"
+                           value="@image.Id"
+                           data-url="@image.ImageUrl"
+                           @(isPrimary && !removed ? "checked" : null)
+                           @(removed ? "disabled" : null) />
+                    <label class="form-check-label" for="primary-@image.Id">@(image.IsMain ? "Primary photo" : "Set as primary")</label>
                 </div>
             </div>
         }
@@ -415,22 +387,27 @@
 }
 else if (Model.Id != null)
 {
-    <p class="text-muted">This car has no saved gallery images yet. Add at least one image before saving.</p>
+    <p class="text-muted">This car has no saved photos yet. Choose photos below before saving.</p>
 }
-<div class="mt-3 av-gallery-field">
-    <input type="file"
-           id="gallery-files"
-           name="galleryFiles"
-           class="av-file-input"
-           multiple
-           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-    <label for="gallery-files" class="av-add-images" id="gallery-add-button">
-        <i class="rt-icon-convertible-car" aria-hidden="true"></i>
-        <span>Add Images</span>
-    </label>
-    <div id="gallery-new-preview" class="row g-3 mt-1"></div>
-    <div id="gallery-file-name" class="form-text" aria-live="polite"></div>
-    <div class="form-text">Optional. Choose one or more JPG, JPEG, PNG, or WEBP images, up to 5 MB each. There is no three-image limit. New images are added alongside the images already saved.</div>
+<div class="av-gallery-field">
+    <div class="av-gallery-picker-row">
+        <input type="file"
+               id="vehicle-photos"
+               name="vehiclePhotos"
+               class="av-file-input"
+               multiple="multiple"
+               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+        <label for="vehicle-photos" class="av-add-images" id="vehicle-photos-button">
+            <i class="rt-icon-convertible-car" aria-hidden="true"></i>
+            <span>Choose Photos</span>
+        </label>
+        <div id="vehicle-photos-file-name" class="form-text" aria-live="polite"></div>
+        <span asp-validation-for="Car.ImageUrl" class="text-danger"></span>
+    </div>
+    <div id="vehicle-photos-preview"
+         class="av-vehicle-photos-grid"
+         data-vehicle-photos-preview
+         aria-live="polite"></div>
 </div>
 
 <h2 class="h5 mt-4">Description</h2>
@@ -446,50 +423,91 @@ else if (Model.Id != null)
     .av-car-image-picker { min-width: 9rem; }
     .admin-card, .admin-card .row { overflow: visible; }
     .form-check-input { position: static; margin-top: 0.2rem; }
-    .av-admin-preview-frame {
-        width: 220px;
+    .av-gallery-field {
+        display: block;
+        width: 100%;
         max-width: 100%;
-        height: 148px;
+    }
+    .av-vehicle-photos-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 160px));
+        gap: 12px;
+        align-items: start;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 0.75rem;
+    }
+    .av-vehicle-photos-grid > .av-vehicle-photo-card {
+        width: 100%;
+        max-width: 160px;
+        min-width: 0;
+    }
+    .av-vehicle-photo-card {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #eef1f4;
+        flex-direction: column;
+        width: 100%;
+        max-width: 160px;
+        margin: 0;
+        padding: 0.35rem;
+        background: #fff;
         border: 1px solid #d9dee7;
         border-radius: 6px;
         overflow: hidden;
     }
-    .av-admin-preview-frame img,
-    img#car-image-preview {
-        width: auto !important;
-        height: auto !important;
-        max-width: 100% !important;
-        max-height: 148px !important;
-        object-fit: contain !important;
-        background: #eef1f4;
-    }
-    .av-admin-thumb {
+    .av-vehicle-photo-card__media {
+        position: relative;
         width: 100%;
-        height: 148px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        height: 110px;
         background: #eef1f4;
-        border-radius: 6px;
+        border-radius: 4px;
         overflow: hidden;
     }
-    .av-admin-thumb img,
-    #gallery-new-preview img {
-        width: 100% !important;
-        height: 148px !important;
-        max-height: 148px !important;
-        object-fit: contain !important;
+    .av-vehicle-photo-card__thumb {
+        display: block;
+        width: 140px;
+        max-width: 100%;
+        height: 110px;
+        object-fit: cover;
         object-position: center;
         background: #eef1f4;
     }
+    .av-vehicle-photo-card__meta {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.35rem;
+        margin: 0.45rem 0 0;
+        padding: 0;
+        min-height: 1.5rem;
+        visibility: visible;
+    }
+    .av-vehicle-photo-card__meta .form-check-label,
+    .av-vehicle-photo-card__primary-label {
+        font-size: 0.78rem;
+        line-height: 1.25;
+        color: #0b1b3f;
+    }
+    .av-vehicle-photo-card__meta .btn {
+        font-size: 0.72rem;
+        padding: 0.2rem 0.35rem;
+        white-space: normal;
+        line-height: 1.2;
+    }
+    .vehicle-photo-new .badge-primary-photo {
+        position: absolute;
+        left: 6px;
+        top: 6px;
+        z-index: 3;
+        background: #0d6efd;
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+    }
     button.gallery-remove {
         position: absolute;
-        top: 8px;
-        right: 8px;
+        top: 6px;
+        right: 6px;
         left: auto;
         z-index: 4;
         display: inline-flex !important;

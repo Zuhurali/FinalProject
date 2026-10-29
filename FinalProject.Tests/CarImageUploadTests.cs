@@ -32,7 +32,7 @@ public class CarImageUploadTests
             var service = new CarImageUploadService(new FakeWebHost(root));
             var car = new SaveCarDto { ImageUrl = "https://example.com/old.jpg" };
             await using var stream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
-            var file = new FormFile(stream, 0, stream.Length, "imageFile", "studio.png")
+            var file = new FormFile(stream, 0, stream.Length, "vehiclePhotos", "studio.png")
             {
                 Headers = new HeaderDictionary(),
                 ContentType = "image/png"
@@ -84,7 +84,7 @@ public class CarImageUploadTests
     }
 
     [Fact]
-    public async Task Create_requires_url_or_file()
+    public async Task Create_requires_at_least_one_photo()
     {
         var root = CreateTempWebRoot();
         try
@@ -94,7 +94,7 @@ public class CarImageUploadTests
 
             var error = await service.ApplyAsync(car, imageFile: null, requireImage: true);
 
-            Assert.Contains("path or URL", error!, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("vehicle photo", error!, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
@@ -103,21 +103,107 @@ public class CarImageUploadTests
     }
 
     [Fact]
-    public void Admin_car_forms_include_url_input_and_choose_file_button()
+    public async Task Vehicle_photos_use_first_file_as_primary_and_rest_as_gallery()
+    {
+        var root = CreateTempWebRoot();
+        try
+        {
+            var service = new CarImageUploadService(new FakeWebHost(root));
+            var car = new SaveCarDto();
+            var files = new List<IFormFile>
+            {
+                FormFile("primary.jpg", [1, 2, 3]),
+                FormFile("side.png", [4, 5, 6, 7]),
+                FormFile("rear.webp", [8, 9])
+            };
+
+            var error = await service.ApplyVehiclePhotosAsync(car, files, requireImage: true);
+
+            Assert.Null(error);
+            Assert.EndsWith(".jpg", car.ImageUrl, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(2, car.AdditionalImageUrls.Count);
+            Assert.EndsWith(".png", car.AdditionalImageUrls[0], StringComparison.OrdinalIgnoreCase);
+            Assert.EndsWith(".webp", car.AdditionalImageUrls[1], StringComparison.OrdinalIgnoreCase);
+            Assert.True(File.Exists(Physical(root, car.ImageUrl)));
+            Assert.All(car.AdditionalImageUrls, path => Assert.True(File.Exists(Physical(root, path))));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Vehicle_photos_empty_selection_preserves_existing_primary_on_edit()
+    {
+        var root = CreateTempWebRoot();
+        try
+        {
+            var service = new CarImageUploadService(new FakeWebHost(root));
+            var existing = "~/assets/images/portfolio/cars/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg";
+            var car = new SaveCarDto { ImageUrl = existing };
+
+            var error = await service.ApplyVehiclePhotosAsync(car, Array.Empty<IFormFile>(), requireImage: true);
+
+            Assert.Null(error);
+            Assert.Equal(existing, car.ImageUrl);
+            Assert.Empty(car.AdditionalImageUrls);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Admin_and_account_forms_use_one_multi_photo_picker()
     {
         var root = FindRepositoryRoot();
-        var fields = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminCars", "_CarFields.cshtml"));
+        var admin = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminCars", "_CarFields.cshtml"));
+        var account = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Account", "_VehicleListingFields.cshtml"));
         var create = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminCars", "Create.cshtml"));
         var edit = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminCars", "Edit.cshtml"));
 
-        Assert.Contains("asp-for=\"Car.ImageUrl\"", fields, StringComparison.Ordinal);
-        Assert.Contains("Choose File", fields, StringComparison.Ordinal);
-        Assert.Contains("name=\"imageFile\"", fields, StringComparison.Ordinal);
-        Assert.Contains("accept=\".jpg,.jpeg,.png,.webp", fields, StringComparison.Ordinal);
+        foreach (var fields in new[] { admin, account })
+        {
+            Assert.Contains("Vehicle Photos", fields, StringComparison.Ordinal);
+            Assert.Contains("Choose Photos", fields, StringComparison.Ordinal);
+            Assert.Contains("name=\"vehiclePhotos\"", fields, StringComparison.Ordinal);
+            Assert.Contains("multiple", fields, StringComparison.Ordinal);
+            Assert.Contains("asp-for=\"Car.ImageUrl\"", fields, StringComparison.Ordinal);
+            Assert.Contains("type=\"hidden\"", fields, StringComparison.Ordinal);
+            Assert.DoesNotContain("name=\"imageFile\"", fields, StringComparison.Ordinal);
+            Assert.DoesNotContain("name=\"galleryFiles\"", fields, StringComparison.Ordinal);
+            Assert.DoesNotContain("Primary image</label>", fields, StringComparison.Ordinal);
+            Assert.DoesNotContain("Car Gallery Images", fields, StringComparison.Ordinal);
+            Assert.DoesNotContain(">Add Images<", fields, StringComparison.Ordinal);
+        }
+
         Assert.Contains("enctype=\"multipart/form-data\"", create, StringComparison.Ordinal);
         Assert.Contains("enctype=\"multipart/form-data\"", edit, StringComparison.Ordinal);
-        Assert.Contains("car-image-preview", fields, StringComparison.Ordinal);
+        Assert.Contains("Show on homepage", admin, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"Car.IsFeatured\"", admin, StringComparison.Ordinal);
     }
+
+    private static IFormFile FormFile(string name, byte[] bytes)
+    {
+        var stream = new MemoryStream(bytes);
+        return new FormFile(stream, 0, stream.Length, "vehiclePhotos", name)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "application/octet-stream"
+        };
+    }
+
+    private static string Physical(string root, string relative) =>
+        Path.Combine(
+            root,
+            "assets",
+            "images",
+            "portfolio",
+            "cars",
+            "uploads",
+            Path.GetFileName(relative));
 
     private static string CreateTempWebRoot()
     {

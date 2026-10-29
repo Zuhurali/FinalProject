@@ -65,6 +65,52 @@ public class HomeCarShowcaseTests
     }
 
     [Fact]
+    public void Premium_shows_only_IsFeatured_cars_when_any_are_marked()
+    {
+        var cars = new[]
+        {
+            Car(1, true, isFeatured: true, "Active", 2018, "Audi", "A4"),
+            Car(2, false, isFeatured: false, "Active", 2025, "Mercedes-Benz", "S-Class"),
+            Car(3, true, isFeatured: false, "Active", 2024, "BMW", "M5"),
+            Car(4, false, isFeatured: true, "Active", 2020, "Nissan", "350Z")
+        };
+
+        var premium = HomeCarShowcase.PremiumCars(cars);
+
+        Assert.Equal(new[] { 4, 1 }, premium.Select(car => car.Id));
+        Assert.All(premium, car => Assert.True(car.IsFeatured));
+        Assert.DoesNotContain(premium, car => car.Id is 2 or 3);
+    }
+
+    [Fact]
+    public void Premium_falls_back_to_mercedes_heuristic_when_no_car_is_featured()
+    {
+        var cars = new[]
+        {
+            Car(1, true, false, "Active", 2025, "Audi", "A8"),
+            Car(2, false, false, "Active", 2021, "Mercedes-Benz", "S-Class")
+        };
+
+        var premium = HomeCarShowcase.PremiumCars(cars);
+
+        Assert.Equal(2, premium[0].Id);
+        Assert.All(premium, car => Assert.False(car.IsFeatured));
+    }
+
+    [Fact]
+    public void Premium_includes_featured_cars_even_when_image_is_not_under_catalog()
+    {
+        var featuredUpload = Car(9, false, isFeatured: true, "Active", 2019, "Toyota", "Upload Featured");
+        featuredUpload.ImagePath = "~/assets/images/portfolio/cars/uploads/featured-test.webp";
+        var mercedes = Car(2, false, isFeatured: false, "Active", 2025, "Mercedes-Benz", "S-Class");
+
+        // Catalog-path showcase filter would drop the upload; PremiumCars must still surface IsFeatured.
+        Assert.DoesNotContain(featuredUpload, HomeCarShowcase.ShowcaseCars(new[] { featuredUpload, mercedes }));
+        var premium = HomeCarShowcase.PremiumCars(new[] { featuredUpload, mercedes });
+        Assert.Equal(new[] { 9 }, premium.Select(car => car.Id));
+    }
+
+    [Fact]
     public void In_stock_requires_Active_status_not_merely_being_listed()
     {
         var sold = Car(20, isNew: true, isFeatured: true, status: "Sold");

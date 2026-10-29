@@ -34,11 +34,16 @@ public interface IShopCatalogService
 
     Task<InPersonSale?> GetSaleAsync(int id, CancellationToken cancellationToken = default);
 
+    /// <param name="couponCode">Optional showroom courtesy code; redeemed in SQL when the sale succeeds.</param>
+    /// <param name="customerUserId">Required with <paramref name="couponCode"/> — Identity user receiving the redemption.</param>
     Task<(bool Ok, string? Error)> RecordSaleAsync(
         int productId,
         int quantity,
         string recordedByUserId,
         string? note,
+        Guid? idempotencyKey = null,
+        string? couponCode = null,
+        string? customerUserId = null,
         CancellationToken cancellationToken = default);
 
     Task<(bool Ok, string? Error)> VoidSaleAsync(
@@ -48,6 +53,11 @@ public interface IShopCatalogService
 
     Task<IReadOnlyList<ProductInquiry>> GetInquiriesAsync(
         string? status = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Public product page: answered Q&amp;A for one product only (no admin inbox dump).</summary>
+    Task<IReadOnlyList<ProductInquiry>> GetAnsweredInquiriesForProductAsync(
+        int productId,
         CancellationToken cancellationToken = default);
 
     Task<ProductInquiry?> GetInquiryAsync(int id, CancellationToken cancellationToken = default);
@@ -95,10 +105,12 @@ public interface IShopCatalogService
         string status,
         CancellationToken cancellationToken = default);
 
+    /// <param name="couponCode">Optional courtesy code; redeemed for the request's <c>UserId</c> when present.</param>
     Task<(bool Ok, string? Error)> CompletePurchaseRequestWithSaleAsync(
         int requestId,
         string recordedByUserId,
         string? note,
+        string? couponCode = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> DeletePurchaseRequestAsync(int id, CancellationToken cancellationToken = default);

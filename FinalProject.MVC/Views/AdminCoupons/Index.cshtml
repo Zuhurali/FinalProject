@@ -1,15 +1,18 @@
 @model IReadOnlyList<Coupon>
 @{
     Layout = "_AdminLayout";
+    var usageCounts = ViewBag.UsageCounts as IReadOnlyDictionary<string, int>
+        ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+    var recentUsages = ViewBag.RecentUsages as IReadOnlyList<CouponUsage> ?? Array.Empty<CouponUsage>();
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
         <h1 class="h3 mb-1">Coupons</h1>
-        <p class="text-muted mb-0">Showroom courtesy codes for spare-parts inquiry carts. Applying a coupon only previews the discount; usage is recorded when an order is successfully placed.</p>
+        <p class="text-muted mb-0">Showroom courtesy codes for spare-parts inquiry carts. Cart apply is preview-only. Redemption is written to SQL (<code>CouponUsages</code>) when staff records an in-person sale (or completes a linked purchase request) — not via online checkout.</p>
     </div>
     <a asp-action="Create" class="btn btn-primary">New coupon</a>
 </div>
-<div class="admin-card">
+<div class="admin-card mb-4">
     @if (Model.Count == 0)
     {
         <p class="mb-0">No coupons yet.</p>
@@ -27,6 +30,7 @@
                         <th>Scope</th>
                         <th>Expires (UTC)</th>
                         <th>Limits</th>
+                        <th>Redeemed</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
@@ -34,6 +38,7 @@
                 <tbody>
                 @foreach (var coupon in Model)
                 {
+                    usageCounts.TryGetValue(coupon.Code, out var redeemed);
                     <tr>
                         <td><code>@coupon.Code</code></td>
                         <td>@coupon.Name</td>
@@ -57,6 +62,7 @@
                                 <div class="small text-muted">Total: @coupon.MaxTotalUses</div>
                             }
                         </td>
+                        <td>@redeemed</td>
                         <td>@(coupon.IsActive ? "Active" : "Inactive")</td>
                         <td class="text-nowrap">
                             <a asp-action="Edit" asp-route-id="@coupon.Id" class="btn btn-sm btn-outline-dark">Edit</a>
@@ -70,6 +76,39 @@
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                             </form>
                         </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+<div class="admin-card">
+    <h2 class="h5">Recent redemptions</h2>
+    @if (recentUsages.Count == 0)
+    {
+        <p class="text-muted mb-0">No coupon redemptions recorded yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>When (UTC)</th>
+                        <th>Code</th>
+                        <th>User</th>
+                        <th>Discount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var usage in recentUsages)
+                {
+                    <tr>
+                        <td>@usage.UsedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td><code>@usage.CouponCode</code></td>
+                        <td>@(usage.User?.Email ?? usage.UserId)</td>
+                        <td>@usage.DiscountAmount.ToString("C")</td>
                     </tr>
                 }
                 </tbody>

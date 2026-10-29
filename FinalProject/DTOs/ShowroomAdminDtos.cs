@@ -51,6 +51,9 @@ public sealed class RecordShowroomSaleRequest
 
     [MaxLength(500)]
     public string? Note { get; set; }
+
+    /// <summary>Client-generated key; retries with the same key return the original sale.</summary>
+    public Guid? IdempotencyKey { get; set; }
 }
 
 public sealed class CompleteShowroomRequestSaleRequest

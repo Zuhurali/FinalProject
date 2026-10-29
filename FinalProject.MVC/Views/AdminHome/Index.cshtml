@@ -1,0 +1,234 @@
+@model HomePageContentEditViewModel
+@{
+    Layout = "_AdminLayout";
+}
+<h1 class="h3 mb-4">Home Page</h1>
+<p class="text-muted">Edit marketing copy and images on the public homepage. Car listings, search filters, and live campaigns stay connected to their existing catalogs.</p>
+
+<form asp-controller="AdminHome" asp-action="Index" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <h2 class="h5">Hero</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <label asp-for="HeroTitle" class="form-label"></label>
+            <input asp-for="HeroTitle" class="form-control" />
+            <span asp-validation-for="HeroTitle" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="HeroHighlight" class="form-label"></label>
+            <input asp-for="HeroHighlight" class="form-control" />
+            <span asp-validation-for="HeroHighlight" class="text-danger"></span>
+        </div>
+        <div class="col-md-8">
+            <label asp-for="HeroImageAlt" class="form-label"></label>
+            <input asp-for="HeroImageAlt" class="form-control" />
+            <span asp-validation-for="HeroImageAlt" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Hero image</label>
+            <div class="mb-2"><img src="@Url.Content(Model.HeroImagePath)" alt="" style="max-height:72px;" /></div>
+            <input type="hidden" asp-for="HeroImagePath" />
+            <input type="file" name="heroImage" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+        </div>
+    </div>
+
+    <h2 class="h5">Categories section</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="CategoriesEyebrow" class="form-label"></label>
+            <input asp-for="CategoriesEyebrow" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="CategoriesHeadingBefore" class="form-label"></label>
+            <input asp-for="CategoriesHeadingBefore" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label asp-for="CategoriesHeadingHighlight" class="form-label"></label>
+            <input asp-for="CategoriesHeadingHighlight" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="CategoriesHeadingAfter" class="form-label"></label>
+            <input asp-for="CategoriesHeadingAfter" class="form-control" />
+        </div>
+    </div>
+
+    <h2 class="h5">Car portfolio section</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="PortfolioEyebrow" class="form-label"></label>
+            <input asp-for="PortfolioEyebrow" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="PortfolioHeadingBefore" class="form-label"></label>
+            <input asp-for="PortfolioHeadingBefore" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="PortfolioHeadingHighlight" class="form-label"></label>
+            <input asp-for="PortfolioHeadingHighlight" class="form-control" />
+        </div>
+    </div>
+
+    <h2 class="h5">Campaigns section</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="CampaignsEyebrow" class="form-label"></label>
+            <input asp-for="CampaignsEyebrow" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="CampaignsHeadingBefore" class="form-label"></label>
+            <input asp-for="CampaignsHeadingBefore" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="CampaignsHeadingHighlight" class="form-label"></label>
+            <input asp-for="CampaignsHeadingHighlight" class="form-control" />
+        </div>
+    </div>
+
+    <h2 class="h5">About section</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="AboutEyebrow" class="form-label"></label>
+            <input asp-for="AboutEyebrow" class="form-control" />
+        </div>
+        <div class="col-md-5">
+            <label asp-for="AboutHeadingBefore" class="form-label"></label>
+            <input asp-for="AboutHeadingBefore" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="AboutHeadingHighlight" class="form-label"></label>
+            <input asp-for="AboutHeadingHighlight" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="AboutBody" class="form-label"></label>
+            <textarea asp-for="AboutBody" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="AboutCtaLabel" class="form-label"></label>
+            <input asp-for="AboutCtaLabel" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">About main image</label>
+            <div class="mb-2"><img src="@Url.Content(Model.AboutImageMainPath)" alt="" style="max-height:72px;" /></div>
+            <input type="hidden" asp-for="AboutImageMainPath" />
+            <input type="file" name="aboutImageMain" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">About float image 1</label>
+            <div class="mb-2"><img src="@Url.Content(Model.AboutImageFloat1Path)" alt="" style="max-height:72px;" /></div>
+            <input type="hidden" asp-for="AboutImageFloat1Path" />
+            <input type="file" name="aboutImageFloat1" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">About float image 2</label>
+            <div class="mb-2"><img src="@Url.Content(Model.AboutImageFloat2Path)" alt="" style="max-height:72px;" /></div>
+            <input type="hidden" asp-for="AboutImageFloat2Path" />
+            <input type="file" name="aboutImageFloat2" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+        </div>
+    </div>
+
+    <h2 class="h5">Premium Brands section</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="BrandsEyebrow" class="form-label"></label>
+            <input asp-for="BrandsEyebrow" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="BrandsHeadingBefore" class="form-label"></label>
+            <input asp-for="BrandsHeadingBefore" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="BrandsHeadingHighlight" class="form-label"></label>
+            <input asp-for="BrandsHeadingHighlight" class="form-control" />
+        </div>
+    </div>
+
+    <h2 class="h5">Why Choose Us</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="WhyChooseEyebrow" class="form-label"></label>
+            <input asp-for="WhyChooseEyebrow" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="WhyChooseHeadingBefore" class="form-label"></label>
+            <input asp-for="WhyChooseHeadingBefore" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="WhyChooseHeadingHighlight" class="form-label"></label>
+            <input asp-for="WhyChooseHeadingHighlight" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Background image</label>
+            <div class="mb-2"><img src="@Url.Content(Model.WhyChooseBackgroundPath)" alt="" style="max-height:72px;" /></div>
+            <input type="hidden" asp-for="WhyChooseBackgroundPath" />
+            <input type="file" name="whyChooseBackground" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+        </div>
+        @for (var i = 1; i <= 4; i++)
+        {
+            <div class="col-12"><hr class="my-1" /><h3 class="h6 mb-0">Feature @i</h3></div>
+            if (i == 1)
+            {
+                <div class="col-md-4"><label asp-for="Feature1Title" class="form-label"></label><input asp-for="Feature1Title" class="form-control" /></div>
+                <div class="col-md-5"><label asp-for="Feature1Description" class="form-label"></label><textarea asp-for="Feature1Description" class="form-control" rows="2"></textarea></div>
+                <div class="col-md-3">
+                    <label class="form-label">Icon</label>
+                    <div class="mb-2"><img src="@Url.Content(Model.Feature1IconPath)" alt="" style="max-height:40px;" /></div>
+                    <input type="hidden" asp-for="Feature1IconPath" />
+                    <input type="file" name="feature1Icon" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+                </div>
+            }
+            else if (i == 2)
+            {
+                <div class="col-md-4"><label asp-for="Feature2Title" class="form-label"></label><input asp-for="Feature2Title" class="form-control" /></div>
+                <div class="col-md-5"><label asp-for="Feature2Description" class="form-label"></label><textarea asp-for="Feature2Description" class="form-control" rows="2"></textarea></div>
+                <div class="col-md-3">
+                    <label class="form-label">Icon</label>
+                    <div class="mb-2"><img src="@Url.Content(Model.Feature2IconPath)" alt="" style="max-height:40px;" /></div>
+                    <input type="hidden" asp-for="Feature2IconPath" />
+                    <input type="file" name="feature2Icon" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+                </div>
+            }
+            else if (i == 3)
+            {
+                <div class="col-md-4"><label asp-for="Feature3Title" class="form-label"></label><input asp-for="Feature3Title" class="form-control" /></div>
+                <div class="col-md-5"><label asp-for="Feature3Description" class="form-label"></label><textarea asp-for="Feature3Description" class="form-control" rows="2"></textarea></div>
+                <div class="col-md-3">
+                    <label class="form-label">Icon</label>
+                    <div class="mb-2"><img src="@Url.Content(Model.Feature3IconPath)" alt="" style="max-height:40px;" /></div>
+                    <input type="hidden" asp-for="Feature3IconPath" />
+                    <input type="file" name="feature3Icon" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+                </div>
+            }
+            else
+            {
+                <div class="col-md-4"><label asp-for="Feature4Title" class="form-label"></label><input asp-for="Feature4Title" class="form-control" /></div>
+                <div class="col-md-5"><label asp-for="Feature4Description" class="form-label"></label><textarea asp-for="Feature4Description" class="form-control" rows="2"></textarea></div>
+                <div class="col-md-3">
+                    <label class="form-label">Icon</label>
+                    <div class="mb-2"><img src="@Url.Content(Model.Feature4IconPath)" alt="" style="max-height:40px;" /></div>
+                    <input type="hidden" asp-for="Feature4IconPath" />
+                    <input type="file" name="feature4Icon" class="form-control" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" />
+                </div>
+            }
+        }
+    </div>
+
+    <h2 class="h5">Featured Cars section</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label asp-for="FeaturedEyebrow" class="form-label"></label>
+            <input asp-for="FeaturedEyebrow" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="FeaturedHeadingBefore" class="form-label"></label>
+            <input asp-for="FeaturedHeadingBefore" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="FeaturedHeadingHighlight" class="form-label"></label>
+            <input asp-for="FeaturedHeadingHighlight" class="form-control" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Save home page</button>
+</form>

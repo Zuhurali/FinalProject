@@ -23,9 +23,9 @@ public class ShowroomSalesAndRequestsTests
 
     [Theory]
     [InlineData(ShowroomRequestStatus.New, ShowroomRequestStatus.Contacted, true)]
-    [InlineData(ShowroomRequestStatus.New, ShowroomRequestStatus.Completed, true)]
+    [InlineData(ShowroomRequestStatus.New, ShowroomRequestStatus.Completed, false)]
     [InlineData(ShowroomRequestStatus.New, ShowroomRequestStatus.Cancelled, true)]
-    [InlineData(ShowroomRequestStatus.Contacted, ShowroomRequestStatus.Completed, true)]
+    [InlineData(ShowroomRequestStatus.Contacted, ShowroomRequestStatus.Completed, false)]
     [InlineData(ShowroomRequestStatus.Contacted, ShowroomRequestStatus.Cancelled, true)]
     [InlineData(ShowroomRequestStatus.Contacted, ShowroomRequestStatus.New, false)]
     [InlineData(ShowroomRequestStatus.Completed, ShowroomRequestStatus.Cancelled, false)]
@@ -174,6 +174,39 @@ public class ShowroomSalesAndRequestsTests
     }
 
     [Fact]
+    public async Task Record_sale_idempotency_key_prevents_duplicate_stock_decrement()
+    {
+        await using var db = CreateMvcDb();
+        var catalog = new ShopCatalogService(db);
+        var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 2);
+        var originalQty = product.Quantity;
+        var key = Guid.NewGuid();
+        var note = "idempotent-sale-" + key.ToString("N");
+
+        try
+        {
+            var (first, firstError) = await catalog.RecordSaleAsync(product.Id, 1, "idem-admin", note, key);
+            Assert.True(first, firstError);
+            var (second, secondError) = await catalog.RecordSaleAsync(product.Id, 1, "idem-admin", note, key);
+            Assert.True(second, secondError);
+
+            var after = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
+            Assert.Equal(originalQty - 1, after.Quantity);
+            Assert.Equal(1, await db.InPersonSales.CountAsync(item => item.IdempotencyKey == key.ToString("N")));
+        }
+        finally
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                DELETE FROM InPersonSales WHERE Note = {note};
+                UPDATE ShopProducts
+                SET Quantity = {originalQty},
+                    InStock = CASE WHEN {originalQty} > 0 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
+                WHERE Id = {product.Id};
+                """);
+        }
+    }
+
+    [Fact]
     public async Task Void_sale_restores_stock_atomically_and_excludes_from_list()
     {
         await using var db = CreateMvcDb();
@@ -255,14 +288,30 @@ public class ShowroomSalesAndRequestsTests
                 .SingleAsync(item => item.Note == "e2e complete" && item.ProductId == product.Id);
             saleId = sale.Id;
             Assert.Equal(2, sale.Quantity);
+            Assert.Equal(requestId, sale.PurchaseRequestId);
             Assert.Null(sale.VoidedAt);
+
+            var (statusOnly, statusError) = await catalog.SetPurchaseRequestStatusAsync(
+                requestId,
+                ShowroomRequestStatus.Completed);
+            Assert.False(statusOnly);
+            Assert.Contains("Cannot change status", statusError);
 
             var (again, againError) = await catalog.CompletePurchaseRequestWithSaleAsync(
                 requestId,
                 "complete-admin",
                 null);
-            Assert.False(again);
-            Assert.Contains("Completed", againError);
+            Assert.True(again, againError);
+            Assert.Equal(1, await db.InPersonSales.CountAsync(item => item.PurchaseRequestId == requestId));
+            var afterRetry = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
+            Assert.Equal(originalQty - 2, afterRetry.Quantity);
+
+            var (voided, voidError) = await catalog.VoidSaleAsync(sale.Id, "complete-admin");
+            Assert.True(voided, voidError);
+            var reopened = await catalog.GetPurchaseRequestAsync(requestId);
+            Assert.Equal(ShowroomRequestStatus.Contacted, reopened!.Status);
+            var restored = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
+            Assert.Equal(originalQty, restored.Quantity);
         }
         finally
         {
@@ -284,6 +333,51 @@ public class ShowroomSalesAndRequestsTests
     }
 
     [Fact]
+    public async Task Walk_in_sale_rejects_when_open_requests_reserve_remaining_stock()
+    {
+        await using var db = CreateMvcDb();
+        var catalog = new ShopCatalogService(db);
+        var product = await db.ShopProducts.FirstAsync(item =>
+            item.IsActive && item.Quantity >= 2 && item.Quantity <= ShowroomRequestRules.MaxQuantityPerRequest);
+        var originalQty = product.Quantity;
+        var email = $"reserve-{Guid.NewGuid():N}@example.com";
+        var note = "reserve-walkin-" + Guid.NewGuid().ToString("N");
+
+        var created = await catalog.SavePurchaseRequestAsync(new ShowroomPurchaseRequest
+        {
+            ProductId = product.Id,
+            CustomerName = "Reserve Guard",
+            Email = email,
+            Phone = "+994 50 555 66 77",
+            Quantity = originalQty,
+            SubmissionKey = Guid.NewGuid()
+        });
+        Assert.True(created.Ok, created.Error);
+
+        try
+        {
+            var (ok, error) = await catalog.RecordSaleAsync(product.Id, 1, "reserve-admin", note);
+            Assert.False(ok);
+            Assert.Contains("reserved", error, StringComparison.OrdinalIgnoreCase);
+
+            var after = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
+            Assert.Equal(originalQty, after.Quantity);
+            Assert.Equal(0, await db.InPersonSales.CountAsync(item => item.Note == note));
+        }
+        finally
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                DELETE FROM InPersonSales WHERE Note = {note};
+                DELETE FROM ShowroomPurchaseRequests WHERE Id = {created.RequestId};
+                UPDATE ShopProducts
+                SET Quantity = {originalQty},
+                    InStock = CASE WHEN {originalQty} > 0 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
+                WHERE Id = {product.Id};
+                """);
+        }
+    }
+
+    [Fact]
     public async Task Api_showroom_service_records_and_voids_sale_against_sql_server()
     {
         await using var db = CreateApiDb();
@@ -296,12 +390,32 @@ public class ShowroomSalesAndRequestsTests
 
         try
         {
+            var idempotencyKey = Guid.NewGuid();
             var (sale, error) = await service.RecordSaleAsync(
-                new RecordShowroomSaleRequest { ProductId = product.Id, Quantity = 1, Note = note },
+                new RecordShowroomSaleRequest
+                {
+                    ProductId = product.Id,
+                    Quantity = 1,
+                    Note = note,
+                    IdempotencyKey = idempotencyKey
+                },
                 "api-admin");
             Assert.NotNull(sale);
             Assert.Null(error);
             saleId = sale!.Id;
+
+            var (retry, retryError) = await service.RecordSaleAsync(
+                new RecordShowroomSaleRequest
+                {
+                    ProductId = product.Id,
+                    Quantity = 1,
+                    Note = note,
+                    IdempotencyKey = idempotencyKey
+                },
+                "api-admin");
+            Assert.NotNull(retry);
+            Assert.Null(retryError);
+            Assert.Equal(sale.Id, retry!.Id);
 
             var after = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
             Assert.Equal(originalQty - 1, after.Quantity);

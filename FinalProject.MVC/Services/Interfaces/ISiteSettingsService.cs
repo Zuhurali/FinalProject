@@ -47,6 +47,8 @@ public sealed class SitePublicSettings
 
     public string DefaultMetaDescription { get; init; } = string.Empty;
 
+    public string CallCtaHeadline { get; init; } = "If you have any questions Please Call.";
+
     public string FormatCopyright(int year) =>
         (CopyrightText ?? string.Empty).Replace("{year}", year.ToString(), StringComparison.OrdinalIgnoreCase);
 

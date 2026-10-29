@@ -1,0 +1,42 @@
+@using FinalProject.MVC.Services.Interfaces
+@inject ICurrentPartnerStrip Partners
+@{
+    var settings = Partners.Settings;
+    var items = Partners.Items;
+    var sectionClass = ViewData["PartnerStripClass"] as string ?? "rts-brand-area rts-section-gapBottom";
+}
+@if (items.Count > 0)
+{
+    <section class="@sectionClass">
+        <div class="container">
+            <div class="section-title-area2">
+                <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">@settings.Eyebrow</p>
+                <h2 class="section-title wow move-right">@settings.HeadingBefore <span>@settings.HeadingHighlight</span></h2>
+            </div>
+            <div class="section-inner mt--80">
+                <ul>
+                    @{ var delay = 0.2; }
+                    @foreach (var item in items)
+                    {
+                        var delayText = $"{delay.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}s";
+                        delay += 0.2;
+                        <li class="wow fadeInUp" data-wow-delay="@delayText" data-wow-duration="1s">
+                            @if (!string.IsNullOrWhiteSpace(item.LinkUrl))
+                            {
+                                <a href="@item.LinkUrl" aria-label="@item.Name">
+                                    <img src="@Url.Content(item.LogoPath)" alt="@item.Name">
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Cars" asp-action="Index" asp-route-make="@item.Name" aria-label="@item.Name">
+                                    <img src="@Url.Content(item.LogoPath)" alt="@item.Name">
+                                </a>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </section>
+}

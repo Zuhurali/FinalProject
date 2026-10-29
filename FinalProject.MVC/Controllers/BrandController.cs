@@ -10,22 +10,13 @@ namespace FinalProject.MVC.Controllers;
 
 public class BrandController : Controller
 {
-    private static readonly Dictionary<string, string> LogoPaths = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["BMW"] = "~/assets/images/brand/04.svg",
-        ["Mazda"] = "~/assets/images/brand/03.svg",
-        ["Honda"] = "~/assets/images/brand/05.svg",
-        ["Audi"] = "~/assets/images/brand/06.svg",
-        ["Nissan"] = "~/assets/images/brand/07.svg",
-        ["Jeep"] = "~/assets/images/brand/01.svg",
-        ["Ford"] = "~/assets/images/brand/02.svg"
-    };
-
     private readonly ICarApiService _carApi;
+    private readonly IPartnerStripService _partners;
 
-    public BrandController(ICarApiService carApi)
+    public BrandController(ICarApiService carApi, IPartnerStripService partners)
     {
         _carApi = carApi;
+        _partners = partners;
     }
 
     public async Task<IActionResult> Details(int id)
@@ -63,7 +54,7 @@ public class BrandController : Controller
         return View(new BrandDetailsViewModel
         {
             Brand = brand,
-            LogoPath = LogoPaths.TryGetValue(brand.Name, out var logo) ? logo : string.Empty,
+            LogoPath = _partners.FindLogoPathByName(brand.Name) ?? string.Empty,
             Cars = cars
         });
     }

@@ -1,6 +1,8 @@
 @model IReadOnlyList<FinalProject.MVC.Models.Dealer>
 @{
-    ViewData["Title"] = "Dealer List - AutoVault";
+    var cms = ViewData["DealerPage"] as DealerPagePublicContent ?? DealerPage.Current;
+    ViewData["Title"] = cms.SeoTitle;
+    ViewData["MetaDescription"] = cms.SeoDescription;
     var total = Model.Count;
 }
 
@@ -8,10 +10,10 @@
 <div class="rts-breadcrumb-area portfolio-3 jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Dealer List</h1>
+            <h1 class="title">@cms.PageTitle</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Dealer</a>
+                <a href="#" class="current">@cms.BreadcrumbTitle</a>
             </div>
         </div>
     </div>
@@ -22,17 +24,6 @@
     <div class="container">
         <div class="shop-filter-area">
             <p>Showing 1-@total of @total results</p>
-            <div class="select-area">
-                <form class="select-2" id="dealerSortForm" action="#" method="get" accept-charset="utf-8">
-                    <select name="my_select2" class="my_select2">
-                        <option value="2" selected>Sort By Latest</option>
-                        <option value="10">Top</option>
-                        <option value="1">Price low to high</option>
-                        <option value="13">Price high to low</option>
-                        <option value="14">Best Matching</option>
-                    </select>
-                </form>
-            </div>
         </div>
         <div class="row g-5">
             @foreach (var dealer in Model)
@@ -57,19 +48,7 @@
                 </div>
             }
         </div>
-        <a href="#" class="rts-btn load-more-btn btn-border" id="dealerLoadMore">Load More</a>
     </div>
 </div>
 
 <partial name="_DealershipCallCta" />
-
-@section Scripts {
-    <script>
-        document.getElementById("dealerLoadMore")?.addEventListener("click", function (event) {
-            event.preventDefault();
-        });
-        document.getElementById("dealerSortForm")?.addEventListener("submit", function (event) {
-            event.preventDefault();
-        });
-    </script>
-}

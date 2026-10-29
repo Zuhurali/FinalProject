@@ -20,25 +20,28 @@ public class CarPublicVisibilityTests
     [Theory]
     [InlineData("Active", true)]
     [InlineData("active", true)]
+    [InlineData("Sold", true)]
+    [InlineData("sold", true)]
     [InlineData("Draft", false)]
-    [InlineData("Sold", false)]
     [InlineData(null, false)]
-    public void Public_listing_helper_recognizes_Active_only(string? status, bool expected)
+    public void Public_listing_helper_recognizes_Active_and_Sold_archive(string? status, bool expected)
     {
         Assert.Equal(expected, CarPublicListing.IsPubliclyListed(status));
     }
 
     [Fact]
-    public async Task Anonymous_get_by_id_hides_draft_and_sold()
+    public async Task Anonymous_get_by_id_hides_draft_but_allows_sold_archive()
     {
         await using var db = CreateDb();
         var draft = await SeedCarAsync(db, "DraftHide", "Draft");
-        var sold = await SeedCarAsync(db, "SoldHide", "Sold");
+        var sold = await SeedCarAsync(db, "SoldShow", "Sold");
         var active = await SeedCarAsync(db, "ActiveShow", "Active");
         var controller = CreateCarsController(db, principal: null);
 
         Assert.IsType<NotFoundResult>((await controller.GetById(draft.Id, CancellationToken.None)).Result);
-        Assert.IsType<NotFoundResult>((await controller.GetById(sold.Id, CancellationToken.None)).Result);
+
+        var soldOk = Assert.IsType<OkObjectResult>((await controller.GetById(sold.Id, CancellationToken.None)).Result);
+        Assert.Equal(sold.Id, Assert.IsType<CarResponse>(soldOk.Value).Id);
 
         var ok = Assert.IsType<OkObjectResult>((await controller.GetById(active.Id, CancellationToken.None)).Result);
         var payload = Assert.IsType<CarResponse>(ok.Value);

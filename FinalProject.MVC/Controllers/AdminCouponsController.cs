@@ -24,6 +24,8 @@ public sealed class AdminCouponsController : Controller
     {
         ViewData["Title"] = "Coupons - AutoVault";
         await _coupons.EnsureSeedAsync(cancellationToken);
+        ViewBag.UsageCounts = await _coupons.GetUsageCountsByCodeAsync(cancellationToken);
+        ViewBag.RecentUsages = await _coupons.GetRecentUsagesAsync(cancellationToken: cancellationToken);
         return View(await _coupons.GetAllAsync(cancellationToken));
     }
 
@@ -69,7 +71,7 @@ public sealed class AdminCouponsController : Controller
             return View("Edit", coupon);
         }
 
-        TempData["Success"] = $"Coupon {coupon.Code} was saved. Applying it in the cart only previews the discount; redemption is recorded when an order completes successfully.";
+        TempData["Success"] = $"Coupon {coupon.Code} was saved. Cart apply only previews the discount; redeem it when recording an in-person sale (AutoVault has no online checkout).";
         return RedirectToAction(nameof(Index));
     }
 

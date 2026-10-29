@@ -213,16 +213,16 @@ public class CarGalleryTests
     }
 
     [Fact]
-    public void Admin_edit_form_lists_the_saved_gallery_and_an_add_images_control()
+    public void Admin_edit_form_lists_saved_photos_in_unified_vehicle_photos_control()
     {
         var root = FindRepositoryRoot();
         var fields = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminCars", "_CarFields.cshtml"));
         var edit = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminCars", "Edit.cshtml"));
 
-        Assert.Contains("Car Gallery Images", fields, StringComparison.Ordinal);
+        Assert.Contains("Vehicle Photos", fields, StringComparison.Ordinal);
         Assert.Contains("Model.Gallery", fields, StringComparison.Ordinal);
-        Assert.Contains("aria-label=\"Remove image\"", fields, StringComparison.Ordinal);
-        Assert.Contains("name=\"galleryFiles\"", fields, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Remove photo\"", fields, StringComparison.Ordinal);
+        Assert.Contains("name=\"vehiclePhotos\"", fields, StringComparison.Ordinal);
         Assert.Contains("multiple", fields, StringComparison.Ordinal);
         Assert.Contains("enctype=\"multipart/form-data\"", edit, StringComparison.Ordinal);
     }

@@ -151,6 +151,7 @@ public class CarService : ICarService
             Description = request.Description.Trim(),
             OwnerId = ownerId,
             Status = request.Status,
+            IsFeatured = request.IsFeatured,
             IsNew = true,
             CreatedAt = now,
             Images =
@@ -198,6 +199,7 @@ public class CarService : ICarService
             Description = request.Description.Trim(),
             OwnerId = null,
             Status = request.Status,
+            IsFeatured = request.IsFeatured,
             IsNew = true,
             CreatedAt = now,
             Images =
@@ -252,6 +254,7 @@ public class CarService : ICarService
         car.Color = VehicleColorCatalog.FromPosted(request.Color);
         car.Description = request.Description.Trim();
         car.Status = request.Status;
+        car.IsFeatured = request.IsFeatured;
         car.UpdatedAt = DateTime.UtcNow;
         ApplySpecifications(car, request);
         var removedImageUrls = await SyncGalleryAsync(car, request, cancellationToken);

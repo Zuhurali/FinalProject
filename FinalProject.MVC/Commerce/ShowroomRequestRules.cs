@@ -11,7 +11,8 @@ public static class ShowroomRequestRules
 
     /// <summary>
     /// Allowed admin status transitions for showroom purchase requests.
-    /// Completed and Cancelled are terminal.
+    /// Completed is only set via CompletePurchaseRequestWithSaleAsync (never via status PATCH).
+    /// Cancelled is terminal.
     /// </summary>
     public static bool CanTransition(string? fromStatus, string? toStatus)
     {
@@ -30,13 +31,17 @@ public static class ShowroomRequestRules
             return true;
         }
 
+        // Completed requires a linked stock-moving sale — refuse status-only completion.
+        if (string.Equals(toStatus, ShowroomRequestStatus.Completed, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         return fromStatus switch
         {
             ShowroomRequestStatus.New => toStatus is ShowroomRequestStatus.Contacted
-                or ShowroomRequestStatus.Completed
                 or ShowroomRequestStatus.Cancelled,
-            ShowroomRequestStatus.Contacted => toStatus is ShowroomRequestStatus.Completed
-                or ShowroomRequestStatus.Cancelled,
+            ShowroomRequestStatus.Contacted => toStatus is ShowroomRequestStatus.Cancelled,
             _ => false
         };
     }
@@ -80,7 +85,9 @@ public static class ShowroomRequestRules
 
         if (request.Quantity > availableQuantity)
         {
-            return $"Only {availableQuantity} available. Lower the quantity and try again.";
+            return availableQuantity <= 0
+                ? "All current stock is already covered by open purchase requests. Try again later or call the store."
+                : $"Only {availableQuantity} available after open requests. Lower the quantity and try again.";
         }
 
         if (request.CustomerName.Length is < 2 or > 80)
@@ -113,6 +120,34 @@ public static class ShowroomRequestRules
         if (request.Note is { Length: > MaxNoteLength })
         {
             return $"Keep the note under {MaxNoteLength} characters.";
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Units still free for new requests after open New/Contacted reservations.
+    /// </summary>
+    public static int UnreservedQuantity(int onHandQuantity, int openReservedQuantity) =>
+        Math.Max(0, onHandQuantity - Math.Max(0, openReservedQuantity));
+
+    /// <summary>
+    /// Walk-in sales must leave enough stock for existing open purchase requests.
+    /// </summary>
+    public static string? ValidateSaleAgainstReservations(int saleQuantity, int onHandQuantity, int openReservedQuantity)
+    {
+        var stockError = ShowroomRules.ValidateSaleQuantity(saleQuantity, onHandQuantity);
+        if (stockError != null)
+        {
+            return stockError;
+        }
+
+        var remaining = onHandQuantity - saleQuantity;
+        if (remaining < openReservedQuantity)
+        {
+            return openReservedQuantity == 0
+                ? null
+                : $"That sale would leave only {remaining} in stock, but {openReservedQuantity} unit(s) are reserved by open purchase requests.";
         }
 
         return null;

@@ -10,12 +10,10 @@ namespace FinalProject.Services;
 public sealed class ProductReviewService : IProductReviewService
 {
     private readonly FinalProjectDbContext _context;
-    private readonly HashSet<int> _productIds;
 
-    public ProductReviewService(FinalProjectDbContext context, IConfiguration configuration)
+    public ProductReviewService(FinalProjectDbContext context)
     {
         _context = context;
-        _productIds = configuration.GetSection("ShopCatalog:ProductIds").Get<int[]>()?.ToHashSet() ?? [];
     }
 
     public async Task<IReadOnlyList<ProductReviewItem>?> GetReviewsAsync(
@@ -237,15 +235,8 @@ public sealed class ProductReviewService : IProductReviewService
                 canModerate && review.IsEdited);
     }
 
-    private async Task<bool> ProductExistsAsync(int productId, CancellationToken cancellationToken)
-    {
-        if (_productIds.Contains(productId))
-        {
-            return true;
-        }
-
-        return await _context.ShopProducts.AsNoTracking().AnyAsync(product => product.Id == productId, cancellationToken);
-    }
+    private Task<bool> ProductExistsAsync(int productId, CancellationToken cancellationToken) =>
+        _context.ShopProducts.AsNoTracking().AnyAsync(product => product.Id == productId, cancellationToken);
 
     private Task<bool> ProductIsActiveAsync(int productId, CancellationToken cancellationToken) =>
         _context.ShopProducts.AsNoTracking()

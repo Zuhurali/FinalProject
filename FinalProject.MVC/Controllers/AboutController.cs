@@ -7,52 +7,49 @@ namespace FinalProject.MVC.Controllers;
 
 public class AboutController : Controller
 {
-    private static readonly LuxuryShowcaseBrand[] ShowcaseTemplate =
-    [
-        new()
-        {
-            Name = "Lamborghini",
-            Descriptor = "Italian performance icons",
-            ImagePath = "~/assets/images/catalog/sports-car/huracan-1.jpg",
-            HasListings = false
-        },
-        new()
-        {
-            Name = "Ferrari",
-            Descriptor = "Racing-bred grand tourers",
-            ImagePath = "~/assets/images/catalog/sports-car/f8-1.jpg",
-            HasListings = false
-        },
-        new()
-        {
-            Name = "Bentley",
-            Descriptor = "Handcrafted British luxury",
-            ImagePath = "~/assets/images/catalog/luxury/continental-1.jpg",
-            HasListings = false
-        },
-        new()
-        {
-            Name = "Rolls-Royce",
-            Descriptor = "The pinnacle of comfort",
-            ImagePath = "~/assets/images/catalog/luxury/rolls-royce-phantom-viii-front.jpg",
-            HasListings = false
-        }
-    ];
-
+    private readonly IAboutPageContentService _aboutPage;
     private readonly ICarApiService _carApi;
     private readonly ILogger<AboutController> _logger;
 
-    public AboutController(ICarApiService carApi, ILogger<AboutController> logger)
+    public AboutController(
+        IAboutPageContentService aboutPage,
+        ICarApiService carApi,
+        ILogger<AboutController> logger)
     {
+        _aboutPage = aboutPage;
         _carApi = carApi;
         _logger = logger;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        ViewData["Title"] = "About Us - AutoVault";
+        var content = _aboutPage.GetPublic();
+        ViewData["Title"] = string.IsNullOrWhiteSpace(content.SeoTitle) ? content.PageTitle : content.SeoTitle;
+        ViewData["MetaDescription"] = content.SeoDescription;
+
         var availableMakes = await LoadAvailableMakesAsync(cancellationToken);
-        var showcase = ShowcaseTemplate
+        var showcase = BuildShowcase(content, availableMakes);
+
+        return View(new AboutPageViewModel
+        {
+            Content = content,
+            Showcase = showcase
+        });
+    }
+
+    private static IReadOnlyList<LuxuryShowcaseBrand> BuildShowcase(
+        AboutPagePublicContent content,
+        HashSet<string> availableMakes)
+    {
+        var templates = new (string Name, string Descriptor, string ImagePath)[]
+        {
+            (content.Showcase1Name, content.Showcase1Descriptor, content.Showcase1ImagePath),
+            (content.Showcase2Name, content.Showcase2Descriptor, content.Showcase2ImagePath),
+            (content.Showcase3Name, content.Showcase3Descriptor, content.Showcase3ImagePath),
+            (content.Showcase4Name, content.Showcase4Descriptor, content.Showcase4ImagePath)
+        };
+
+        return templates
             .Select(brand => new LuxuryShowcaseBrand
             {
                 Name = brand.Name,
@@ -61,8 +58,6 @@ public class AboutController : Controller
                 HasListings = availableMakes.Contains(brand.Name)
             })
             .ToList();
-
-        return View(showcase);
     }
 
     private async Task<HashSet<string>> LoadAvailableMakesAsync(CancellationToken cancellationToken)

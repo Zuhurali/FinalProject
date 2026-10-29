@@ -92,6 +92,25 @@ public class FavoritesReviewsRatingsTests
     }
 
     [Fact]
+    public async Task Product_favorite_rejects_unknown_product_id()
+    {
+        await using var db = CreateDb();
+        var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
+        var missingProductId = int.MaxValue - 42;
+
+        db.ProductFavorites.Add(new ProductFavorite
+        {
+            UserId = userId,
+            ProductId = missingProductId,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        Assert.False(await db.ProductFavorites.AnyAsync(
+            item => item.UserId == userId && item.ProductId == missingProductId));
+    }
+
+    [Fact]
     public async Task Product_favorite_is_scoped_to_owner()
     {
         await using var db = CreateDb();
@@ -121,11 +140,26 @@ public class FavoritesReviewsRatingsTests
     }
 
     [Fact]
+    public async Task Rating_and_review_require_real_shop_product_row()
+    {
+        await using var db = CreateDb();
+        var ratings = new ProductRatingService(db);
+        var reviews = new ProductReviewService(db);
+        var missingId = int.MaxValue - 7;
+        var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
+
+        Assert.Null(await ratings.GetProductRatingsAsync(missingId));
+        Assert.Null(await ratings.SaveRatingAsync(missingId, userId, 5));
+        Assert.Null(await reviews.GetReviewsAsync(missingId, userId, includeHidden: false));
+        var (created, _) = await reviews.SaveReviewAsync(missingId, null, userId, "Should not persist without product.");
+        Assert.Null(created);
+    }
+
+    [Fact]
     public async Task Rating_persists_rejects_duplicate_and_inactive_product()
     {
         await using var db = CreateDb();
-        var config = new ConfigurationBuilder().Build();
-        var ratings = new ProductRatingService(db, config);
+        var ratings = new ProductRatingService(db);
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive);
         var originalActive = product.IsActive;
@@ -187,8 +221,7 @@ public class FavoritesReviewsRatingsTests
     public async Task Review_create_rejected_for_inactive_product_but_existing_can_edit()
     {
         await using var db = CreateDb();
-        var config = new ConfigurationBuilder().Build();
-        var reviews = new ProductReviewService(db, config);
+        var reviews = new ProductReviewService(db);
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
         var taken = await db.ProductReviews.AsNoTracking()
             .Where(review => review.UserId == userId)

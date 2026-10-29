@@ -16,6 +16,10 @@ public sealed class OrderService : IOrderService
         _coupons = coupons;
     }
 
+    /// <summary>
+    /// Legacy writer for historical <c>Orders</c> rows. Public MVC checkout must not call this —
+    /// AutoVault is contact / in-store only. Prefer in-person <c>RecordSaleAsync</c> for new sales.
+    /// </summary>
     public async Task<Order> PlaceOrderAsync(
         string? userId,
         string firstName,
@@ -112,5 +116,19 @@ public sealed class OrderService : IOrderService
             .AsNoTracking()
             .Include(order => order.OrderItems)
             .FirstOrDefaultAsync(order => order.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Order>> GetRecentOrdersAsync(
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var limit = take < 1 ? 100 : Math.Min(take, 500);
+        return await _db.Orders
+            .AsNoTracking()
+            .Include(order => order.OrderItems)
+            .OrderByDescending(order => order.OrderDate)
+            .ThenByDescending(order => order.Id)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
     }
 }

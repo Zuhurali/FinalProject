@@ -12,6 +12,8 @@ namespace FinalProject.MVC.Models
         public string Address { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string DescriptionExtra { get; set; } = string.Empty;
+        /// <summary>Newline-separated company feature bullets shown on the dealer details page.</summary>
+        public string FeatureList { get; set; } = string.Empty;
         public string CarType { get; set; } = string.Empty;
         public string Mileage { get; set; } = string.Empty;
         public string FuelType { get; set; } = string.Empty;
@@ -36,6 +38,10 @@ namespace FinalProject.MVC.Models
         public string Cylinders { get; set; } = string.Empty;
         public string EngineLayout { get; set; } = string.Empty;
         public string EngineConfig { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
+        public bool IsPublished { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 
     public class DealerDetailsViewModel

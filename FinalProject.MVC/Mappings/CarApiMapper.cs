@@ -122,10 +122,17 @@ public static class CarApiMapper
 
     public static string CountLabel(IEnumerable<Car> cars, string categoryName)
     {
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            return "0 Cars";
+        }
+
         var category = CarCategories.Resolve(categoryName);
-        var count = category == null
-            ? 0
-            : cars.Count(car => car.Category.Equals(category.Value, StringComparison.OrdinalIgnoreCase));
+        var count = cars.Count(car =>
+            category != null
+                ? car.Category.Equals(category.Value, StringComparison.OrdinalIgnoreCase)
+                  || car.Category.Equals(category.DisplayName, StringComparison.OrdinalIgnoreCase)
+                : car.Category.Equals(categoryName.Trim(), StringComparison.OrdinalIgnoreCase));
         return count == 1 ? "1 Car" : $"{count} Cars";
     }
 

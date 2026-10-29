@@ -1,28 +1,27 @@
 @model IReadOnlyList<FaqItem>
 @{
-    ViewData["Title"] = "FAQ - AutoVault";
+    var cms = ViewData["FaqPage"] as FaqPagePublicContent ?? FaqPage.Current;
+    ViewData["Title"] = cms.SeoTitle;
+    ViewData["MetaDescription"] = cms.SeoDescription;
 }
 
-<!-- rts breadcrumb area start -->
 <div class="rts-breadcrumb-area portfolio jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Faq</h1>
+            <h1 class="title">@cms.BreadcrumbTitle</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Faq</a>
+                <a href="#" class="current">@cms.BreadcrumbTitle</a>
             </div>
         </div>
     </div>
 </div>
-<!-- rts breadcrumb area end -->
 
-<!-- FAQ Area Start -->
 <section class="rts-faq-area inner rts-section-gap">
     <div class="container">
         <div class="section-title-area2">
-            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">FAQ</p>
-            <h2 class="section-title wow move-right">Frequently Asked <span>Question</span></h2>
+            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">@cms.Eyebrow</p>
+            <h2 class="section-title wow move-right">@cms.HeadingBefore <span>@cms.HeadingHighlight</span></h2>
         </div>
         <div class="section-inner mt--80">
             <div class="row g-5">
@@ -67,35 +66,14 @@
                 </div>
                 <div class="col-xl-5 col-lg-6 order-change">
                     <div class="image-area">
-                        <img src="~/assets/images/banner/faq.webp" alt="">
+                        <img src="@Url.Content(cms.BannerImagePath)" alt="">
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- FAQ Area End -->
 
-<!-- Brand Area Start -->
-<section class="rts-brand-area rts-section-gapBottom">
-    <div class="container">
-        <div class="section-title-area2">
-            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
-            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
-        </div>
-        <div class="section-inner mt--80">
-            <ul>
-                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
-            </ul>
-        </div>
-    </div>
-</section>
-<!-- Brand Area End -->
+<partial name="_PartnerBrandStrip" />
 
 <partial name="_DealershipCallCta" />

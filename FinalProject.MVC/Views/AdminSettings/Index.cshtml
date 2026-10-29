@@ -30,6 +30,12 @@
 
     <h2 class="h5">Contact</h2>
     <div class="row g-3 mb-4">
+        <div class="col-12">
+            <label asp-for="CallCtaHeadline" class="form-label"></label>
+            <input asp-for="CallCtaHeadline" class="form-control" />
+            <div class="form-text">Shown on the homepage call-to-action strip.</div>
+            <span asp-validation-for="CallCtaHeadline" class="text-danger"></span>
+        </div>
         <div class="col-md-4">
             <label asp-for="DisplayPhone" class="form-label"></label>
             <input asp-for="DisplayPhone" class="form-control" />

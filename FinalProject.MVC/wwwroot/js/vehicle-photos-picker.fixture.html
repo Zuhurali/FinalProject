@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Vehicle Photos Picker Fixture</title>
+  <link rel="stylesheet" href="/css/car-listing-form.css" />
+  <style>
+    body { font-family: Segoe UI, sans-serif; margin: 24px; }
+    .av-gallery-field { max-width: 960px; }
+  </style>
+</head>
+<body>
+  <h1>Vehicle Photos Picker Fixture</h1>
+  <div class="av-gallery-field">
+    <input type="file"
+           id="vehicle-photos"
+           name="vehiclePhotos"
+           class="av-file-input"
+           multiple="multiple"
+           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+    <label for="vehicle-photos" class="av-add-images" id="vehicle-photos-button">Choose Photos</label>
+    <div id="vehicle-photos-file-name" class="av-help" aria-live="polite"></div>
+    <div id="vehicle-photos-preview" class="av-vehicle-photos-grid" data-vehicle-photos-preview></div>
+  </div>
+  <script src="/js/vehicle-photos-picker.js"></script>
+  <script>
+    window.AutoVaultVehiclePhotos.bind({});
+  </script>
+</body>
+</html>

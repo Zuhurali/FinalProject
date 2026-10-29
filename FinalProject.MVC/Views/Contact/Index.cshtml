@@ -1,13 +1,14 @@
 @model ContactFormModel
+@using FinalProject.MVC.Services.Interfaces
 @{
-    ViewData["Title"] = "Contact - AutoVault";
+    var contact = ViewData["ContactPage"] as ContactPagePublicContent ?? ContactPage.Current;
 }
 
 <!-- rts breadcrumb area start -->
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Get In Touch</h1>
+            <h1 class="title">@contact.FormTitle</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Dealership</a>
                 <a href="#" class="current">Contact</a>
@@ -29,13 +30,13 @@
         <div class="section-inner av-contact-layout">
             <div class="map-area">
                 <div class="contact-map-area-fluid">
-                    <iframe class="contact-map" title="Baku Auto Mall, Babek Prospekti 22–24, Baku, Azerbaijan" src="https://maps.google.com/maps?q=Baku%20Auto%20Mall%2C%20Babek%20Prospekti%2022-24%2C%20Baku%2C%20Azerbaijan&amp;ll=40.390506,49.899982&amp;z=16&amp;hl=en&amp;output=embed" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe class="contact-map" title="@contact.MapTitle" src="@contact.MapEmbedUrl" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
             <div class="get-in-touch-area">
                 <div class="contact-form">
-                    <h5 class="av-contact-form-title">Get In Touch</h5>
-                    <p class="av-contact-form-intro">Tell us which part or car you want to inspect. We will reply from the Baku store.</p>
+                    <h5 class="av-contact-form-title">@contact.FormTitle</h5>
+                    <p class="av-contact-form-intro">@contact.FormIntro</p>
                     <form class="form__content av-contact-form"
                           asp-controller="Contact"
                           asp-action="Send"
@@ -126,7 +127,7 @@
                 <div class="icon">
                     <img src="~/assets/images/contact/01.svg" alt="">
                 </div>
-                <h5 class="title">Location</h5>
+                <h5 class="title">@contact.LocationCardTitle</h5>
                 <ul>
                     <li><a href="@Site.Contact.MapsHref" target="_blank" rel="noopener">@Site.Contact.AddressLine</a></li>
                 </ul>
@@ -135,7 +136,7 @@
                 <div class="icon">
                     <img src="~/assets/images/contact/03.svg" alt="">
                 </div>
-                <h5 class="title">Phone</h5>
+                <h5 class="title">@contact.PhoneCardTitle</h5>
                 <ul>
                     <li><a href="@Site.Contact.TelHref" data-contact-action="call" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">@Site.Contact.DisplayPhone</a></li>
                     <li><a href="@Site.Contact.WhatsAppHref" data-contact-action="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Open a WhatsApp chat with AutoVault (not a phone call)">WhatsApp</a></li>
@@ -145,7 +146,7 @@
                 <div class="icon">
                     <img src="~/assets/images/contact/02.svg" alt="">
                 </div>
-                <h5 class="title">Email</h5>
+                <h5 class="title">@contact.EmailCardTitle</h5>
                 <ul>
                     <li><a href="@Site.Contact.MailtoHref">@Site.Contact.Email</a></li>
                 </ul>
@@ -154,25 +155,8 @@
     </div>
 </div>
 
-<section class="rts-brand-area contact-brand-area rts-section-gapTop">
-    <div class="container">
-        <div class="section-title-area2">
-            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
-            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
-        </div>
-        <div class="section-inner mt--80">
-            <ul>
-                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Jeep" aria-label="Jeep"><img src="~/assets/images/brand/01-w.svg" alt="Jeep"></a></li>
-                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Ford" aria-label="Ford"><img src="~/assets/images/brand/02.svg" alt="Ford"></a></li>
-                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Mazda" aria-label="Mazda"><img src="~/assets/images/brand/03.svg" alt="Mazda"></a></li>
-                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="BMW" aria-label="BMW"><img src="~/assets/images/brand/04.svg" alt="BMW"></a></li>
-                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Honda" aria-label="Honda"><img src="~/assets/images/brand/05.svg" alt="Honda"></a></li>
-                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Audi" aria-label="Audi"><img src="~/assets/images/brand/06.svg" alt="Audi"></a></li>
-                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><a asp-controller="Cars" asp-action="Index" asp-route-make="Nissan" aria-label="Nissan"><img src="~/assets/images/brand/07.svg" alt="Nissan"></a></li>
-            </ul>
-        </div>
-    </div>
-</section>
+@{ ViewData["PartnerStripClass"] = "rts-brand-area contact-brand-area rts-section-gapTop"; }
+<partial name="_PartnerBrandStrip" />
 <style>
     .rts-brand-area.contact-brand-area .section-inner ul li a {
         display: block;

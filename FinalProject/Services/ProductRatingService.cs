@@ -9,17 +9,10 @@ namespace FinalProject.Services;
 public sealed class ProductRatingService : IProductRatingService
 {
     private readonly FinalProjectDbContext _context;
-    private readonly HashSet<int> _productIds;
 
-    public ProductRatingService(
-        FinalProjectDbContext context,
-        IConfiguration configuration)
+    public ProductRatingService(FinalProjectDbContext context)
     {
         _context = context;
-        _productIds = configuration
-            .GetSection("ShopCatalog:ProductIds")
-            .Get<int[]>()
-            ?.ToHashSet() ?? [];
     }
 
     public async Task<ProductRatingSummary?> GetProductRatingsAsync(
@@ -224,16 +217,9 @@ public sealed class ProductRatingService : IProductRatingService
         return (true, true);
     }
 
-    private async Task<bool> ProductExistsAsync(int productId, CancellationToken cancellationToken)
-    {
-        if (_productIds.Contains(productId))
-        {
-            return true;
-        }
-
-        return await _context.ShopProducts.AsNoTracking()
+    private Task<bool> ProductExistsAsync(int productId, CancellationToken cancellationToken) =>
+        _context.ShopProducts.AsNoTracking()
             .AnyAsync(product => product.Id == productId, cancellationToken);
-    }
 
     private Task<bool> ProductIsActiveAsync(int productId, CancellationToken cancellationToken) =>
         _context.ShopProducts.AsNoTracking()
@@ -249,17 +235,6 @@ public sealed class ProductRatingService : IProductRatingService
             .Select(product => product.Id)
             .ToListAsync(cancellationToken);
         var known = active.ToHashSet();
-
-        foreach (var id in distinct.Where(id => _productIds.Contains(id) && !known.Contains(id)))
-        {
-            var inDb = await _context.ShopProducts.AsNoTracking()
-                .AnyAsync(product => product.Id == id, cancellationToken);
-            if (!inDb)
-            {
-                known.Add(id);
-            }
-        }
-
         return distinct.Where(known.Contains).ToArray();
     }
 

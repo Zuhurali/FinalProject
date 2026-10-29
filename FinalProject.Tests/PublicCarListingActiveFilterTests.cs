@@ -37,6 +37,7 @@ public class PublicCarListingActiveFilterTests
 
         Assert.Contains("CarPublicListing.WithActiveStatus", controller, StringComparison.Ordinal);
         Assert.Contains("CarPublicListing.CreateActiveQuery()", controller, StringComparison.Ordinal);
+        Assert.Contains("CarPublicListing.CreateSoldQuery()", controller, StringComparison.Ordinal);
         Assert.Contains("CarPublicListing.CreateActiveQuery()", mapper, StringComparison.Ordinal);
         Assert.Contains("CarPublicListing.WithActiveStatus", brand, StringComparison.Ordinal);
 
@@ -67,6 +68,27 @@ public class PublicCarListingActiveFilterTests
     }
 
     [Fact]
+    public async Task QueryAsync_with_Sold_status_returns_only_sold_cars()
+    {
+        await using var db = CreateDb();
+        await SeedCarAsync(db, "ActiveOne", "Active");
+        await SeedCarAsync(db, "DraftOne", "Draft");
+        var sold = await SeedCarAsync(db, "SoldOne", "Sold");
+        var service = new CarService(db, new SilentNotifications());
+
+        var page = await service.QueryAsync(new CarListQuery
+        {
+            Status = ApiCarPublicListing.SoldStatus,
+            Page = 1,
+            PageSize = 50
+        });
+
+        Assert.Single(page.Items);
+        Assert.Equal(sold.Id, page.Items[0].Id);
+        Assert.Equal("Sold", page.Items[0].Status, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task QueryAsync_without_status_still_returns_all_for_admin_style_queries()
     {
         await using var db = CreateDb();
@@ -78,6 +100,21 @@ public class PublicCarListingActiveFilterTests
 
         Assert.Equal(2, page.Items.Count);
         Assert.Contains(page.Items, item => item.Status == "Draft");
+    }
+
+    [Fact]
+    public void Api_CarsController_normalizes_anonymous_list_status_to_Active_or_Sold()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var controller = File.ReadAllText(Path.Combine(root, "FinalProject", "Controllers", "CarsController.cs"));
+        Assert.Contains("NormalizeAnonymousListStatus", controller, StringComparison.Ordinal);
+        Assert.Contains("!User.IsInRole(\"Admin\")", controller, StringComparison.Ordinal);
+        Assert.Contains("!User.IsInRole(\"SuperAdmin\")", controller, StringComparison.Ordinal);
+        Assert.Equal("Sold", ApiCarPublicListing.NormalizeAnonymousListStatus("Sold"));
+        Assert.Equal("Active", ApiCarPublicListing.NormalizeAnonymousListStatus("Draft"));
+        Assert.Equal("Active", ApiCarPublicListing.NormalizeAnonymousListStatus(null));
+        Assert.True(ApiCarPublicListing.IsPubliclyListed("Sold"));
+        Assert.False(ApiCarPublicListing.IsPubliclyListed("Draft"));
     }
 
     [Fact]

@@ -44,4 +44,33 @@ public static class ContactRequestStatus
     public static bool IsValid(string? status) =>
         !string.IsNullOrWhiteSpace(status)
         && All.Contains(status, StringComparer.Ordinal);
+
+    /// <summary>
+    /// New → In Progress → Resolved (Resolved is terminal). Same-status is allowed (no-op save).
+    /// New → Resolved is allowed to close without an intermediate step.
+    /// </summary>
+    public static bool CanTransition(string? fromStatus, string? toStatus)
+    {
+        if (string.IsNullOrWhiteSpace(fromStatus) || string.IsNullOrWhiteSpace(toStatus))
+        {
+            return false;
+        }
+
+        if (!IsValid(toStatus))
+        {
+            return false;
+        }
+
+        if (string.Equals(fromStatus, toStatus, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return fromStatus switch
+        {
+            New => toStatus is InProgress or Resolved,
+            InProgress => toStatus is Resolved,
+            _ => false
+        };
+    }
 }

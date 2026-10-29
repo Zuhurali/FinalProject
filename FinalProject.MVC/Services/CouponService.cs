@@ -185,7 +185,7 @@ public sealed class CouponService : ICouponService
 
         return (
             true,
-            $"{coupon.Code} applied ({coupon.DiscountPercent:0.#}% off). The discount is reserved for checkout/order completion and is not permanently used yet.",
+            $"{coupon.Code} applied ({coupon.DiscountPercent:0.#}% off). Preview only — staff redeem this coupon when recording your in-store sale.",
             discount,
             coupon.Code);
     }
@@ -274,5 +274,32 @@ public sealed class CouponService : ICouponService
             CreatedAt = DateTime.UtcNow
         });
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<string, int>> GetUsageCountsByCodeAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await _db.CouponUsages.AsNoTracking()
+            .GroupBy(usage => usage.CouponCode)
+            .Select(group => new { Code = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+
+        return rows.ToDictionary(
+            row => row.Code,
+            row => row.Count,
+            StringComparer.OrdinalIgnoreCase);
+    }
+
+    public async Task<IReadOnlyList<CouponUsage>> GetRecentUsagesAsync(
+        int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var limit = take < 1 ? 50 : Math.Min(take, 200);
+        return await _db.CouponUsages.AsNoTracking()
+            .Include(usage => usage.User)
+            .OrderByDescending(usage => usage.UsedAt)
+            .ThenByDescending(usage => usage.Id)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
     }
 }

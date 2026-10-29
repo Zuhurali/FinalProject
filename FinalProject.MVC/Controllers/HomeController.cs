@@ -1,4 +1,5 @@
 using FinalProject.MVC.Commerce;
+using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Models.Api;
 using FinalProject.MVC.Exceptions;
@@ -11,31 +12,21 @@ namespace FinalProject.MVC.Controllers
 {
     public class HomeController : Controller
     {
-        private static readonly string[] HomeCategories =
-        {
-            "Hatchback",
-            "Minivans",
-            "Luxury Cars",
-            "Sedans",
-            "Convertible",
-            "Sports Car"
-        };
-
-        private static readonly object CatalogLock = new();
-        private static IReadOnlyList<Car>? CatalogCache;
-
         private readonly ILogger<HomeController> _logger;
         private readonly ICarApiService _carApi;
         private readonly IShopCatalogService _shopCatalog;
+        private readonly ILegalPageContentService _legalPage;
 
         public HomeController(
             ILogger<HomeController> logger,
             ICarApiService carApi,
-            IShopCatalogService shopCatalog)
+            IShopCatalogService shopCatalog,
+            ILegalPageContentService legalPage)
         {
             _logger = logger;
             _carApi = carApi;
             _shopCatalog = shopCatalog;
+            _legalPage = legalPage;
         }
 
         public async Task<IActionResult> Index()
@@ -47,23 +38,13 @@ namespace FinalProject.MVC.Controllers
             try
             {
                 cars = await CarApiMapper.LoadCarsAsync(_carApi, HttpContext.RequestAborted);
-                lock (CatalogLock)
-                {
-                    CatalogCache = cars;
-                }
             }
             catch (CarApiException exception)
             {
+                // Do not serve a process-local snapshot as inventory — SQL/API is the source of truth.
                 _logger.LogWarning(exception, "Home car catalog could not be loaded.");
-                lock (CatalogLock)
-                {
-                    cars = CatalogCache ?? Array.Empty<Car>();
-                }
-            }
-
-            foreach (var category in HomeCategories)
-            {
-                labels[category] = cars.Count == 0 ? "—" : CarApiMapper.CountLabel(cars, category);
+                cars = Array.Empty<Car>();
+                ViewData["CarApiUnavailable"] = true;
             }
 
             makes = cars.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList();
@@ -75,13 +56,31 @@ namespace FinalProject.MVC.Controllers
                     group => group.Select(car => car.Model).Distinct().OrderBy(model => model).ToArray());
 
             IReadOnlyList<BrandApiDto> brands = Array.Empty<BrandApiDto>();
+            IReadOnlyList<HomeCategoryStripItem> homeCategories = Array.Empty<HomeCategoryStripItem>();
             try
             {
-                brands = (await _carApi.GetLookupsAsync(HttpContext.RequestAborted)).Brands;
+                var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                brands = lookups.Brands;
+                homeCategories = lookups.Categories
+                    .Where(category => !string.IsNullOrWhiteSpace(category.Name))
+                    .OrderBy(category => category.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select((category, index) =>
+                    {
+                        var name = category.Name.Trim();
+                        labels[name] = cars.Count == 0 ? "—" : CarApiMapper.CountLabel(cars, name);
+                        return new HomeCategoryStripItem
+                        {
+                            Name = name,
+                            Slug = CarCategories.Slug(name),
+                            IconPath = $"~/assets/images/category/{(index % 6) + 1:00}.svg",
+                            CountLabel = labels[name]
+                        };
+                    })
+                    .ToList();
             }
             catch (CarApiException exception)
             {
-                _logger.LogWarning(exception, "Home brand list could not be loaded.");
+                _logger.LogWarning(exception, "Home brand and category lists could not be loaded.");
             }
 
             IReadOnlyList<ProductCampaign> homeCampaignBanners = Array.Empty<ProductCampaign>();
@@ -96,6 +95,7 @@ namespace FinalProject.MVC.Controllers
             }
 
             ViewData["CategoryLabels"] = labels;
+            ViewData["HomeCategories"] = homeCategories;
             ViewData["SearchMakes"] = makes;
             ViewData["ModelsByMake"] = modelsByMake;
             ViewData["HomeCars"] = cars;
@@ -141,6 +141,19 @@ namespace FinalProject.MVC.Controllers
 
         public IActionResult Privacy()
         {
+            var legal = _legalPage.GetPublic();
+            ViewData["Title"] = legal.PrivacySeoTitle;
+            ViewData["MetaDescription"] = legal.PrivacySeoDescription;
+            ViewData["Legal"] = legal;
+            return View();
+        }
+
+        public IActionResult Terms()
+        {
+            var legal = _legalPage.GetPublic();
+            ViewData["Title"] = legal.TermsSeoTitle;
+            ViewData["MetaDescription"] = legal.TermsSeoDescription;
+            ViewData["Legal"] = legal;
             return View();
         }
 

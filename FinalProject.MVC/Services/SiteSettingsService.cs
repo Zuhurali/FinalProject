@@ -143,6 +143,9 @@ public sealed class SiteSettingsService : ISiteSettingsService
         entity.TwitterUrl = twitter;
         entity.DefaultSeoTitle = model.DefaultSeoTitle.Trim();
         entity.DefaultMetaDescription = model.DefaultMetaDescription.Trim();
+        entity.CallCtaHeadline = string.IsNullOrWhiteSpace(model.CallCtaHeadline)
+            ? "If you have any questions Please Call."
+            : model.CallCtaHeadline.Trim();
         entity.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -173,6 +176,7 @@ public sealed class SiteSettingsService : ISiteSettingsService
             MapsQuery = string.IsNullOrWhiteSpace(contact.MapsQuery)
                 ? DealershipContactDefaults.MapsQuery
                 : contact.MapsQuery.Trim(),
+            CallCtaHeadline = HomePageContentDefaults.CallCtaHeadline,
             UpdatedAt = DateTime.UtcNow
         };
     }
@@ -231,7 +235,10 @@ public sealed class SiteSettingsService : ISiteSettingsService
                 : entity.DefaultSeoTitle.Trim(),
             DefaultMetaDescription = string.IsNullOrWhiteSpace(entity.DefaultMetaDescription)
                 ? "Your trusted source for expert automotive services and quality cars. Find your perfect vehicle with our extensive inventory and professional service."
-                : entity.DefaultMetaDescription.Trim()
+                : entity.DefaultMetaDescription.Trim(),
+            CallCtaHeadline = string.IsNullOrWhiteSpace(entity.CallCtaHeadline)
+                ? "If you have any questions Please Call."
+                : entity.CallCtaHeadline.Trim()
         };
     }
 

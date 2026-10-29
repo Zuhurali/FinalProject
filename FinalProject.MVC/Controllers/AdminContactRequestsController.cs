@@ -35,10 +35,16 @@ public sealed class AdminContactRequestsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var updated = await _contactRequests.SetStatusAsync(id, status, cancellationToken);
-        TempData[updated ? "Success" : "Error"] = updated
-            ? $"Contact request #{id} marked {status}."
-            : "Contact request not found.";
+        var (updated, error) = await _contactRequests.SetStatusAsync(id, status, cancellationToken);
+        if (updated)
+        {
+            TempData["Success"] = $"Contact request #{id} marked {status}.";
+        }
+        else
+        {
+            TempData["Error"] = error ?? "Contact request not found.";
+        }
+
         return RedirectToAction(nameof(Index));
     }
 

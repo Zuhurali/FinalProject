@@ -216,7 +216,12 @@ public class FinalProjectDbContext : DbContext
             entity.Property(sale => sale.CampaignDiscountPercent).HasColumnType("decimal(5,2)");
             entity.Property(sale => sale.RecordedByUserId).HasMaxLength(450).IsRequired();
             entity.Property(sale => sale.Note).HasMaxLength(500);
+            entity.Property(sale => sale.IdempotencyKey).HasMaxLength(64);
             entity.Property(sale => sale.VoidedByUserId).HasMaxLength(450);
+            entity.HasIndex(sale => sale.IdempotencyKey)
+                .IsUnique()
+                .HasFilter("[IdempotencyKey] IS NOT NULL")
+                .HasDatabaseName("UX_InPersonSales_IdempotencyKey");
             entity.HasOne(sale => sale.Product)
                 .WithMany()
                 .HasForeignKey(sale => sale.ProductId)
@@ -272,8 +277,11 @@ public class FinalProjectDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(favorite => favorite.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-            // ShopProducts is MVC-owned (ExcludeFromMigrations). Persist ProductId only; join in queries.
-            entity.Ignore(favorite => favorite.Product);
+            // ShopProducts table is MVC-owned for schema ownership, but FK is enforced here for integrity.
+            entity.HasOne(favorite => favorite.Product)
+                .WithMany()
+                .HasForeignKey(favorite => favorite.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Conversation>(entity =>

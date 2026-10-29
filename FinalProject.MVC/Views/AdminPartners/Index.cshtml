@@ -1,0 +1,44 @@
+@model IReadOnlyList<PartnerStripItem>
+@{
+    Layout = "_AdminLayout";
+    var settings = ViewData["Settings"] as PartnerStripSettingsEditViewModel ?? new PartnerStripSettingsEditViewModel();
+}
+<h1 class="h3 mb-4">Partners / Brands strip</h1>
+<p class="text-muted">Shared logo strip used on FAQ, Team, Contact, Home, and Shop. Names should match catalog brand names when possible so brand detail pages can reuse logos.</p>
+
+<form asp-action="Settings" method="post" class="admin-card mb-4">
+    @Html.AntiForgeryToken()
+    <h2 class="h5">Section headings</h2>
+    <div class="row g-3">
+        <div class="col-md-4"><label asp-for="@settings.Eyebrow" class="form-label"></label><input asp-for="@settings.Eyebrow" name="Eyebrow" class="form-control" value="@settings.Eyebrow" /></div>
+        <div class="col-md-4"><label class="form-label">Heading (before)</label><input name="HeadingBefore" class="form-control" value="@settings.HeadingBefore" /></div>
+        <div class="col-md-4"><label class="form-label">Heading highlight</label><input name="HeadingHighlight" class="form-control" value="@settings.HeadingHighlight" /></div>
+    </div>
+    <button type="submit" class="btn btn-dark mt-3">Save headings</button>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 mb-0">Partner logos</h2>
+    <a class="btn btn-sm btn-primary" asp-action="Create">Add partner</a>
+</div>
+<table class="table table-sm admin-card">
+    <thead><tr><th>Name</th><th>Logo</th><th>Order</th><th>Published</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td><img src="@Url.Content(item.LogoPath)" alt="" style="max-height:36px;" /></td>
+            <td>@item.SortOrder</td>
+            <td>@(item.IsPublished ? "Yes" : "No")</td>
+            <td class="text-nowrap">
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                <form asp-action="Move" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="direction" value="-1" /><button type="submit" class="btn btn-link btn-sm p-0">Up</button></form>
+                <form asp-action="Move" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="direction" value="1" /><button type="submit" class="btn btn-link btn-sm p-0">Down</button></form>
+                <form asp-action="Publish" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="publish" value="@(!item.IsPublished)" /><button type="submit" class="btn btn-link btn-sm p-0">@(item.IsPublished ? "Unpublish" : "Publish")</button></form>
+                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this partner?');">@Html.AntiForgeryToken()<button type="submit" class="btn btn-link btn-sm text-danger p-0">Delete</button></form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -1,0 +1,10 @@
+@model PartnerStripItemEditViewModel
+@{ Layout = "_AdminLayout"; }
+<h1 class="h3 mb-4">Edit partner</h1>
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <partial name="_PartnerItemForm" />
+    <button type="submit" class="btn btn-dark mt-3">Save</button>
+    <a asp-action="Index" class="btn btn-link mt-3">Cancel</a>
+</form>

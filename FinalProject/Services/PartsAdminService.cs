@@ -122,7 +122,33 @@ public sealed class PartsAdminService : IPartsAdminService
             return (null, "The part was not found.");
         }
 
+        var expectedQuantity = part.Quantity;
+        var newQuantity = request.Quantity;
         Apply(part, request);
+        if (newQuantity != expectedQuantity)
+        {
+            var affected = await _db.ShopProducts
+                .Where(item => item.Id == part.Id && item.Quantity == expectedQuantity)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(item => item.Quantity, newQuantity)
+                        .SetProperty(item => item.InStock, newQuantity > 0),
+                    cancellationToken);
+            if (affected != 1)
+            {
+                return (null, "Stock changed since this part was loaded (likely from a sale). Refresh and try again.");
+            }
+
+            // Keep tracked values for the response DTO without letting EF overwrite the claimed stock.
+            // Setting IsModified=false after changing CurrentValue would revert to OriginalValue.
+            _db.Entry(part).Property(item => item.Quantity).OriginalValue = newQuantity;
+            _db.Entry(part).Property(item => item.Quantity).IsModified = false;
+            _db.Entry(part).Property(item => item.InStock).OriginalValue = newQuantity > 0;
+            _db.Entry(part).Property(item => item.InStock).IsModified = false;
+            part.Quantity = newQuantity;
+            part.InStock = newQuantity > 0;
+        }
+
         try
         {
             await _db.SaveChangesAsync(cancellationToken);

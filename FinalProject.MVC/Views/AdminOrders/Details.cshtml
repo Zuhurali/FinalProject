@@ -1,0 +1,77 @@
+@model Order
+@{
+    Layout = "_AdminLayout";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Legacy order #@Model.Id</h1>
+        <p class="text-muted mb-0">Historical SQL row · @Model.OrderDate.ToString("yyyy-MM-dd HH:mm") UTC · @Model.OrderStatus. Not created by current public checkout.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Back to archive</a>
+</div>
+<div class="admin-card mb-4">
+    <h2 class="h5">Customer</h2>
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9">@Model.Email</dd>
+        <dt class="col-sm-3">Phone</dt>
+        <dd class="col-sm-9">@Model.PhoneNumber</dd>
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">@Model.StreetAddress, @Model.City, @Model.District @(Model.PostCode)</dd>
+        @if (!string.IsNullOrWhiteSpace(Model.CompanyName))
+        {
+            <dt class="col-sm-3">Company</dt>
+            <dd class="col-sm-9">@Model.CompanyName</dd>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.OrderNotes))
+        {
+            <dt class="col-sm-3">Notes</dt>
+            <dd class="col-sm-9">@Model.OrderNotes</dd>
+        }
+    </dl>
+</div>
+<div class="admin-card mb-4">
+    <h2 class="h5">Line items</h2>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Unit</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.OrderItems)
+            {
+                <tr>
+                    <td>@item.ProductName <span class="small text-muted">#@item.ProductId</span></td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Price.ToString("C")</td>
+                    <td>@item.Subtotal.ToString("C")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="admin-card">
+    <h2 class="h5">Totals</h2>
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Subtotal</dt>
+        <dd class="col-sm-9">@Model.Subtotal.ToString("C")</dd>
+        <dt class="col-sm-3">Discount</dt>
+        <dd class="col-sm-9">
+            @Model.DiscountAmount.ToString("C")
+            @if (!string.IsNullOrWhiteSpace(Model.CouponCode))
+            {
+                <span class="text-muted">(@Model.CouponCode)</span>
+            }
+        </dd>
+        <dt class="col-sm-3">Total</dt>
+        <dd class="col-sm-9 fw-semibold">@Model.Total.ToString("C")</dd>
+    </dl>
+</div>

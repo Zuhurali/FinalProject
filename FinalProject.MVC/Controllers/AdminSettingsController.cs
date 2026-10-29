@@ -76,6 +76,7 @@ public sealed class AdminSettingsController : Controller
         YoutubeUrl = current.YoutubeUrl,
         TwitterUrl = current.TwitterUrl,
         DefaultSeoTitle = current.DefaultSeoTitle,
-        DefaultMetaDescription = current.DefaultMetaDescription
+        DefaultMetaDescription = current.DefaultMetaDescription,
+        CallCtaHeadline = current.CallCtaHeadline
     };
 }

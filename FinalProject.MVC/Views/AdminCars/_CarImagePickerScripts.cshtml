@@ -1,122 +1,9 @@
+<script src="~/js/vehicle-photos-picker.js" asp-append-version="true"></script>
 <script>
 (function () {
-    var fileInput = document.getElementById('car-image-file');
-    var nameEl = document.getElementById('car-image-file-name');
-    var preview = document.getElementById('car-image-preview');
-    var urlInput = document.getElementById('Car_ImageUrl');
-
-    function showPreview(url) {
-        if (!preview) {
-            return;
-        }
-        if (!url) {
-            preview.removeAttribute('src');
-            preview.style.display = 'none';
-            return;
-        }
-        preview.src = url;
-        preview.style.display = '';
+    if (window.AutoVaultVehiclePhotos && typeof window.AutoVaultVehiclePhotos.bind === 'function') {
+        window.AutoVaultVehiclePhotos.bind({});
     }
-
-    if (fileInput && nameEl && preview) {
-        fileInput.addEventListener('change', function () {
-            var file = fileInput.files && fileInput.files[0];
-            if (!file) {
-                nameEl.textContent = '';
-                return;
-            }
-            nameEl.textContent = 'Selected: ' + file.name;
-            if (file.type && file.type.indexOf('image/') === 0) {
-                showPreview(URL.createObjectURL(file));
-            }
-        });
-    }
-
-    if (urlInput && preview) {
-        urlInput.addEventListener('change', function () {
-            if (fileInput && fileInput.files && fileInput.files.length) {
-                return;
-            }
-            var value = (urlInput.value || '').trim();
-            if (!value) {
-                showPreview('');
-                return;
-            }
-            if (value.indexOf('~/') === 0) {
-                showPreview(value.replace(/^~/, ''));
-            } else {
-                showPreview(value);
-            }
-        });
-    }
-
-    var galleryInput = document.getElementById('gallery-files');
-    var galleryPreview = document.getElementById('gallery-new-preview');
-    var galleryName = document.getElementById('gallery-file-name');
-    if (galleryInput && galleryPreview) {
-        galleryInput.addEventListener('change', function () {
-            galleryPreview.innerHTML = '';
-            var files = Array.prototype.slice.call(galleryInput.files || []);
-            if (galleryName) {
-                galleryName.textContent = files.length
-                    ? 'Selected: ' + files.map(function (file) { return file.name; }).join(', ')
-                    : '';
-            }
-            files.forEach(function (file) {
-                if (!file.type || file.type.indexOf('image/') !== 0) {
-                    return;
-                }
-                var column = document.createElement('div');
-                column.className = 'col-6 col-md-4 col-xl-3';
-                var frame = document.createElement('div');
-                frame.className = 'border rounded p-1';
-                var image = document.createElement('img');
-                image.alt = file.name;
-                image.className = 'w-100 rounded av-admin-thumb-img';
-                image.style.height = '168px';
-                image.style.objectFit = 'contain';
-                image.style.background = '#eef1f4';
-                image.src = URL.createObjectURL(file);
-                frame.appendChild(image);
-                column.appendChild(frame);
-                galleryPreview.appendChild(column);
-            });
-        });
-    }
-
-    document.querySelectorAll('.gallery-remove').forEach(function (button) {
-        button.addEventListener('click', function () {
-            var item = button.closest('.gallery-item');
-            if (!item || !window.confirm('Remove this image from the gallery?')) {
-                return;
-            }
-            var id = item.getAttribute('data-image-id');
-            var radio = item.querySelector('.gallery-primary');
-            var wasPrimary = radio && radio.checked;
-            if (radio) {
-                radio.checked = false;
-                radio.disabled = true;
-            }
-            var marker = document.createElement('input');
-            marker.type = 'hidden';
-            marker.name = 'Car.RemoveImageIds';
-            marker.value = id;
-            item.appendChild(marker);
-            item.classList.add('d-none');
-            if (wasPrimary) {
-                var next = document.querySelector('.gallery-item:not(.d-none) .gallery-primary');
-                if (next) {
-                    next.checked = true;
-                    if (urlInput) {
-                        urlInput.value = next.getAttribute('data-url') || urlInput.value;
-                    }
-                }
-            }
-        });
-    });
-
-    // Gallery uses a single <label for="gallery-files"> — do not also call input.click()
-    // (that double-fires the picker and can look like a second control).
 
     var engines = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(CarListingRules.EngineSizes));
     var horsepowers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(CarListingRules.HorsepowerChoices));
@@ -189,27 +76,5 @@
 
     bindCombo('engine', engines, function (item) { return item; });
     bindCombo('horsepower', horsepowers, function (item) { return String(item) + ' HP'; });
-
-    var form = document.getElementById('car-image-file');
-    var listingForm = form ? form.closest('form') : document.querySelector('form.admin-card');
-    if (listingForm) {
-        listingForm.addEventListener('submit', function () {
-            var primaryFile = document.getElementById('car-image-file');
-            var selectedPrimary = document.querySelector('.gallery-primary:checked');
-            if (primaryFile && primaryFile.files && primaryFile.files.length) {
-                return;
-            }
-            if (selectedPrimary && urlInput) {
-                var typed = (urlInput.value || '').trim();
-                var selectedUrl = selectedPrimary.getAttribute('data-url') || '';
-                var known = Array.prototype.some.call(document.querySelectorAll('.gallery-primary'), function (radio) {
-                    return (radio.getAttribute('data-url') || '').trim() === typed;
-                });
-                if (!typed || known) {
-                    urlInput.value = selectedUrl;
-                }
-            }
-        });
-    }
 })();
 </script>

@@ -65,5 +65,8 @@ public class SiteSettings
     public string DefaultMetaDescription { get; set; } =
         "Your trusted source for expert automotive services and quality cars. Find your perfect vehicle with our extensive inventory and professional service.";
 
+    [Required, MaxLength(200)]
+    public string CallCtaHeadline { get; set; } = "If you have any questions Please Call.";
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -1,0 +1,9 @@
+@model PartnerStripItemEditViewModel
+@{ Layout = "_AdminLayout"; }
+<h1 class="h3 mb-4">Add partner</h1>
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <partial name="_PartnerItemForm" />
+    <button type="submit" class="btn btn-dark mt-3">Create</button>
+    <a asp-action="Index" class="btn btn-link mt-3">Cancel</a>
+</form>

@@ -1,0 +1,8 @@
+@model DealerEditViewModel
+@{ Layout = "_AdminLayout"; }
+<h1 class="h3 mb-4">Edit dealer</h1>
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <partial name="_DealerForm" />
+    <button type="submit" class="btn btn-dark mt-3">Save</button>
+</form>

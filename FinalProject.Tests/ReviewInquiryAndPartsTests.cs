@@ -21,8 +21,7 @@ public class ReviewInquiryAndPartsTests
     {
         var options = new DbContextOptionsBuilder<FinalProjectDbContext>().UseSqlServer(ConnectionString).Options;
         await using var db = new FinalProjectDbContext(options);
-        var config = new ConfigurationBuilder().AddInMemoryCollection().Build();
-        var reviews = new ProductReviewService(db, config);
+        var reviews = new ProductReviewService(db);
 
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
         var taken = await db.ProductReviews.AsNoTracking()

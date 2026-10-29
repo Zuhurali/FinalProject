@@ -1,0 +1,17 @@
+@model PartnerStripItemEditViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /></div>
+    <div class="col-md-6"><label asp-for="LinkUrl" class="form-label"></label><input asp-for="LinkUrl" class="form-control" placeholder="Optional; blank links to Cars by make" /></div>
+    <div class="col-md-6">
+        <label class="form-label">Logo</label>
+        <input type="hidden" asp-for="LogoPath" />
+        @if (!string.IsNullOrWhiteSpace(Model.LogoPath))
+        {
+            <img src="@Url.Content(Model.LogoPath)" alt="" style="max-height:48px;display:block;" class="mb-1" />
+        }
+        <input type="file" name="logo" class="form-control" accept="image/*" />
+    </div>
+    <div class="col-md-3"><label asp-for="SortOrder" class="form-label"></label><input asp-for="SortOrder" class="form-control" /></div>
+    <div class="col-md-3 d-flex align-items-end"><div class="form-check"><input asp-for="IsPublished" class="form-check-input" /><label asp-for="IsPublished" class="form-check-label"></label></div></div>
+</div>

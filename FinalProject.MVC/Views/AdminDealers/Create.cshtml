@@ -1,0 +1,8 @@
+@model DealerEditViewModel
+@{ Layout = "_AdminLayout"; }
+<h1 class="h3 mb-4">Add dealer</h1>
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <partial name="_DealerForm" />
+    <button type="submit" class="btn btn-dark mt-3">Create</button>
+</form>

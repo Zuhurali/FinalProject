@@ -88,7 +88,8 @@ public class SiteSettingsTests
             YoutubeUrl = null,
             TwitterUrl = null,
             DefaultSeoTitle = "AutoVault Test SEO",
-            DefaultMetaDescription = "CMS meta description for tests."
+            DefaultMetaDescription = "CMS meta description for tests.",
+            CallCtaHeadline = "Please Call Us Now."
         }, null, null, null);
 
         Assert.True(ok, error);
@@ -99,6 +100,7 @@ public class SiteSettingsTests
         Assert.Equal("cms-settings@example.com", publicSettings.Contact.Email);
         Assert.Equal(marker, publicSettings.FooterText);
         Assert.Equal("https://facebook.com/autovault", publicSettings.FacebookUrl);
+        Assert.Equal("Please Call Us Now.", publicSettings.CallCtaHeadline);
         Assert.Equal("tel:+994501112233", publicSettings.Contact.TelHref);
         Assert.Contains("2026", publicSettings.FormatCopyright(2026), StringComparison.Ordinal);
 
@@ -123,7 +125,8 @@ public class SiteSettingsTests
             FooterText = "Your trusted partner for quality vehicles and exceptional service. Find your perfect car with confidence at AutoVault.",
             CopyrightText = "Copyright © {year} AutoVault. All rights reserved.",
             DefaultSeoTitle = "AutoVault Car Dealer",
-            DefaultMetaDescription = "Your trusted source for expert automotive services and quality cars. Find your perfect vehicle with our extensive inventory and professional service."
+            DefaultMetaDescription = "Your trusted source for expert automotive services and quality cars. Find your perfect vehicle with our extensive inventory and professional service.",
+            CallCtaHeadline = HomePageContentDefaults.CallCtaHeadline
         }, null, null, null);
     }
 

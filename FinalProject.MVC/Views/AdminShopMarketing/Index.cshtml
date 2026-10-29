@@ -1,0 +1,94 @@
+@model ShopMarketingContentEditViewModel
+@{ Layout = "_AdminLayout"; }
+<h1 class="h3 mb-4">Shop Marketing</h1>
+<p class="text-muted">Hero, brand strip headings, used-car promo, catalog, why-choose, visit tips, FAQ labels, CTAs, and shop SEO. Partner logos are edited under Partners.</p>
+<form asp-controller="AdminShopMarketing" asp-action="Index" method="post" enctype="multipart/form-data" class="admin-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <h2 class="h5">Hero</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><label asp-for="HeroEyebrow" class="form-label"></label><input asp-for="HeroEyebrow" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="HeroTitle" class="form-label"></label><input asp-for="HeroTitle" class="form-control" /></div>
+        <div class="col-12"><label asp-for="HeroText" class="form-label"></label><textarea asp-for="HeroText" class="form-control" rows="2"></textarea></div>
+        <div class="col-md-4"><label asp-for="HeroCtaBrowseParts" class="form-label"></label><input asp-for="HeroCtaBrowseParts" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="HeroCtaBrowseCars" class="form-label"></label><input asp-for="HeroCtaBrowseCars" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="HeroCtaVisit" class="form-label"></label><input asp-for="HeroCtaVisit" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="HeroImageAlt" class="form-label"></label><input asp-for="HeroImageAlt" class="form-control" /></div>
+        <div class="col-md-6"><label class="form-label">Hero image</label><input type="hidden" asp-for="HeroImagePath" /><img src="@Url.Content(Model.HeroImagePath)" alt="" style="max-height:72px;display:block;" /><input type="file" name="heroImage" class="form-control mt-1" accept="image/*" /></div>
+    </div>
+
+    <h2 class="h5">SEO</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><label asp-for="SeoTitle" class="form-label"></label><input asp-for="SeoTitle" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="SeoDescription" class="form-label"></label><input asp-for="SeoDescription" class="form-control" /></div>
+    </div>
+
+    <h2 class="h5">Categories</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="CategoriesEyebrow" class="form-label"></label><input asp-for="CategoriesEyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="CategoriesHeadingBefore" class="form-label"></label><input asp-for="CategoriesHeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="CategoriesHeadingHighlight" class="form-label"></label><input asp-for="CategoriesHeadingHighlight" class="form-control" /></div>
+    </div>
+
+    <h2 class="h5">Catalog</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="CatalogEyebrow" class="form-label"></label><input asp-for="CatalogEyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="CatalogHeadingBefore" class="form-label"></label><input asp-for="CatalogHeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="CatalogHeadingHighlight" class="form-label"></label><input asp-for="CatalogHeadingHighlight" class="form-control" /></div>
+        <div class="col-12"><label asp-for="CatalogIntro" class="form-label"></label><textarea asp-for="CatalogIntro" class="form-control" rows="3"></textarea></div>
+    </div>
+
+    <h2 class="h5">Brand strip headings</h2>
+    <p class="text-muted small">Logo rows come from Admin → Partners. These fields only set the shop section titles.</p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="BrandStripEyebrow" class="form-label"></label><input asp-for="BrandStripEyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="BrandStripHeadingBefore" class="form-label"></label><input asp-for="BrandStripHeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="BrandStripHeadingHighlight" class="form-label"></label><input asp-for="BrandStripHeadingHighlight" class="form-control" /></div>
+    </div>
+
+    <h2 class="h5">Used-car promo tile</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="UsedCarsPromoTag" class="form-label"></label><input asp-for="UsedCarsPromoTag" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="UsedCarsPromoTitle" class="form-label"></label><input asp-for="UsedCarsPromoTitle" class="form-control" /></div>
+        <div class="col-md-4"><label class="form-label">Promo image</label><input type="hidden" asp-for="UsedCarsPromoImagePath" /><img src="@Url.Content(Model.UsedCarsPromoImagePath)" alt="" style="max-height:72px;display:block;" /><input type="file" name="usedCarsPromoImage" class="form-control mt-1" accept="image/*" /></div>
+    </div>
+
+    <h2 class="h5">Why Choose Us</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="WhyChooseEyebrow" class="form-label"></label><input asp-for="WhyChooseEyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="WhyChooseHeadingBefore" class="form-label"></label><input asp-for="WhyChooseHeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="WhyChooseHeadingHighlight" class="form-label"></label><input asp-for="WhyChooseHeadingHighlight" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why1Title" class="form-label"></label><input asp-for="Why1Title" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why1Description" class="form-label"></label><input asp-for="Why1Description" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why2Title" class="form-label"></label><input asp-for="Why2Title" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why2Description" class="form-label"></label><input asp-for="Why2Description" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why3Title" class="form-label"></label><input asp-for="Why3Title" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why3Description" class="form-label"></label><input asp-for="Why3Description" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why4Title" class="form-label"></label><input asp-for="Why4Title" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="Why4Description" class="form-label"></label><input asp-for="Why4Description" class="form-control" /></div>
+    </div>
+
+    <h2 class="h5">Visit tips</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="VisitEyebrow" class="form-label"></label><input asp-for="VisitEyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="VisitHeadingBefore" class="form-label"></label><input asp-for="VisitHeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="VisitHeadingHighlight" class="form-label"></label><input asp-for="VisitHeadingHighlight" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="VisitTip1Title" class="form-label"></label><input asp-for="VisitTip1Title" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="VisitTip1Meta" class="form-label"></label><input asp-for="VisitTip1Meta" class="form-control" /></div>
+        <div class="col-md-6"><label class="form-label">Tip 1 image</label><input type="hidden" asp-for="VisitTip1ImagePath" /><img src="@Url.Content(Model.VisitTip1ImagePath)" alt="" style="max-height:72px;display:block;" /><input type="file" name="visitTip1Image" class="form-control mt-1" accept="image/*" /></div>
+        <div class="col-md-6"><label asp-for="VisitTip2Title" class="form-label"></label><input asp-for="VisitTip2Title" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="VisitTip2Meta" class="form-label"></label><input asp-for="VisitTip2Meta" class="form-control" /></div>
+        <div class="col-md-6"><label class="form-label">Tip 2 image</label><input type="hidden" asp-for="VisitTip2ImagePath" /><img src="@Url.Content(Model.VisitTip2ImagePath)" alt="" style="max-height:72px;display:block;" /><input type="file" name="visitTip2Image" class="form-control mt-1" accept="image/*" /></div>
+    </div>
+
+    <h2 class="h5">FAQ section &amp; contact form</h2>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label asp-for="FaqSectionEyebrow" class="form-label"></label><input asp-for="FaqSectionEyebrow" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="FaqSectionHeadingBefore" class="form-label"></label><input asp-for="FaqSectionHeadingBefore" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="FaqSectionHeadingHighlight" class="form-label"></label><input asp-for="FaqSectionHeadingHighlight" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="ContactFormTitle" class="form-label"></label><input asp-for="ContactFormTitle" class="form-control" /></div>
+    </div>
+
+    <button type="submit" class="btn btn-dark">Save shop marketing</button>
+</form>

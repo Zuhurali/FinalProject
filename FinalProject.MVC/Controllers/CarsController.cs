@@ -324,9 +324,29 @@ namespace FinalProject.MVC.Controllers
                 : RedirectToAction(nameof(Index));
         }
 
-        public IActionResult SoldCar()
+        public async Task<IActionResult> SoldCar()
         {
-            return RedirectToAction(nameof(Index));
+            ViewData["Title"] = "Sold Cars - AutoVault";
+            try
+            {
+                var sold = await _carApi.GetAllCarsAsync(
+                    CarPublicListing.CreateSoldQuery(),
+                    HttpContext.RequestAborted);
+                var cars = sold
+                    .Select(CarApiMapper.ToCar)
+                    .Where(car => string.Equals(car.Status, CarPublicListing.SoldStatus, StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(car => car.CreatedAt)
+                    .ThenByDescending(car => car.Id)
+                    .ToList();
+                await MarkFavoritesAsync(cars);
+                return View(cars);
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogError(exception, "Sold car listing could not be loaded.");
+                ViewData["CarApiUnavailable"] = true;
+                return View(new List<Car>());
+            }
         }
 
         [Authorize]
@@ -470,10 +490,15 @@ namespace FinalProject.MVC.Controllers
         private async Task<CarListingResult> BuildListingAsync(CarListingQuery query, IReadOnlyList<CarApiDto> catalog)
         {
             var catalogCars = catalog.Select(CarApiMapper.ToCar).ToList();
-            var brandId = await ResolveBrandIdAsync(query.Make, catalog);
-            if (!TryCreateApiQuery(query, catalog, CarListingResult.PageSize, brandId, out var apiQuery))
+            var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+            var categories = lookups.Categories
+                .Where(category => !string.IsNullOrWhiteSpace(category.Name))
+                .OrderBy(category => category.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var brandId = ResolveBrandId(query.Make, catalog, lookups.Brands);
+            if (!TryCreateApiQuery(query, categories, CarListingResult.PageSize, brandId, out var apiQuery))
             {
-                return ListingFrom(query, catalogCars, Array.Empty<Car>(), query.Page < 1 ? 1 : query.Page, 0, 0);
+                return ListingFrom(query, catalogCars, Array.Empty<Car>(), query.Page < 1 ? 1 : query.Page, 0, 0, categories);
             }
 
             var page = await _carApi.GetCarsAsync(apiQuery, HttpContext.RequestAborted);
@@ -489,13 +514,15 @@ namespace FinalProject.MVC.Controllers
                 page.Items.Select(CarApiMapper.ToCar).ToList(),
                 page.CurrentPage,
                 page.TotalCount,
-                page.TotalPages);
+                page.TotalPages,
+                categories);
         }
 
         private async Task<List<Car>> LoadMatchingCarsAsync(CarListingQuery query, IReadOnlyList<CarApiDto> catalogDtos)
         {
-            var brandId = await ResolveBrandIdAsync(query.Make, catalogDtos);
-            if (!TryCreateApiQuery(query, catalogDtos, CarApiQuery.MaxPageSize, brandId, out var apiQuery))
+            var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+            var brandId = ResolveBrandId(query.Make, catalogDtos, lookups.Brands);
+            if (!TryCreateApiQuery(query, lookups.Categories, CarApiQuery.MaxPageSize, brandId, out var apiQuery))
             {
                 return new List<Car>();
             }
@@ -504,7 +531,10 @@ namespace FinalProject.MVC.Controllers
             return matches.Select(CarApiMapper.ToCar).ToList();
         }
 
-        private async Task<int?> ResolveBrandIdAsync(string? make, IReadOnlyList<CarApiDto> catalog)
+        private static int? ResolveBrandId(
+            string? make,
+            IReadOnlyList<CarApiDto> catalog,
+            IReadOnlyList<BrandApiDto> brands)
         {
             if (string.IsNullOrWhiteSpace(make) || make == "All Makes")
             {
@@ -517,11 +547,15 @@ namespace FinalProject.MVC.Controllers
                 return fromCatalog;
             }
 
-            var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
-            return lookups.Brands.FirstOrDefault(brand => string.Equals(brand.Name, make, StringComparison.OrdinalIgnoreCase))?.Id;
+            return brands.FirstOrDefault(brand => string.Equals(brand.Name, make, StringComparison.OrdinalIgnoreCase))?.Id;
         }
 
-        private static bool TryCreateApiQuery(CarListingQuery query, IReadOnlyList<CarApiDto> catalog, int pageSize, int? brandId, out CarApiQuery apiQuery)
+        private static bool TryCreateApiQuery(
+            CarListingQuery query,
+            IReadOnlyList<CategoryApiDto> categories,
+            int pageSize,
+            int? brandId,
+            out CarApiQuery apiQuery)
         {
             apiQuery = CarPublicListing.WithActiveStatus(new CarApiQuery
             {
@@ -531,16 +565,13 @@ namespace FinalProject.MVC.Controllers
 
             if (!string.IsNullOrWhiteSpace(query.Category))
             {
-                var category = CarCategories.Resolve(query.Category);
-                var categoryId = category == null
-                    ? null
-                    : catalog.FirstOrDefault(car => string.Equals(car.Category?.Name, category.Value, StringComparison.OrdinalIgnoreCase))?.Category?.Id;
-                if (categoryId == null)
+                var category = categories.FirstOrDefault(item => CarCategories.Matches(item.Name, query.Category));
+                if (category == null)
                 {
                     return false;
                 }
 
-                apiQuery.CategoryId = categoryId;
+                apiQuery.CategoryId = category.Id;
             }
 
             if (HasFilterValue(query.Make))
@@ -601,9 +632,12 @@ namespace FinalProject.MVC.Controllers
             IReadOnlyList<Car> cars,
             int page,
             int totalCount,
-            int totalPages)
+            int totalPages,
+            IReadOnlyList<CategoryApiDto> categories)
         {
-            var requestedCategory = CarCategories.Resolve(query.Category);
+            var matched = categories.FirstOrDefault(item => CarCategories.Matches(item.Name, query.Category));
+            var display = matched?.Name
+                ?? (string.IsNullOrWhiteSpace(query.Category) ? null : query.Category.Trim().Replace('-', ' '));
             return new CarListingResult
             {
                 Cars = cars,
@@ -612,10 +646,11 @@ namespace FinalProject.MVC.Controllers
                 TotalCount = totalCount,
                 TotalPages = totalPages,
                 CategoryRequested = !string.IsNullOrWhiteSpace(query.Category),
-                CategorySlug = requestedCategory?.Slug ?? query.Category,
-                CategoryDisplay = requestedCategory?.DisplayName ?? query.Category,
+                CategorySlug = string.IsNullOrWhiteSpace(display) ? query.Category : CarCategories.Slug(display),
+                CategoryDisplay = display ?? query.Category,
                 Makes = catalog.Select(car => car.Make).Where(make => !string.IsNullOrWhiteSpace(make)).Distinct().OrderBy(make => make).ToList(),
-                Models = catalog.Select(car => car.Model).Where(model => !string.IsNullOrWhiteSpace(model)).Distinct().OrderBy(model => model).ToList()
+                Models = catalog.Select(car => car.Model).Where(model => !string.IsNullOrWhiteSpace(model)).Distinct().OrderBy(model => model).ToList(),
+                Categories = categories
             };
         }
 

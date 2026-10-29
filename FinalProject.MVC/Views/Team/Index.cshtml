@@ -1,54 +1,53 @@
 @model IReadOnlyList<FinalProject.MVC.Models.TeamMember>
 @{
-    ViewData["Title"] = "Team - AutoVault";
+    var cms = ViewData["TeamPage"] as TeamPagePublicContent ?? TeamPage.Current;
+    ViewData["Title"] = cms.SeoTitle;
+    ViewData["MetaDescription"] = cms.SeoDescription;
+    var teamCount = ViewData["PublishedTeamCount"] as int? ?? Model.Count;
+    var dealerCount = ViewData["PublishedDealerCount"] as int? ?? 0;
 }
 
-<!-- rts breadcrumb area start -->
 <div class="rts-breadcrumb-area portfolio-3 jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Team</h1>
+            <h1 class="title">@cms.BreadcrumbTitle</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Team</a>
+                <a href="#" class="current">@cms.BreadcrumbTitle</a>
             </div>
         </div>
     </div>
 </div>
-<!-- rts breadcrumb area end -->
 
-<!-- Team Area Start -->
 <section class="rts-team-area rts-section-gap">
     <div class="container">
         <div class="section-title-area2">
-            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Our Team</p>
-            <h2 class="section-title wow move-right">Let’s Meet Our <span>Expert</span></h2>
+            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">@cms.Eyebrow</p>
+            <h2 class="section-title wow move-right">@cms.HeadingBefore <span>@cms.HeadingHighlight</span></h2>
         </div>
         <div class="section-inner mt--60">
-                    <div class="row g-5">
-                        @foreach (var member in Model)
-                        {
-                            <div class="col-lg-3 col-md-6">
-                                <div class="team-wrapper">
-                                    <div class="image-area">
-                                        <a asp-controller="Team" asp-action="Details" asp-route-id="@member.Id">
-                                            <img src="@Url.Content(member.ImagePath)" alt="@member.Name">
-                                            <div class="content">
-                                                <h6 class="title cw">@member.Name</h6>
-                                                <p class="designation cw">@member.Position</p>
-                                            </div>
-                                        </a>
+            <div class="row g-5">
+                @foreach (var member in Model)
+                {
+                    <div class="col-lg-3 col-md-6">
+                        <div class="team-wrapper">
+                            <div class="image-area">
+                                <a asp-controller="Team" asp-action="Details" asp-route-id="@member.Id">
+                                    <img src="@Url.Content(member.ImagePath)" alt="@member.Name">
+                                    <div class="content">
+                                        <h6 class="title cw">@member.Name</h6>
+                                        <p class="designation cw">@member.Position</p>
                                     </div>
-                                </div>
+                                </a>
                             </div>
-                        }
+                        </div>
                     </div>
+                }
+            </div>
         </div>
     </div>
 </section>
-<!-- Team Area End -->
 
-<!-- Counter Area Start -->
 <section class="rts-counter-area jarallax">
     <div class="container">
         <div class="counter-inner">
@@ -57,8 +56,8 @@
                     <img src="~/assets/images/counter/icon-01.svg" width="74" alt="">
                 </div>
                 <div class="text">
-                    <h3 class="title cw"><span class="counter">320</span><span>M</span></h3>
-                    <p class="desc">Cars For Sale</p>
+                    <h3 class="title cw"><span class="counter">@teamCount</span></h3>
+                    <p class="desc">Team members</p>
                 </div>
             </div>
             <div class="inner wow zoomIn" data-wow-delay=".4s" data-wow-duration="1s">
@@ -66,53 +65,15 @@
                     <img src="~/assets/images/counter/icon-02.svg" alt="">
                 </div>
                 <div class="text">
-                    <h3 class="title cw"><span class="counter">5500</span><span>+</span></h3>
-                    <p class="desc">Dealer Review</p>
-                </div>
-            </div>
-            <div class="inner wow zoomIn" data-wow-delay=".6s" data-wow-duration="1s">
-                <div class="icon">
-                    <img src="~/assets/images/counter/icon-03.svg" alt="">
-                </div>
-                <div class="text">
-                    <h3 class="title cw"><span class="counter">300</span><span>M</span></h3>
-                    <p class="desc">Verified User</p>
-                </div>
-            </div>
-            <div class="inner wow zoomIn" data-wow-delay=".8s" data-wow-duration="1s">
-                <div class="icon">
-                    <img src="~/assets/images/counter/icon-04.svg" alt="">
-                </div>
-                <div class="text">
-                    <h3 class="title cw"><span class="counter">10</span><span>M</span></h3>
-                    <p class="desc">Visitor Per Day</p>
+                    <h3 class="title cw"><span class="counter">@dealerCount</span></h3>
+                    <p class="desc">Dealers</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Counter Area End -->
 
-<!-- Brand Area Start -->
-<section class="rts-brand-area rts-section-gapTop">
-    <div class="container">
-        <div class="section-title-area2">
-            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
-            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
-        </div>
-        <div class="section-inner mt--80">
-            <ul>
-                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
-            </ul>
-        </div>
-    </div>
-</section>
-<!-- Brand Area End -->
+@{ ViewData["PartnerStripClass"] = "rts-brand-area rts-section-gapTop"; }
+<partial name="_PartnerBrandStrip" />
 
 <partial name="_DealershipCallCta" />

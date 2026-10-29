@@ -1,0 +1,44 @@
+@model DealerEditViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /></div>
+    <div class="col-md-6"><label asp-for="Summary" class="form-label"></label><input asp-for="Summary" class="form-control" /></div>
+    <div class="col-md-6"><label class="form-label">Card image</label><input type="hidden" asp-for="CardImage" /><input type="file" name="cardImage" class="form-control" accept="image/*" /></div>
+    <div class="col-md-6"><label class="form-label">Detail image</label><input type="hidden" asp-for="DetailImage" /><input type="file" name="detailImage" class="form-control" accept="image/*" /></div>
+    <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea></div>
+    <div class="col-12"><label asp-for="DescriptionExtra" class="form-label"></label><textarea asp-for="DescriptionExtra" class="form-control" rows="2"></textarea></div>
+    <div class="col-12"><label asp-for="FeatureList" class="form-label"></label><textarea asp-for="FeatureList" class="form-control" rows="6" placeholder="One feature per line"></textarea></div>
+    <div class="col-md-4"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /></div>
+    <div class="col-md-4"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /></div>
+    <div class="col-md-4"><label asp-for="Address" class="form-label"></label><input asp-for="Address" class="form-control" /></div>
+    <div class="col-md-3"><label asp-for="CarType" class="form-label"></label><input asp-for="CarType" class="form-control" /></div>
+    <div class="col-md-3"><label asp-for="Mileage" class="form-label"></label><input asp-for="Mileage" class="form-control" /></div>
+    <div class="col-md-3"><label asp-for="FuelType" class="form-label"></label><input asp-for="FuelType" class="form-control" /></div>
+    <div class="col-md-3"><label asp-for="Transmission" class="form-label"></label><input asp-for="Transmission" class="form-control" /></div>
+    <div class="col-md-3"><label asp-for="ContactName" class="form-label"></label><input asp-for="ContactName" class="form-control" /></div>
+    <div class="col-md-3"><label asp-for="ContactPhone" class="form-label"></label><input asp-for="ContactPhone" class="form-control" /></div>
+    <div class="col-md-3"><label asp-for="SortOrder" class="form-label"></label><input asp-for="SortOrder" class="form-control" /></div>
+    <div class="col-md-3 d-flex align-items-end"><div class="form-check"><input asp-for="IsPublished" class="form-check-input" /><label asp-for="IsPublished" class="form-check-label"></label></div></div>
+    <div class="col-12"><details><summary class="mb-2">Additional specs</summary>
+        <div class="row g-3 mt-1">
+            <div class="col-md-3"><label asp-for="Person" class="form-label"></label><input asp-for="Person" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="DriveType" class="form-label"></label><input asp-for="DriveType" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Engine" class="form-label"></label><input asp-for="Engine" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Color" class="form-label"></label><input asp-for="Color" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="ContactRole" class="form-label"></label><input asp-for="ContactRole" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Whatsapp" class="form-label"></label><input asp-for="Whatsapp" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="SpecTransmission" class="form-label"></label><input asp-for="SpecTransmission" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="ChargingTime" class="form-label"></label><input asp-for="ChargingTime" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="BatteryCapacity" class="form-label"></label><input asp-for="BatteryCapacity" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="FastCharge" class="form-label"></label><input asp-for="FastCharge" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="BatteryWarranty" class="form-label"></label><input asp-for="BatteryWarranty" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="PowertrainWarranty" class="form-label"></label><input asp-for="PowertrainWarranty" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Displacement" class="form-label"></label><input asp-for="Displacement" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Torque" class="form-label"></label><input asp-for="Torque" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Horsepower" class="form-label"></label><input asp-for="Horsepower" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Cylinders" class="form-label"></label><input asp-for="Cylinders" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="EngineLayout" class="form-label"></label><input asp-for="EngineLayout" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="EngineConfig" class="form-label"></label><input asp-for="EngineConfig" class="form-control" /></div>
+        </div>
+    </details></div>
+</div>

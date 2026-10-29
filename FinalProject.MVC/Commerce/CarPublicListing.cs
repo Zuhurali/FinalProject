@@ -3,15 +3,17 @@ using FinalProject.MVC.Models.Api;
 namespace FinalProject.MVC.Commerce;
 
 /// <summary>
-/// Public catalog queries must only surface Active cars. Admin and "mine" endpoints
-/// keep their own status filters and are not routed through this helper.
+/// Public catalog helpers. Active is the default storefront; Sold is the public archive.
+/// Draft stays private. Admin and "mine" endpoints keep their own status filters.
 /// </summary>
 public static class CarPublicListing
 {
     public const string ActiveStatus = "Active";
+    public const string SoldStatus = "Sold";
 
     public static bool IsPubliclyListed(string? status) =>
-        string.Equals(status, ActiveStatus, StringComparison.OrdinalIgnoreCase);
+        string.Equals(status, ActiveStatus, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, SoldStatus, StringComparison.OrdinalIgnoreCase);
 
     public static CarApiQuery WithActiveStatus(CarApiQuery query)
     {
@@ -25,4 +27,12 @@ public static class CarPublicListing
             Page = page < 1 ? 1 : page,
             PageSize = pageSize < 1 ? CarApiQuery.MaxPageSize : pageSize
         });
+
+    public static CarApiQuery CreateSoldQuery(int page = 1, int pageSize = CarApiQuery.MaxPageSize) =>
+        new()
+        {
+            Status = SoldStatus,
+            Page = page < 1 ? 1 : page,
+            PageSize = pageSize < 1 ? CarApiQuery.MaxPageSize : pageSize
+        };
 }

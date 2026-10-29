@@ -1,14 +1,25 @@
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject.MVC.Controllers
 {
     public class CalculatorController : Controller
     {
+        private readonly ICalculatorPageContentService _page;
+
+        public CalculatorController(ICalculatorPageContentService page)
+        {
+            _page = page;
+        }
+
         public IActionResult Index()
         {
-            ViewData["Title"] = "Calculator - AutoVault";
+            var page = _page.GetPublic();
+            ViewData["Title"] = page.SeoTitle;
+            ViewData["MetaDescription"] = page.SeoDescription;
+            ViewData["CalculatorPage"] = page;
             return View(new CarLoanCalculatorModel());
         }
 

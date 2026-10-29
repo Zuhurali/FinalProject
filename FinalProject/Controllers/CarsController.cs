@@ -31,6 +31,12 @@ public class CarsController : ControllerBase
             return BadRequest(validationError);
         }
 
+        // Anonymous / member callers may list Active (default) or Sold. Draft stays admin/owner-only.
+        if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+        {
+            query.Status = CarPublicListing.NormalizeAnonymousListStatus(query.Status);
+        }
+
         var cars = await _carService.QueryAsync(query, cancellationToken);
         return Ok(cars);
     }

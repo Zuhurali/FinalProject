@@ -1,75 +1,76 @@
+@model IReadOnlyList<Car>
 @{
-    ViewData["Title"] = "Sold Car - AutoVault";
-
-    var soldCars = new[]
-    {
-        new { Name = "Thunderbolt Car", Image = "04.webp", ImageCount = 7 },
-        new { Name = "Mercedes-Benz E-Class", Image = "05.webp", ImageCount = 7 },
-        new { Name = "Ford Mustang Convertible", Image = "06.webp", ImageCount = 7 },
-        new { Name = "Mazda MX-5 Miata", Image = "07.webp", ImageCount = 7 },
-        new { Name = "Honda Civic Hatchback", Image = "08.webp", ImageCount = 5 },
-        new { Name = "Hyundai Veloster", Image = "09.webp", ImageCount = 7 },
-        new { Name = "Thunderbolt Car", Image = "04.webp", ImageCount = 7 },
-        new { Name = "Mercedes-Benz E-Class", Image = "05.webp", ImageCount = 7 },
-        new { Name = "Ford Mustang Convertible", Image = "06.webp", ImageCount = 7 }
-    };
+    ViewData["Title"] = "Sold Cars - AutoVault";
 }
 
-<!-- rts breadcrumb area start -->
 <div class="rts-breadcrumb-area portfolio-3 jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
             <h1 class="title">Sold</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-controller="Cars" asp-action="Index">Cars</a>
                 <a href="#" class="current">Sold</a>
             </div>
         </div>
     </div>
 </div>
-<!-- rts breadcrumb area end -->
 
 <section class="rts-portfolio-area sold-car rts-section-gap">
     <div class="container">
         <div class="section-inner">
             <div class="row g-5">
-                @foreach (var car in soldCars)
+                @if (ViewData["CarApiUnavailable"] as bool? == true)
+                {
+                    <div class="col-12 text-center">
+                        <h3 class="title">Sold inventory is temporarily unavailable.</h3>
+                        <p>Please try again in a moment.</p>
+                    </div>
+                }
+                else if (Model.Count == 0)
+                {
+                    <div class="col-12 text-center">
+                        <h3 class="title">No sold vehicles are listed yet.</h3>
+                        <p class="mb-0">When Admin marks a car as Sold, it appears here from SQL Server.</p>
+                        <a asp-action="Index" class="rts-btn btn-primary radius-small mt-3">Browse available cars</a>
+                    </div>
+                }
+                @foreach (var car in Model)
                 {
                     <div class="col-lg-4 col-md-6">
                         <div class="project-wrapper2">
                             <div class="image-area">
-                                <a asp-controller="Cars" asp-action="Details" asp-route-id="1">
-                                    <img src="~/assets/images/portfolio/@car.Image" alt="">
+                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
+                                    <img src="@Url.Content(car.ImagePath)" alt="@car.Name">
                                 </a>
-                                <span class="tag">Sold Out</span>
-                                <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                <a href="~/assets/images/portfolio/@car.Image" class="gallery-image">
+                                <span class="tag">Sold</span>
+                                <a href="@Url.Content(car.ImagePath)" class="gallery-image">
                                     <img src="~/assets/images/icon/image.svg" alt="">
-                                    @car.ImageCount
+                                    @Math.Max(1, car.ImageCount)
                                 </a>
                             </div>
-                            <span class="price">14,000$</span>
+                            <span class="price">@car.Price.ToString("C")</span>
                             <div class="content-area">
                                 <h6 class="title">
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1">@car.Name</a>
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a>
                                 </h6>
                                 <ul class="feature-area">
                                     <li>
                                         <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                        100 Miles
+                                        @car.MileageText
                                     </li>
                                     <li>
                                         <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                        Petrol
+                                        @car.Fuel
                                     </li>
                                     <li>
                                         <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                        Autometic
+                                        @car.Transmission
                                     </li>
                                 </ul>
                                 <div class="button-area">
-                                    <p class="">$400</p>
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="1" class="rts-btn btn-primary radius-small">View Details</a>
+                                    <p>@car.Year</p>
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
                                 </div>
                             </div>
                         </div>
@@ -79,27 +80,3 @@
         </div>
     </div>
 </section>
-
-<!-- Brand Area Start -->
-<section class="rts-brand-area">
-    <div class="container">
-        <div class="section-title-area2">
-            <p class="sub-title wow fadeInUp" data-wow-delay=".1s" data-wow-duration="1s">Partners</p>
-            <h2 class="section-title wow move-right">Browse by <span>Company</span></h2>
-        </div>
-        <div class="section-inner mt--80">
-            <ul>
-                <li class="wow fadeInUp" data-wow-delay=".2s" data-wow-duration="1s"><img src="~/assets/images/brand/01-w.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".4s" data-wow-duration="1s"><img src="~/assets/images/brand/02.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".6s" data-wow-duration="1s"><img src="~/assets/images/brand/03.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s"><img src="~/assets/images/brand/04.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1s" data-wow-duration="1s"><img src="~/assets/images/brand/05.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.2s" data-wow-duration="1s"><img src="~/assets/images/brand/06.svg" alt=""></li>
-                <li class="wow fadeInUp" data-wow-delay="1.4s" data-wow-duration="1s"><img src="~/assets/images/brand/07.svg" alt=""></li>
-            </ul>
-        </div>
-    </div>
-</section>
-<!-- Brand Area End -->
-
-<partial name="_DealershipCallCta" />

@@ -41,6 +41,7 @@ public class AccountIdentityAndRolesTests
         Assert.Equal("Admin,SuperAdmin", typeof(AdminCouponsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminRequestsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminSalesController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal("Admin,SuperAdmin", typeof(AdminOrdersController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(
             AppRoles.Admin + "," + AppRoles.SuperAdmin,
             typeof(AccountController).GetMethods(BindingFlags.Instance | BindingFlags.Public)

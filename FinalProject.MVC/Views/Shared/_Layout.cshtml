@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" type="image/x-icon" href="@Url.Content(Site.Current.FaviconPath)">
     <title>@(string.IsNullOrWhiteSpace(ViewData["Title"] as string) ? Site.Current.DefaultSeoTitle : ViewData["Title"])</title>
-    <meta name="description" content="@Site.Current.DefaultMetaDescription">
+    <meta name="description" content="@(string.IsNullOrWhiteSpace(ViewData["MetaDescription"] as string) ? Site.Current.DefaultMetaDescription : ViewData["MetaDescription"])">
     
     <!-- Autovault CSS -->
     <link rel="stylesheet" href="~/assets/css/plugins/plugins.css">
@@ -277,8 +277,8 @@
                             <p>@Site.Current.FormatCopyright(DateTime.Now.Year)</p>
                             <div class="menu">
                                 <ul>
-                                    <li><a href="#">Terms & Conditions</a></li>
-                                    <li><a href="#">Privacy Policy</a></li>
+                                    <li><a asp-controller="Home" asp-action="Terms">Terms & Conditions</a></li>
+                                    <li><a asp-controller="Home" asp-action="Privacy">Privacy Policy</a></li>
                                 </ul>
                             </div>
                         </div>

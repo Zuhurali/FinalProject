@@ -52,7 +52,8 @@ public class ContactQuestionsMessagesTests
             var allNew = await service.GetAllAsync(ContactRequestStatus.New);
             Assert.Contains(allNew, item => item.Id == id);
 
-            Assert.True(await service.SetStatusAsync(id!.Value, ContactRequestStatus.Resolved));
+            var (statusOk, statusError) = await service.SetStatusAsync(id!.Value, ContactRequestStatus.Resolved);
+            Assert.True(statusOk, statusError);
             var resolved = await service.GetAllAsync(ContactRequestStatus.Resolved);
             Assert.Contains(resolved, item => item.Id == id);
             Assert.DoesNotContain(await service.GetAllAsync(ContactRequestStatus.New), item => item.Id == id);

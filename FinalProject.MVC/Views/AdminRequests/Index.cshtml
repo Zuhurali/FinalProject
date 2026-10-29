@@ -81,9 +81,15 @@
                                 <form asp-action="CompleteSale"
                                       asp-route-id="@request.Id"
                                       method="post"
-                                      class="d-inline"
+                                      class="d-flex flex-column gap-1"
                                       onsubmit="return confirm('Record an in-store sale for qty @request.Quantity and mark request #@request.Id completed? Stock will decrease.');">
                                     @Html.AntiForgeryToken()
+                                    <input type="text"
+                                           name="couponCode"
+                                           class="form-control form-control-sm"
+                                           maxlength="50"
+                                           placeholder="@(string.IsNullOrEmpty(request.UserId) ? "Coupon needs linked account" : "Coupon (optional)")"
+                                           @(string.IsNullOrEmpty(request.UserId) ? "disabled" : null) />
                                     <button type="submit" class="btn btn-sm btn-primary">Complete &amp; record sale</button>
                                 </form>
                             }

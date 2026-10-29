@@ -131,6 +131,8 @@ public sealed class AdminFaqsController : Controller
         Question = item.Question,
         Answer = item.Answer,
         SortOrder = item.SortOrder,
-        IsPublished = item.IsPublished
+        IsPublished = item.IsPublished,
+        ShowOnFaqPage = item.ShowOnFaqPage,
+        ShowOnShop = item.ShowOnShop
     };
 }

@@ -41,7 +41,6 @@
     var colorName = VehicleColorCatalog.DisplayName(Model.Car.Color);
     var colorHex = VehicleColorCatalog.Hex(Model.Car.Color);
     var selectedFeatures = Model.Car.Features ?? new List<string>();
-    var preview = string.IsNullOrWhiteSpace(Model.Car.ImageUrl) ? null : Url.Content(Model.Car.ImageUrl);
     var knownModel = Model.Lookups.Models.Any(item =>
         item.BrandId == Model.Car.BrandId
         && item.Name.Equals(Model.Car.Model, StringComparison.OrdinalIgnoreCase));
@@ -406,26 +405,11 @@
 </section>
 
 <section class="av-section">
-    <h2>Images</h2>
-    <div class="form__control av-field">
-        <label for="Car_ImageUrl">Primary image</label>
-        <div class="av-image-row">
-            <input asp-for="Car.ImageUrl" id="Car_ImageUrl" class="input-form" placeholder="~/assets/images/... or https://..." autocomplete="off" />
-            <div>
-                <input type="file" id="car-image-file" name="imageFile" class="av-file-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-                <label for="car-image-file" class="av-choose-file">Choose File</label>
-            </div>
-        </div>
-        <div id="car-image-file-name" class="av-help" aria-live="polite"></div>
-        <small class="av-help">JPG, JPEG, PNG, or WEBP up to 5 MB. A chosen file replaces the path. Leave it empty when editing to keep the current primary image.</small>
-        <span asp-validation-for="Car.ImageUrl" class="text-danger"></span>
-        <div class="av-preview-frame">
-            <img id="car-image-preview" class="av-image-preview" src="@preview" alt="Primary image preview" style="@(preview == null ? "display:none;" : null)" />
-        </div>
-    </div>
-    @if (Model.Id != null)
-    {
-        <input type="hidden" name="Car.GallerySpecified" value="true" />
+    <h2>Vehicle Photos</h2>
+    <input type="hidden" name="Car.GallerySpecified" value="true" />
+    <input asp-for="Car.ImageUrl" id="Car_ImageUrl" type="hidden" />
+    <p class="av-help">Choose one or more photos in a single step. The first selected photo becomes the primary listing image; the rest are additional photos. Existing photos stay until you remove them. JPG, JPEG, PNG, or WEBP up to 5 MB each.</p>
+    @{
         var removedIds = new HashSet<int>(Model.Car.RemoveImageIds ?? new List<int>());
         string GallerySrc(string? url)
         {
@@ -439,51 +423,59 @@
                 ? (Url.Content(text) ?? text)
                 : text;
         }
-        if (Model.Gallery.Count > 0)
-        {
-            <p class="av-help">Saved gallery images stay until you remove them. Choose Primary for the listing card photo.</p>
-            <div class="row g-3 mb-3" id="car-gallery">
-                @foreach (var image in Model.Gallery.OrderBy(item => item.DisplayOrder).ThenBy(item => item.Id))
-                {
-                    var removed = removedIds.Contains(image.Id);
-                    var isPrimary = Model.Car.PrimaryImageId is int selected
-                        ? selected == image.Id
-                        : image.IsMain;
-                    <div class="col-6 col-md-4 gallery-item@(removed ? " d-none" : string.Empty)" data-image-id="@image.Id">
-                        @if (removed)
-                        {
-                            <input type="hidden" name="Car.RemoveImageIds" value="@image.Id" />
-                        }
-                        <div class="position-relative border rounded p-1 h-100 bg-white">
-                            <img src="@GallerySrc(image.ImageUrl)" alt="" class="w-100 rounded" style="height:140px;object-fit:contain;background:#eef1f4;" />
-                            <button type="button" class="gallery-remove" title="Remove image" aria-label="Remove image">&times;</button>
-                            <div class="form-check mt-2 mb-1">
-                                <input class="form-check-input gallery-primary"
-                                       type="radio"
-                                       name="Car.PrimaryImageId"
-                                       id="listing-primary-@image.Id"
-                                       value="@image.Id"
-                                       data-url="@image.ImageUrl"
-                                       @(isPrimary && !removed ? "checked" : null)
-                                       @(removed ? "disabled" : null) />
-                                <label class="form-check-label" for="listing-primary-@image.Id">@(image.IsMain ? "Primary image" : "Set as primary")</label>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
     }
-    <div class="form__control av-field av-gallery-field">
-        <span class="av-field-label">Gallery images</span>
-        <input type="file" id="gallery-files" name="galleryFiles" class="av-file-input" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-        <label for="gallery-files" class="av-add-images" id="gallery-add-button">
-            <i class="rt-icon-convertible-car" aria-hidden="true"></i>
-            <span>Add Images</span>
-        </label>
-        <div id="gallery-new-preview" class="av-gallery-preview"></div>
-        <div id="gallery-file-name" class="av-help" aria-live="polite"></div>
-        <small class="av-help">Add several photos at once. Existing images stay unless you remove them above. Each photo can be up to 5 MB.</small>
+    @if (Model.Gallery.Count > 0)
+    {
+        <div class="av-vehicle-photos-grid mb-3" id="car-gallery">
+            @foreach (var image in Model.Gallery.OrderBy(item => item.DisplayOrder).ThenBy(item => item.Id))
+            {
+                var removed = removedIds.Contains(image.Id);
+                var isPrimary = Model.Car.PrimaryImageId is int selected
+                    ? selected == image.Id
+                    : image.IsMain;
+                <div class="av-vehicle-photo-card gallery-item@(removed ? " d-none" : string.Empty)" data-image-id="@image.Id">
+                    @if (removed)
+                    {
+                        <input type="hidden" name="Car.RemoveImageIds" value="@image.Id" />
+                    }
+                    <div class="av-vehicle-photo-card__media">
+                        <img src="@GallerySrc(image.ImageUrl)" alt="" class="av-vehicle-photo-card__thumb" />
+                        <button type="button" class="gallery-remove" title="Remove photo" aria-label="Remove photo">&times;</button>
+                    </div>
+                    <div class="form-check av-vehicle-photo-card__meta">
+                        <input class="form-check-input gallery-primary"
+                               type="radio"
+                               name="Car.PrimaryImageId"
+                               id="listing-primary-@image.Id"
+                               value="@image.Id"
+                               data-url="@image.ImageUrl"
+                               @(isPrimary && !removed ? "checked" : null)
+                               @(removed ? "disabled" : null) />
+                        <label class="form-check-label" for="listing-primary-@image.Id">@(image.IsMain ? "Primary photo" : "Set as primary")</label>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    <div class="av-gallery-field">
+        <div class="form__control av-field">
+            <input type="file"
+                   id="vehicle-photos"
+                   name="vehiclePhotos"
+                   class="av-file-input"
+                   multiple="multiple"
+                   accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+            <label for="vehicle-photos" class="av-add-images" id="vehicle-photos-button">
+                <i class="rt-icon-convertible-car" aria-hidden="true"></i>
+                <span>Choose Photos</span>
+            </label>
+            <div id="vehicle-photos-file-name" class="av-help" aria-live="polite"></div>
+            <span asp-validation-for="Car.ImageUrl" class="text-danger"></span>
+        </div>
+        <div id="vehicle-photos-preview"
+             class="av-vehicle-photos-grid"
+             data-vehicle-photos-preview
+             aria-live="polite"></div>
     </div>
 </section>
 

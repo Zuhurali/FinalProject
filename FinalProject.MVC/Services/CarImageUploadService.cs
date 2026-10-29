@@ -27,33 +27,46 @@ public sealed class CarImageUploadService : ICarImageUploadService
                 return error;
             }
 
-            var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-            var fileName = $"{Guid.NewGuid():N}{extension}";
-            var folder = Path.Combine(
-                _environment.WebRootPath,
-                "assets",
-                "images",
-                "portfolio",
-                "cars",
-                "uploads");
-            Directory.CreateDirectory(folder);
-            var physical = Path.Combine(folder, fileName);
-            await using (var stream = File.Create(physical))
-            {
-                await imageFile.CopyToAsync(stream, cancellationToken);
-            }
-
-            car.ImageUrl = CarImageRules.BuildRelativePath(fileName);
+            car.ImageUrl = await WriteAsync(imageFile, cancellationToken);
             return null;
         }
 
         car.ImageUrl = car.ImageUrl?.Trim() ?? string.Empty;
         if (requireImage && string.IsNullOrWhiteSpace(car.ImageUrl))
         {
-            return "Enter an image path or URL, or choose a local image file.";
+            return "Choose at least one vehicle photo.";
         }
 
         return null;
+    }
+
+    public async Task<string?> ApplyVehiclePhotosAsync(
+        SaveCarDto car,
+        IEnumerable<IFormFile>? vehiclePhotos,
+        bool requireImage,
+        CancellationToken cancellationToken = default)
+    {
+        var files = (vehiclePhotos ?? Array.Empty<IFormFile>())
+            .Where(file => file is { Length: > 0 })
+            .ToList();
+
+        // First selected file is primary; remaining files are gallery additions.
+        var maxTotal = 1 + CarImageRules.MaxGalleryFilesPerSave;
+        if (files.Count > maxTotal)
+        {
+            return $"You can upload up to {maxTotal} photos at a time.";
+        }
+
+        var primary = files.Count > 0 ? files[0] : null;
+        var gallery = files.Skip(1).ToList();
+
+        var primaryError = await ApplyAsync(car, primary, requireImage, cancellationToken);
+        if (primaryError != null)
+        {
+            return primaryError;
+        }
+
+        return await SaveGalleryAsync(car.AdditionalImageUrls, gallery, cancellationToken);
     }
 
     public async Task<string?> SaveGalleryAsync(

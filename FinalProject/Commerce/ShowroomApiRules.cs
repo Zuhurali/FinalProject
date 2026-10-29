@@ -34,10 +34,16 @@ public static class ShowroomApiRules
             return true;
         }
 
+        // Completed requires CompleteRequestWithSaleAsync — refuse status-only completion.
+        if (string.Equals(toStatus, StatusCompleted, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         return fromStatus switch
         {
-            StatusNew => toStatus is StatusContacted or StatusCompleted or StatusCancelled,
-            StatusContacted => toStatus is StatusCompleted or StatusCancelled,
+            StatusNew => toStatus is StatusContacted or StatusCancelled,
+            StatusContacted => toStatus is StatusCancelled,
             _ => false
         };
     }
@@ -61,6 +67,30 @@ public static class ShowroomApiRules
 
         return null;
     }
+
+    public static int UnreservedQuantity(int onHandQuantity, int openReservedQuantity) =>
+        Math.Max(0, onHandQuantity - Math.Max(0, openReservedQuantity));
+
+    public static string? ValidateSaleAgainstReservations(int saleQuantity, int onHandQuantity, int openReservedQuantity)
+    {
+        var stockError = ValidateSaleQuantity(saleQuantity, onHandQuantity);
+        if (stockError != null)
+        {
+            return stockError;
+        }
+
+        var remaining = onHandQuantity - saleQuantity;
+        if (remaining < openReservedQuantity)
+        {
+            return openReservedQuantity == 0
+                ? null
+                : $"That sale would leave only {remaining} in stock, but {openReservedQuantity} unit(s) are reserved by open purchase requests.";
+        }
+
+        return null;
+    }
+
+    public static string CompleteSaleIdempotencyKey(int requestId) => $"req-complete:{requestId}";
 
     public static decimal DiscountedPrice(decimal originalPrice, decimal? discountedPrice, decimal? discountPercent)
     {

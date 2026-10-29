@@ -100,6 +100,9 @@ public sealed class SaveCarRequest : IValidatableObject
     [Required, RegularExpression("^(Active|Sold|Draft)$")]
     public string Status { get; set; } = "Active";
 
+    /// <summary>When true, prefer this Active listing in the home Featured / Premium carousel.</summary>
+    public bool IsFeatured { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         foreach (var result in Commerce.CarListingRules.ValidateYear(Year))

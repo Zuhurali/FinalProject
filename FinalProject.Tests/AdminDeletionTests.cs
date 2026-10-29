@@ -115,8 +115,7 @@ public class AdminDeletionTests
         });
         await db.SaveChangesAsync();
 
-        var config = new ConfigurationBuilder().AddInMemoryCollection().Build();
-        var reviews = new ProductReviewService(db, config);
+        var reviews = new ProductReviewService(db);
 
         var (created, createError) = await reviews.SaveReviewAsync(42, null, "member-user", "Original admin-delete review.");
         Assert.True(created != null, createError);

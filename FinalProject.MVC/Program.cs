@@ -158,7 +158,29 @@ builder.Services.AddScoped<IProductPopularityService, ProductPopularityService>(
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ISiteSettingsService, SiteSettingsService>();
 builder.Services.AddScoped<ICurrentSiteSettings, CurrentSiteSettings>();
+builder.Services.AddScoped<IHomePageContentService, HomePageContentService>();
+builder.Services.AddScoped<ICurrentHomePageContent, CurrentHomePageContent>();
+builder.Services.AddScoped<IAboutPageContentService, AboutPageContentService>();
+builder.Services.AddScoped<ICurrentAboutPageContent, CurrentAboutPageContent>();
+builder.Services.AddScoped<IContactPageContentService, ContactPageContentService>();
+builder.Services.AddScoped<ICurrentContactPageContent, CurrentContactPageContent>();
+builder.Services.AddScoped<ILegalPageContentService, LegalPageContentService>();
+builder.Services.AddScoped<ICurrentLegalPageContent, CurrentLegalPageContent>();
+builder.Services.AddScoped<IShopMarketingContentService, ShopMarketingContentService>();
+builder.Services.AddScoped<ICurrentShopMarketingContent, CurrentShopMarketingContent>();
+builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
+builder.Services.AddScoped<IDealerService, DealerService>();
 builder.Services.AddScoped<IFaqService, FaqService>();
+builder.Services.AddScoped<IPartnerStripService, PartnerStripService>();
+builder.Services.AddScoped<ICurrentPartnerStrip, CurrentPartnerStrip>();
+builder.Services.AddScoped<IFaqPageContentService, FaqPageContentService>();
+builder.Services.AddScoped<ICurrentFaqPageContent, CurrentFaqPageContent>();
+builder.Services.AddScoped<ITeamPageContentService, TeamPageContentService>();
+builder.Services.AddScoped<ICurrentTeamPageContent, CurrentTeamPageContent>();
+builder.Services.AddScoped<IDealerPageContentService, DealerPageContentService>();
+builder.Services.AddScoped<ICurrentDealerPageContent, CurrentDealerPageContent>();
+builder.Services.AddScoped<ICalculatorPageContentService, CalculatorPageContentService>();
+builder.Services.AddScoped<ICurrentCalculatorPageContent, CurrentCalculatorPageContent>();
 builder.Services.AddScoped<AccountActivityHistory>();
 
 builder.Services.AddDistributedMemoryCache();
@@ -216,6 +238,19 @@ static async Task SeedApplicationAsync(WebApplication app)
         await services.GetRequiredService<IShopCatalogService>().EnsureSeedAsync();
         await services.GetRequiredService<ICouponService>().EnsureSeedAsync();
         await services.GetRequiredService<ISiteSettingsService>().EnsureSeedAsync();
+        await services.GetRequiredService<IHomePageContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<IAboutPageContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<IContactPageContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<ILegalPageContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<IShopMarketingContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<ITeamMemberService>().EnsureSeedAsync();
+        await services.GetRequiredService<IDealerService>().EnsureSeedAsync();
+        await services.GetRequiredService<IFaqService>().EnsureSeedAsync();
+        await services.GetRequiredService<IPartnerStripService>().EnsureSeedAsync();
+        await services.GetRequiredService<IFaqPageContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<ITeamPageContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<IDealerPageContentService>().EnsureSeedAsync();
+        await services.GetRequiredService<ICalculatorPageContentService>().EnsureSeedAsync();
     }
 
     var seed = app.Configuration.GetSection("AdminSeed");

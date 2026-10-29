@@ -23,6 +23,8 @@ namespace FinalProject.MVC.Controllers
         private readonly IProductPopularityService _popularity;
         private readonly IMarketplaceApiService _marketplaceApi;
         private readonly ICouponService _coupons;
+        private readonly IShopMarketingContentService _shopMarketing;
+        private readonly IFaqService _faqs;
 
         public ShopController(
             ApplicationDbContext context,
@@ -33,7 +35,9 @@ namespace FinalProject.MVC.Controllers
             IProductReviewApiService reviewApiService,
             IProductPopularityService popularity,
             IMarketplaceApiService marketplaceApi,
-            ICouponService coupons)
+            ICouponService coupons,
+            IShopMarketingContentService shopMarketing,
+            IFaqService faqs)
         {
             _context = context;
             _ratingApiService = ratingApiService;
@@ -44,6 +48,8 @@ namespace FinalProject.MVC.Controllers
             _popularity = popularity;
             _marketplaceApi = marketplaceApi;
             _coupons = coupons;
+            _shopMarketing = shopMarketing;
+            _faqs = faqs;
         }
 
         private static ShopProduct CopyPart(ShopProduct product)
@@ -260,7 +266,10 @@ namespace FinalProject.MVC.Controllers
             int? campaign,
             CancellationToken cancellationToken)
         {
-            ViewData["Title"] = "Shop - AutoVault";
+            var marketing = _shopMarketing.GetPublic();
+            ViewData["Title"] = marketing.SeoTitle;
+            ViewData["MetaDescription"] = marketing.SeoDescription;
+            ViewData["ShopMarketing"] = marketing;
             await EnsureCatalogAsync(cancellationToken);
             var discountPercent = discount is > 0 ? discount : null;
             var campaignId = campaign is > 0 ? campaign : null;
@@ -291,6 +300,7 @@ namespace FinalProject.MVC.Controllers
             ViewData["Brand"] = brand;
             ViewData["Discount"] = discountPercent;
             ViewData["CampaignId"] = campaignId;
+            ViewData["ShopFaqs"] = await _faqs.GetShopPublishedAsync(cancellationToken);
             return View(response);
         }
 
@@ -547,11 +557,14 @@ namespace FinalProject.MVC.Controllers
         {
             ViewData["Title"] = "Shop Three - AutoVault";
             await EnsureCatalogAsync(cancellationToken);
-            
-            // Use the same products from the main shop - show 12 products initially (col-lg-6 grid = 2 per row)
-            var order = new[] { 1, 8, 3, 9, 5, 7, 10, 11, 4, 16, 6, 2 };
-            var products = order
-                .Select(id => CopyPart(_allProducts.First(product => product.Id == id)))
+
+            // SQL catalog order only — never hardcode product IDs (seed IDs can change).
+            // GetAllAsync already returns active storefront parts from SQL.
+            var products = _allProducts
+                .OrderBy(product => product.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(product => product.Id)
+                .Take(12)
+                .Select(CopyPart)
                 .ToList();
             await ApplyRatingsAsync(products, cancellationToken);
 
@@ -649,11 +662,9 @@ namespace FinalProject.MVC.Controllers
             ViewBag.RelatedProducts = related;
             ViewBag.SubmissionKey = Guid.NewGuid();
 
-            // Load answered inquiries so the product page can display admin replies
-            var inquiries = await _shopCatalog.GetInquiriesAsync(status: null, cancellationToken);
-            ViewBag.ProductInquiries = inquiries
-                .Where(q => q.ProductId == product.Id && q.HasReply)
-                .ToList();
+            ViewBag.ProductInquiries = await _shopCatalog.GetAnsweredInquiriesForProductAsync(
+                product.Id,
+                cancellationToken);
 
             await MarkProductFavoriteAsync(product, cancellationToken);
 

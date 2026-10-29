@@ -42,7 +42,11 @@ public sealed class AdminRequestsController : Controller
 
     [HttpPost("CompleteSale/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CompleteSale(int id, string? note, CancellationToken cancellationToken)
+    public async Task<IActionResult> CompleteSale(
+        int id,
+        string? note,
+        string? couponCode,
+        CancellationToken cancellationToken)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -50,9 +54,16 @@ public sealed class AdminRequestsController : Controller
             return Challenge();
         }
 
-        var (ok, error) = await _catalog.CompletePurchaseRequestWithSaleAsync(id, user.Id, note, cancellationToken);
+        var (ok, error) = await _catalog.CompletePurchaseRequestWithSaleAsync(
+            id,
+            user.Id,
+            note,
+            couponCode,
+            cancellationToken);
         TempData[ok ? "Success" : "Error"] = ok
-            ? $"Request #{id} completed and the in-store sale was recorded. Stock was reduced."
+            ? string.IsNullOrWhiteSpace(couponCode)
+                ? $"Request #{id} completed and the in-store sale was recorded. Stock was reduced."
+                : $"Request #{id} completed, stock reduced, and coupon redeemed in SQL."
             : error ?? "Could not complete that request with a sale.";
         return RedirectToAction(nameof(Index));
     }

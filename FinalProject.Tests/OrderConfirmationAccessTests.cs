@@ -173,5 +173,11 @@ public class OrderConfirmationAccessTests
 
         public Task<Order?> GetOrderAsync(int id, CancellationToken cancellationToken = default) =>
             Task.FromResult(_order != null && _order.Id == id ? _order : null);
+
+        public Task<IReadOnlyList<Order>> GetRecentOrdersAsync(
+            int take = 100,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Order>>(
+                _order == null ? Array.Empty<Order>() : new[] { _order });
     }
 }

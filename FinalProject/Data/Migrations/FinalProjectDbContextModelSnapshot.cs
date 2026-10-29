@@ -513,6 +513,10 @@ namespace FinalProject.Data.Migrations
                     b.Property<int?>("CampaignId")
                         .HasColumnType("int");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<bool>("IsDemo")
                         .HasColumnType("bit");
 
@@ -525,6 +529,9 @@ namespace FinalProject.Data.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PurchaseRequestId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -1125,11 +1132,19 @@ namespace FinalProject.Data.Migrations
 
             modelBuilder.Entity("FinalProject.Models.Entities.ProductFavorite", b =>
                 {
+                    b.HasOne("FinalProject.Models.Entities.ShopProductReference", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("FinalProject.Models.Entities.IdentityUserReference", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Product");
 
                     b.Navigation("User");
                 });

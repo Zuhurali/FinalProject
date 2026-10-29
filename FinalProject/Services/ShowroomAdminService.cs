@@ -98,6 +98,20 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             return (null, "Recorded-by user is required.");
         }
 
+        var durableKey = request.IdempotencyKey is { } key && key != Guid.Empty
+            ? key.ToString("N")
+            : null;
+        if (durableKey != null)
+        {
+            var prior = await _db.InPersonSales.AsNoTracking()
+                .Include(sale => sale.Product)
+                .FirstOrDefaultAsync(sale => sale.IdempotencyKey == durableKey, cancellationToken);
+            if (prior != null)
+            {
+                return (MapSale(prior), null);
+            }
+        }
+
         var product = await _db.ShopProducts.AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == request.ProductId, cancellationToken);
         if (product == null)
@@ -110,7 +124,11 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             return (null, "Inactive products cannot be sold in store.");
         }
 
-        var qtyError = ShowroomApiRules.ValidateSaleQuantity(request.Quantity, product.Quantity);
+        var openReserved = await SumOpenReservedAsync(request.ProductId, excludeRequestId: null, cancellationToken);
+        var qtyError = ShowroomApiRules.ValidateSaleAgainstReservations(
+            request.Quantity,
+            product.Quantity,
+            openReserved);
         if (qtyError != null)
         {
             return (null, qtyError);
@@ -140,12 +158,27 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             CampaignDiscountPercent = campaignPercent,
             RecordedByUserId = recordedByUserId.Trim(),
             Note = (request.Note ?? string.Empty).Trim(),
+            IdempotencyKey = durableKey,
             SoldAt = DateTime.UtcNow,
             IsDemo = false
         };
         _db.InPersonSales.Add(sale);
-        await _db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (DbUpdateException) when (durableKey != null)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _db.ChangeTracker.Clear();
+            var raced = await _db.InPersonSales.AsNoTracking()
+                .Include(item => item.Product)
+                .FirstOrDefaultAsync(item => item.IdempotencyKey == durableKey, cancellationToken);
+            return raced == null
+                ? (null, "The sale could not be recorded.")
+                : (MapSale(raced), null);
+        }
 
         sale.Product = product;
         return (MapSale(sale), null);
@@ -162,41 +195,72 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             return (null, "Recorded-by user is required.");
         }
 
-        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-        var request = await _db.ShowroomPurchaseRequests.FirstOrDefaultAsync(
-            item => item.Id == requestId,
-            cancellationToken);
-        if (request == null)
+        var completeKey = ShowroomApiRules.CompleteSaleIdempotencyKey(requestId);
+        var priorSale = await _db.InPersonSales.AsNoTracking()
+            .Include(sale => sale.Product)
+            .FirstOrDefaultAsync(sale => sale.IdempotencyKey == completeKey && sale.VoidedAt == null, cancellationToken);
+        if (priorSale != null)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            return (null, "Request not found.");
+            return (MapSale(priorSale), null);
         }
 
-        if (!ShowroomApiRules.IsOpen(request.Status))
+        var completedAt = DateTime.UtcNow;
+        var openNew = ShowroomApiRules.StatusNew;
+        var openContacted = ShowroomApiRules.StatusContacted;
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+        var claimed = await _db.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE ShowroomPurchaseRequests
+            SET Status = {ShowroomApiRules.StatusCompleted}, UpdatedAt = {completedAt}
+            WHERE Id = {requestId}
+              AND (Status = {openNew} OR Status = {openContacted})
+            """, cancellationToken);
+        if (claimed != 1)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return (null, $"Request #{requestId} is {request.Status} and cannot be completed with a sale.");
+            var existing = await _db.ShowroomPurchaseRequests.AsNoTracking()
+                .FirstOrDefaultAsync(item => item.Id == requestId, cancellationToken);
+            if (existing == null)
+            {
+                return (null, "Request not found.");
+            }
+
+            priorSale = await _db.InPersonSales.AsNoTracking()
+                .Include(sale => sale.Product)
+                .FirstOrDefaultAsync(sale => sale.IdempotencyKey == completeKey && sale.VoidedAt == null, cancellationToken);
+            if (priorSale != null)
+            {
+                return (MapSale(priorSale), null);
+            }
+
+            return (null, $"Request #{requestId} is {existing.Status} and cannot be completed with a sale.");
+        }
+
+        var request = await _db.ShowroomPurchaseRequests.AsNoTracking()
+            .FirstAsync(item => item.Id == requestId, cancellationToken);
+
+        async Task<(ShowroomSaleItem? Sale, string? Error)> FailAfterClaimAsync(string error)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return (null, error);
         }
 
         var product = await _db.ShopProducts.AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == request.ProductId, cancellationToken);
         if (product == null)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            return (null, "Product not found.");
+            return await FailAfterClaimAsync("Product not found.");
         }
 
         if (!product.IsActive)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            return (null, "Inactive products cannot be sold in store.");
+            return await FailAfterClaimAsync("Inactive products cannot be sold in store.");
         }
 
         var qtyError = ShowroomApiRules.ValidateSaleQuantity(request.Quantity, product.Quantity);
         if (qtyError != null)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            return (null, qtyError);
+            return await FailAfterClaimAsync(qtyError);
         }
 
         var (unitPrice, listPrice, campaignId, campaignPercent) = await PriceAsync(product, cancellationToken);
@@ -208,8 +272,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             """, cancellationToken);
         if (affected != 1)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            return (null, "That sale is larger than the available quantity.");
+            return await FailAfterClaimAsync("That sale is larger than the available quantity.");
         }
 
         var saleNote = string.IsNullOrWhiteSpace(note)
@@ -218,6 +281,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         var sale = new InPersonSaleReference
         {
             ProductId = request.ProductId,
+            PurchaseRequestId = request.Id,
             Quantity = request.Quantity,
             UnitPrice = unitPrice,
             ListUnitPrice = listPrice,
@@ -225,14 +289,27 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             CampaignDiscountPercent = campaignPercent,
             RecordedByUserId = recordedByUserId.Trim(),
             Note = saleNote,
-            SoldAt = DateTime.UtcNow,
+            IdempotencyKey = completeKey,
+            SoldAt = completedAt,
             IsDemo = false
         };
         _db.InPersonSales.Add(sale);
-        request.Status = ShowroomApiRules.StatusCompleted;
-        request.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _db.ChangeTracker.Clear();
+            priorSale = await _db.InPersonSales.AsNoTracking()
+                .Include(item => item.Product)
+                .FirstOrDefaultAsync(item => item.IdempotencyKey == completeKey && item.VoidedAt == null, cancellationToken);
+            return priorSale == null
+                ? (null, "The sale could not be recorded.")
+                : (MapSale(priorSale), null);
+        }
 
         sale.Product = product;
         return (MapSale(sale), null);
@@ -259,15 +336,23 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             return (false, "Voided-by user is required.");
         }
 
+        var voidedBy = voidedByUserId.Trim();
+        var voidedAt = DateTime.UtcNow;
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-        var sale = await _db.InPersonSales.FirstOrDefaultAsync(
-            item => item.Id == saleId && !item.IsDemo && item.VoidedAt == null,
-            cancellationToken);
-        if (sale == null)
+
+        var claimed = await _db.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE InPersonSales
+            SET VoidedAt = {voidedAt}, VoidedByUserId = {voidedBy}
+            WHERE Id = {saleId} AND IsDemo = 0 AND VoidedAt IS NULL
+            """, cancellationToken);
+        if (claimed != 1)
         {
             await transaction.RollbackAsync(cancellationToken);
             return (false, "Sale not found or already voided.");
         }
+
+        var sale = await _db.InPersonSales.AsNoTracking()
+            .FirstAsync(item => item.Id == saleId, cancellationToken);
 
         var affected = await _db.Database.ExecuteSqlInterpolatedAsync($"""
             UPDATE ShopProducts
@@ -281,11 +366,33 @@ public sealed class ShowroomAdminService : IShowroomAdminService
             return (false, "Could not restore stock for that sale.");
         }
 
-        sale.VoidedAt = DateTime.UtcNow;
-        sale.VoidedByUserId = voidedByUserId.Trim();
-        await _db.SaveChangesAsync(cancellationToken);
+        if (sale.PurchaseRequestId is int requestId)
+        {
+            await _db.Database.ExecuteSqlInterpolatedAsync($"""
+                UPDATE ShowroomPurchaseRequests
+                SET Status = {ShowroomApiRules.StatusContacted}, UpdatedAt = {voidedAt}
+                WHERE Id = {requestId} AND Status = {ShowroomApiRules.StatusCompleted}
+                """, cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
         return (true, null);
+    }
+
+    private async Task<int> SumOpenReservedAsync(
+        int productId,
+        int? excludeRequestId,
+        CancellationToken cancellationToken)
+    {
+        var query = _db.ShowroomPurchaseRequests.AsNoTracking()
+            .Where(item => item.ProductId == productId
+                && (item.Status == ShowroomApiRules.StatusNew || item.Status == ShowroomApiRules.StatusContacted));
+        if (excludeRequestId is int excludeId)
+        {
+            query = query.Where(item => item.Id != excludeId);
+        }
+
+        return await query.SumAsync(item => (int?)item.Quantity, cancellationToken) ?? 0;
     }
 
     private async Task<(decimal UnitPrice, decimal ListPrice, int? CampaignId, decimal? CampaignPercent)> PriceAsync(

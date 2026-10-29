@@ -91,14 +91,27 @@ public class ContactRequestPersistenceTests
         var (ok, id, _, error) = await service.SaveAsync(ValidModel());
         Assert.True(ok, error);
 
-        Assert.True(await service.SetStatusAsync(id!.Value, ContactRequestStatus.InProgress));
-        Assert.True(await service.SetStatusAsync(id.Value, ContactRequestStatus.Resolved));
-        Assert.False(await service.SetStatusAsync(id.Value, "Contacted"));
-        Assert.False(await service.SetStatusAsync(99999, ContactRequestStatus.New));
+        Assert.True((await service.SetStatusAsync(id!.Value, ContactRequestStatus.InProgress)).Ok);
+        Assert.True((await service.SetStatusAsync(id.Value, ContactRequestStatus.Resolved)).Ok);
+        Assert.False((await service.SetStatusAsync(id.Value, "Contacted")).Ok);
+        Assert.False((await service.SetStatusAsync(id.Value, ContactRequestStatus.New)).Ok);
+        Assert.False((await service.SetStatusAsync(99999, ContactRequestStatus.New)).Ok);
 
         var stored = await db.ContactRequests.AsNoTracking().SingleAsync(item => item.Id == id);
         Assert.Equal(ContactRequestStatus.Resolved, stored.Status);
         Assert.NotNull(stored.UpdatedAt);
+    }
+
+    [Theory]
+    [InlineData(ContactRequestStatus.New, ContactRequestStatus.InProgress, true)]
+    [InlineData(ContactRequestStatus.New, ContactRequestStatus.Resolved, true)]
+    [InlineData(ContactRequestStatus.InProgress, ContactRequestStatus.Resolved, true)]
+    [InlineData(ContactRequestStatus.Resolved, ContactRequestStatus.New, false)]
+    [InlineData(ContactRequestStatus.Resolved, ContactRequestStatus.InProgress, false)]
+    [InlineData(ContactRequestStatus.InProgress, ContactRequestStatus.New, false)]
+    public void Contact_status_transitions_follow_workflow(string from, string to, bool allowed)
+    {
+        Assert.Equal(allowed, ContactRequestStatus.CanTransition(from, to));
     }
 
     [Fact]

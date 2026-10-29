@@ -25,7 +25,7 @@ public interface IContactRequestService
         string accountEmail,
         CancellationToken cancellationToken = default);
 
-    Task<bool> SetStatusAsync(int id, string status, CancellationToken cancellationToken = default);
+    Task<(bool Ok, string? Error)> SetStatusAsync(int id, string status, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

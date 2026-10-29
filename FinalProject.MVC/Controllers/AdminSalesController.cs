@@ -4,7 +4,6 @@ using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace FinalProject.MVC.Controllers;
 
@@ -12,22 +11,18 @@ namespace FinalProject.MVC.Controllers;
 [Route("Admin/Sales")]
 public sealed class AdminSalesController : Controller
 {
-    private static readonly TimeSpan SubmissionKeyTtl = TimeSpan.FromHours(6);
     private readonly IShopCatalogService _catalog;
     private readonly IProductPopularityService _popularity;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IMemoryCache _submissionCache;
 
     public AdminSalesController(
         IShopCatalogService catalog,
         IProductPopularityService popularity,
-        UserManager<ApplicationUser> userManager,
-        IMemoryCache submissionCache)
+        UserManager<ApplicationUser> userManager)
     {
         _catalog = catalog;
         _popularity = popularity;
         _userManager = userManager;
-        _submissionCache = submissionCache;
     }
 
     [HttpGet("")]
@@ -55,6 +50,8 @@ public sealed class AdminSalesController : Controller
         int quantity,
         string? note,
         Guid submissionKey,
+        string? couponCode,
+        string? customerEmail,
         CancellationToken cancellationToken)
     {
         var user = await _userManager.GetUserAsync(User);
@@ -69,18 +66,39 @@ public sealed class AdminSalesController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var cacheKey = "admin-sale-submit:" + submissionKey.ToString("N");
-        if (_submissionCache.TryGetValue(cacheKey, out _))
+        string? customerUserId = null;
+        if (!string.IsNullOrWhiteSpace(couponCode) || !string.IsNullOrWhiteSpace(customerEmail))
         {
-            TempData["Success"] = "That sale was already recorded. Stock was not changed again.";
-            return RedirectToAction(nameof(Index));
+            if (string.IsNullOrWhiteSpace(customerEmail))
+            {
+                TempData["Error"] = "Enter the customer's account email to redeem a coupon in store.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var customer = await _userManager.FindByEmailAsync(customerEmail.Trim());
+            if (customer == null)
+            {
+                TempData["Error"] = "No customer account matches that email.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            customerUserId = customer.Id;
         }
 
-        var (ok, error) = await _catalog.RecordSaleAsync(productId, quantity, user.Id, note, cancellationToken);
+        var (ok, error) = await _catalog.RecordSaleAsync(
+            productId,
+            quantity,
+            user.Id,
+            note,
+            submissionKey,
+            couponCode,
+            customerUserId,
+            cancellationToken);
         if (ok)
         {
-            _submissionCache.Set(cacheKey, true, SubmissionKeyTtl);
-            TempData["Success"] = "The in-person sale was recorded and stock was reduced.";
+            TempData["Success"] = string.IsNullOrWhiteSpace(couponCode)
+                ? "The in-person sale was recorded and stock was reduced."
+                : "The in-person sale was recorded, stock was reduced, and the coupon was redeemed in SQL.";
         }
         else
         {
@@ -102,8 +120,8 @@ public sealed class AdminSalesController : Controller
 
         var (ok, error) = await _catalog.VoidSaleAsync(id, user.Id, cancellationToken);
         TempData[ok ? "Success" : "Error"] = ok
-            ? $"Sale #{id} was voided and stock was restored."
-            : error ?? "Sale not found or already voided.";
+            ? "The sale was voided and stock was restored."
+            : error;
         return RedirectToAction(nameof(Index));
     }
 }

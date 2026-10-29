@@ -88,9 +88,10 @@
                 <div class="filter-field">
                     <select name="category" class="mySelect">
                         <option value="">Car Type</option>
-                        @foreach (var category in CarCategories.All)
+                        @foreach (var category in Model.Categories)
                         {
-                            <option value="@category.Slug" selected="@(category.Slug == Model.CategorySlug)">@category.DisplayName</option>
+                            var slug = CarCategories.Slug(category.Name);
+                            <option value="@slug" selected="@(string.Equals(slug, Model.CategorySlug, StringComparison.OrdinalIgnoreCase) || CarCategories.Matches(category.Name, Model.CategorySlug))">@category.Name</option>
                         }
                     </select>
                 </div>

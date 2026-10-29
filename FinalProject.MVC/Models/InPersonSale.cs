@@ -10,6 +10,11 @@ public class InPersonSale
 
     public ShopCatalogProduct? Product { get; set; }
 
+    /// <summary>When set, this sale completed the linked showroom purchase request.</summary>
+    public int? PurchaseRequestId { get; set; }
+
+    public ShowroomPurchaseRequest? PurchaseRequest { get; set; }
+
     [Range(1, int.MaxValue)]
     public int Quantity { get; set; }
 
@@ -30,6 +35,10 @@ public class InPersonSale
 
     [MaxLength(500)]
     public string Note { get; set; } = string.Empty;
+
+    /// <summary>Durable client/submission key so retries do not create duplicate sales.</summary>
+    [MaxLength(64)]
+    public string? IdempotencyKey { get; set; }
 
     public DateTime SoldAt { get; set; }
 

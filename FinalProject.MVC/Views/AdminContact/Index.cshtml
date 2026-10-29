@@ -1,0 +1,21 @@
+@model ContactPageContentEditViewModel
+@{ Layout = "_AdminLayout"; }
+<h1 class="h3 mb-4">Contact Page</h1>
+<p class="text-muted">Phone, email, and address stay in Site Settings.</p>
+<form asp-controller="AdminContact" asp-action="Index" method="post" class="admin-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div class="row g-3">
+        <div class="col-md-6"><label asp-for="PageTitle" class="form-label"></label><input asp-for="PageTitle" class="form-control" /></div>
+        <div class="col-md-6"><label asp-for="SeoTitle" class="form-label"></label><input asp-for="SeoTitle" class="form-control" /></div>
+        <div class="col-12"><label asp-for="SeoDescription" class="form-label"></label><textarea asp-for="SeoDescription" class="form-control" rows="2"></textarea></div>
+        <div class="col-md-6"><label asp-for="FormTitle" class="form-label"></label><input asp-for="FormTitle" class="form-control" /></div>
+        <div class="col-12"><label asp-for="FormIntro" class="form-label"></label><textarea asp-for="FormIntro" class="form-control" rows="2"></textarea></div>
+        <div class="col-md-4"><label asp-for="LocationCardTitle" class="form-label"></label><input asp-for="LocationCardTitle" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="PhoneCardTitle" class="form-label"></label><input asp-for="PhoneCardTitle" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="EmailCardTitle" class="form-label"></label><input asp-for="EmailCardTitle" class="form-control" /></div>
+        <div class="col-12"><label asp-for="MapTitle" class="form-label"></label><input asp-for="MapTitle" class="form-control" /></div>
+        <div class="col-12"><label asp-for="MapEmbedUrl" class="form-label"></label><textarea asp-for="MapEmbedUrl" class="form-control" rows="2"></textarea></div>
+    </div>
+    <button type="submit" class="btn btn-dark mt-3">Save contact page</button>
+</form>
