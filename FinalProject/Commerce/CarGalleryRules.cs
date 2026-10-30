@@ -6,6 +6,16 @@ public static class CarGalleryRules
 
     public const int MaxNewImagesPerRequest = 12;
 
+    /// <summary>
+    /// Seeded catalog assets and Admin/account uploads under wwwroot.
+    /// Proven against FinalProjectDb CarImages (catalog + portfolio/cars/uploads only).
+    /// </summary>
+    private static readonly string[] AllowedPathPrefixes =
+    [
+        "/assets/images/catalog/",
+        "/assets/images/portfolio/cars/uploads/"
+    ];
+
     public static bool UrlsMatch(string? left, string? right) =>
         string.Equals(left?.Trim(), right?.Trim(), StringComparison.OrdinalIgnoreCase);
 
@@ -17,15 +27,23 @@ public static class CarGalleryRules
         }
 
         var text = url.Trim();
-        if (text.Length > 500 || text.IndexOf("..", StringComparison.Ordinal) >= 0 || text.IndexOf('\\') >= 0)
+        if (text.Length > 500
+            || text.Contains("..", StringComparison.Ordinal)
+            || text.Contains('\\'))
         {
             return false;
         }
 
-        return text.StartsWith("~/", StringComparison.Ordinal)
-            || text.StartsWith("/", StringComparison.Ordinal)
-            || text.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-            || text.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+        // Local app-relative paths only. Reject http(s) and protocol-relative "//…".
+        if (!(text.StartsWith("~/", StringComparison.Ordinal) || text.StartsWith("/", StringComparison.Ordinal))
+            || text.StartsWith("//", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var normalized = text.StartsWith("~/", StringComparison.Ordinal) ? text[1..] : text;
+        return AllowedPathPrefixes.Any(prefix =>
+            normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
     }
 }
 

@@ -10,11 +10,44 @@ public static class HomeCarShowcase
 {
     public const string ActiveStatus = "Active";
 
+    /// <summary>
+    /// Seeded catalog assets and Admin vehicle uploads under wwwroot.
+    /// External URLs and path traversal are rejected.
+    /// </summary>
+    private static readonly string[] ShowcaseImagePrefixes =
+    [
+        "/assets/images/catalog/",
+        "/assets/images/portfolio/cars/uploads/"
+    ];
+
+    public static bool IsShowcaseImagePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        var text = path.Trim();
+        if (text.Length > 500
+            || text.Contains("..", StringComparison.Ordinal)
+            || text.Contains('\\'))
+        {
+            return false;
+        }
+
+        if (!(text.StartsWith("~/", StringComparison.Ordinal) || text.StartsWith("/", StringComparison.Ordinal)))
+        {
+            return false;
+        }
+
+        var normalized = text.StartsWith("~/", StringComparison.Ordinal) ? text[1..] : text;
+        return ShowcaseImagePrefixes.Any(prefix =>
+            normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+    }
+
     public static IReadOnlyList<Car> ShowcaseCars(IEnumerable<Car> cars) =>
         cars
-            .Where(car =>
-                !string.IsNullOrWhiteSpace(car.ImagePath)
-                && car.ImagePath.Contains("/assets/images/catalog/", StringComparison.OrdinalIgnoreCase))
+            .Where(car => IsShowcaseImagePath(car.ImagePath))
             .GroupBy(car => car.Id)
             .Select(group => group.First())
             .ToList();
@@ -71,7 +104,7 @@ public static class HomeCarShowcase
     public static IReadOnlyList<Car> PremiumCars(IEnumerable<Car> cars)
     {
         var eligible = cars
-            .Where(car => !string.IsNullOrWhiteSpace(car.ImagePath))
+            .Where(car => IsShowcaseImagePath(car.ImagePath))
             .GroupBy(car => car.Id)
             .Select(group => group.First())
             .ToList();

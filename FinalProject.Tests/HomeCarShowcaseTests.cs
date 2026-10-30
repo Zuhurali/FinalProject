@@ -98,16 +98,66 @@ public class HomeCarShowcaseTests
     }
 
     [Fact]
-    public void Premium_includes_featured_cars_even_when_image_is_not_under_catalog()
+    public void Showcase_and_premium_include_admin_uploaded_car_images()
     {
         var featuredUpload = Car(9, false, isFeatured: true, "Active", 2019, "Toyota", "Upload Featured");
-        featuredUpload.ImagePath = "~/assets/images/portfolio/cars/uploads/featured-test.webp";
+        featuredUpload.ImagePath = "~/assets/images/portfolio/cars/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp";
         var mercedes = Car(2, false, isFeatured: false, "Active", 2025, "Mercedes-Benz", "S-Class");
 
-        // Catalog-path showcase filter would drop the upload; PremiumCars must still surface IsFeatured.
-        Assert.DoesNotContain(featuredUpload, HomeCarShowcase.ShowcaseCars(new[] { featuredUpload, mercedes }));
+        Assert.Contains(featuredUpload, HomeCarShowcase.ShowcaseCars(new[] { featuredUpload, mercedes }));
         var premium = HomeCarShowcase.PremiumCars(new[] { featuredUpload, mercedes });
         Assert.Equal(new[] { 9 }, premium.Select(car => car.Id));
+    }
+
+    [Theory]
+    [InlineData("~/assets/images/catalog/bmw/m340i.jpg", true)]
+    [InlineData("/assets/images/catalog/convertible/mercedes-sl-class-black.jpg", true)]
+    [InlineData("~/assets/images/portfolio/cars/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg", true)]
+    [InlineData("/assets/images/portfolio/cars/uploads/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.png", true)]
+    [InlineData("", false)]
+    [InlineData("   ", false)]
+    [InlineData("https://cdn.example.com/car.jpg", false)]
+    [InlineData("http://localhost/assets/images/catalog/x.jpg", false)]
+    [InlineData("~/assets/images/catalog/../secret.jpg", false)]
+    [InlineData("~/assets/images/portfolio/cars/uploads/../secret.jpg", false)]
+    [InlineData("~/assets/images/portfolio/01.jpg", false)]
+    [InlineData("~/assets/images/blog/post.jpg", false)]
+    [InlineData(@"~\assets\images\catalog\bmw.jpg", false)]
+    public void Showcase_image_path_allows_catalog_and_uploads_only(string path, bool expected)
+    {
+        Assert.Equal(expected, HomeCarShowcase.IsShowcaseImagePath(path));
+    }
+
+    [Fact]
+    public void ShowcaseCars_keeps_catalog_and_upload_mains_and_drops_unsafe_paths()
+    {
+        var catalog = Car(1, true, false, "Active");
+        catalog.ImagePath = "/assets/images/catalog/bmw/m340i.jpg";
+        var upload = Car(2, false, false, "Active");
+        upload.ImagePath = "~/assets/images/portfolio/cars/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg";
+        var external = Car(3, false, false, "Active");
+        external.ImagePath = "https://evil.example/car.jpg";
+        var traversal = Car(4, false, false, "Active");
+        traversal.ImagePath = "~/assets/images/catalog/../etc/passwd";
+        var empty = Car(5, false, false, "Active");
+        empty.ImagePath = "";
+
+        var showcase = HomeCarShowcase.ShowcaseCars(new[] { catalog, upload, external, traversal, empty });
+
+        Assert.Equal(new[] { 1, 2 }, showcase.Select(car => car.Id));
+    }
+
+    [Fact]
+    public void PremiumCars_excludes_external_and_unsafe_image_paths()
+    {
+        var featuredExternal = Car(1, false, isFeatured: true, "Active", 2024, "Audi", "A8");
+        featuredExternal.ImagePath = "https://cdn.example.com/featured.jpg";
+        var mercedes = Car(2, false, isFeatured: false, "Active", 2021, "Mercedes-Benz", "S-Class");
+
+        var premium = HomeCarShowcase.PremiumCars(new[] { featuredExternal, mercedes });
+
+        Assert.Equal(new[] { 2 }, premium.Select(car => car.Id));
+        Assert.DoesNotContain(premium, car => car.Id == 1);
     }
 
     [Fact]

@@ -1,8 +1,10 @@
 using FinalProject.Commerce;
 using FinalProject.DTOs;
+using FinalProject.Security;
 using FinalProject.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace FinalProject.Controllers;
@@ -90,10 +92,13 @@ public class CarsController : ControllerBase
         return Ok(car);
     }
 
+    /// <summary>Anonymous view counter. Rate-limited; login is not required.</summary>
+    [EnableRateLimiting(CarViewsRateLimit.PolicyName)]
     [HttpPost("{id:int}/views")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> RecordView(int id, CancellationToken cancellationToken)
     {
         if (id <= 0)

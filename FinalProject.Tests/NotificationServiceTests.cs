@@ -170,7 +170,7 @@ public class NotificationServiceTests
             Transmission = "Auto",
             Color = "Black",
             Description = "Test",
-            ImageUrl = "/images/cars/a5.jpg",
+            ImageUrl = "/assets/images/catalog/bmw/m340i.jpg",
             Status = "Active"
         };
 
