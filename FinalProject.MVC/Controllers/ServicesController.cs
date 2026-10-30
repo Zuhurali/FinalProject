@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace FinalProject.MVC.Controllers
+namespace FinalProject.MVC.Controllers;
+
+/// <summary>
+/// Theme repair/service-center marketing is not the live AutoVault offer.
+/// Keep the /Services route and send visitors to Contact.
+/// </summary>
+public class ServicesController : Controller
 {
-    public class ServicesController : Controller
+    public IActionResult Index()
     {
-        public IActionResult Index()
-        {
-            return RedirectToActionPermanent("Index", "Contact");
-        }
+        return RedirectToActionPermanent("Index", "Contact");
     }
 }
