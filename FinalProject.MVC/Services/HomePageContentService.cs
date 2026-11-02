@@ -9,7 +9,7 @@ namespace FinalProject.MVC.Services;
 
 public sealed class HomePageContentService : IHomePageContentService
 {
-    public const string CacheKey = "home-page-content-public-v1";
+    public const string CacheKey = "home-page-content-public-v2";
 
     private readonly ApplicationDbContext _db;
     private readonly IMemoryCache _cache;
@@ -128,6 +128,14 @@ public sealed class HomePageContentService : IHomePageContentService
         entity.PortfolioEyebrow = model.PortfolioEyebrow.Trim();
         entity.PortfolioHeadingBefore = model.PortfolioHeadingBefore.Trim();
         entity.PortfolioHeadingHighlight = model.PortfolioHeadingHighlight.Trim();
+        entity.PortfolioTabNewLabel = model.PortfolioTabNewLabel.Trim();
+        entity.PortfolioTabUsedLabel = model.PortfolioTabUsedLabel.Trim();
+        entity.PortfolioTabTrendingLabel = model.PortfolioTabTrendingLabel.Trim();
+        entity.PortfolioTabStocksLabel = model.PortfolioTabStocksLabel.Trim();
+        entity.PortfolioEmptyNew = model.PortfolioEmptyNew.Trim();
+        entity.PortfolioEmptyUsed = model.PortfolioEmptyUsed.Trim();
+        entity.PortfolioEmptyTrending = model.PortfolioEmptyTrending.Trim();
+        entity.PortfolioEmptyStocks = model.PortfolioEmptyStocks.Trim();
         entity.CampaignsEyebrow = model.CampaignsEyebrow.Trim();
         entity.CampaignsHeadingBefore = model.CampaignsHeadingBefore.Trim();
         entity.CampaignsHeadingHighlight = model.CampaignsHeadingHighlight.Trim();
@@ -182,6 +190,14 @@ public sealed class HomePageContentService : IHomePageContentService
         PortfolioEyebrow = HomePageContentDefaults.PortfolioEyebrow,
         PortfolioHeadingBefore = HomePageContentDefaults.PortfolioHeadingBefore,
         PortfolioHeadingHighlight = HomePageContentDefaults.PortfolioHeadingHighlight,
+        PortfolioTabNewLabel = HomePageContentDefaults.PortfolioTabNewLabel,
+        PortfolioTabUsedLabel = HomePageContentDefaults.PortfolioTabUsedLabel,
+        PortfolioTabTrendingLabel = HomePageContentDefaults.PortfolioTabTrendingLabel,
+        PortfolioTabStocksLabel = HomePageContentDefaults.PortfolioTabStocksLabel,
+        PortfolioEmptyNew = HomePageContentDefaults.PortfolioEmptyNew,
+        PortfolioEmptyUsed = HomePageContentDefaults.PortfolioEmptyUsed,
+        PortfolioEmptyTrending = HomePageContentDefaults.PortfolioEmptyTrending,
+        PortfolioEmptyStocks = HomePageContentDefaults.PortfolioEmptyStocks,
         CampaignsEyebrow = HomePageContentDefaults.CampaignsEyebrow,
         CampaignsHeadingBefore = HomePageContentDefaults.CampaignsHeadingBefore,
         CampaignsHeadingHighlight = HomePageContentDefaults.CampaignsHeadingHighlight,
@@ -237,6 +253,14 @@ public sealed class HomePageContentService : IHomePageContentService
             PortfolioEyebrow = Text(entity.PortfolioEyebrow, HomePageContentDefaults.PortfolioEyebrow),
             PortfolioHeadingBefore = Text(entity.PortfolioHeadingBefore, HomePageContentDefaults.PortfolioHeadingBefore),
             PortfolioHeadingHighlight = Text(entity.PortfolioHeadingHighlight, HomePageContentDefaults.PortfolioHeadingHighlight),
+            PortfolioTabNewLabel = Text(entity.PortfolioTabNewLabel, HomePageContentDefaults.PortfolioTabNewLabel),
+            PortfolioTabUsedLabel = Text(entity.PortfolioTabUsedLabel, HomePageContentDefaults.PortfolioTabUsedLabel),
+            PortfolioTabTrendingLabel = Text(entity.PortfolioTabTrendingLabel, HomePageContentDefaults.PortfolioTabTrendingLabel),
+            PortfolioTabStocksLabel = Text(entity.PortfolioTabStocksLabel, HomePageContentDefaults.PortfolioTabStocksLabel),
+            PortfolioEmptyNew = Text(entity.PortfolioEmptyNew, HomePageContentDefaults.PortfolioEmptyNew),
+            PortfolioEmptyUsed = Text(entity.PortfolioEmptyUsed, HomePageContentDefaults.PortfolioEmptyUsed),
+            PortfolioEmptyTrending = Text(entity.PortfolioEmptyTrending, HomePageContentDefaults.PortfolioEmptyTrending),
+            PortfolioEmptyStocks = Text(entity.PortfolioEmptyStocks, HomePageContentDefaults.PortfolioEmptyStocks),
             CampaignsEyebrow = Text(entity.CampaignsEyebrow, HomePageContentDefaults.CampaignsEyebrow),
             CampaignsHeadingBefore = Text(entity.CampaignsHeadingBefore, HomePageContentDefaults.CampaignsHeadingBefore),
             CampaignsHeadingHighlight = Text(entity.CampaignsHeadingHighlight, HomePageContentDefaults.CampaignsHeadingHighlight),

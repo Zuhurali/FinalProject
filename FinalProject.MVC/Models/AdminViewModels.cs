@@ -27,6 +27,13 @@ public sealed class AdminDashboardViewModel
     public bool ServiceUnavailable { get; set; }
 }
 
+public sealed class AdminUsersPageViewModel
+{
+    public string? Search { get; set; }
+
+    public IReadOnlyList<AdminUserViewModel> Users { get; set; } = Array.Empty<AdminUserViewModel>();
+}
+
 public sealed class AdminUserViewModel
 {
     public string Id { get; set; } = string.Empty;
@@ -35,11 +42,19 @@ public sealed class AdminUserViewModel
 
     public string DisplayName { get; set; } = string.Empty;
 
+    public string? PhoneNumber { get; set; }
+
     public bool EmailConfirmed { get; set; }
+
+    public bool PhoneNumberConfirmed { get; set; }
 
     public string Role { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; }
+
+    public bool IsLockedOut { get; set; }
+
+    public int AccessFailedCount { get; set; }
 
     public bool IsSuperAdmin { get; set; }
 }

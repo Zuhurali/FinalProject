@@ -18212,6 +18212,15 @@ a.category-wrapper2:hover {
 .rts-portfolio-area.inner .project-wrapper2 .content-area {
   background: var(--color-white);
 }
+/* portfolio-3 / Autovault original: light inner cards use heading title color.
+   Base .project-wrapper2 .content-area .title[a] forces #fff for dark home cards —
+   without this override, list titles are invisible on white content-area. */
+.rts-portfolio-area.inner .project-wrapper2 .content-area .title,
+.rts-portfolio-area.inner .project-wrapper2 .content-area .title:hover,
+.rts-portfolio-area.inner .project-wrapper2 .content-area .title a,
+.rts-portfolio-area.inner .project-wrapper2 .content-area .title a:hover {
+  color: var(--color-heading-1);
+}
 .rts-portfolio-area.inner .project-wrapper2 .content-area .feature-area {
   gap: 13px;
 }

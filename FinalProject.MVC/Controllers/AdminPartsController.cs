@@ -267,6 +267,7 @@ public sealed class AdminPartsController : AdminControllerBase
         Compatibility = part.Compatibility,
         CarMake = part.CarMake,
         CarModel = part.CarModel,
+        Color = part.Color,
         Quantity = part.Quantity,
         ImagePath = part.ImagePath,
         IsActive = part.IsActive

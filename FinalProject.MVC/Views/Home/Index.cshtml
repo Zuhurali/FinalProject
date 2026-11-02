@@ -636,16 +636,16 @@
                     <div class="tab-area">
                         <ul class="nav nav-tabs" id="myTab" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="new-cars-tab" data-bs-toggle="tab" data-bs-target="#new-cars" type="button" role="tab" aria-controls="new-cars" aria-selected="true">New Cars</button>
+                                <button class="nav-link active" id="new-cars-tab" data-bs-toggle="tab" data-bs-target="#new-cars" type="button" role="tab" aria-controls="new-cars" aria-selected="true">@home.PortfolioTabNewLabel</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="used-tab" data-bs-toggle="tab" data-bs-target="#used" type="button" role="tab" aria-controls="used" aria-selected="false">Used Cars</button>
+                                <button class="nav-link" id="used-tab" data-bs-toggle="tab" data-bs-target="#used" type="button" role="tab" aria-controls="used" aria-selected="false">@home.PortfolioTabUsedLabel</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="trending-tab" data-bs-toggle="tab" data-bs-target="#trending" type="button" role="tab" aria-controls="trending" aria-selected="false">Trending Cars</button>
+                                <button class="nav-link" id="trending-tab" data-bs-toggle="tab" data-bs-target="#trending" type="button" role="tab" aria-controls="trending" aria-selected="false">@home.PortfolioTabTrendingLabel</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false">In Stocks</button>
+                                <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false">@home.PortfolioTabStocksLabel</button>
                             </li>
                         </ul>
                     </div>
@@ -654,10 +654,10 @@
                         @{
                             var portfolioTabs = new (string Id, IReadOnlyList<Car> Cars, string Empty)[]
                             {
-                                ("new-cars", newCars, "No new cars are currently listed."),
-                                ("used", usedCars, "No used cars are currently listed."),
-                                ("trending", trendingCars, "No cars are currently listed."),
-                                ("stocks", stockCars, "No cars are currently in stock.")
+                                ("new-cars", newCars, home.PortfolioEmptyNew),
+                                ("used", usedCars, home.PortfolioEmptyUsed),
+                                ("trending", trendingCars, home.PortfolioEmptyTrending),
+                                ("stocks", stockCars, home.PortfolioEmptyStocks)
                             };
                             var stockOnlyBadges = new ViewDataDictionary(ViewData) { { "StockOnlyBadges", true } };
                             var hideStockBadge = new ViewDataDictionary(ViewData) { { "HideStockBadge", true } };

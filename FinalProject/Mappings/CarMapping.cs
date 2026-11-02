@@ -52,7 +52,8 @@ public static class CarMapping
             Category = new CategoryResponse
             {
                 Id = car.Category.Id,
-                Name = car.Category.Name
+                Name = car.Category.Name,
+                IconPath = car.Category.IconPath ?? string.Empty
             },
             Images = car.Images
                 .OrderBy(image => image.DisplayOrder)

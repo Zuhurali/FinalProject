@@ -36,6 +36,7 @@
                     }
                     @(string.IsNullOrWhiteSpace(vehicle) ? "Not stated" : vehicle)
                 </dd>
+                <dt class="col-sm-4">Color</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Color) ? "Not stated" : Model.Color)</dd>
                 <dt class="col-sm-4">Price</dt><dd class="col-sm-8">@Model.Price.ToString("C")</dd>
                 <dt class="col-sm-4">Stock quantity</dt><dd class="col-sm-8">@Model.Quantity</dd>
                 <dt class="col-sm-4">Stock status</dt><dd class="col-sm-8">@stockText</dd>

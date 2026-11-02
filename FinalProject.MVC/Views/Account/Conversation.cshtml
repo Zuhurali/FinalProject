@@ -41,11 +41,14 @@
                     </div>
                 }
             </div>
+            @if (currentUserId == Model.BuyerId || currentUserId == Model.SellerId)
+            {
             <form asp-action="Reply" asp-route-id="@Model.Id" method="post" class="message-reply-form mt-4" id="conversation-reply-form" data-conversation-id="@Model.Id">
                 @Html.AntiForgeryToken()
                 <textarea id="conversation-reply-input" name="content" rows="4" class="input-form" placeholder="Write a reply... " maxlength="4000"></textarea>
                 <button type="submit" class="rts-btn btn-primary radius-small mt-3" data-send-reply>Send Reply</button>
             </form>
+            }
         </div>
     </div></div>
 </div>

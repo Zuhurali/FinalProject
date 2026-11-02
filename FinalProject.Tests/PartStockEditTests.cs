@@ -227,6 +227,10 @@ public class PartStockEditTests
         Category = part.Category,
         Brand = part.Brand,
         Compatibility = part.Compatibility,
+        CarMake = part.CarMake,
+        CarModel = part.CarModel,
+        Color = part.Color,
+        PartNumber = part.PartNumber,
         Quantity = part.Quantity,
         ImagePath = part.ImagePath,
         IsActive = part.IsActive

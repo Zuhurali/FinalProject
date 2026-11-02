@@ -27,6 +27,8 @@ public class AdminDashboardTests
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.ChangeRole))!
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.ChangeRoles))!
+            .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
     }
 
     [Fact]

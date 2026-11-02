@@ -22,6 +22,8 @@ public sealed class PartAdminItem
 
     public string CarModel { get; set; } = string.Empty;
 
+    public string Color { get; set; } = string.Empty;
+
     public decimal Price { get; set; }
 
     public int Quantity { get; set; }
@@ -82,6 +84,9 @@ public sealed class SavePartRequest
 
     [MaxLength(100)]
     public string? CarModel { get; set; }
+
+    [MaxLength(50)]
+    public string? Color { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = "Stock cannot be negative.")]
     public int Quantity { get; set; }

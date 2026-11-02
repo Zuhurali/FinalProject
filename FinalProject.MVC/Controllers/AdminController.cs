@@ -92,30 +92,51 @@ public sealed class AdminController : AdminControllerBase
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpGet("Users")]
-    public async Task<IActionResult> Users()
+    public async Task<IActionResult> Users(string? search, CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Users - AutoVault";
-        var users = await UserManager.Users.OrderBy(user => user.Email).ToListAsync();
+        var users = await UserManager.Users
+            .OrderBy(user => user.Email)
+            .ToListAsync(cancellationToken);
+
         var models = new List<AdminUserViewModel>();
         foreach (var user in users)
         {
+            if (!AdminUserSearch.Matches(
+                    search,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.PhoneNumber))
+            {
+                continue;
+            }
+
             var roles = await UserManager.GetRolesAsync(user);
             models.Add(new AdminUserViewModel
             {
                 Id = user.Id,
                 Email = user.Email ?? string.Empty,
                 DisplayName = $"{user.FirstName} {user.LastName}".Trim(),
+                PhoneNumber = user.PhoneNumber,
                 EmailConfirmed = user.EmailConfirmed,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
                 Role = roles.Contains(AppRoles.SuperAdmin)
                     ? AppRoles.SuperAdmin
                     : roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member,
                 CreatedAt = user.CreatedAt,
+                IsLockedOut = await UserManager.IsLockedOutAsync(user),
+                AccessFailedCount = user.AccessFailedCount,
                 IsSuperAdmin = roles.Contains(AppRoles.SuperAdmin)
             });
         }
 
         ViewBag.CurrentUserId = UserManager.GetUserId(User);
-        return View(models);
+        return View(new AdminUsersPageViewModel
+        {
+            Search = search?.Trim(),
+            Users = models
+        });
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]

@@ -322,6 +322,13 @@ namespace FinalProject.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("IconPath")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -338,26 +345,31 @@ namespace FinalProject.Data.Migrations
                         new
                         {
                             Id = 1,
+                            IconPath = "~/assets/images/category/04.svg",
                             Name = "Sedan"
                         },
                         new
                         {
                             Id = 2,
+                            IconPath = "~/assets/images/category/05.svg",
                             Name = "SUV"
                         },
                         new
                         {
                             Id = 3,
+                            IconPath = "~/assets/images/category/02.svg",
                             Name = "Coupe"
                         },
                         new
                         {
                             Id = 4,
+                            IconPath = "~/assets/images/category/03.svg",
                             Name = "Hatchback"
                         },
                         new
                         {
                             Id = 5,
+                            IconPath = "~/assets/images/category/01.svg",
                             Name = "Convertible"
                         });
                 });
@@ -556,6 +568,11 @@ namespace FinalProject.Data.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("UX_InPersonSales_IdempotencyKey")
+                        .HasFilter("[IdempotencyKey] IS NOT NULL");
 
                     b.HasIndex("ProductId");
 

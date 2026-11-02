@@ -278,6 +278,7 @@ public sealed class PartsAdminService : IPartsAdminService
         request.Compatibility = (request.Compatibility ?? string.Empty).Trim();
         request.CarMake = (request.CarMake ?? string.Empty).Trim();
         request.CarModel = (request.CarModel ?? string.Empty).Trim();
+        request.Color = (request.Color ?? string.Empty).Trim();
         request.ImagePath = (request.ImagePath ?? string.Empty).Trim();
         if (request.Name.Length is < 2 or > 200)
         {
@@ -297,6 +298,11 @@ public sealed class PartsAdminService : IPartsAdminService
         if (request.CarMake.Length > 100 || request.CarModel.Length > 100)
         {
             return "Compatible vehicle fields are too long.";
+        }
+
+        if (request.Color.Length > 50)
+        {
+            return "Color cannot exceed 50 characters.";
         }
 
         if (request.Price < 0)
@@ -329,6 +335,7 @@ public sealed class PartsAdminService : IPartsAdminService
         part.Compatibility = request.Compatibility ?? string.Empty;
         part.CarMake = request.CarMake ?? string.Empty;
         part.CarModel = request.CarModel ?? string.Empty;
+        part.Color = request.Color ?? string.Empty;
         part.Quantity = request.Quantity;
         part.ImagePath = request.ImagePath!.Trim();
         part.InStock = request.Quantity > 0;
@@ -344,7 +351,6 @@ public sealed class PartsAdminService : IPartsAdminService
                 request.CarModel
             }
             .Where(value => !string.IsNullOrWhiteSpace(value)));
-        part.Color ??= string.Empty;
         part.Fuel ??= string.Empty;
     }
 
@@ -364,6 +370,7 @@ public sealed class PartsAdminService : IPartsAdminService
             Compatibility = part.Compatibility,
             CarMake = part.CarMake,
             CarModel = part.CarModel,
+            Color = part.Color,
             Price = part.Price,
             Quantity = part.Quantity,
             ImagePath = part.ImagePath,

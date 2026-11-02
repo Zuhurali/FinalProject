@@ -308,7 +308,8 @@ public class CarService : ICarService
             .Select(category => new CategoryResponse
             {
                 Id = category.Id,
-                Name = category.Name
+                Name = category.Name,
+                IconPath = category.IconPath
             })
             .ToListAsync(cancellationToken);
         var storedModels = await _dbContext.Cars

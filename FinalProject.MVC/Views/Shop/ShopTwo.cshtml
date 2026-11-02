@@ -111,14 +111,14 @@
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>
                         
-                        <!-- Categories/Fuel Tags -->
+                        <!-- Categories from SQL ShopProducts -->
                         <div class="tag-area side-box">
                             <h2>Categories</h2>
                             <ul>
-                                <li><a href="#" data-category="Brakes">Brakes</a></li>
-                                <li><a href="#" data-category="Filters">Filters</a></li>
-                                <li><a href="#" data-category="Suspension">Suspension</a></li>
-                                <li><a href="#" data-category="Lighting">Lighting</a></li>
+                                @foreach (var category in ViewBag.Categories as IEnumerable<string> ?? Enumerable.Empty<string>())
+                                {
+                                    <li><a href="#" data-category="@category">@category</a></li>
+                                }
                             </ul>
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>

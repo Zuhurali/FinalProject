@@ -166,9 +166,14 @@ namespace FinalProject.MVC.Controllers
             return View(cars);
         }
 
-        public IActionResult CarsThree()
+        public async Task<IActionResult> CarsThree()
         {
-            return RedirectToAction(nameof(Index));
+            ViewData["Title"] = "Cars Three - AutoVault";
+            ViewData["BodyClass"] = "with-sidebar";
+            ViewData["HeaderStyle"] = "three";
+            var cars = await LoadCarsAsync();
+            await MarkFavoritesAsync(cars);
+            return View(cars);
         }
 
         public async Task<IActionResult> Details(int? id)

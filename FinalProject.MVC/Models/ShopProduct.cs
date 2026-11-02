@@ -65,6 +65,7 @@ namespace FinalProject.MVC.Models
         public decimal? MaxPrice { get; set; }
         public List<string>? SelectedMakes { get; set; }
         public List<string>? SelectedModels { get; set; }
+        public List<string>? SelectedColors { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 6;
     }

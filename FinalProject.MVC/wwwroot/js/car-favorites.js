@@ -109,6 +109,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("form.wishlist[data-favorite-toggle]").forEach(bindForm);
+    // Bind any favorite toggle form (wishlist class optional for older markup).
+    document.querySelectorAll("form[data-favorite-toggle]").forEach(bindForm);
   });
 })();

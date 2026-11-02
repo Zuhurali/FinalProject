@@ -42,6 +42,30 @@ public class HomePageContent
     [Required, MaxLength(80)]
     public string PortfolioHeadingHighlight { get; set; } = string.Empty;
 
+    [Required, MaxLength(80)]
+    public string PortfolioTabNewLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
+    public string PortfolioTabUsedLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
+    public string PortfolioTabTrendingLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
+    public string PortfolioTabStocksLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    public string PortfolioEmptyNew { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    public string PortfolioEmptyUsed { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    public string PortfolioEmptyTrending { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    public string PortfolioEmptyStocks { get; set; } = string.Empty;
+
     [Required, MaxLength(120)]
     public string CampaignsEyebrow { get; set; } = string.Empty;
 

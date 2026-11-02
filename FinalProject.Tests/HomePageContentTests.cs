@@ -66,6 +66,14 @@ public class HomePageContentTests
         Assert.Equal(HomePageContentDefaults.HeroTitle, seeded.HeroTitle);
         Assert.Equal(HomePageContentDefaults.HeroHighlight, seeded.HeroHighlight);
         Assert.Equal(HomePageContentDefaults.AboutBody, seeded.AboutBody);
+        Assert.Equal(HomePageContentDefaults.PortfolioTabNewLabel, seeded.PortfolioTabNewLabel);
+        Assert.Equal(HomePageContentDefaults.PortfolioTabUsedLabel, seeded.PortfolioTabUsedLabel);
+        Assert.Equal(HomePageContentDefaults.PortfolioTabTrendingLabel, seeded.PortfolioTabTrendingLabel);
+        Assert.Equal(HomePageContentDefaults.PortfolioTabStocksLabel, seeded.PortfolioTabStocksLabel);
+        Assert.Equal(HomePageContentDefaults.PortfolioEmptyNew, seeded.PortfolioEmptyNew);
+        Assert.Equal(HomePageContentDefaults.PortfolioEmptyUsed, seeded.PortfolioEmptyUsed);
+        Assert.Equal(HomePageContentDefaults.PortfolioEmptyTrending, seeded.PortfolioEmptyTrending);
+        Assert.Equal(HomePageContentDefaults.PortfolioEmptyStocks, seeded.PortfolioEmptyStocks);
 
         var publicBefore = service.GetPublic();
         Assert.Equal(HomePageContentDefaults.HeroImagePath, publicBefore.HeroImagePath);
@@ -77,6 +85,8 @@ public class HomePageContentTests
         edit.HeroHighlight = "Autos";
         edit.AboutBody = $"{marker} about body for tests.";
         edit.Feature1Title = "Test Pricing";
+        edit.PortfolioTabNewLabel = "Fresh cars";
+        edit.PortfolioEmptyNew = "Nothing new is listed.";
 
         var (ok, error) = await service.SaveAsync(edit, new HomePageImageUploads());
         Assert.True(ok, error);
@@ -86,15 +96,65 @@ public class HomePageContentTests
         Assert.Equal(marker, publicAfter.HeroTitle);
         Assert.Equal("Autos", publicAfter.HeroHighlight);
         Assert.Equal("Test Pricing", publicAfter.Feature1Title);
+        Assert.Equal("Fresh cars", publicAfter.PortfolioTabNewLabel);
+        Assert.Equal("Nothing new is listed.", publicAfter.PortfolioEmptyNew);
         Assert.Contains(marker, publicAfter.AboutBody, StringComparison.Ordinal);
 
         var reloaded = await db.HomePageContents.AsNoTracking()
             .SingleAsync(content => content.Id == HomePageContent.SingletonId);
         Assert.Equal(marker, reloaded.HeroTitle);
 
+        var blank = ToEditModel(FromSeed());
+        blank.PortfolioTabUsedLabel = "   ";
+        blank.PortfolioEmptyUsed = "";
+        var (blankOk, blankError) = await service.SaveAsync(blank, new HomePageImageUploads());
+        Assert.True(blankOk, blankError);
+        cache.Remove(HomePageContentService.CacheKey);
+        Assert.Equal(HomePageContentDefaults.PortfolioTabUsedLabel, service.GetPublic().PortfolioTabUsedLabel);
+        Assert.Equal(HomePageContentDefaults.PortfolioEmptyUsed, service.GetPublic().PortfolioEmptyUsed);
+
         await service.SaveAsync(ToEditModel(FromSeed()), new HomePageImageUploads());
         cache.Remove(HomePageContentService.CacheKey);
         Assert.Equal(HomePageContentDefaults.HeroTitle, service.GetPublic().HeroTitle);
+        Assert.Equal(HomePageContentDefaults.PortfolioTabNewLabel, service.GetPublic().PortfolioTabNewLabel);
+        Assert.Equal(HomePageContentDefaults.PortfolioEmptyStocks, service.GetPublic().PortfolioEmptyStocks);
+    }
+
+    [Fact]
+    public void Home_portfolio_tabs_read_cms_labels_instead_of_hardcoded_copy()
+    {
+        var root = FindRepoRoot();
+        var view = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Home", "Index.cshtml"));
+        var admin = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminHome", "Index.cshtml"));
+        Assert.Contains("@home.PortfolioTabNewLabel", view, StringComparison.Ordinal);
+        Assert.Contains("@home.PortfolioTabUsedLabel", view, StringComparison.Ordinal);
+        Assert.Contains("@home.PortfolioTabTrendingLabel", view, StringComparison.Ordinal);
+        Assert.Contains("@home.PortfolioTabStocksLabel", view, StringComparison.Ordinal);
+        Assert.Contains("home.PortfolioEmptyNew", view, StringComparison.Ordinal);
+        Assert.Contains("home.PortfolioEmptyUsed", view, StringComparison.Ordinal);
+        Assert.Contains("home.PortfolioEmptyTrending", view, StringComparison.Ordinal);
+        Assert.Contains("home.PortfolioEmptyStocks", view, StringComparison.Ordinal);
+        Assert.DoesNotContain(">New Cars</button>", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("No new cars are currently listed.", view, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"PortfolioTabNewLabel\"", admin, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"PortfolioEmptyStocks\"", admin, StringComparison.Ordinal);
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "FinalProject.slnx"))
+                || File.Exists(Path.Combine(dir.FullName, "FinalProject.sln")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the repository root.");
     }
 
     private static HomePagePublicContent FromSeed()
@@ -113,6 +173,14 @@ public class HomePageContentTests
             PortfolioEyebrow = seed.PortfolioEyebrow,
             PortfolioHeadingBefore = seed.PortfolioHeadingBefore,
             PortfolioHeadingHighlight = seed.PortfolioHeadingHighlight,
+            PortfolioTabNewLabel = seed.PortfolioTabNewLabel,
+            PortfolioTabUsedLabel = seed.PortfolioTabUsedLabel,
+            PortfolioTabTrendingLabel = seed.PortfolioTabTrendingLabel,
+            PortfolioTabStocksLabel = seed.PortfolioTabStocksLabel,
+            PortfolioEmptyNew = seed.PortfolioEmptyNew,
+            PortfolioEmptyUsed = seed.PortfolioEmptyUsed,
+            PortfolioEmptyTrending = seed.PortfolioEmptyTrending,
+            PortfolioEmptyStocks = seed.PortfolioEmptyStocks,
             CampaignsEyebrow = seed.CampaignsEyebrow,
             CampaignsHeadingBefore = seed.CampaignsHeadingBefore,
             CampaignsHeadingHighlight = seed.CampaignsHeadingHighlight,
@@ -162,6 +230,14 @@ public class HomePageContentTests
         PortfolioEyebrow = current.PortfolioEyebrow,
         PortfolioHeadingBefore = current.PortfolioHeadingBefore,
         PortfolioHeadingHighlight = current.PortfolioHeadingHighlight,
+        PortfolioTabNewLabel = current.PortfolioTabNewLabel,
+        PortfolioTabUsedLabel = current.PortfolioTabUsedLabel,
+        PortfolioTabTrendingLabel = current.PortfolioTabTrendingLabel,
+        PortfolioTabStocksLabel = current.PortfolioTabStocksLabel,
+        PortfolioEmptyNew = current.PortfolioEmptyNew,
+        PortfolioEmptyUsed = current.PortfolioEmptyUsed,
+        PortfolioEmptyTrending = current.PortfolioEmptyTrending,
+        PortfolioEmptyStocks = current.PortfolioEmptyStocks,
         CampaignsEyebrow = current.CampaignsEyebrow,
         CampaignsHeadingBefore = current.CampaignsHeadingBefore,
         CampaignsHeadingHighlight = current.CampaignsHeadingHighlight,

@@ -1,301 +1,846 @@
+@model IReadOnlyList<FinalProject.MVC.Models.Car>
 @{
     ViewData["Title"] = "Cars Three - AutoVault";
-    var cards = new (string Title, string Image, int Id)[]
-    {
-        ("Honda Civic Hatchback", "~/assets/images/portfolio/08-sm.webp", 1),
-        ("Mercedes-Benz E-Class", "~/assets/images/portfolio/05-sm.webp", 6),
-        ("Mazda MX-5 Miata", "~/assets/images/portfolio/07-sm.webp", 23)
-    };
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var makes = Model
+        .Where(car => !string.IsNullOrWhiteSpace(car.Make))
+        .GroupBy(car => car.Make)
+        .OrderBy(group => group.Key)
+        .Select(group => group.Key)
+        .ToList();
+    var models = Model
+        .Where(car => !string.IsNullOrWhiteSpace(car.Model))
+        .GroupBy(car => car.Model)
+        .OrderBy(group => group.Key)
+        .Select(group => group.Key)
+        .ToList();
+    var types = Model
+        .Where(car => !string.IsNullOrWhiteSpace(car.Category))
+        .GroupBy(car => car.Category)
+        .OrderBy(group => group.Key)
+        .Select(group => group.Key)
+        .ToList();
+    var fuels = Model
+        .Where(car => !string.IsNullOrWhiteSpace(car.Fuel))
+        .GroupBy(car => car.Fuel)
+        .OrderBy(group => group.Key)
+        .Select(group => group.Key)
+        .ToList();
+    var transmissions = Model
+        .Where(car => !string.IsNullOrWhiteSpace(car.Transmission))
+        .GroupBy(car => car.Transmission)
+        .OrderBy(group => group.Key)
+        .Select(group => group.Key)
+        .ToList();
+    var seats = Model
+        .Where(car => car.Seats > 0)
+        .GroupBy(car => car.Seats)
+        .OrderBy(group => group.Key)
+        .Select(group => group.Key)
+        .ToList();
+    var minPrice = Model.Count == 0 ? 0m : Model.Min(car => car.Price);
+    var maxPrice = Model.Count == 0 ? 0m : Model.Max(car => car.Price);
+    var minYear = Model.Count == 0 ? 0 : Model.Min(car => car.Year);
+    var maxYear = Model.Count == 0 ? 0 : Model.Max(car => car.Year);
+    var minMileage = Model.Count == 0 ? 0 : Model.Min(car => car.Mileage);
+    var maxMileage = Model.Count == 0 ? 0 : Model.Max(car => car.Mileage);
+    const int pageSize = 9;
 }
+
+<style>
+    .cars3-advanced {
+        --c3-bg: #f3f4f7;
+        --c3-panel: #ffffff;
+        --c3-line: rgba(85, 85, 85, 0.14);
+        --c3-ink: var(--color-heading-1, #050B20);
+        --c3-muted: var(--color-body, #555555);
+        --c3-accent: var(--color-primary, #FF3600);
+        background: linear-gradient(180deg, #eef0f4 0%, var(--c3-bg) 28%, #f7f8fa 100%);
+        padding-bottom: 72px;
+    }
+
+    .cars3-advanced .cars3-shell {
+        display: grid;
+        grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
+    }
+
+    .cars3-panel {
+        background: var(--c3-panel);
+        border: 1px solid var(--c3-line);
+        border-radius: 18px;
+        box-shadow: 0 18px 40px rgba(5, 11, 32, 0.06);
+    }
+
+    .cars3-filters {
+        padding: 22px 20px 20px;
+        position: sticky;
+        top: 110px;
+        max-height: calc(100vh - 130px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(85, 85, 85, 0.35) transparent;
+    }
+
+    .cars3-filters::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .cars3-filters::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .cars3-filters::-webkit-scrollbar-thumb {
+        background: rgba(85, 85, 85, 0.28);
+        border-radius: 999px;
+    }
+
+    .cars3-filters__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--c3-line);
+    }
+
+    .cars3-filters__head h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.2;
+        color: var(--c3-ink);
+        font-weight: 600;
+        white-space: nowrap;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .cars3-clear {
+        border: 0;
+        background: transparent;
+        color: var(--c3-accent);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0;
+        cursor: pointer;
+        flex: 0 0 auto;
+        width: auto;
+        white-space: nowrap;
+    }
+
+    .cars3-field {
+        margin-bottom: 14px;
+        clear: both;
+    }
+
+    .cars3-field label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--c3-muted);
+    }
+
+    .cars3-field input[type="text"],
+    .cars3-field input[type="number"],
+    .cars3-field select {
+        width: 100%;
+        border: 1px solid var(--c3-line);
+        border-radius: 10px;
+        background: #fafbfc;
+        color: var(--c3-ink);
+        font-size: 14px;
+        line-height: 1.2;
+        padding: 11px 12px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Override global .nice-select { float: left } only inside CarsThree filters. */
+    .cars3-filters .nice-select {
+        float: none;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        line-height: 1.2;
+        border: 1px solid var(--c3-line);
+        border-radius: 10px;
+        background: #fafbfc;
+        color: var(--c3-ink);
+        font-size: 14px;
+        padding: 11px 36px 11px 12px;
+        margin: 0;
+    }
+
+    .cars3-filters .nice-select:after {
+        right: 14px;
+    }
+
+    .cars3-filters .nice-select .list {
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    /* Closed dropdown lists are opacity:0 but still expand overflow:auto scrollHeight. */
+    .cars3-filters .nice-select:not(.open) .list {
+        height: 0 !important;
+        max-height: 0 !important;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        border: 0;
+        box-shadow: none;
+        transform: none;
+    }
+
+    .cars3-filters .nice-select.open .list {
+        height: 200px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .cars3-field input:focus,
+    .cars3-field select:focus,
+    .cars3-filters .nice-select:focus,
+    .cars3-filters .nice-select.open {
+        border-color: rgba(255, 54, 0, 0.45);
+        box-shadow: 0 0 0 3px rgba(255, 54, 0, 0.12);
+        background: #fff;
+    }
+
+    .cars3-range {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .cars3-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+    }
+
+    .cars3-toolbar__count {
+        margin: 0;
+        font-size: 15px;
+        color: var(--c3-ink);
+        font-weight: 600;
+    }
+
+    .cars3-toolbar__count span {
+        color: var(--c3-accent);
+    }
+
+    .cars3-toolbar__sort {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: relative;
+        z-index: 5;
+    }
+
+    .cars3-toolbar__sort label {
+        margin: 0;
+        font-size: 13px;
+        color: var(--c3-muted);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .cars3-toolbar__sort select {
+        min-width: 220px;
+        border: 1px solid var(--c3-line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: var(--c3-ink);
+    }
+
+    /* Global .nice-select { float:left } clips Sort options — scope override for CarsThree toolbar. */
+    .cars3-toolbar__sort .nice-select {
+        float: none !important;
+        display: block;
+        clear: none;
+        min-width: 240px;
+        width: 240px;
+        max-width: min(100vw - 48px, 280px);
+        height: auto;
+        line-height: 1.25;
+        border: 1px solid var(--c3-line);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--c3-ink);
+        font-size: 14px;
+        padding: 10px 36px 10px 14px;
+        margin: 0;
+        overflow: visible;
+        white-space: nowrap;
+        z-index: 6;
+    }
+
+    .cars3-toolbar__sort .nice-select .current {
+        display: block;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
+    }
+
+    .cars3-toolbar__sort .nice-select:after {
+        right: 14px;
+    }
+
+    .cars3-toolbar__sort .nice-select .list,
+    .cars3-toolbar__sort .nice-select.open .list {
+        width: 260px !important;
+        min-width: 260px !important;
+        left: 0 !important;
+        right: auto !important;
+        margin-top: 6px;
+        border-radius: 10px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: auto !important;
+        max-height: 280px;
+        z-index: 30;
+        box-shadow: 0 14px 32px rgba(5, 11, 32, 0.14);
+    }
+
+    .cars3-toolbar__sort .nice-select .option {
+        line-height: 1.3;
+        min-height: 40px;
+        padding: 10px 16px;
+        white-space: nowrap;
+    }
+
+    .cars3-toolbar__sort .nice-select.open {
+        z-index: 40;
+    }
+
+    .cars3-results {
+        min-width: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .cars3-results .cars3-toolbar {
+        position: relative;
+        z-index: 8;
+    }
+
+    .cars3-card {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr) 180px;
+        gap: 0;
+        overflow: hidden;
+        margin-bottom: 16px;
+        transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .cars3-card:hover {
+        transform: translateY(-2px);
+        border-color: transparent;
+        box-shadow: 0 22px 44px rgba(5, 11, 32, 0.1);
+    }
+
+    .cars3-card__media {
+        position: relative;
+        background: #eceef2;
+        min-height: 168px;
+    }
+
+    .cars3-card__media a {
+        display: block;
+        height: 100%;
+    }
+
+    .cars3-card__media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 168px;
+        object-fit: cover;
+    }
+
+    .cars3-card__badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: var(--c3-accent);
+        color: #fff;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+        padding: 7px 10px;
+    }
+
+    .cars3-card__body {
+        padding: 18px 20px 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        border-left: 1px solid var(--c3-line);
+        border-right: 1px solid var(--c3-line);
+    }
+
+    .cars3-card__title {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.25;
+        color: var(--c3-ink);
+        font-weight: 600;
+    }
+
+    .cars3-card__title a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .cars3-card__title a:hover {
+        color: var(--c3-accent);
+    }
+
+    .cars3-card__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .cars3-card__meta li {
+        font-size: 13px;
+        color: var(--c3-muted);
+        line-height: 1.3;
+    }
+
+    .cars3-card__meta li strong {
+        color: var(--c3-ink);
+        font-weight: 600;
+    }
+
+    .cars3-card__aside {
+        padding: 18px 18px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        gap: 12px;
+        text-align: right;
+        background: linear-gradient(180deg, #fff 0%, #fafbfc 100%);
+    }
+
+    .cars3-card__price {
+        margin: 0;
+        font-size: 26px;
+        line-height: 1;
+        font-weight: 700;
+        color: var(--c3-accent);
+        font-family: var(--font-primary, inherit);
+    }
+
+    .cars3-card__actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .cars3-card__actions .rts-btn {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        font-size: 13px;
+        padding: 11px 14px;
+    }
+
+    .cars3-fav {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        border: 1px solid var(--c3-line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--c3-ink);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 12px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .cars3-fav:hover,
+    .cars3-fav button {
+        color: var(--c3-accent);
+    }
+
+    .cars3-fav form {
+        margin: 0;
+        width: 100%;
+    }
+
+    .cars3-fav button {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font: inherit;
+        font-weight: 600;
+        color: inherit;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .cars3-empty {
+        margin: 28px 0 10px;
+        text-align: center;
+        color: var(--c3-muted);
+        font-size: 16px;
+    }
+
+    .cars3-load {
+        margin: 28px auto 0;
+        display: block;
+    }
+
+    #carLoadMore[hidden],
+    #carEmpty[hidden] {
+        display: none !important;
+    }
+
+    #favorite-card-status {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        z-index: 40;
+        margin: 0;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: #050B20;
+        color: #fff;
+        font-size: 13px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    #favorite-card-status.is-error {
+        background: #8a1f1f;
+    }
+
+    @@media (max-width: 991.98px) {
+        .cars3-advanced .cars3-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .cars3-filters {
+            position: static;
+            max-height: none;
+            overflow: visible;
+            overscroll-behavior: auto;
+        }
+
+        .cars3-card {
+            grid-template-columns: 1fr;
+        }
+
+        .cars3-card__media img {
+            min-height: 200px;
+        }
+
+        .cars3-card__body,
+        .cars3-card__aside {
+            border: 0;
+            text-align: left;
+        }
+
+        .cars3-card__actions {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .cars3-card__actions .rts-btn,
+        .cars3-fav,
+        .cars3-fav form {
+            width: auto;
+            flex: 1 1 140px;
+        }
+    }
+</style>
 
 <div class="rts-breadcrumb-area portfolio-3 jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">Cars</h1>
+            <h1 class="title">Advanced Search</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Cars</a>
+                <a href="#" class="current">Cars Three</a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="rts-portfolio-area inner rts-section-gapNew">
+<p id="favorite-card-status" role="status" aria-live="polite" hidden></p>
+
+<div class="rts-section-gapNew cars3-advanced cars-three-page">
     <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-4">
-                <div class="sticky-top">
-                    <div class="left-side-bar">
-                        <div class="search-area side-box">
-                            <h2>Cars Search</h2>
-                            <form action="#">
-                                <div class="input-wrapper">
-                                    <input type="text" placeholder="Search Vehicles" required>
-                                    <button type="submit"><i class="fa-regular fa-magnifying-glass"></i></button>
-                                </div>
-                            </form>
-                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
-                        </div>
-                        <div class="car-make side-box">
-                            <h2>Car Make</h2>
-                            <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" checked />
-                                        <span>Mercedes-Benz</span>
-                                    </label>
-                                    <span>(130)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Volkswagen</span>
-                                    </label>
-                                    <span>(80)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Mitsubishi</span>
-                                    </label>
-                                    <span>(199)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Honda</span>
-                                    </label>
-                                    <span>(70)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Lamborghini</span>
-                                    </label>
-                                    <span>(160)</span>
-                                </li>
-                            </ul>
-                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
-                        </div>
-                        <div class="car-make side-box">
-                            <h2>Car Model</h2>
-                            <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" checked />
-                                        <span>Chevrolet</span>
-                                    </label>
-                                    <span>(64)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Ford</span>
-                                    </label>
-                                    <span>(199)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Tesla</span>
-                                    </label>
-                                    <span>(59)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>BMW</span>
-                                    </label>
-                                    <span>(230)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Audi</span>
-                                    </label>
-                                    <span>(30)</span>
-                                </li>
-                            </ul>
-                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
-                        </div>
-                        <div class="price-box side-box">
-                            <h2>Price</h2>
-                            <div class="slider-container">
-                                <div class="histogram">
-                                    <div class="histogram-bar" style="height: 67px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                    <div class="histogram-bar" style="height: 52px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                    <div class="histogram-bar" style="height: 99px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                    <div class="histogram-bar" style="height: 75px;"></div>
-                                    <div class="histogram-bar" style="height: 93px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                    <div class="histogram-bar" style="height: 99px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                    <div class="histogram-bar" style="height: 75px;"></div>
-                                    <div class="histogram-bar" style="height: 93px;"></div>
-                                    <div class="histogram-bar" style="height: 93px;"></div>
-                                    <div class="histogram-bar" style="height: 75px;"></div>
-                                    <div class="histogram-bar" style="height: 98px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                    <div class="histogram-bar" style="height: 107px;"></div>
-                                    <div class="histogram-bar" style="height: 75px;"></div>
-                                    <div class="histogram-bar" style="height: 93px;"></div>
-                                    <div class="histogram-bar" style="height: 102px;"></div>
-                                    <div class="histogram-bar" style="height: 52px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                    <div class="histogram-bar" style="height: 94px;"></div>
-                                    <div class="histogram-bar" style="height: 75px;"></div>
-                                    <div class="histogram-bar" style="height: 86px;"></div>
-                                </div>
-                                <div class="range-slider">
-                                    <div class="track"></div>
-                                    <div class="range" id="range"></div>
-                                    <input type="range" id="minRange" min="0" max="100" value="20">
-                                    <input type="range" id="maxRange" min="0" max="100" value="80">
-                                </div>
-                                <div class="price-labels">
-                                    <span id="minPrice">$500</span>
-                                    <span id="maxPrice">$5000</span>
-                                </div>
-                            </div>
-                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
-                        </div>
-                        <div class="car-make side-box">
-                            <h2>Car Seats</h2>
-                            <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" checked />
-                                        <span>2 seats</span>
-                                    </label>
-                                    <span>(30)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>3 seats</span>
-                                    </label>
-                                    <span>(23)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>4 seats</span>
-                                    </label>
-                                    <span>(179)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>5 seats</span>
-                                    </label>
-                                    <span>(40)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>6 seats</span>
-                                    </label>
-                                    <span>(120)</span>
-                                </li>
-                            </ul>
-                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
-                        </div>
-                        <div class="car-make side-box">
-                            <h2>Car Color</h2>
-                            <ul class="checkbox-list">
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" checked />
-                                        <span>Matte Black</span>
-                                    </label>
-                                    <span>(30)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Orange</span>
-                                    </label>
-                                    <span>(23)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Black</span>
-                                    </label>
-                                    <span>(179)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Yellow</span>
-                                    </label>
-                                    <span>(40)</span>
-                                </li>
-                                <li class="checkbox-item">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" />
-                                        <span>Neon Colors</span>
-                                    </label>
-                                    <span>(120)</span>
-                                </li>
-                            </ul>
-                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
-                        </div>
-                        <div class="tag-area side-box">
-                            <h2>Fuel</h2>
-                            <ul>
-                                <li>Gasoline</li>
-                                <li>Diesel</li>
-                                <li>Plug-in Hybrid</li>
-                                <li>Hybrid</li>
-                                <li>Electric</li>
-                            </ul>
-                            <span class="cross"><i class="fa-light fa-xmark"></i></span>
-                        </div>
+        @if (ViewData["CarApiError"] is string carApiError)
+        {
+            <h3 class="title text-center">@carApiError</h3>
+        }
+
+        <div class="cars3-shell">
+            <aside class="cars3-panel cars3-filters" aria-label="Advanced vehicle filters">
+                <div class="cars3-filters__head">
+                    <h2>Filters</h2>
+                    <button type="button" class="cars3-clear" id="carClearFilters">Clear All</button>
+                </div>
+
+                <div class="cars3-field">
+                    <label for="carSearch">Search</label>
+                    <input type="text" id="carSearch" placeholder="Make, model, keyword" autocomplete="off" />
+                </div>
+
+                <div class="cars3-field">
+                    <label for="filterBrand">Brand</label>
+                    <select id="filterBrand">
+                        <option value="">All brands</option>
+                        @foreach (var make in makes)
+                        {
+                            <option value="@make">@make</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="cars3-field">
+                    <label for="filterModel">Model</label>
+                    <select id="filterModel">
+                        <option value="">All models</option>
+                        @foreach (var carModel in models)
+                        {
+                            <option value="@carModel">@carModel</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="cars3-field">
+                    <label for="filterType">Vehicle Type</label>
+                    <select id="filterType">
+                        <option value="">All types</option>
+                        @foreach (var type in types)
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="cars3-field">
+                    <label>Price</label>
+                    <div class="cars3-range">
+                        <input type="number" id="filterMinPrice" min="@minPrice" max="@maxPrice" step="100" placeholder="Min" value="" />
+                        <input type="number" id="filterMaxPrice" inputmode="decimal" placeholder="Max" value="" />
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-8">
-                <div class="right">
-                    @for (var i = 0; i < 9; i++)
+
+                <div class="cars3-field">
+                    <label>Year</label>
+                    <div class="cars3-range">
+                        <input type="number" id="filterMinYear" min="@minYear" max="@maxYear" step="1" placeholder="Min" value="" />
+                        <input type="number" id="filterMaxYear" min="@minYear" max="@maxYear" step="1" placeholder="Max" value="" />
+                    </div>
+                </div>
+
+                <div class="cars3-field">
+                    <label for="filterFuel">Fuel Type</label>
+                    <select id="filterFuel">
+                        <option value="">All fuels</option>
+                        @foreach (var fuel in fuels)
+                        {
+                            <option value="@fuel">@fuel</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="cars3-field">
+                    <label for="filterTransmission">Transmission</label>
+                    <select id="filterTransmission">
+                        <option value="">All transmissions</option>
+                        @foreach (var transmission in transmissions)
+                        {
+                            <option value="@transmission">@transmission</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="cars3-field">
+                    <label>Mileage</label>
+                    @* No min/max/step: browser number constraints make partial values invalid while typing. *@
+                    <div class="cars3-range">
+                        <input type="number" id="filterMinMileage" inputmode="numeric" placeholder="Min" value="" />
+                        <input type="number" id="filterMaxMileage" inputmode="numeric" placeholder="Max" value="" />
+                    </div>
+                </div>
+
+                <div class="cars3-field">
+                    <label for="filterSeats">Seats</label>
+                    <select id="filterSeats">
+                        <option value="">Any</option>
+                        @foreach (var seat in seats)
+                        {
+                            <option value="@seat">@seat seats</option>
+                        }
+                    </select>
+                </div>
+            </aside>
+
+            <section class="cars3-results" aria-label="Vehicle results">
+                <div class="cars3-panel cars3-toolbar">
+                    <p class="cars3-toolbar__count"><span id="carResultCount">@Model.Count</span> vehicles found</p>
+                    <div class="cars3-toolbar__sort">
+                        <label for="carSort">Sort</label>
+                        <select id="carSort">
+                            <option value="latest">Latest</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="year-desc">Newest Year</option>
+                            <option value="year-asc">Oldest Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="carList">
+                    @{
+                        var index = 0;
+                    }
+                    @foreach (var car in Model)
                     {
-                        var card = cards[i % 3];
-                        var cardClass = i == 8 ? "project-wrapper2 list-style" : "project-wrapper2 list-style mb--30";
-                        <div class="@cardClass">
-                            <div class="image-area">
-                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@card.Id">
-                                    <img src="@Url.Content(card.Image)" height="206" alt="">
+                        var displayName = string.IsNullOrWhiteSpace(car.Name)
+                            ? $"{car.Make} {car.Model}".Trim()
+                            : car.Name;
+                        <article class="cars3-panel cars3-card car-card@(index >= pageSize ? " d-none" : null)"
+                                 data-id="@car.Id"
+                                 data-search="@($"{displayName} {car.Make} {car.Model} {car.Category}")"
+                                 data-make="@car.Make"
+                                 data-model="@car.Model"
+                                 data-type="@car.Category"
+                                 data-price="@car.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                 data-year="@car.Year.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                 data-fuel="@car.Fuel"
+                                 data-transmission="@car.Transmission"
+                                 data-mileage="@car.Mileage.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                 data-seats="@car.Seats.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                 data-created="@car.CreatedAt.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                            <div class="cars3-card__media">
+                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
+                                    <img src="@Url.Content(car.ImagePath)" alt="@displayName" loading="lazy" />
                                 </a>
+                                @if (!string.IsNullOrWhiteSpace(car.Badge))
+                                {
+                                    <span class="cars3-card__badge">@car.Badge</span>
+                                }
                             </div>
-                            <div class="content-area">
-                                <h6 class="title"><a asp-controller="Cars" asp-action="Details" asp-route-id="@card.Id">@card.Title</a></h6>
-                                <ul class="feature-area">
-                                    <li>
-                                        <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                        100 Miles
-                                    </li>
-                                    <li>
-                                        <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                        Petrol
-                                    </li>
-                                    <li>
-                                        <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                        Autometic
-                                    </li>
+                            <div class="cars3-card__body">
+                                <h3 class="cars3-card__title">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@displayName</a>
+                                </h3>
+                                <ul class="cars3-card__meta">
+                                    @if (car.Year > 0)
+                                    {
+                                        <li><strong>Year:</strong> @car.Year</li>
+                                    }
+                                    <li><strong>Mileage:</strong> @car.MileageText</li>
+                                    @if (!string.IsNullOrWhiteSpace(car.Fuel))
+                                    {
+                                        <li><strong>Fuel:</strong> @car.Fuel</li>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(car.Transmission))
+                                    {
+                                        <li><strong>Transmission:</strong> @car.Transmission</li>
+                                    }
+                                    @if (car.Seats > 0)
+                                    {
+                                        <li><strong>Seats:</strong> @car.Seats</li>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(car.Category))
+                                    {
+                                        <li><strong>Type:</strong> @car.Category</li>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(car.DriveType))
+                                    {
+                                        <li><strong>Drive:</strong> @car.DriveType</li>
+                                    }
+                                    @if (car.Horsepower > 0)
+                                    {
+                                        <li><strong>HP:</strong> @car.Horsepower</li>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(car.Color))
+                                    {
+                                        <li><strong>Color:</strong> @car.Color</li>
+                                    }
                                 </ul>
-                                <div class="button-area">
-                                    <p class="cw">$400</p>
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@card.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                            </div>
+                            <div class="cars3-card__aside">
+                                <p class="cars3-card__price">$@car.Price.ToString("N0")</p>
+                                <div class="cars3-card__actions">
+                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                                    <div class="cars3-fav">
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            <form asp-controller="Cars"
+                                                  asp-action="@(car.IsFavorite ? "RemoveFavorite" : "AddFavorite")"
+                                                  asp-route-id="@car.Id"
+                                                  method="post"
+                                                  class="wishlist"
+                                                  data-favorite-toggle
+                                                  data-is-favorite="@(car.IsFavorite ? "true" : "false")"
+                                                  data-add-url="@Url.Action("AddFavorite", "Cars", new { id = car.Id })"
+                                                  data-remove-url="@Url.Action("RemoveFavorite", "Cars", new { id = car.Id })">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                                <button type="submit"
+                                                        data-favorite-button
+                                                        aria-pressed="@(car.IsFavorite ? "true" : "false")"
+                                                        title="@(car.IsFavorite ? "Remove from favorites" : "Add to favorites")">
+                                                    <i class="@(car.IsFavorite ? "fa-solid" : "fa-regular") fa-heart" data-favorite-icon></i>
+                                                    <span>Favorite</span>
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@returnUrl" title="Sign in to favorite">
+                                                <i class="fa-regular fa-heart"></i>
+                                                <span>Favorite</span>
+                                            </a>
+                                        }
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </article>
+                        index++;
                     }
-                    <a href="#" class="rts-btn load-more-btn btn-border">Load More</a>
                 </div>
-            </div>
+
+                <h6 id="carEmpty" class="cars3-empty" hidden>No vehicles match these filters.</h6>
+                <button type="button" class="rts-btn load-more-btn btn-border cars3-load" id="carLoadMore">Load More</button>
+            </section>
         </div>
     </div>
 </div>
@@ -303,50 +848,208 @@
 <partial name="_DealershipCallCta" />
 
 @section Scripts {
+    <script src="~/js/car-favorites.js" asp-append-version="true"></script>
     <script>
-        const minRange = document.getElementById('minRange');
-        const maxRange = document.getElementById('maxRange');
-        const range = document.getElementById('range');
-        const histogramBars = document.querySelectorAll('.histogram-bar');
-        const minPrice = document.getElementById('minPrice');
-        const maxPrice = document.getElementById('maxPrice');
+        (function () {
+            var pageSize = @pageSize;
+            var shown = pageSize;
+            var priceFloor = @minPrice.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var priceCeil = @maxPrice.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var yearFloor = @minYear.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var yearCeil = @maxYear.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-        function updateRange() {
-            const minValue = parseInt(minRange.value);
-            const maxValue = parseInt(maxRange.value);
+            var search = document.getElementById("carSearch");
+            var brand = document.getElementById("filterBrand");
+            var model = document.getElementById("filterModel");
+            var type = document.getElementById("filterType");
+            var minPrice = document.getElementById("filterMinPrice");
+            var maxPrice = document.getElementById("filterMaxPrice");
+            var minYear = document.getElementById("filterMinYear");
+            var maxYear = document.getElementById("filterMaxYear");
+            var fuel = document.getElementById("filterFuel");
+            var transmission = document.getElementById("filterTransmission");
+            var minMileageInput = document.getElementById("filterMinMileage");
+            var maxMileageInput = document.getElementById("filterMaxMileage");
+            var seats = document.getElementById("filterSeats");
+            var sort = document.getElementById("carSort");
+            var clearBtn = document.getElementById("carClearFilters");
+            var empty = document.getElementById("carEmpty");
+            var loadMore = document.getElementById("carLoadMore");
+            var resultCount = document.getElementById("carResultCount");
+            var list = document.getElementById("carList");
+            var cards = Array.prototype.slice.call(document.querySelectorAll(".car-card"));
 
-            range.style.left = `${minValue}%`;
-            range.style.right = `${100 - maxValue}%`;
+            function num(value, fallback) {
+                var parsed = Number(String(value).trim().replace(/,/g, ""));
+                return Number.isFinite(parsed) ? parsed : fallback;
+            }
 
-            histogramBars.forEach((bar, index) => {
-                const barValue = (index / (histogramBars.length - 1)) * 100;
-                if (barValue >= minValue && barValue <= maxValue) {
-                    bar.classList.add('active');
-                } else {
-                    bar.classList.remove('active');
+            function norm(value) {
+                return String(value == null ? "" : value).trim().toLowerCase();
+            }
+
+            // null => filter bound inactive (empty / invalid input)
+            function parseNonNegativeFilter(raw) {
+                var text = String(raw == null ? "" : raw).trim().replace(/\s/g, "").replace(/,/g, "");
+                if (text === "") return null;
+                var parsed = Number(text);
+                if (!Number.isFinite(parsed) || parsed < 0) return null;
+                return parsed;
+            }
+
+            function matchingCards() {
+                var query = (search.value || "").trim().toLowerCase();
+                var brandValue = norm(brand.value);
+                var modelValue = norm(model.value);
+                var typeValue = norm(type.value);
+                var fuelValue = norm(fuel.value);
+                var transmissionValue = norm(transmission.value);
+                var seatsValue = norm(seats.value);
+                var minP = minPrice.value === "" ? priceFloor : num(minPrice.value, priceFloor);
+                var maxP = maxPrice.value === "" ? priceCeil : num(maxPrice.value, priceCeil);
+                var minY = minYear.value === "" ? yearFloor : num(minYear.value, yearFloor);
+                var maxY = maxYear.value === "" ? yearCeil : num(maxYear.value, yearCeil);
+                var minM = parseNonNegativeFilter(minMileageInput.value);
+                var maxM = parseNonNegativeFilter(maxMileageInput.value);
+
+                return cards.filter(function (card) {
+                    var price = num(card.getAttribute("data-price"), 0);
+                    var year = num(card.getAttribute("data-year"), 0);
+                    var mileage = num(card.getAttribute("data-mileage"), 0);
+                    if (query && norm(card.getAttribute("data-search")).indexOf(query) === -1) return false;
+                    if (brandValue && norm(card.getAttribute("data-make")) !== brandValue) return false;
+                    if (modelValue && norm(card.getAttribute("data-model")) !== modelValue) return false;
+                    if (typeValue && norm(card.getAttribute("data-type")) !== typeValue) return false;
+                    if (fuelValue && norm(card.getAttribute("data-fuel")) !== fuelValue) return false;
+                    if (transmissionValue && norm(card.getAttribute("data-transmission")) !== transmissionValue) return false;
+                    if (seatsValue && norm(card.getAttribute("data-seats")) !== seatsValue) return false;
+                    if (price < minP || price > maxP) return false;
+                    if (year < minY || year > maxY) return false;
+                    if (minM !== null && mileage < minM) return false;
+                    if (maxM !== null && mileage > maxM) return false;
+                    return true;
+                });
+            }
+
+            // Filter first. An active minimum price sorts matches cheapest-first.
+            // With no minimum price, the Sort dropdown selection is unchanged.
+            function sortCards(matches) {
+                var mode = parseNonNegativeFilter(minPrice.value) !== null ? "price-asc" : sort.value;
+                return matches.slice().sort(function (a, b) {
+                    var priceA = num(a.getAttribute("data-price"), 0);
+                    var priceB = num(b.getAttribute("data-price"), 0);
+                    var yearA = num(a.getAttribute("data-year"), 0);
+                    var yearB = num(b.getAttribute("data-year"), 0);
+                    var createdA = num(a.getAttribute("data-created"), 0);
+                    var createdB = num(b.getAttribute("data-created"), 0);
+                    if (mode === "price-asc") return priceA - priceB;
+                    if (mode === "price-desc") return priceB - priceA;
+                    if (mode === "year-desc") return yearB - yearA;
+                    if (mode === "year-asc") return yearA - yearB;
+                    return createdB - createdA;
+                });
+            }
+
+            function apply() {
+                var matches = sortCards(matchingCards());
+                var matchSet = new Set(matches);
+                var visible = matches.slice(0, shown);
+
+                cards.forEach(function (card) {
+                    card.classList.add("d-none");
+                });
+
+                visible.forEach(function (card) {
+                    list.appendChild(card);
+                    card.classList.remove("d-none");
+                });
+
+                // Keep remaining matches after visible ones for stable Load More order.
+                matches.slice(shown).forEach(function (card) {
+                    list.appendChild(card);
+                });
+
+                // Non-matching cards stay at the end, hidden.
+                cards.forEach(function (card) {
+                    if (!matchSet.has(card)) {
+                        list.appendChild(card);
+                    }
+                });
+
+                resultCount.textContent = String(matches.length);
+                empty.hidden = matches.length > 0;
+                loadMore.hidden = matches.length <= shown;
+            }
+
+            function resetPagingAndApply() {
+                shown = pageSize;
+                apply();
+            }
+
+            function onFilterChange() {
+                resetPagingAndApply();
+            }
+
+            // nice-select updates the <select> then fires jQuery .trigger("change"),
+            // which does not reach native addEventListener handlers.
+            function bindControl(el) {
+                el.addEventListener("input", onFilterChange);
+                el.addEventListener("change", onFilterChange);
+                if (window.jQuery) {
+                    window.jQuery(el).on("change", onFilterChange);
                 }
+            }
+
+            [
+                search, brand, model, type, minPrice, maxPrice, minYear, maxYear,
+                fuel, transmission, minMileageInput, maxMileageInput, seats, sort
+            ].forEach(bindControl);
+
+            [minMileageInput, maxMileageInput].forEach(function (el) {
+                el.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                    }
+                });
             });
 
-            const minPriceValue = Math.round((minValue / 100) * (5000 - 500) + 500);
-            const maxPriceValue = Math.round((maxValue / 100) * (5000 - 500) + 500);
-            minPrice.textContent = `$${minPriceValue}`;
-            maxPrice.textContent = `$${maxPriceValue}`;
-        }
-
-        minRange.addEventListener('input', () => {
-            if (parseInt(minRange.value) > parseInt(maxRange.value) - 10) {
-                minRange.value = maxRange.value - 10;
+            function syncNiceSelect(selectEl) {
+                if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.niceSelect) return;
+                var $select = window.jQuery(selectEl);
+                if ($select.next(".nice-select").length) {
+                    $select.niceSelect("update");
+                }
             }
-            updateRange();
-        });
 
-        maxRange.addEventListener('input', () => {
-            if (parseInt(maxRange.value) < parseInt(minRange.value) + 10) {
-                maxRange.value = parseInt(minRange.value) + 10;
-            }
-            updateRange();
-        });
+            clearBtn.addEventListener("click", function () {
+                search.value = "";
+                brand.value = "";
+                model.value = "";
+                type.value = "";
+                minPrice.value = "";
+                maxPrice.value = "";
+                minYear.value = "";
+                maxYear.value = "";
+                fuel.value = "";
+                transmission.value = "";
+                minMileageInput.value = "";
+                maxMileageInput.value = "";
+                seats.value = "";
+                sort.value = "latest";
+                [brand, model, type, fuel, transmission, seats, sort].forEach(syncNiceSelect);
+                resetPagingAndApply();
+            });
 
-        updateRange();
+            loadMore.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var scrollY = window.scrollY || window.pageYOffset || 0;
+                shown += pageSize;
+                apply();
+                window.scrollTo(0, scrollY);
+            });
+
+            apply();
+        })();
     </script>
 }

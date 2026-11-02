@@ -112,10 +112,10 @@ public sealed class CatalogAdminService : ICatalogAdminService
             return null;
         }
 
-        var category = new Category { Name = trimmed };
+        var category = new Category { Name = trimmed, IconPath = string.Empty };
         _db.Categories.Add(category);
         await _db.SaveChangesAsync(cancellationToken);
-        return new CategoryResponse { Id = category.Id, Name = category.Name };
+        return ToCategoryResponse(category);
     }
 
     public async Task<CategoryResponse?> UpdateCategoryAsync(int id, string name, CancellationToken cancellationToken = default)
@@ -131,7 +131,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
 
         category.Name = trimmed;
         await _db.SaveChangesAsync(cancellationToken);
-        return new CategoryResponse { Id = category.Id, Name = category.Name };
+        return ToCategoryResponse(category);
     }
 
     public async Task<bool> DeleteCategoryAsync(int id, CancellationToken cancellationToken = default)
@@ -151,4 +151,11 @@ public sealed class CatalogAdminService : ICatalogAdminService
         await _db.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    private static CategoryResponse ToCategoryResponse(Category category) => new()
+    {
+        Id = category.Id,
+        Name = category.Name,
+        IconPath = category.IconPath ?? string.Empty
+    };
 }

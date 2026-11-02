@@ -45,11 +45,10 @@
                         <span class="av-loan-control">
                             <select id="carMake" name="carMake" class="mySelect" required>
                                 <option value="">Select a car make</option>
-                                <option value="Mazda">Mazda</option>
-                                <option value="Citroen">Citroen</option>
-                                <option value="Honda">Honda</option>
-                                <option value="Mitsubishi">Mitsubishi</option>
-                                <option value="Peugeot">Peugeot</option>
+                                @foreach (var brand in Model.BrandNames)
+                                {
+                                    <option value="@brand">@brand</option>
+                                }
                                 <option value="Other">Other</option>
                             </select>
                             <img src="~/assets/images/icon/car-03.svg" alt="">

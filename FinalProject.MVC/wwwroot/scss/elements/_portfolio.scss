@@ -902,6 +902,15 @@
             }
             .content-area{
                 background: var(--color-white);
+                // Light inner cards (portfolio-3): restore heading title vs dark-card #fff rule
+                .title{
+                    color: var(--color-heading-1);
+                    &:hover,
+                    a,
+                    a:hover{
+                        color: var(--color-heading-1);
+                    }
+                }
                 .feature-area{
                     gap: 13px;
                     li{

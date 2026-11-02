@@ -52,6 +52,12 @@
             <label asp-for="Compatibility">Compatibility notes</label>
             <input asp-for="Compatibility" class="form-control" maxlength="300" placeholder="Optional fitment notes" />
         </div>
+        <div class="col-md-4">
+            <label asp-for="Color">Color</label>
+            <input asp-for="Color" class="form-control" maxlength="50" placeholder="Optional, e.g. Black" />
+            <div class="form-text">Used by the Shop Three color filter. Leave blank if not applicable.</div>
+            <span asp-validation-for="Color" class="text-danger"></span>
+        </div>
         <div class="col-12">
             <label for="image">Product image @(editing ? "" : "(required)")</label>
             <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" class="form-control" @(editing ? null : "required") />

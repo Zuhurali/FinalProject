@@ -16,22 +16,17 @@ public static class ConversationHideRules
             && string.Equals(hide.UserId, userId, StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// Only the conversation buyer or seller may hide a thread from their own inbox.
+    /// Role/staff flags do not grant hide rights.
+    /// </summary>
     public static bool CanHideForUser(
         string userId,
         string buyerId,
-        string sellerId,
-        bool asStoreStaff,
-        string? storeInboxUserId)
+        string sellerId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        if (string.Equals(userId, buyerId, StringComparison.Ordinal)
-            || string.Equals(userId, sellerId, StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        return asStoreStaff
-            && !string.IsNullOrWhiteSpace(storeInboxUserId)
-            && string.Equals(sellerId, storeInboxUserId, StringComparison.Ordinal);
+        return string.Equals(userId, buyerId, StringComparison.Ordinal)
+            || string.Equals(userId, sellerId, StringComparison.Ordinal);
     }
 }

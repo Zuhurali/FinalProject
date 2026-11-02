@@ -16,6 +16,14 @@ public static class HomePageContentDefaults
     public const string PortfolioEyebrow = "Select Car";
     public const string PortfolioHeadingBefore = "Our Amazing";
     public const string PortfolioHeadingHighlight = "Car";
+    public const string PortfolioTabNewLabel = "New Cars";
+    public const string PortfolioTabUsedLabel = "Used Cars";
+    public const string PortfolioTabTrendingLabel = "Trending Cars";
+    public const string PortfolioTabStocksLabel = "In Stocks";
+    public const string PortfolioEmptyNew = "No new cars are currently listed.";
+    public const string PortfolioEmptyUsed = "No used cars are currently listed.";
+    public const string PortfolioEmptyTrending = "No cars are currently listed.";
+    public const string PortfolioEmptyStocks = "No cars are currently in stock.";
 
     public const string CampaignsEyebrow = "In-store offers";
     public const string CampaignsHeadingBefore = "Live spare-parts";

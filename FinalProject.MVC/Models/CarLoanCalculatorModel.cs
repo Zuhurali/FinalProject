@@ -18,4 +18,7 @@ public class CarLoanCalculatorModel
 
     [Display(Name = "Annual interest rate (%)")]
     public string? AnnualInterestRate { get; set; } = "8";
+
+    /// <summary>Brand names from the API Brands table (SQL), ordered for the make dropdown.</summary>
+    public IReadOnlyList<string> BrandNames { get; set; } = Array.Empty<string>();
 }

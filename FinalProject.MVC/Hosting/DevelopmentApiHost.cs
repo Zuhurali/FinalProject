@@ -8,6 +8,8 @@ namespace FinalProject.MVC.Hosting;
 
 /// <summary>
 /// Development-only helper that starts the existing FinalProject API when MVC is launched by itself.
+/// Builds into the normal bin/Debug output, copies to artifacts/run/api (shadow), then runs the DLL
+/// from the shadow folder so subsequent builds are not blocked by MSB3027/MSB3021 file locks.
 /// Production startup never calls this type.
 /// </summary>
 internal static class DevelopmentApiHost
@@ -57,7 +59,8 @@ internal static class DevelopmentApiHost
             return;
         }
 
-        var apiProjectPath = Path.GetFullPath(Path.Combine(contentRootPath, "..", "FinalProject", "FinalProject.csproj"));
+        var repoRoot = FindRepoRoot(contentRootPath);
+        var apiProjectPath = Path.Combine(repoRoot, "FinalProject", "FinalProject.csproj");
         if (!File.Exists(apiProjectPath))
         {
             throw new InvalidOperationException(
@@ -66,9 +69,20 @@ internal static class DevelopmentApiHost
 
         var apiProjectDirectory = Path.GetDirectoryName(apiProjectPath)!;
         var applicationUrls = ReadHttpsApplicationUrls(apiProjectDirectory, apiBaseUrl);
-        logger.LogInformation("Starting FinalProject API in the background at {ApplicationUrls}. Swagger will not be opened.", applicationUrls);
+        var shadowDirectory = Path.Combine(repoRoot, "artifacts", "run", "api");
+        var buildOutputDirectory = Path.Combine(apiProjectDirectory, "bin", "Debug", "net8.0");
 
-        var process = StartApiProcess(apiProjectPath, apiProjectDirectory, applicationUrls, apiSigningKey);
+        logger.LogInformation(
+            "Preparing FinalProject API shadow-run at {ShadowDirectory} (build output stays at {BuildOutput}).",
+            shadowDirectory,
+            buildOutputDirectory);
+
+        BuildApiProject(apiProjectPath, apiProjectDirectory, logger);
+        SyncDirectory(buildOutputDirectory, shadowDirectory, logger);
+
+        logger.LogInformation("Starting FinalProject API from shadow {ShadowDirectory} at {ApplicationUrls}. Swagger will not be opened.", shadowDirectory, applicationUrls);
+
+        var process = StartApiProcess(shadowDirectory, applicationUrls, apiSigningKey);
         _ownedProcess = process;
         WindowsProcessJob.TryAssign(process, logger);
         lifetime.ApplicationStopping.Register(StopOwnedProcess);
@@ -84,7 +98,7 @@ internal static class DevelopmentApiHost
             throw;
         }
 
-        logger.LogInformation("FinalProject API is ready at {ApiBaseUrl}.", apiBaseUrl);
+        logger.LogInformation("FinalProject API is ready at {ApiBaseUrl} (shadow-run).", apiBaseUrl);
     }
 
     public static void StopOwnedProcess()
@@ -176,17 +190,122 @@ internal static class DevelopmentApiHost
         }
     }
 
-    private static Process StartApiProcess(
-        string apiProjectPath,
-        string apiProjectDirectory,
-        string applicationUrls,
-        string? apiSigningKey)
+    private static string FindRepoRoot(string startPath)
+    {
+        var fromEnv = Environment.GetEnvironmentVariable("FINALPROJECT_REPO_ROOT");
+        if (!string.IsNullOrWhiteSpace(fromEnv) && Directory.Exists(fromEnv))
+        {
+            var envApi = Path.Combine(fromEnv, "FinalProject", "FinalProject.csproj");
+            if (File.Exists(envApi))
+            {
+                return Path.GetFullPath(fromEnv);
+            }
+        }
+
+        var dir = new DirectoryInfo(Path.GetFullPath(startPath));
+        while (dir != null)
+        {
+            var apiProject = Path.Combine(dir.FullName, "FinalProject", "FinalProject.csproj");
+            var solution = Path.Combine(dir.FullName, "FinalProject.slnx");
+            if (File.Exists(apiProject) || File.Exists(solution))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException(
+            $"Could not locate the repository root from '{startPath}'. Set FINALPROJECT_REPO_ROOT or run from the repo layout.");
+    }
+
+    private static void BuildApiProject(string apiProjectPath, string apiProjectDirectory, ILogger logger)
     {
         var startInfo = new ProcessStartInfo
         {
             FileName = ResolveDotnetHost(),
-            Arguments = $"run --no-launch-profile --project \"{apiProjectPath}\"",
+            Arguments = $"build \"{apiProjectPath}\" -c Debug --verbosity minimal",
             WorkingDirectory = apiProjectDirectory,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using var process = new Process { StartInfo = startInfo };
+        process.OutputDataReceived += (_, eventArgs) => AppendError(eventArgs.Data);
+        process.ErrorDataReceived += (_, eventArgs) => AppendError(eventArgs.Data);
+        if (!process.Start())
+        {
+            throw new InvalidOperationException("Failed to start 'dotnet build' for the development API.");
+        }
+
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        process.WaitForExit();
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                "Development API build failed before shadow-run copy."
+                + Environment.NewLine
+                + ReadError());
+        }
+
+        logger.LogInformation("Development API build succeeded; syncing to shadow-run folder.");
+    }
+
+    private static void SyncDirectory(string sourceDirectory, string destinationDirectory, ILogger logger)
+    {
+        if (!Directory.Exists(sourceDirectory))
+        {
+            throw new InvalidOperationException($"API build output was not found at '{sourceDirectory}'.");
+        }
+
+        Directory.CreateDirectory(destinationDirectory);
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "robocopy",
+            Arguments = $"\"{sourceDirectory}\" \"{destinationDirectory}\" /MIR /R:2 /W:1 /NFL /NDL /NJH /NJS /NP /XD refs",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+
+        using var process = new Process { StartInfo = startInfo };
+        process.Start();
+        process.WaitForExit();
+        // robocopy: 0-7 = success / no fatal error
+        if (process.ExitCode >= 8)
+        {
+            throw new InvalidOperationException(
+                $"Failed to sync API build output to shadow '{destinationDirectory}' (robocopy exit {process.ExitCode}). "
+                + "Stop any process still locking artifacts/run/api (scripts/dev-stop.ps1), then retry.");
+        }
+
+        var dllPath = Path.Combine(destinationDirectory, "FinalProject.dll");
+        if (!File.Exists(dllPath))
+        {
+            throw new InvalidOperationException($"Shadow API DLL was not found at '{dllPath}' after sync.");
+        }
+
+        logger.LogInformation("API shadow sync complete -> {ShadowDirectory}", destinationDirectory);
+    }
+
+    private static Process StartApiProcess(
+        string shadowDirectory,
+        string applicationUrls,
+        string? apiSigningKey)
+    {
+        var dllPath = Path.Combine(shadowDirectory, "FinalProject.dll");
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = ResolveDotnetHost(),
+            Arguments = $"\"{dllPath}\"",
+            WorkingDirectory = shadowDirectory,
             UseShellExecute = false,
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden,
@@ -197,6 +316,7 @@ internal static class DevelopmentApiHost
         startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         startInfo.Environment["ASPNETCORE_URLS"] = applicationUrls;
         startInfo.Environment["ASPNETCORE_HTTPS_PORT"] = new Uri(applicationUrls.Split(';', 2)[0]).Port.ToString();
+        startInfo.Environment["FINALPROJECT_SHADOW_RUN"] = "1";
         startInfo.Environment.Remove("DOTNET_LAUNCH_PROFILE");
         // Pass the signing key via env so the child API can validate JWTs without reading
         // committed appsettings. Never log this value.
@@ -210,7 +330,7 @@ internal static class DevelopmentApiHost
         process.ErrorDataReceived += (_, eventArgs) => AppendError(eventArgs.Data);
         if (!process.Start())
         {
-            throw new InvalidOperationException("Failed to start the development FinalProject API process.");
+            throw new InvalidOperationException("Failed to start the development FinalProject API process from the shadow folder.");
         }
 
         process.BeginOutputReadLine();

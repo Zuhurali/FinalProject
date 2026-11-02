@@ -63,6 +63,7 @@ public class FinalProjectDbContext : DbContext
         modelBuilder.Entity<Category>(entity =>
         {
             entity.Property(category => category.Name).IsRequired().HasMaxLength(100);
+            entity.Property(category => category.IconPath).HasMaxLength(500).HasDefaultValue(string.Empty);
             entity.HasIndex(category => category.Name).IsUnique();
         });
 
@@ -381,11 +382,12 @@ public class FinalProjectDbContext : DbContext
             new Brand { Id = 4, Name = "Honda", CreatedAt = seededAt },
             new Brand { Id = 5, Name = "Toyota", CreatedAt = seededAt });
 
+        // Icon paths match the prior Home strip assignment (OrderBy Name → 01.svg…05.svg).
         modelBuilder.Entity<Category>().HasData(
-            new Category { Id = 1, Name = "Sedan" },
-            new Category { Id = 2, Name = "SUV" },
-            new Category { Id = 3, Name = "Coupe" },
-            new Category { Id = 4, Name = "Hatchback" },
-            new Category { Id = 5, Name = "Convertible" });
+            new Category { Id = 1, Name = "Sedan", IconPath = "~/assets/images/category/04.svg" },
+            new Category { Id = 2, Name = "SUV", IconPath = "~/assets/images/category/05.svg" },
+            new Category { Id = 3, Name = "Coupe", IconPath = "~/assets/images/category/02.svg" },
+            new Category { Id = 4, Name = "Hatchback", IconPath = "~/assets/images/category/03.svg" },
+            new Category { Id = 5, Name = "Convertible", IconPath = "~/assets/images/category/01.svg" });
     }
 }

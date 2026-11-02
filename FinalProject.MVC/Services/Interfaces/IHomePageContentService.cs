@@ -34,6 +34,14 @@ public sealed class HomePagePublicContent
     public string PortfolioEyebrow { get; init; } = string.Empty;
     public string PortfolioHeadingBefore { get; init; } = string.Empty;
     public string PortfolioHeadingHighlight { get; init; } = string.Empty;
+    public string PortfolioTabNewLabel { get; init; } = string.Empty;
+    public string PortfolioTabUsedLabel { get; init; } = string.Empty;
+    public string PortfolioTabTrendingLabel { get; init; } = string.Empty;
+    public string PortfolioTabStocksLabel { get; init; } = string.Empty;
+    public string PortfolioEmptyNew { get; init; } = string.Empty;
+    public string PortfolioEmptyUsed { get; init; } = string.Empty;
+    public string PortfolioEmptyTrending { get; init; } = string.Empty;
+    public string PortfolioEmptyStocks { get; init; } = string.Empty;
 
     public string CampaignsEyebrow { get; init; } = string.Empty;
     public string CampaignsHeadingBefore { get; init; } = string.Empty;

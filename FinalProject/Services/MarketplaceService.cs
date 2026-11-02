@@ -238,9 +238,8 @@ public sealed class MarketplaceService : IMarketplaceService
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default)
     {
-        var storeInboxId = asStoreStaff
-            ? await ResolveStoreInboxUserIdAsync(cancellationToken)
-            : null;
+        // asStoreStaff is ignored: inbox listing is participant-only (BuyerId/SellerId).
+        _ = asStoreStaff;
 
         var hiddenIds = await _context.ConversationHides
             .AsNoTracking()
@@ -251,9 +250,7 @@ public sealed class MarketplaceService : IMarketplaceService
         var conversations = await _context.Conversations
             .AsNoTracking()
             .Where(conversation =>
-                (conversation.BuyerId == userId
-                    || conversation.SellerId == userId
-                    || (storeInboxId != null && conversation.SellerId == storeInboxId))
+                (conversation.BuyerId == userId || conversation.SellerId == userId)
                 && !hiddenIds.Contains(conversation.Id))
             .OrderByDescending(conversation => conversation.UpdatedAt)
             .Include(conversation => conversation.Car.Brand)
@@ -266,17 +263,13 @@ public sealed class MarketplaceService : IMarketplaceService
 
         return conversations.Select(conversation =>
         {
-            var viewingAsSeller = conversation.SellerId == userId
-                || (storeInboxId != null && conversation.SellerId == storeInboxId);
+            var viewingAsSeller = conversation.SellerId == userId;
             var other = viewingAsSeller
                 ? conversation.Buyer
                 : conversation.Seller;
             var lastMessage = conversation.Messages
                 .OrderByDescending(message => message.CreatedAt)
                 .FirstOrDefault();
-            var unreadReceiverIds = viewingAsSeller
-                ? new[] { conversation.SellerId, userId }.Distinct().ToArray()
-                : new[] { userId };
 
             return new ConversationSummaryResponse(
                 conversation.Id,
@@ -287,7 +280,7 @@ public sealed class MarketplaceService : IMarketplaceService
                 MarketplaceMessagingRules.StripGeneratedListingText(lastMessage?.Content),
                 conversation.UpdatedAt,
                 conversation.Messages.Count(message =>
-                    unreadReceiverIds.Contains(message.ReceiverId) && !message.IsRead));
+                    message.ReceiverId == userId && !message.IsRead));
         }).ToList();
     }
 
@@ -309,28 +302,18 @@ public sealed class MarketplaceService : IMarketplaceService
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         if (conversation == null
-            || !await CanAccessConversationAsync(
-                conversation,
-                userId,
-                asStoreStaff,
-                cancellationToken))
+            || !CanAccessConversation(conversation, userId))
         {
             return null;
         }
 
+        // asStoreStaff is ignored: only BuyerId/SellerId may open a thread.
+        _ = asStoreStaff;
+
         if (markRead)
         {
-            var storeInboxId = asStoreStaff
-                ? await ResolveStoreInboxUserIdAsync(cancellationToken)
-                : null;
-            var viewingAsSeller = conversation.SellerId == userId
-                || (storeInboxId != null && conversation.SellerId == storeInboxId);
-            var receiverIds = viewingAsSeller
-                ? new[] { conversation.SellerId, userId }.Distinct().ToArray()
-                : new[] { userId };
-
             var unread = conversation.Messages
-                .Where(message => receiverIds.Contains(message.ReceiverId) && !message.IsRead)
+                .Where(message => message.ReceiverId == userId && !message.IsRead)
                 .ToList();
             if (unread.Count > 0)
             {
@@ -445,24 +428,17 @@ public sealed class MarketplaceService : IMarketplaceService
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default)
     {
+        // asStoreStaff never grants send rights; only BuyerId/SellerId may reply.
+        _ = asStoreStaff;
+
         var conversation = await _context.Conversations
             .SingleOrDefaultAsync(item => item.Id == conversationId, cancellationToken);
-        if (conversation == null
-            || !await CanAccessConversationAsync(
-                conversation,
-                senderId,
-                asStoreStaff,
-                cancellationToken))
+        if (conversation == null || !CanAccessConversation(conversation, senderId))
         {
             return null;
         }
 
-        var storeInboxId = asStoreStaff
-            ? await ResolveStoreInboxUserIdAsync(cancellationToken)
-            : null;
-        var viewingAsSeller = conversation.SellerId == senderId
-            || (storeInboxId != null && conversation.SellerId == storeInboxId);
-        var receiverId = viewingAsSeller
+        var receiverId = conversation.SellerId == senderId
             ? conversation.BuyerId
             : conversation.SellerId;
         var cleaned = MarketplaceMessagingRules.StripGeneratedListingText(content);
@@ -516,28 +492,21 @@ public sealed class MarketplaceService : IMarketplaceService
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default)
     {
+        // asStoreStaff is ignored: hide is participant-only.
+        _ = asStoreStaff;
+
         var conversation = await _context.Conversations
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == conversationId, cancellationToken);
-        if (conversation == null
-            || !await CanAccessConversationAsync(
-                conversation,
-                userId,
-                asStoreStaff,
-                cancellationToken))
+        if (conversation == null || !CanAccessConversation(conversation, userId))
         {
             return false;
         }
 
-        var storeInboxId = asStoreStaff
-            ? await ResolveStoreInboxUserIdAsync(cancellationToken)
-            : null;
         if (!ConversationHideRules.CanHideForUser(
                 userId,
                 conversation.BuyerId,
-                conversation.SellerId,
-                asStoreStaff,
-                storeInboxId))
+                conversation.SellerId))
         {
             return false;
         }
@@ -583,19 +552,11 @@ public sealed class MarketplaceService : IMarketplaceService
                     && _context.ShopProducts.Any(product => product.Id == favorite.ProductId && product.IsActive),
                 cancellationToken);
         var favorites = carFavorites + partFavorites;
-        var storeInboxId = asStoreStaff
-            ? await ResolveStoreInboxUserIdAsync(cancellationToken)
-            : null;
+        // asStoreStaff is ignored: unread counts only messages addressed to this user.
+        _ = asStoreStaff;
         var unreadMessages = await _context.Messages
             .CountAsync(
-                message =>
-                    !message.IsRead
-                    && (message.ReceiverId == userId
-                        || (storeInboxId != null
-                            && message.ReceiverId == storeInboxId
-                            && _context.Conversations.Any(conversation =>
-                                conversation.Id == message.ConversationId
-                                && conversation.SellerId == storeInboxId))),
+                message => !message.IsRead && message.ReceiverId == userId,
                 cancellationToken);
 
         var listingActivities = await _context.Cars
@@ -753,25 +714,12 @@ public sealed class MarketplaceService : IMarketplaceService
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    private async Task<bool> CanAccessConversationAsync(
-        Conversation conversation,
-        string userId,
-        bool asStoreStaff,
-        CancellationToken cancellationToken)
-    {
-        if (conversation.BuyerId == userId || conversation.SellerId == userId)
-        {
-            return true;
-        }
-
-        if (!asStoreStaff)
-        {
-            return false;
-        }
-
-        var storeInboxId = await ResolveStoreInboxUserIdAsync(cancellationToken);
-        return storeInboxId != null && conversation.SellerId == storeInboxId;
-    }
+    /// <summary>
+    /// Only the conversation's BuyerId and SellerId may view or send. Role/staff
+    /// flags must not grant access on ordinary messaging endpoints.
+    /// </summary>
+    private static bool CanAccessConversation(Conversation conversation, string userId) =>
+        conversation.BuyerId == userId || conversation.SellerId == userId;
 
     private static ConversationDetailsResponse ToDetails(Conversation conversation)
     {

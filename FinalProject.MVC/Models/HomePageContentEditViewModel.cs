@@ -48,6 +48,38 @@ public sealed class HomePageContentEditViewModel
     [Display(Name = "Portfolio heading highlight")]
     public string PortfolioHeadingHighlight { get; set; } = string.Empty;
 
+    [Required, MaxLength(80)]
+    [Display(Name = "New Cars tab")]
+    public string PortfolioTabNewLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
+    [Display(Name = "Used Cars tab")]
+    public string PortfolioTabUsedLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
+    [Display(Name = "Trending Cars tab")]
+    public string PortfolioTabTrendingLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(80)]
+    [Display(Name = "In Stocks tab")]
+    public string PortfolioTabStocksLabel { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    [Display(Name = "New Cars empty message")]
+    public string PortfolioEmptyNew { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    [Display(Name = "Used Cars empty message")]
+    public string PortfolioEmptyUsed { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    [Display(Name = "Trending Cars empty message")]
+    public string PortfolioEmptyTrending { get; set; } = string.Empty;
+
+    [Required, MaxLength(200)]
+    [Display(Name = "In Stocks empty message")]
+    public string PortfolioEmptyStocks { get; set; } = string.Empty;
+
     [Required, MaxLength(120)]
     [Display(Name = "Campaigns eyebrow")]
     public string CampaignsEyebrow { get; set; } = string.Empty;

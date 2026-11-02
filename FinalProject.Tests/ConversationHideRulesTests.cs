@@ -25,42 +25,23 @@ public class ConversationHideRulesTests
         Assert.True(ConversationHideRules.CanHideForUser(
             "buyer-1",
             "buyer-1",
-            "seller-1",
-            asStoreStaff: false,
-            storeInboxUserId: null));
+            "seller-1"));
         Assert.True(ConversationHideRules.CanHideForUser(
             "seller-1",
             "buyer-1",
-            "seller-1",
-            asStoreStaff: false,
-            storeInboxUserId: null));
+            "seller-1"));
     }
 
     [Fact]
-    public void CanHideForUser_rejects_outsiders()
+    public void CanHideForUser_rejects_outsiders_including_staff()
     {
         Assert.False(ConversationHideRules.CanHideForUser(
             "stranger",
             "buyer-1",
-            "seller-1",
-            asStoreStaff: false,
-            storeInboxUserId: null));
-    }
-
-    [Fact]
-    public void CanHideForUser_allows_store_staff_for_store_inbox_threads()
-    {
-        Assert.True(ConversationHideRules.CanHideForUser(
-            "admin-1",
-            "buyer-1",
-            "store-inbox",
-            asStoreStaff: true,
-            storeInboxUserId: "store-inbox"));
+            "seller-1"));
         Assert.False(ConversationHideRules.CanHideForUser(
             "admin-1",
             "buyer-1",
-            "private-seller",
-            asStoreStaff: true,
-            storeInboxUserId: "store-inbox"));
+            "store-inbox"));
     }
 }

@@ -118,6 +118,14 @@ namespace FinalProject.MVC.Data
                 entity.Property(content => content.PortfolioEyebrow).HasMaxLength(120).IsRequired();
                 entity.Property(content => content.PortfolioHeadingBefore).HasMaxLength(120).IsRequired();
                 entity.Property(content => content.PortfolioHeadingHighlight).HasMaxLength(80).IsRequired();
+                entity.Property(content => content.PortfolioTabNewLabel).HasMaxLength(80).IsRequired();
+                entity.Property(content => content.PortfolioTabUsedLabel).HasMaxLength(80).IsRequired();
+                entity.Property(content => content.PortfolioTabTrendingLabel).HasMaxLength(80).IsRequired();
+                entity.Property(content => content.PortfolioTabStocksLabel).HasMaxLength(80).IsRequired();
+                entity.Property(content => content.PortfolioEmptyNew).HasMaxLength(200).IsRequired();
+                entity.Property(content => content.PortfolioEmptyUsed).HasMaxLength(200).IsRequired();
+                entity.Property(content => content.PortfolioEmptyTrending).HasMaxLength(200).IsRequired();
+                entity.Property(content => content.PortfolioEmptyStocks).HasMaxLength(200).IsRequired();
                 entity.Property(content => content.CampaignsEyebrow).HasMaxLength(120).IsRequired();
                 entity.Property(content => content.CampaignsHeadingBefore).HasMaxLength(120).IsRequired();
                 entity.Property(content => content.CampaignsHeadingHighlight).HasMaxLength(80).IsRequired();

@@ -1,52 +1,103 @@
-@model IReadOnlyList<AdminUserViewModel>
+@model AdminUsersPageViewModel
 @{
     Layout = "_AdminLayout";
     var currentUserId = ViewBag.CurrentUserId as string;
     var editableIndex = 0;
 }
 <h1 class="h3 mb-4">Users</h1>
+
+<form asp-action="Users" method="get" class="admin-card mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-8 col-lg-9">
+            <label class="form-label mb-1" for="users-search">Search</label>
+            <input id="users-search"
+                   type="search"
+                   name="search"
+                   value="@Model.Search"
+                   class="form-control"
+                   placeholder="Search by first name, last name, email, or phone" />
+        </div>
+        <div class="col-12 col-md-4 col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+            @if (!string.IsNullOrWhiteSpace(Model.Search))
+            {
+                <a asp-action="Users" class="btn btn-outline-secondary">Clear</a>
+            }
+        </div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.Search))
+    {
+        <p class="text-muted small mb-0 mt-2">
+            Showing @Model.Users.Count result(s) for “@Model.Search”.
+        </p>
+    }
+</form>
+
 <form asp-action="ChangeRoles" method="post">
     @Html.AntiForgeryToken()
     <div class="admin-card">
-        <table class="table">
-            <thead><tr><th>User</th><th>Email</th><th>Confirmed</th><th>Role</th><th>Registered</th><th></th></tr></thead>
-            <tbody>
-            @foreach (var user in Model)
-            {
-                <tr>
-                    <td>@(string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName)</td>
-                    <td>@user.Email</td>
-                    <td>@(user.EmailConfirmed ? "Yes" : "No")</td>
-                    <td>@user.Role</td>
-                    <td>@user.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
-                    <td>
-                        @if (user.Id == currentUserId && user.IsSuperAdmin)
-                        {
-                            <span>SuperAdmin (you)</span>
-                        }
-                        else
-                        {
-                            <input type="hidden" name="items[@editableIndex].UserId" value="@user.Id" />
-                            <select name="items[@editableIndex].Role" class="form-select form-select-sm" style="max-width:160px">
-                                @foreach (var roleName in new[] { "Member", "Admin", "SuperAdmin" })
-                                {
-                                    if (user.Role == roleName)
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Email status</th>
+                        <th>Phone status</th>
+                        <th>Registered</th>
+                        <th>Lockout</th>
+                        <th>Failed logins</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Users.Count == 0)
+                {
+                    <tr>
+                        <td colspan="9" class="text-muted">No users matched this search.</td>
+                    </tr>
+                }
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td>@(string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName)</td>
+                        <td class="text-break">@user.Email</td>
+                        <td class="text-nowrap">@(string.IsNullOrWhiteSpace(user.PhoneNumber) ? "—" : user.PhoneNumber)</td>
+                        <td>@(user.EmailConfirmed ? "Confirmed" : "Unconfirmed")</td>
+                        <td>@(user.PhoneNumberConfirmed ? "Confirmed" : "Unverified")</td>
+                        <td class="text-nowrap">@user.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@(user.IsLockedOut ? "Locked" : "Active")</td>
+                        <td>@user.AccessFailedCount</td>
+                        <td>
+                            @if (user.Id == currentUserId && user.IsSuperAdmin)
+                            {
+                                <span>SuperAdmin (you)</span>
+                            }
+                            else
+                            {
+                                <input type="hidden" name="items[@editableIndex].UserId" value="@user.Id" />
+                                <select name="items[@editableIndex].Role" class="form-select form-select-sm" style="min-width:140px;max-width:160px">
+                                    @foreach (var roleName in new[] { "Member", "Admin", "SuperAdmin" })
                                     {
-                                        <option value="@roleName" selected>@roleName</option>
+                                        if (user.Role == roleName)
+                                        {
+                                            <option value="@roleName" selected>@roleName</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@roleName">@roleName</option>
+                                        }
                                     }
-                                    else
-                                    {
-                                        <option value="@roleName">@roleName</option>
-                                    }
-                                }
-                            </select>
-                            editableIndex++;
-                        }
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+                                </select>
+                                editableIndex++;
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
         @if (editableIndex > 0)
         {
             <div class="d-flex justify-content-end mt-3">

@@ -22,6 +22,8 @@ public sealed class PartAdminItemDto
 
     public string CarModel { get; set; } = string.Empty;
 
+    public string Color { get; set; } = string.Empty;
+
     public decimal Price { get; set; }
 
     public int Quantity { get; set; }
@@ -87,6 +89,10 @@ public sealed class SavePartDto
     [Display(Name = "Compatible car model")]
     [StringLength(100)]
     public string? CarModel { get; set; }
+
+    [Display(Name = "Color")]
+    [StringLength(50, ErrorMessage = "Color cannot exceed 50 characters.")]
+    public string? Color { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = "Stock cannot be negative.")]
     public int Quantity { get; set; }

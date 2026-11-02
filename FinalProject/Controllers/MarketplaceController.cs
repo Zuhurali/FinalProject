@@ -24,7 +24,7 @@ public sealed class MarketplaceController : ControllerBase
         var userId = CurrentUserId();
         return userId == null
             ? Unauthorized()
-            : Ok(await _marketplace.GetSummaryAsync(userId, IsStoreStaff(), cancellationToken));
+            : Ok(await _marketplace.GetSummaryAsync(userId, cancellationToken: cancellationToken));
     }
 
     [HttpGet("api/favorites")]
@@ -138,10 +138,7 @@ public sealed class MarketplaceController : ControllerBase
         var userId = CurrentUserId();
         return userId == null
             ? Unauthorized()
-            : Ok(await _marketplace.GetConversationsAsync(
-                userId,
-                asStoreStaff: IsStoreStaff(),
-                cancellationToken));
+            : Ok(await _marketplace.GetConversationsAsync(userId, cancellationToken: cancellationToken));
     }
 
     [HttpGet("api/conversations/{id:int}")]
@@ -159,8 +156,7 @@ public sealed class MarketplaceController : ControllerBase
             id,
             userId,
             markRead: true,
-            asStoreStaff: IsStoreStaff(),
-            cancellationToken);
+            cancellationToken: cancellationToken);
         return conversation == null ? NotFound() : Ok(conversation);
     }
 
@@ -205,8 +201,7 @@ public sealed class MarketplaceController : ControllerBase
             id,
             userId,
             request.Content,
-            asStoreStaff: IsStoreStaff(),
-            cancellationToken);
+            cancellationToken: cancellationToken);
         return message == null ? NotFound() : Ok(message);
     }
 
@@ -224,15 +219,11 @@ public sealed class MarketplaceController : ControllerBase
         var hidden = await _marketplace.HideConversationAsync(
             id,
             userId,
-            asStoreStaff: IsStoreStaff(),
-            cancellationToken);
+            cancellationToken: cancellationToken);
         return hidden
             ? Ok(new { hidden = true })
             : NotFound(new { message = "Conversation not found or you cannot hide it." });
     }
 
     private string? CurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    private bool IsStoreStaff() =>
-        User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
 }

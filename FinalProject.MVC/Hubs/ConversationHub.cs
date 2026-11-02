@@ -8,7 +8,7 @@ namespace FinalProject.MVC.Hubs;
 
 /// <summary>
 /// Real-time delivery for one car conversation. Connections join a group only
-/// after the existing marketplace API confirms the caller may read that thread.
+/// after GetConversation confirms the caller is BuyerId or SellerId.
 /// </summary>
 [Authorize]
 public sealed class ConversationHub : Hub

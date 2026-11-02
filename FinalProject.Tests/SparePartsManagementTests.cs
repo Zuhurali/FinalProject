@@ -108,6 +108,86 @@ public class SparePartsManagementTests
     }
 
     [Fact]
+    public void Admin_parts_edit_form_exposes_color_input()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var edit = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminParts", "Edit.cshtml"));
+        var dto = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Models", "Api", "PartAdminDtos.cs"));
+        var apiDto = File.ReadAllText(Path.Combine(root, "FinalProject", "DTOs", "PartAdminDtos.cs"));
+        var service = File.ReadAllText(Path.Combine(root, "FinalProject", "Services", "PartsAdminService.cs"));
+
+        Assert.Contains("asp-for=\"Color\"", edit, StringComparison.Ordinal);
+        Assert.Contains("public string? Color { get; set; }", dto, StringComparison.Ordinal);
+        Assert.Contains("public string? Color { get; set; }", apiDto, StringComparison.Ordinal);
+        Assert.Contains("part.Color = request.Color ?? string.Empty;", service, StringComparison.Ordinal);
+        Assert.Contains("Color = part.Color,", service, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PartsAdminService_saves_color_and_preserves_other_fields()
+    {
+        await using var db = CreateDb();
+        var service = new PartsAdminService(db);
+
+        var (created, createError) = await service.CreateAsync(new SavePartRequest
+        {
+            Name = "Caliper Cover",
+            Category = "Brakes",
+            Brand = "Brembo",
+            PartNumber = "CLR-1",
+            CarMake = "BMW",
+            CarModel = "M3",
+            Compatibility = "F80",
+            Price = 99.50m,
+            Quantity = 4,
+            ImagePath = "~/assets/images/portfolio/parts/uploads/demo.webp",
+            Description = "Red cover",
+            Color = ""
+        });
+        Assert.Null(createError);
+        Assert.NotNull(created);
+        Assert.Equal(string.Empty, created!.Color);
+
+        var update = new SavePartRequest
+        {
+            Id = created.Id,
+            Name = created.Name,
+            Category = created.Category,
+            Brand = created.Brand,
+            PartNumber = created.PartNumber,
+            CarMake = created.CarMake,
+            CarModel = created.CarModel,
+            Compatibility = created.Compatibility,
+            Price = created.Price,
+            Quantity = created.Quantity,
+            ImagePath = created.ImagePath,
+            Description = created.Description,
+            IsActive = created.IsActive,
+            Color = "  Red  "
+        };
+        var (updated, updateError) = await service.UpdateAsync(created.Id, update);
+        Assert.Null(updateError);
+        Assert.NotNull(updated);
+        Assert.Equal("Red", updated!.Color);
+        Assert.Equal("Caliper Cover", updated.Name);
+        Assert.Equal("Brakes", updated.Category);
+        Assert.Equal("Brembo", updated.Brand);
+        Assert.Equal("CLR-1", updated.PartNumber);
+        Assert.Equal("BMW", updated.CarMake);
+        Assert.Equal("M3", updated.CarModel);
+        Assert.Equal(99.50m, updated.Price);
+        Assert.Equal(4, updated.Quantity);
+        Assert.Equal("~/assets/images/portfolio/parts/uploads/demo.webp", updated.ImagePath);
+
+        var loaded = await service.GetAsync(created.Id);
+        Assert.NotNull(loaded);
+        Assert.Equal("Red", loaded!.Color);
+
+        var entity = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == created.Id);
+        Assert.Equal("Red", entity.Color);
+    }
+
+    [Fact]
     public async Task PartsAdminService_rejects_negative_stock_and_oversized_sku()
     {
         await using var db = CreateDb();

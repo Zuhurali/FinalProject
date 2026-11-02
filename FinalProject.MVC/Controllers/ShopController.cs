@@ -342,7 +342,9 @@ namespace FinalProject.MVC.Controllers
             // Apply category filter
             if (!string.IsNullOrEmpty(request.Category))
             {
-                filteredProducts = filteredProducts.Where(p => p.Category == request.Category);
+                var category = request.Category.Trim();
+                filteredProducts = filteredProducts.Where(p =>
+                    string.Equals(p.Category, category, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrEmpty(request.Brand))
@@ -382,6 +384,22 @@ namespace FinalProject.MVC.Controllers
             if (request.SelectedModels != null && request.SelectedModels.Any())
             {
                 filteredProducts = filteredProducts.Where(p => request.SelectedModels.Contains(p.CarModel));
+            }
+
+            // Apply selected colors filter (multi-select from ShopThree)
+            if (request.SelectedColors != null && request.SelectedColors.Count > 0)
+            {
+                var colors = request.SelectedColors
+                    .Where(color => !string.IsNullOrWhiteSpace(color))
+                    .Select(color => color.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (colors.Count > 0)
+                {
+                    filteredProducts = filteredProducts.Where(p =>
+                        colors.Any(color =>
+                            string.Equals(p.Color, color, StringComparison.OrdinalIgnoreCase)));
+                }
             }
 
             // Apply price range filter (dropdown - backwards compatibility)

@@ -5,36 +5,36 @@ namespace FinalProject.Tests;
 public class HeaderSearchOverlayTests
 {
     [Fact]
-    public void Layout_overlay_submits_get_search_to_cars_index()
+    public void Public_headers_do_not_expose_header_search_icon_or_overlay()
     {
-        var layout = File.ReadAllText(Path.Combine(FindRepoRoot(), "FinalProject.MVC", "Views", "Shared", "_Layout.cshtml"));
+        var root = FindRepoRoot();
+        var layout = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_Layout.cshtml"));
+        var headerThree = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_HeaderThree.cshtml"));
+        var headerFive = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_HeaderFive.cshtml"));
+        var headerSix = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_HeaderSix.cshtml"));
 
-        Assert.Contains("class=\"search-input-area\"", layout, StringComparison.Ordinal);
-        Assert.Contains("asp-controller=\"Cars\"", layout, StringComparison.Ordinal);
-        Assert.Contains("asp-action=\"Index\"", layout, StringComparison.Ordinal);
-        Assert.Contains("method=\"get\"", layout, StringComparison.Ordinal);
-        Assert.Contains("name=\"search\"", layout, StringComparison.Ordinal);
-        Assert.Contains("type=\"search\"", layout, StringComparison.Ordinal);
-        Assert.Contains("type=\"submit\"", layout, StringComparison.Ordinal);
-        Assert.Contains("class=\"search-input autocomplete\"", layout, StringComparison.Ordinal);
-        Assert.Contains("id=\"close\"", layout, StringComparison.Ordinal);
-        Assert.Contains("search-close-icon", layout, StringComparison.Ordinal);
-        Assert.DoesNotContain("asp-controller=\"Shop\"", layout.Substring(
-            layout.IndexOf("search-input-area", StringComparison.Ordinal),
-            600), StringComparison.Ordinal);
+        Assert.DoesNotContain("search-input-area", layout, StringComparison.Ordinal);
+        Assert.DoesNotContain("Open car search", layout, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("class=\"search\"", headerThree, StringComparison.Ordinal);
+        Assert.DoesNotContain("class=\"search-area\"", headerThree, StringComparison.Ordinal);
+        Assert.DoesNotContain("assets/images/icon/search", headerThree, StringComparison.Ordinal);
+        Assert.Contains("menu-btn", headerThree, StringComparison.Ordinal);
+        Assert.Contains("_AddNewDropdown", headerThree, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("class=\"search\"", headerFive, StringComparison.Ordinal);
+        Assert.DoesNotContain("assets/images/icon/search", headerFive, StringComparison.Ordinal);
+        Assert.DoesNotContain("class=\"search\"", headerSix, StringComparison.Ordinal);
+        Assert.DoesNotContain("assets/images/icon/search", headerSix, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void HeaderThree_exposes_search_overlay_trigger()
+    public void CarsThree_no_longer_needs_page_scoped_header_search_css_hide()
     {
-        var headerThree = File.ReadAllText(Path.Combine(FindRepoRoot(), "FinalProject.MVC", "Views", "Shared", "_HeaderThree.cshtml"));
-        var headerFive = File.ReadAllText(Path.Combine(FindRepoRoot(), "FinalProject.MVC", "Views", "Shared", "_HeaderFive.cshtml"));
-
-        Assert.Contains("class=\"search\"", headerThree, StringComparison.Ordinal);
-        Assert.Contains("class=\"search-area\"", headerThree, StringComparison.Ordinal);
-        Assert.Contains("assets/images/icon/search", headerThree, StringComparison.Ordinal);
-        Assert.Contains("class=\"search\"", headerFive, StringComparison.Ordinal);
-        Assert.Contains("menu-btn", headerThree, StringComparison.Ordinal);
+        var carsThree = File.ReadAllText(Path.Combine(FindRepoRoot(), "FinalProject.MVC", "Views", "Cars", "CarsThree.cshtml"));
+        Assert.DoesNotContain(".header-three .bottom-right > .search-area", carsThree, StringComparison.Ordinal);
+        Assert.Contains("cars3-advanced", carsThree, StringComparison.Ordinal);
+        Assert.Contains("id=\"carSearch\"", carsThree, StringComparison.Ordinal);
     }
 
     [Fact]

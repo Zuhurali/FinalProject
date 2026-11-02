@@ -1,4 +1,5 @@
 using FinalProject.MVC.Commerce;
+using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -8,19 +9,31 @@ namespace FinalProject.MVC.Controllers
     public class CalculatorController : Controller
     {
         private readonly ICalculatorPageContentService _page;
+        private readonly ICarApiService _carApi;
+        private readonly ILogger<CalculatorController> _logger;
 
-        public CalculatorController(ICalculatorPageContentService page)
+        public CalculatorController(
+            ICalculatorPageContentService page,
+            ICarApiService carApi,
+            ILogger<CalculatorController> logger)
         {
             _page = page;
+            _carApi = carApi;
+            _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var page = _page.GetPublic();
             ViewData["Title"] = page.SeoTitle;
             ViewData["MetaDescription"] = page.SeoDescription;
             ViewData["CalculatorPage"] = page;
-            return View(new CarLoanCalculatorModel());
+
+            var model = new CarLoanCalculatorModel
+            {
+                BrandNames = await LoadBrandNamesAsync()
+            };
+            return View(model);
         }
 
         [HttpPost]
@@ -59,6 +72,31 @@ namespace FinalProject.MVC.Controllers
                     totalCostIncludingDownPayment = result.TotalCostIncludingDownPayment
                 }
             });
+        }
+
+        private async Task<IReadOnlyList<string>> LoadBrandNamesAsync()
+        {
+            try
+            {
+                var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                return lookups.Brands
+                    .Select(brand => brand.Name?.Trim() ?? string.Empty)
+                    .Where(name => !string.IsNullOrWhiteSpace(name)
+                        && !name.Equals("Other", StringComparison.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Calculator brand list could not be loaded from SQL.");
+                return Array.Empty<string>();
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "Calculator brand list could not be loaded.");
+                return Array.Empty<string>();
+            }
         }
     }
 }

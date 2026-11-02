@@ -33,7 +33,7 @@ public class SqlPersistenceVerificationTests
         await using var db = CreateApiDb();
         var fromTable = await db.Categories.AsNoTracking()
             .OrderBy(category => category.Name)
-            .Select(category => new { category.Id, category.Name })
+            .Select(category => new { category.Id, category.Name, category.IconPath })
             .ToListAsync();
         Assert.NotEmpty(fromTable);
 
@@ -45,6 +45,13 @@ public class SqlPersistenceVerificationTests
         Assert.Equal(
             fromTable.Select(category => category.Name).ToList(),
             lookups.Categories.Select(category => category.Name).ToList());
+        Assert.Equal(
+            fromTable.Select(category => category.IconPath ?? string.Empty).ToList(),
+            lookups.Categories.Select(category => category.IconPath ?? string.Empty).ToList());
+        Assert.Contains(
+            fromTable,
+            category => category.Name.Equals("Sedan", StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(category.IconPath));
     }
 
     [Fact]

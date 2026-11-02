@@ -72,7 +72,7 @@ namespace FinalProject.MVC.Controllers
                         {
                             Name = name,
                             Slug = CarCategories.Slug(name),
-                            IconPath = $"~/assets/images/category/{(index % 6) + 1:00}.svg",
+                            IconPath = CategoryIconPaths.Resolve(category.IconPath, index),
                             CountLabel = labels[name]
                         };
                     })
