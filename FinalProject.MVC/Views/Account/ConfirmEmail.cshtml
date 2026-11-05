@@ -1,23 +1,27 @@
 @{
-    ViewData["Title"] = "Confirm Email - AutoVault";
-    var confirmed = ViewData["Confirmed"] as bool? == true;
+    ViewData["Title"] = "Email Confirmed - AutoVault";
 }
 <div class="rts-breadcrumb-area service jarallax">
-    <div class="container"><div class="breadcrumb-area-wrapper"><h1 class="title">Email Confirmation</h1></div></div>
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Email Confirmed</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Email Confirmed</a>
+            </div>
+        </div>
+    </div>
 </div>
 <section class="rts-section-gap">
     <div class="container">
-        <div class="row justify-content-center"><div class="col-lg-6 contact-form text-center">
-            @if (confirmed)
-            {
-                <div class="alert alert-success">Your email address has been confirmed. You can now sign in.</div>
-                <a class="submit__btn" asp-action="SignIn">Sign In</a>
-            }
-            else
-            {
-                <div class="alert alert-danger">This confirmation link is invalid or has expired.</div>
-                <a asp-action="SignIn">Back to sign in</a>
-            }
-        </div></div>
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="contact-form text-center">
+                    <h3 class="mb-4">Your email address is confirmed</h3>
+                    <div class="alert alert-success" role="alert">Your AutoVault account is ready. You can now sign in.</div>
+                    <a class="submit__btn" asp-action="SignIn">Sign In</a>
+                </div>
+            </div>
+        </div>
     </div>
 </section>

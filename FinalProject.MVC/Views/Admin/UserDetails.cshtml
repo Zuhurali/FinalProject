@@ -18,12 +18,8 @@
         <dd class="col-sm-8 col-lg-9">@(string.IsNullOrWhiteSpace(Model.LastName) ? "—" : Model.LastName)</dd>
         <dt class="col-sm-4 col-lg-3">Email</dt>
         <dd class="col-sm-8 col-lg-9 text-break">@Model.Email</dd>
-        <dt class="col-sm-4 col-lg-3">Phone</dt>
-        <dd class="col-sm-8 col-lg-9">@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "—" : Model.PhoneNumber)</dd>
         <dt class="col-sm-4 col-lg-3">Email status</dt>
         <dd class="col-sm-8 col-lg-9">@(Model.EmailConfirmed ? "Confirmed" : "Unconfirmed")</dd>
-        <dt class="col-sm-4 col-lg-3">Phone status</dt>
-        <dd class="col-sm-8 col-lg-9">@(Model.PhoneNumberConfirmed ? "Confirmed" : "Unverified")</dd>
         <dt class="col-sm-4 col-lg-3">Role</dt>
         <dd class="col-sm-8 col-lg-9">@Model.Role</dd>
         <dt class="col-sm-4 col-lg-3">Registered</dt>

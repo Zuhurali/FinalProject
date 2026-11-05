@@ -1,6 +1,20 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var accountHeading = "My Account";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var accountUser = await UserManager.GetUserAsync(User);
+        accountHeading = AccountDisplayName.Resolve(
+            accountUser?.FirstName,
+            accountUser?.LastName,
+            accountUser?.UserName ?? User.Identity?.Name,
+            accountUser?.Email);
+    }
+}
 <div class="mian-wrapper-form account-nav-card">
     <div class="title-mid-wrapper-home-two">
-        <h3 class="title account-nav-title">My Account</h3>
+        <h3 class="title account-nav-title">@accountHeading</h3>
     </div>
     <nav aria-label="Account navigation">
         <ul class="account-menu">

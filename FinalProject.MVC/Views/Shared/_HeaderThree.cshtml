@@ -38,10 +38,7 @@
                                 </div>
                                 <div class="bottom-right">
                                     <div class="button-area">
-                                        <a asp-controller="Account" asp-action="@(User.Identity?.IsAuthenticated == true ? "Index" : "SignIn")" class="rts-btn btn-border radius-small icon" title="@(User.Identity?.IsAuthenticated == true ? User.Identity?.Name : null)">
-                                            @(User.Identity?.IsAuthenticated == true ? "Account" : "Sign In")
-                                            <partial name="_SignInIcon" />
-                                        </a>
+                                        <partial name="_AccountHeaderButtons" model='@("rts-btn btn-border radius-small icon")' />
                                         @if (User.Identity?.IsAuthenticated == true)
                                         {
                                             <form asp-controller="Account" asp-action="SignOut" method="post" class="d-inline">

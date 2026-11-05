@@ -13,11 +13,6 @@ public static class CarApiMapper
         @"^(\d+(\.\d+)?L\b.*|(single|dual|tri|quad)[- ]motor)$",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-    /// <summary>Matches an explicit seat count token such as "5 seats" (1–12 only).</summary>
-    private static readonly Regex SeatsToken = new(
-        @"\b([1-9]|1[0-2])\s+seats\b",
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-
     public static Car ToCar(CarApiDto dto)
     {
         var brand = dto.Brand?.Name ?? string.Empty;
@@ -27,8 +22,7 @@ public static class CarApiMapper
         var name = string.IsNullOrWhiteSpace(description)
             ? fallbackName
             : description.Split(". ", 2, StringSplitOptions.None)[0];
-        // Prefer the persisted API/DB Seats value; description is fallback only.
-        var seats = ResolveSeats(dto.Seats, description);
+        var seats = ResolveSeats(dto.Seats);
         var driveType = NormalizeDriveType(dto.DriveType);
         var engine = string.IsNullOrWhiteSpace(dto.Engine) ? string.Empty : dto.Engine.Trim();
         var descriptionIsSpecSummary = string.IsNullOrWhiteSpace(description)
@@ -139,31 +133,10 @@ public static class CarApiMapper
     }
 
     /// <summary>
-    /// Uses the database/API seat count when it is a valid 1–12 value.
-    /// Otherwise falls back only to an explicit "N seats" phrase in the description.
+    /// Uses only a persisted seat count. Description text is not a seat value.
     /// </summary>
-    private static int ResolveSeats(int? apiSeats, string? description)
-    {
-        if (apiSeats is >= 1 and <= 12)
-        {
-            return apiSeats.Value;
-        }
-
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            return 0;
-        }
-
-        var match = SeatsToken.Match(description);
-        if (match.Success
-            && int.TryParse(match.Groups[1].Value, out var seats)
-            && seats is >= 1 and <= 12)
-        {
-            return seats;
-        }
-
-        return 0;
-    }
+    private static int ResolveSeats(int? apiSeats) =>
+        apiSeats is >= 1 and <= 12 ? apiSeats.Value : 0;
 
     private static bool TryParseSeats(string part, out int seats)
     {

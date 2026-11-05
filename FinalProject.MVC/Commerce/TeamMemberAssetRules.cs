@@ -11,8 +11,17 @@ public static class TeamMemberAssetRules
         "/assets/images/team/"
     ];
 
-    public static string? ValidateStoredPath(string? path) =>
-        CmsAssetUpload.IsSafeStoredPath(path, AllowedPathPrefixes) ? null : "That team photo path is not allowed.";
+    public static string? ValidateStoredPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "Choose a team photo.";
+        }
+
+        return CmsAssetUpload.IsSafeStoredPath(path, AllowedPathPrefixes)
+            ? null
+            : "That team photo path is not allowed.";
+    }
 
     public static string CoalescePath(string? path, string fallback) =>
         CmsAssetUpload.CoalescePath(path, fallback, AllowedPathPrefixes);

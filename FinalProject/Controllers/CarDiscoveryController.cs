@@ -24,6 +24,7 @@ public sealed class CarDiscoveryController : ControllerBase
         [FromQuery] string? period,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = CarDiscoveryRules.DefaultPageSize,
+        [FromQuery] bool usedOnly = false,
         CancellationToken cancellationToken = default)
     {
         if (!CarDiscoveryRules.TryNormalizePeriod(period, out var normalized))
@@ -31,7 +32,12 @@ public sealed class CarDiscoveryController : ControllerBase
             return BadRequest(new { message = "Period must be today, week, or all." });
         }
 
-        return Ok(await _discovery.GetMostViewedAsync(normalized, page, pageSize, cancellationToken: cancellationToken));
+        return Ok(await _discovery.GetMostViewedAsync(
+            normalized,
+            page,
+            pageSize,
+            usedOnly: usedOnly,
+            cancellationToken: cancellationToken));
     }
 
     [HttpGet("most-favorited")]

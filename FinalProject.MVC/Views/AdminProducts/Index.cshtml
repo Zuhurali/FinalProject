@@ -4,10 +4,7 @@
 }
 <div class="d-flex justify-content-between mb-4">
     <h1 class="h3">Products</h1>
-    @if (User.IsInRole("SuperAdmin"))
-    {
-        <a class="btn btn-primary" asp-action="Create">Add Product</a>
-    }
+    <a class="btn btn-primary" asp-action="Create">Add Product</a>
 </div>
 <div class="admin-card">
     <table class="table">

@@ -141,10 +141,11 @@ builder.Services.AddSingleton<IApiAccessTokenService, ApiAccessTokenService>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminPanel", policy => policy.RequireRole(AppRoles.Admin, AppRoles.SuperAdmin));
-    options.AddPolicy("CatalogCreate", policy => policy.RequireRole(AppRoles.SuperAdmin));
+    options.AddPolicy("CatalogCreate", policy => policy.RequireRole(AppRoles.Admin, AppRoles.SuperAdmin));
     options.AddPolicy("ManageUsers", policy => policy.RequireRole(AppRoles.SuperAdmin));
 });
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<ApplicationSettings>(builder.Configuration.GetSection(ApplicationSettings.SectionName));
 builder.Services.Configure<DealershipContactSettings>(
     builder.Configuration.GetSection(DealershipContactSettings.SectionName));
 builder.Services.AddSingleton<IEmailSender, EmailSender>();

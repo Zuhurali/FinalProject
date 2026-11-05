@@ -4,7 +4,7 @@
         return;
     }
 
-    var makeModels = bindMakeModels(form);
+    var makeModels = bindMakeModels(form, "heroModelsByMake", false);
 
     var input = form.querySelector('input[name="search"]');
     var endpoint = form.getAttribute("data-suggestions-url");
@@ -439,9 +439,10 @@ function bindMakeModels(form, dataElementId, autoSubmit) {
         }
 
         makeSelect.value = match.make;
+        refreshNiceSelect(makeSelect);
         apply(match.make);
         modelSelect.value = match.model;
-        submitSelection();
+        refreshNiceSelect(modelSelect);
     }
 
     function onModelChange() {

@@ -3,10 +3,6 @@
 @{
     var imagePath = string.IsNullOrWhiteSpace(Model.ImagePath) ? string.Empty : Model.ImagePath;
     var conditionBadge = HomeCarShowcase.ConditionBadge(Model);
-    var stockBadge = HomeCarShowcase.StockBadge(Model);
-    var stockClass = HomeCarShowcase.IsInStock(Model) ? "in-stock" : "out-of-stock";
-    var stockOnlyBadges = ViewData["StockOnlyBadges"] is true;
-    var hideStockBadge = ViewData["HideStockBadge"] is true;
 }
 <div class="project-wrapper3 home-car-card">
     <div class="image-area">
@@ -16,15 +12,8 @@
                 <img src="@Url.Content(imagePath)" alt="@Model.Name">
             }
         </a>
-        <div class="home-car-badges" aria-label="@(stockOnlyBadges ? "Vehicle availability" : hideStockBadge ? "Vehicle condition" : "Vehicle condition and availability")">
-            @if (!stockOnlyBadges)
-            {
-                <span class="home-car-badge condition">@conditionBadge</span>
-            }
-            @if (!hideStockBadge)
-            {
-                <span class="home-car-badge stock @stockClass">@stockBadge</span>
-            }
+        <div class="home-car-badges" aria-label="Vehicle condition">
+            <span class="home-car-badge condition">@conditionBadge</span>
         </div>
         <span class="home-car-brand">@Model.Make</span>
         <span class="price">$@Model.Price.ToString("N0")</span>

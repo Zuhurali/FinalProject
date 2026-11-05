@@ -389,10 +389,23 @@ public class CarService : ICarService
             foreach (var term in terms)
             {
                 var token = term;
-                cars = cars.Where(car =>
-                    car.Brand.Name.ToLower().Contains(token)
-                    || car.Model.ToLower().Contains(token)
-                    || car.Description.ToLower().Contains(token));
+                if (query.IncludeListingText)
+                {
+                    cars = cars.Where(car =>
+                        car.Brand.Name.ToLower().Contains(token)
+                        || car.Model.ToLower().Contains(token)
+                        || car.Description.ToLower().Contains(token)
+                        || car.Color.ToLower().Contains(token)
+                        || (car.Features != null && car.Features.ToLower().Contains(token))
+                        || car.Category.Name.ToLower().Contains(token));
+                }
+                else
+                {
+                    cars = cars.Where(car =>
+                        car.Brand.Name.ToLower().Contains(token)
+                        || car.Model.ToLower().Contains(token)
+                        || car.Description.ToLower().Contains(token));
+                }
             }
         }
 
@@ -442,9 +455,15 @@ public class CarService : ICarService
             cars = cars.Where(car => car.Mileage <= maxMileage);
         }
 
-        if (query.Seats is int seats)
+        var selectedSeats = query.SelectedSeats();
+        if (selectedSeats.Count == 1)
         {
+            var seats = selectedSeats[0];
             cars = cars.Where(car => car.Seats == seats);
+        }
+        else if (selectedSeats.Count > 1)
+        {
+            cars = cars.Where(car => car.Seats.HasValue && selectedSeats.Contains(car.Seats.Value));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Fuel))

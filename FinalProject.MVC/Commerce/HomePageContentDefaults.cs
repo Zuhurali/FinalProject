@@ -49,14 +49,16 @@ public static class HomePageContentDefaults
     public const string WhyChooseBackgroundPath = "~/assets/images/about/why-choose-bg.webp";
 
     public const string Feature1Title = "Competitive Pricing";
-    public const string Feature2Title = "24 Hour Support";
-    public const string Feature3Title = "GPS on Every Vehicle";
-    public const string Feature4Title = "Expert Maintenance";
-    public const string FeatureDescription =
-        "Whether you're looking for a brand-new model or a certified pre-owned vehicle, we have a diverse.";
+    public const string Feature2Title = "Easy Vehicle Search";
+    public const string Feature3Title = "Detailed Vehicle Listings";
+    public const string Feature4Title = "Easy Contact & Inquiry";
+    public const string Feature1Description = "Find great value across our selection of new and pre-owned vehicles.";
+    public const string Feature2Description = "Find your ideal car with filters for brand, model, price, year, and more.";
+    public const string Feature3Description = "Explore photos, specifications, mileage, and pricing before making your choice.";
+    public const string Feature4Description = "Have questions about a vehicle? Send us an inquiry and let us know what you're looking for.";
     public const string Feature1IconPath = "~/assets/images/why-choose/icon-01.svg";
-    public const string Feature2IconPath = "~/assets/images/why-choose/icon-02.svg";
-    public const string Feature3IconPath = "~/assets/images/why-choose/icon-03.svg";
+    public const string Feature2IconPath = "~/assets/images/why-choose/icon-07.svg";
+    public const string Feature3IconPath = "~/assets/images/why-choose/icon-08.svg";
     public const string Feature4IconPath = "~/assets/images/why-choose/icon-04.svg";
 
     public const string FeaturedEyebrow = "Featured Car";

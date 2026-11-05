@@ -345,6 +345,7 @@
         overflow: hidden;
     }
     .home-car-slider .home-car-card .image-area {
+        position: relative;
         height: 260px;
         border-radius: 0;
         background: #f4f5f7;
@@ -403,12 +404,6 @@
     }
     .home-car-slider .home-car-badge.condition {
         background: #111827;
-    }
-    .home-car-slider .home-car-badge.stock.in-stock {
-        background: var(--color-primary);
-    }
-    .home-car-slider .home-car-badge.stock.out-of-stock {
-        background: #6b7280;
     }
     .home-catalog-empty {
         margin: 0;
@@ -659,8 +654,6 @@
                                 ("trending", trendingCars, home.PortfolioEmptyTrending),
                                 ("stocks", stockCars, home.PortfolioEmptyStocks)
                             };
-                            var stockOnlyBadges = new ViewDataDictionary(ViewData) { { "StockOnlyBadges", true } };
-                            var hideStockBadge = new ViewDataDictionary(ViewData) { { "HideStockBadge", true } };
                         }
                         @foreach (var tab in portfolioTabs)
                         {
@@ -677,18 +670,7 @@
                                                 @foreach (var car in tab.Cars)
                                                 {
                                                     <div class="swiper-slide">
-                                                        @if (tab.Id == "stocks")
-                                                        {
-                                                            <partial name="_CatalogCarCard" model="car" view-data="stockOnlyBadges" />
-                                                        }
-                                                        else if (tab.Id == "used")
-                                                        {
-                                                            <partial name="_CatalogCarCard" model="car" view-data="hideStockBadge" />
-                                                        }
-                                                        else
-                                                        {
-                                                            <partial name="_CatalogCarCard" model="car" />
-                                                        }
+                                                        <partial name="_CatalogCarCard" model="car" />
                                                     </div>
                                                 }
                                             </div>

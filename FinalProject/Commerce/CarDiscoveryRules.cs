@@ -7,6 +7,7 @@ public static class CarDiscoveryRules
     public const string All = "all";
     public const int DefaultPageSize = 9;
     public const int MaxPageSize = 48;
+    public const int UsedBrowsePageSize = 500;
 
     public static TimeZoneInfo DealershipZone { get; } = ResolveZone();
 

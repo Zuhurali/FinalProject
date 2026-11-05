@@ -275,7 +275,7 @@ public class AdminUserDetailsTests
             throw new NotImplementedException();
         public Task RecordViewAsync(int id, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
-        public Task<PagedRankedCarsDto> GetMostViewedAsync(string period, int page = 1, int pageSize = 9, CancellationToken cancellationToken = default) =>
+        public Task<PagedRankedCarsDto> GetMostViewedAsync(string period, int page = 1, int pageSize = 9, bool usedOnly = false, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
         public Task<PagedRankedCarsDto> GetMostFavoritedAsync(int page = 1, int pageSize = 9, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();

@@ -73,6 +73,11 @@ public sealed class TeamMemberService : ITeamMemberService
         IFormFile? image,
         CancellationToken cancellationToken = default)
     {
+        if (!TryNormalizePhone(model, out var phoneError))
+        {
+            return (false, phoneError, null);
+        }
+
         var (path, pathError) = await ResolveImagePathAsync(model.ImagePath, image, cancellationToken);
         if (pathError != null)
         {
@@ -101,6 +106,11 @@ public sealed class TeamMemberService : ITeamMemberService
         IFormFile? image,
         CancellationToken cancellationToken = default)
     {
+        if (!TryNormalizePhone(model, out var phoneError))
+        {
+            return (false, phoneError);
+        }
+
         var entity = await _db.TeamMembers.FirstOrDefaultAsync(m => m.Id == model.Id, cancellationToken);
         if (entity == null)
         {
@@ -196,7 +206,7 @@ public sealed class TeamMemberService : ITeamMemberService
         IFormFile? image,
         CancellationToken cancellationToken)
     {
-        var path = currentPath.Trim();
+        var path = currentPath?.Trim() ?? string.Empty;
         var upload = await CmsAssetUpload.TrySaveAsync(
             _environment,
             TeamMemberAssetRules.UploadFolderRelative,
@@ -217,16 +227,29 @@ public sealed class TeamMemberService : ITeamMemberService
         return pathError != null ? (path, pathError) : (path, null);
     }
 
+    private static bool TryNormalizePhone(TeamMemberEditViewModel model, out string? error)
+    {
+        if (!AzerbaijanPhoneNumber.TryNormalize(model.Phone, out var phone))
+        {
+            error = AzerbaijanPhoneNumber.ErrorMessage;
+            return false;
+        }
+
+        model.Phone = phone;
+        error = null;
+        return true;
+    }
+
     private static TeamMember MapToEntity(TeamMemberEditViewModel model, string imagePath) => new()
     {
-        Name = model.Name.Trim(),
-        Position = model.Position.Trim(),
+        Name = model.Name?.Trim() ?? string.Empty,
+        Position = model.Position?.Trim() ?? string.Empty,
         ImagePath = imagePath,
-        Biography = model.Biography.Trim(),
-        Experience = model.Experience.Trim(),
-        Department = model.Department.Trim(),
-        Phone = model.Phone.Trim(),
-        Email = model.Email.Trim(),
+        Biography = model.Biography?.Trim() ?? string.Empty,
+        Experience = model.Experience?.Trim() ?? string.Empty,
+        Department = model.Department?.Trim() ?? string.Empty,
+        Phone = model.Phone?.Trim() ?? string.Empty,
+        Email = model.Email?.Trim() ?? string.Empty,
         IsPublished = model.IsPublished
     };
 }

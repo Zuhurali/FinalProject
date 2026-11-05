@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FinalProject.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -63,6 +64,7 @@ public static class VerifiedCatalogSeeder
                 Transmission = vehicle.Transmission,
                 Color = vehicle.Color,
                 Description = vehicle.Description,
+                Seats = ExplicitSeatCount(vehicle.Description),
                 IsNew = vehicle.IsNew,
                 IsFeatured = false,
                 CreatedAt = SeededAt,
@@ -140,6 +142,28 @@ public static class VerifiedCatalogSeeder
         }
 
         return urls;
+    }
+
+    private static readonly Regex SeatToken = new(
+        @"\b([1-9]|1[0-2])\s+seats\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static int? ExplicitSeatCount(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return null;
+        }
+
+        var matches = SeatToken.Matches(description);
+        if (matches.Count != 1
+            || !int.TryParse(matches[0].Groups[1].Value, out var seats)
+            || seats is < 1 or > 12)
+        {
+            return null;
+        }
+
+        return seats;
     }
 
     private sealed record VehicleSeed(

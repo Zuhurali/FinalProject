@@ -4,6 +4,8 @@ public class CarExplorePage
 {
     public const int PageSize = 9;
 
+    public const int UsedPageSize = PageSize;
+
     public string Heading { get; set; } = string.Empty;
 
     public string Intro { get; set; } = string.Empty;
@@ -15,6 +17,8 @@ public class CarExplorePage
     public string CountLabel { get; set; } = string.Empty;
 
     public string ActionName { get; set; } = string.Empty;
+
+    public string? Condition { get; set; }
 
     public bool ApiUnavailable { get; set; }
 

@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Confirmation Failed - AutoVault";
+    var message = ViewData["ErrorMessage"] as string
+        ?? "This confirmation link is invalid, expired, or has already been used.";
+}
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Confirmation Failed</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Confirmation Failed</a>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="contact-form text-center">
+                    <h3 class="mb-4">This link cannot confirm an account</h3>
+                    <div class="alert alert-danger" role="alert">@message</div>
+                    <p>Request a new confirmation email, then open the latest link.</p>
+                    <p class="mt-3"><a class="submit__btn" asp-action="ResendConfirmation">Resend confirmation email</a></p>
+                    <p class="mt-3"><a asp-action="SignIn">Back to sign in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

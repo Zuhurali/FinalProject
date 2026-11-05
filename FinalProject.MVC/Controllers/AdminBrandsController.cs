@@ -1,7 +1,6 @@
 using FinalProject.MVC.Models;
 using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Exceptions;
-using FinalProject.MVC.Security;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -34,7 +33,6 @@ public sealed class AdminBrandsController : AdminControllerBase
         return View(await LoadAsync(cancellationToken));
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> Create(string name, CancellationToken cancellationToken) =>

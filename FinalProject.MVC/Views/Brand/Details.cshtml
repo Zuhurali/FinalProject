@@ -9,25 +9,48 @@
         width: auto;
         margin-bottom: 16px;
     }
-    .brand-details-copy {
-        max-width: 720px;
-        margin: 0 auto 40px;
-        color: var(--color-body);
-        text-align: center;
-    }
     .brand-car-grid .home-car-card {
         margin-bottom: 30px;
     }
     .brand-car-grid .home-car-card .image-area {
         position: relative;
+        height: 240px;
+    }
+    .brand-car-grid .home-car-card .image-area > a {
+        display: block;
+        height: 100%;
     }
     .brand-car-grid .home-car-card .image-area img {
         width: 100%;
-        height: 240px;
+        height: 100%;
         object-fit: cover;
     }
     .brand-car-grid .home-car-card .price {
         transform: scale(1);
+    }
+    .brand-car-grid .home-car-badges {
+        position: absolute;
+        left: 20px;
+        bottom: 16px;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: calc(100% - 40px);
+    }
+    .brand-car-grid .home-car-badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        line-height: 1;
+        text-transform: uppercase;
+        color: #fff;
+    }
+    .brand-car-grid .home-car-badge.condition {
+        background: #111827;
     }
     .brand-car-grid .home-car-brand {
         position: absolute;
@@ -50,7 +73,7 @@
             <h1 class="title">@Model.Brand.Name</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <span class="current">@Model.Brand.Name</span>
+                <a asp-controller="Brand" asp-action="Details" asp-route-id="@Model.Brand.Id" class="current">@Model.Brand.Name</a>
             </div>
         </div>
     </div>
@@ -64,7 +87,6 @@
                 <img class="brand-details-logo" src="@Url.Content(Model.LogoPath)" alt="@Model.Brand.Name logo">
             }
             <h2 class="section-title">@Model.Brand.Name</h2>
-            <p class="brand-details-copy">These are the @Model.Brand.Name vehicles currently listed in the AutoVault catalog.</p>
         </div>
         @if (Model.Cars.Count == 0)
         {

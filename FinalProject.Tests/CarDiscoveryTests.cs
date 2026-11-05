@@ -195,6 +195,65 @@ public class CarDiscoveryTests
         Assert.Equal(0, stats.DailyViews.Single(day => day.Date == "2026-10-12").Views);
     }
 
+    [Fact]
+    public async Task Used_browse_returns_every_active_used_car_and_excludes_new_cars()
+    {
+        await using var db = CreateDb();
+        var viewedUsed = await SeedCarAsync(db, "ViewedUsed", new DateTime(2026, 1, 2));
+        var quietUsed = await SeedCarAsync(db, "QuietUsed", new DateTime(2026, 1, 1));
+        var newCar = await SeedCarAsync(db, "NewCar", new DateTime(2026, 6, 1));
+        var draftUsed = await SeedCarAsync(db, "DraftUsed", new DateTime(2026, 3, 1));
+        newCar.IsNew = true;
+        draftUsed.Status = "Draft";
+        await db.SaveChangesAsync();
+
+        var discovery = new CarDiscoveryService(db);
+        await discovery.RecordViewAsync(viewedUsed.Id, new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc));
+        await discovery.RecordViewAsync(viewedUsed.Id, new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc));
+        await discovery.RecordViewAsync(newCar.Id, new DateTime(2026, 10, 3, 0, 0, 0, DateTimeKind.Utc));
+
+        var used = await discovery.GetMostViewedAsync("all", page: 1, pageSize: 500, usedOnly: true);
+        Assert.Equal(2, used.TotalCount);
+        Assert.Equal(new[] { viewedUsed.Id, quietUsed.Id }, used.Items.Select(item => item.Car.Id).ToArray());
+        Assert.Equal(2, used.Items[0].Count);
+        Assert.Equal(0, used.Items[1].Count);
+        Assert.All(used.Items, item => Assert.False(item.Car.IsNew));
+
+        var ranked = await discovery.GetMostViewedAsync("all", page: 1, pageSize: 9);
+        Assert.Contains(ranked.Items, item => item.Car.Id == newCar.Id);
+        Assert.DoesNotContain(ranked.Items, item => item.Car.Id == quietUsed.Id);
+    }
+
+    [Fact]
+    public async Task Used_browse_pages_nine_active_used_cars_and_keeps_later_pages()
+    {
+        await using var db = CreateDb();
+        var discovery = new CarDiscoveryService(db);
+        var usedIds = new List<int>();
+        for (var index = 0; index < 10; index++)
+        {
+            var car = await SeedCarAsync(db, "Used" + index, new DateTime(2026, 1, index + 1));
+            car.IsNew = false;
+            usedIds.Add(car.Id);
+        }
+
+        var newCar = await SeedCarAsync(db, "BrandNew", new DateTime(2026, 8, 1));
+        newCar.IsNew = true;
+        await db.SaveChangesAsync();
+
+        var first = await discovery.GetMostViewedAsync("all", page: 1, pageSize: 9, usedOnly: true);
+        var second = await discovery.GetMostViewedAsync("all", page: 2, pageSize: 9, usedOnly: true);
+
+        Assert.Equal(10, first.TotalCount);
+        Assert.Equal(2, first.TotalPages);
+        Assert.Equal(9, first.Items.Count);
+        Assert.Single(second.Items);
+        Assert.Equal(9, FinalProject.MVC.Models.CarExplorePage.UsedPageSize);
+        Assert.All(first.Items.Concat(second.Items), item => Assert.False(item.Car.IsNew));
+        Assert.DoesNotContain(first.Items.Concat(second.Items), item => item.Car.Id == newCar.Id);
+        Assert.Equal(usedIds.Count, first.Items.Concat(second.Items).Select(item => item.Car.Id).Distinct().Count());
+    }
+
     private static DateTime ToUtc(DateTime bakuLocal) =>
         TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(bakuLocal, DateTimeKind.Unspecified), CarDiscoveryRules.DealershipZone);
 

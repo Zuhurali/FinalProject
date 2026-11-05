@@ -23,7 +23,6 @@ public sealed class AdminCatalogController : ControllerBase
         return Ok(await _catalogAdmin.GetSummaryAsync(cancellationToken));
     }
 
-    [Authorize(Roles = "SuperAdmin")]
     [HttpPost("brands")]
     public async Task<ActionResult<BrandResponseDto>> CreateBrand(
         [FromBody] SaveLookupRequestDto request,
@@ -51,7 +50,6 @@ public sealed class AdminCatalogController : ControllerBase
             : BadRequest(new { message = "The brand is in use or was not found." });
     }
 
-    [Authorize(Roles = "SuperAdmin")]
     [HttpPost("categories")]
     public async Task<ActionResult<CategoryResponseDto>> CreateCategory(
         [FromBody] SaveLookupRequestDto request,

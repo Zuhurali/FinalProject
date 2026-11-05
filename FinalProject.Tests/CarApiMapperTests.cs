@@ -16,12 +16,12 @@ public class CarApiMapperTests
     };
 
     [Fact]
-    public void ToCar_splits_seats_drive_type_and_engine_from_description()
+    public void ToCar_splits_drive_type_and_engine_without_inventing_seats()
     {
         var car = CarApiMapper.ToCar(Dto("Nissan 370Z. 2 seats, rear-wheel drive, 3.7L V6."));
 
         Assert.Equal("Nissan 370Z", car.Name);
-        Assert.Equal(2, car.Seats);
+        Assert.Equal(0, car.Seats);
         Assert.Equal("RWD", car.DriveType);
         Assert.Equal("3.7L V6", car.Engine);
     }
@@ -107,12 +107,12 @@ public class CarApiMapperTests
     }
 
     [Fact]
-    public void ToCar_reads_seats_from_longer_descriptions_when_database_seats_missing()
+    public void ToCar_does_not_read_seats_from_description_when_database_seats_are_missing()
     {
         var car = CarApiMapper.ToCar(
             Dto("Family SUV. 7 seats, all-wheel drive, 3.5L V6, leather trim, panoramic roof."));
 
-        Assert.Equal(7, car.Seats);
+        Assert.Equal(0, car.Seats);
         Assert.Equal(0, CarApiMapper.ToCar(Dto("Clean car. No seat count here, just prose.")).Seats);
     }
 

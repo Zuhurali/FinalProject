@@ -36,6 +36,11 @@ public sealed class AdminTeamsController : Controller
     public async Task<IActionResult> Create(TeamMemberEditViewModel model, IFormFile? image, CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Add team member - AutoVault";
+        if (image is { Length: > 0 })
+        {
+            ModelState.Remove(nameof(model.ImagePath));
+        }
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -44,11 +49,22 @@ public sealed class AdminTeamsController : Controller
         var (ok, error, _) = await _teams.CreateAsync(model, image, cancellationToken);
         if (!ok)
         {
-            ModelState.AddModelError(string.Empty, error ?? "The team member could not be created.");
+            var message = error ?? "The team member could not be created.";
+            ModelState.AddModelError(string.Empty, message);
+            if (message.Contains("photo", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.ImagePath), message);
+            }
+
+            if (message.Contains("phone", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.Phone), message);
+            }
+
             return View(model);
         }
 
-        TempData["Success"] = "Team member was created.";
+        TempData["Success"] = "Team member created successfully.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -80,7 +96,13 @@ public sealed class AdminTeamsController : Controller
         var (ok, error) = await _teams.UpdateAsync(model, image, cancellationToken);
         if (!ok)
         {
-            ModelState.AddModelError(string.Empty, error ?? "The team member could not be updated.");
+            var message = error ?? "The team member could not be updated.";
+            ModelState.AddModelError(string.Empty, message);
+            if (message.Contains("phone", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.Phone), message);
+            }
+
             return View(model);
         }
 

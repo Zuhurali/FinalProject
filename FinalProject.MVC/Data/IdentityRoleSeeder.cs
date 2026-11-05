@@ -89,6 +89,23 @@ public static class IdentityRoleSeeder
                     logger.LogInformation("Assigned role {Role} to existing account {Email}.", role, email);
                 }
 
+                if ((role == AppRoles.Admin || role == AppRoles.SuperAdmin) && !existing.EmailConfirmed)
+                {
+                    existing.EmailConfirmed = true;
+                    var confirmResult = await userManager.UpdateAsync(existing);
+                    if (!confirmResult.Succeeded)
+                    {
+                        throw new InvalidOperationException(
+                            $"Could not keep '{email}' able to sign in: " +
+                            string.Join(", ", confirmResult.Errors.Select(e => e.Description)));
+                    }
+
+                    logger.LogInformation(
+                        "Marked existing {Role} account {Email} as email-confirmed so staff sign-in is unchanged.",
+                        role,
+                        email);
+                }
+
                 continue;
             }
 

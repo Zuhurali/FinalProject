@@ -53,7 +53,7 @@ public class AccountIdentityAndRolesTests
                 .Single(method => method.Name == nameof(ApiCarsController.Create) && method.GetParameters().Length >= 1)
                 .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(
-            "SuperAdmin",
+            "Admin,SuperAdmin",
             typeof(ApiCarsController).GetMethod(nameof(ApiCarsController.CreateCatalog))!
                 .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.NotNull(typeof(ApiCarsController).GetMethod(nameof(ApiCarsController.Delete))!
@@ -259,6 +259,7 @@ public class AccountIdentityAndRolesTests
         var user = await harness.CreateConfirmedMemberAsync("profile@example.com", "Password1");
         user.FirstName = "Before";
         user.LastName = "User";
+        user.PhoneNumber = "555-0100";
         await harness.Users.UpdateAsync(user);
 
         var controller = harness.CreateAccountController(user);
@@ -267,7 +268,7 @@ public class AccountIdentityAndRolesTests
             FirstName = "After",
             LastName = "Name",
             Email = "attacker@example.com",
-            PhoneNumber = "555-0100"
+            PhoneNumber = null
         }) as RedirectToActionResult;
 
         Assert.Equal(nameof(AccountController.Profile), result!.ActionName);

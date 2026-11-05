@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using FinalProject.MVC.Commerce;
 
 namespace FinalProject.MVC.Models;
 
@@ -12,7 +13,9 @@ public sealed class TeamMemberEditViewModel
     [Required, MaxLength(120), Display(Name = "Position")]
     public string Position { get; set; } = string.Empty;
 
-    [Required, MaxLength(500)]
+    // The photo is supplied by the file input. Requiring this hidden path blocks
+    // Create before the upload is saved, and the form only summarized model-level errors.
+    [MaxLength(500)]
     public string ImagePath { get; set; } = string.Empty;
 
     [Required, MaxLength(2000), Display(Name = "Biography")]
@@ -24,7 +27,7 @@ public sealed class TeamMemberEditViewModel
     [Required, MaxLength(120), Display(Name = "Department")]
     public string Department { get; set; } = string.Empty;
 
-    [Required, MaxLength(40), Display(Name = "Phone")]
+    [Required, AzerbaijanPhone, Display(Name = "Phone")]
     public string Phone { get; set; } = string.Empty;
 
     [Required, MaxLength(200), EmailAddress, Display(Name = "Email")]

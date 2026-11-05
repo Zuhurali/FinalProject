@@ -1,0 +1,35 @@
+@model string
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var buttonClass = string.IsNullOrWhiteSpace(Model)
+        ? "rts-btn btn-border radius-small icon"
+        : Model;
+    var registerClass = buttonClass.Replace(" icon", "", StringComparison.Ordinal);
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var label = "Account";
+    if (signedIn)
+    {
+        var accountUser = await UserManager.GetUserAsync(User);
+        label = AccountDisplayName.Resolve(
+            accountUser?.FirstName,
+            accountUser?.LastName,
+            accountUser?.UserName ?? User.Identity?.Name,
+            accountUser?.Email);
+    }
+}
+@if (signedIn)
+{
+    <a asp-controller="Account" asp-action="Index" class="@buttonClass" title="@label">
+        @label
+        <partial name="_SignInIcon" />
+    </a>
+}
+else
+{
+    <a asp-controller="Account" asp-action="SignIn" class="@buttonClass">
+        Sign In
+        <partial name="_SignInIcon" />
+    </a>
+    <a asp-controller="Account" asp-action="Register" class="@registerClass">Register</a>
+}

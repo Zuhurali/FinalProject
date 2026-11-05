@@ -28,12 +28,12 @@ public static class ShopMarketingContentDefaults
     public const string WhyChooseHeadingHighlight = "Us";
     public const string Why1Title = "Our Prices";
     public const string Why1Description = "Prices and stock on this page are the quantities held at Babek Prospekti.";
-    public const string Why2Title = "Inspect before you buy";
-    public const string Why2Description = "Check a part or car online, then inspect it in the store before you pay.";
-    public const string Why3Title = "Available Products";
-    public const string Why3Description = "There is no shipping or courier. Purchases are collected in Baku.";
-    public const string Why4Title = "Staff on site";
-    public const string Why4Description = "Ask our team about fitment. Compatibility is listed only when it is known.";
+    public const string Why2Title = "Browse Before You Visit";
+    public const string Why2Description = "Explore our vehicle and product listings online before visiting our Baku location.";
+    public const string Why3Title = "Baku Store Collection";
+    public const string Why3Description = "Browse our products and submit an inquiry to check availability. Purchases are completed in person at our Baku store. Delivery is not available.";
+    public const string Why4Title = "Parts Compatibility";
+    public const string Why4Description = "Check the product details to see which vehicles a part is compatible with. Compatibility is shown only when confirmed.";
 
     public const string VisitEyebrow = "Before you visit";
     public const string VisitHeadingBefore = "Plan your";

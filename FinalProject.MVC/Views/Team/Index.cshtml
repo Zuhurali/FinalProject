@@ -26,10 +26,15 @@
             <h2 class="section-title wow move-right">@cms.HeadingBefore <span>@cms.HeadingHighlight</span></h2>
         </div>
         <div class="section-inner mt--60">
-            <div class="row g-5">
+            <div class="row g-5" id="teamMemberGrid">
+                @{
+                    var memberIndex = 0;
+                }
                 @foreach (var member in Model)
                 {
-                    <div class="col-lg-3 col-md-6">
+                    var hiddenInitially = memberIndex >= 4;
+                    memberIndex++;
+                    <div class="col-lg-3 col-md-6@(hiddenInitially ? " team-member-more" : "")">
                         <div class="team-wrapper">
                             <div class="image-area">
                                 <a asp-controller="Team" asp-action="Details" asp-route-id="@member.Id">
@@ -44,6 +49,12 @@
                     </div>
                 }
             </div>
+            @if (Model.Count > 4)
+            {
+                <div class="text-center mt--40">
+                    <button type="button" class="rts-btn btn-primary radius-big" id="teamLoadMore">Load More</button>
+                </div>
+            }
         </div>
     </div>
 </section>
@@ -73,6 +84,24 @@
     </div>
 </section>
 
+<style>
+    .team-member-more { display: none !important; }
+</style>
+@if (Model.Count > 4)
+{
+    <script>
+        (function () {
+            var button = document.getElementById("teamLoadMore");
+            if (!button) return;
+            button.addEventListener("click", function () {
+                document.querySelectorAll("#teamMemberGrid .team-member-more").forEach(function (card) {
+                    card.classList.remove("team-member-more");
+                });
+                button.hidden = true;
+            });
+        })();
+    </script>
+}
 @{ ViewData["PartnerStripClass"] = "rts-brand-area rts-section-gapTop"; }
 <partial name="_PartnerBrandStrip" />
 

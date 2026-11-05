@@ -28,11 +28,37 @@ public sealed class CarsThreeFilterQuery
 
     public int? MaxMileage { get; set; }
 
-    public int? Seats { get; set; }
+    public List<int> Seats { get; set; } = new();
 
     public string? Sort { get; set; }
 
     public int Page { get; set; } = 1;
+
+    public const string PriceRangeMessage = "Minimum price cannot be greater than maximum price.";
+
+    public const string YearRangeMessage = "Minimum year cannot be greater than maximum year.";
+
+    public const string MileageRangeMessage = "Minimum mileage cannot be greater than maximum mileage.";
+
+    public string? RangeError()
+    {
+        if (MinPrice is decimal minPrice && MaxPrice is decimal maxPrice && minPrice > maxPrice)
+        {
+            return PriceRangeMessage;
+        }
+
+        if (MinYear is int minYear && MaxYear is int maxYear && minYear > maxYear)
+        {
+            return YearRangeMessage;
+        }
+
+        if (MinMileage is int minMileage && MaxMileage is int maxMileage && minMileage > maxMileage)
+        {
+            return MileageRangeMessage;
+        }
+
+        return null;
+    }
 }
 
 public sealed class CarsThreePageModel
@@ -72,4 +98,6 @@ public sealed class CarsThreePageModel
     public int MaxYearBound { get; set; }
 
     public string? ApiError { get; set; }
+
+    public string? FilterError { get; set; }
 }

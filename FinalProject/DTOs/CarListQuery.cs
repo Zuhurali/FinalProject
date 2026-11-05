@@ -37,6 +37,8 @@ public class CarListQueryDto
 
     public int? Seats { get; set; }
 
+    public List<int> SeatCounts { get; set; } = new();
+
     public string? Fuel { get; set; }
 
     public string? Transmission { get; set; }
@@ -50,6 +52,12 @@ public class CarListQueryDto
     /// Allowed: latest, price-asc, price-desc, year-desc, year-asc.
     /// </summary>
     public string? Sort { get; set; }
+
+    /// <summary>
+    /// When true, search also matches color, features, and category.
+    /// CarsThree sets this. Other listings keep make, model, and description only.
+    /// </summary>
+    public bool IncludeListingText { get; set; }
 
     public int Page { get; set; } = 1;
 
@@ -112,12 +120,32 @@ public class CarListQueryDto
             return "seats must be between 1 and 12.";
         }
 
+        if (SeatCounts != null && SeatCounts.Any(seat => seat < 1 || seat > 12))
+        {
+            return "seats must be between 1 and 12.";
+        }
+
         if (!string.IsNullOrWhiteSpace(Sort) && !AllowedSorts.Contains(Sort.Trim()))
         {
             return "sort must be one of: latest, price-asc, price-desc, year-desc, year-asc.";
         }
 
         return null;
+    }
+
+    public List<int> SelectedSeats()
+    {
+        var selected = new List<int>();
+        if (Seats is >= 1 and <= 12)
+        {
+            selected.Add(Seats.Value);
+        }
+
+        if (SeatCounts != null)
+        {
+            selected.AddRange(SeatCounts.Where(seat => seat is >= 1 and <= 12));
+        }
+        return selected.Distinct().ToList();
     }
 }
 

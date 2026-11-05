@@ -116,10 +116,15 @@ public class CarApiService : ICarApiService
         string period,
         int page = 1,
         int pageSize = 9,
+        bool usedOnly = false,
         CancellationToken cancellationToken = default)
     {
         var url =
             $"api/cars/explore/most-viewed?period={Uri.EscapeDataString(period)}&page={page}&pageSize={pageSize}";
+        if (usedOnly)
+        {
+            url += "&usedOnly=true";
+        }
         using var response = await SendAsync(url, cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
         return await response.Content.ReadFromJsonAsync<PagedRankedCarsDto>(JsonOptions, cancellationToken)
@@ -380,11 +385,13 @@ public class CarApiService : ICarApiService
             MinMileage = query.MinMileage,
             MaxMileage = query.MaxMileage,
             Seats = query.Seats,
+            SeatCounts = query.SeatCounts?.ToList() ?? new List<int>(),
             Fuel = query.Fuel,
             Transmission = query.Transmission,
             IsNew = query.IsNew,
             Status = query.Status,
             Sort = query.Sort,
+            IncludeListingText = query.IncludeListingText,
             Page = query.Page,
             PageSize = query.PageSize
         };
@@ -449,7 +456,16 @@ public class CarApiService : ICarApiService
             parameters.Add($"seats={seats}");
         }
 
+        foreach (var seatCount in query.SeatCounts ?? Enumerable.Empty<int>())
+        {
+            parameters.Add($"seatCounts={seatCount}");
+        }
+
         Add(parameters, "sort", query.Sort);
+        if (query.IncludeListingText)
+        {
+            parameters.Add("includeListingText=true");
+        }
 
         if (query.IsNew is bool isNew)
         {

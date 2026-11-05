@@ -2,7 +2,6 @@ using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Exceptions;
-using FinalProject.MVC.Security;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -111,7 +110,6 @@ public sealed class AdminCarsController : AdminControllerBase
         }
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpGet("Create")]
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
     {
@@ -119,7 +117,6 @@ public sealed class AdminCarsController : AdminControllerBase
         return View(await EditorAsync(null, cancellationToken));
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(64 * 1024 * 1024)]

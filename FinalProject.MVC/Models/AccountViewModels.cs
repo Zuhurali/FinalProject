@@ -81,6 +81,14 @@ public sealed class MustBeTrueAttribute : ValidationAttribute
     public override bool IsValid(object? value) => value is true;
 }
 
+public sealed class ResendConfirmationViewModel
+{
+    [Required(ErrorMessage = "Enter the email address you used to register.")]
+    [EmailAddress(ErrorMessage = "Enter a valid email address.")]
+    [Display(Name = "Email")]
+    public string Email { get; set; } = string.Empty;
+}
+
 public sealed class ForgotPasswordViewModel
 {
     [Required]

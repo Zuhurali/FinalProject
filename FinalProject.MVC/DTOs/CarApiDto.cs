@@ -26,6 +26,8 @@ public class CarApiQueryDto
 
     public int? Seats { get; set; }
 
+    public List<int> SeatCounts { get; set; } = new();
+
     public string? Fuel { get; set; }
 
     public string? Transmission { get; set; }
@@ -38,6 +40,11 @@ public class CarApiQueryDto
     /// Optional: latest, price-asc, price-desc, year-desc, year-asc.
     /// </summary>
     public string? Sort { get; set; }
+
+    /// <summary>
+    /// CarsThree search also matches color, features, and category.
+    /// </summary>
+    public bool IncludeListingText { get; set; }
 
     public int Page { get; set; } = 1;
 

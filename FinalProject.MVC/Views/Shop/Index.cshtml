@@ -24,7 +24,7 @@
                             <p class="showroom-hero__text">@marketing.HeroText</p>
                             <div class="showroom-hero__actions">
                                 <a href="@catalogUrl" class="rts-btn btn-primary radius-big">@marketing.HeroCtaBrowseParts</a>
-                                <a asp-controller="Cars" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">@marketing.HeroCtaBrowseCars</a>
+                                <a asp-controller="Cars" asp-action="MostViewed" asp-route-condition="used" class="rts-btn radius-big showroom-hero__ghost">@marketing.HeroCtaBrowseCars</a>
                                 <a asp-controller="Contact" asp-action="Index" class="rts-btn radius-big showroom-hero__ghost">@marketing.HeroCtaVisit</a>
                             </div>
                         </div>

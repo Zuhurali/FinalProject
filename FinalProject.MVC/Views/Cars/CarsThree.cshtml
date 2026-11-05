@@ -13,6 +13,8 @@
     var maxYear = Model.MaxYearBound;
     var pageSize = Model.PageSize > 0 ? Model.PageSize : CarsThreeFilterQuery.PageSize;
     var resultsUrl = Url.Action("CarsThreeResults", "Cars") ?? "/Cars/CarsThreeResults";
+    var filters = Model.Filters;
+    var selectedSort = string.IsNullOrWhiteSpace(filters.Sort) ? "latest" : filters.Sort;
 }
 
 <style>
@@ -113,6 +115,24 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
         color: var(--c3-muted);
+    }
+
+    .cars3-seat-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+    }
+
+    .cars3-seat-options label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--c3-ink);
     }
 
     .cars3-field input[type="text"],
@@ -583,7 +603,7 @@
 
                 <div class="cars3-field">
                     <label for="carSearch">Search</label>
-                    <input type="text" id="carSearch" placeholder="Make, model, keyword" autocomplete="off" />
+                    <input type="text" id="carSearch" placeholder="Make, model, keyword" autocomplete="off" value="@filters.Search" />
                 </div>
 
                 <div class="cars3-field">
@@ -592,7 +612,7 @@
                         <option value="">All brands</option>
                         @foreach (var make in makes)
                         {
-                            <option value="@make">@make</option>
+                            <option value="@make" selected="@(string.Equals(make, filters.Brand, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@make</option>
                         }
                     </select>
                 </div>
@@ -603,7 +623,7 @@
                         <option value="">All models</option>
                         @foreach (var carModel in models)
                         {
-                            <option value="@carModel">@carModel</option>
+                            <option value="@carModel" selected="@(string.Equals(carModel, filters.Model, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@carModel</option>
                         }
                     </select>
                 </div>
@@ -614,7 +634,7 @@
                         <option value="">All types</option>
                         @foreach (var type in types)
                         {
-                            <option value="@type">@type</option>
+                            <option value="@type" selected="@(string.Equals(type, filters.Type, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@type</option>
                         }
                     </select>
                 </div>
@@ -622,16 +642,16 @@
                 <div class="cars3-field">
                     <label>Price</label>
                     <div class="cars3-range">
-                        <input type="number" id="filterMinPrice" min="@minPrice" max="@maxPrice" step="100" placeholder="Min" value="" />
-                        <input type="number" id="filterMaxPrice" inputmode="decimal" placeholder="Max" value="" />
+                        <input type="number" id="filterMinPrice" min="@minPrice" max="@maxPrice" step="100" placeholder="Min" value="@filters.MinPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                        <input type="number" id="filterMaxPrice" inputmode="decimal" placeholder="Max" value="@filters.MaxPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
                     </div>
                 </div>
 
                 <div class="cars3-field">
                     <label>Year</label>
                     <div class="cars3-range">
-                        <input type="number" id="filterMinYear" min="@minYear" max="@maxYear" step="1" placeholder="Min" value="" />
-                        <input type="number" id="filterMaxYear" min="@minYear" max="@maxYear" step="1" placeholder="Max" value="" />
+                        <input type="number" id="filterMinYear" min="@minYear" max="@maxYear" step="1" placeholder="Min" value="@filters.MinYear" />
+                        <input type="number" id="filterMaxYear" min="@minYear" max="@maxYear" step="1" placeholder="Max" value="@filters.MaxYear" />
                     </div>
                 </div>
 
@@ -641,7 +661,7 @@
                         <option value="">All fuels</option>
                         @foreach (var fuel in fuels)
                         {
-                            <option value="@fuel">@fuel</option>
+                            <option value="@fuel" selected="@(string.Equals(fuel, filters.Fuel, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@fuel</option>
                         }
                     </select>
                 </div>
@@ -652,7 +672,7 @@
                         <option value="">All transmissions</option>
                         @foreach (var transmission in transmissions)
                         {
-                            <option value="@transmission">@transmission</option>
+                            <option value="@transmission" selected="@(string.Equals(transmission, filters.Transmission, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@transmission</option>
                         }
                     </select>
                 </div>
@@ -661,20 +681,22 @@
                     <label>Mileage</label>
                     @* No min/max/step: browser number constraints make partial values invalid while typing. *@
                     <div class="cars3-range">
-                        <input type="number" id="filterMinMileage" inputmode="numeric" placeholder="Min" value="" />
-                        <input type="number" id="filterMaxMileage" inputmode="numeric" placeholder="Max" value="" />
+                        <input type="number" id="filterMinMileage" inputmode="numeric" placeholder="Min" value="@filters.MinMileage" />
+                        <input type="number" id="filterMaxMileage" inputmode="numeric" placeholder="Max" value="@filters.MaxMileage" />
                     </div>
                 </div>
 
                 <div class="cars3-field">
-                    <label for="filterSeats">Seats</label>
-                    <select id="filterSeats">
-                        <option value="">Any</option>
+                    <label id="filterSeatsLabel">Seats</label>
+                    <div class="cars3-seat-options" id="filterSeats" role="group" aria-labelledby="filterSeatsLabel">
                         @foreach (var seat in seats)
                         {
-                            <option value="@seat">@seat seats</option>
+                            <label>
+                                <input type="checkbox" name="seats" value="@seat" @(filters.Seats.Contains(seat) ? "checked" : null) />
+                                @seat seats
+                            </label>
                         }
-                    </select>
+                    </div>
                 </div>
             </aside>
 
@@ -684,11 +706,11 @@
                     <div class="cars3-toolbar__sort">
                         <label for="carSort">Sort</label>
                         <select id="carSort">
-                            <option value="latest">Latest</option>
-                            <option value="price-asc">Price: Low to High</option>
-                            <option value="price-desc">Price: High to Low</option>
-                            <option value="year-desc">Newest Year</option>
-                            <option value="year-asc">Oldest Year</option>
+                            <option value="latest" selected="@(selectedSort == "latest" ? "selected" : null)">Latest</option>
+                            <option value="price-asc" selected="@(selectedSort == "price-asc" ? "selected" : null)">Price: Low to High</option>
+                            <option value="price-desc" selected="@(selectedSort == "price-desc" ? "selected" : null)">Price: High to Low</option>
+                            <option value="year-desc" selected="@(selectedSort == "year-desc" ? "selected" : null)">Newest Year</option>
+                            <option value="year-asc" selected="@(selectedSort == "year-asc" ? "selected" : null)">Oldest Year</option>
                         </select>
                     </div>
                 </div>
@@ -697,8 +719,10 @@
                     <partial name="_CarsThreeCards" model="Model" />
                 </div>
 
-                <p id="carPriceRangeError" class="cars3-empty cars3-price-error" role="alert" hidden>Minimum price cannot be greater than maximum price.</p>
-                <h6 id="carEmpty" class="cars3-empty" @(Model.TotalCount == 0 ? null : "hidden")>No vehicles match these filters.</h6>
+                <p id="carPriceRangeError" class="cars3-empty cars3-price-error" role="alert" @(Model.FilterError == CarsThreeFilterQuery.PriceRangeMessage ? null : "hidden")>Minimum price cannot be greater than maximum price.</p>
+                <p id="carYearRangeError" class="cars3-empty cars3-price-error" role="alert" @(Model.FilterError == CarsThreeFilterQuery.YearRangeMessage ? null : "hidden")>Minimum year cannot be greater than maximum year.</p>
+                <p id="carMileageRangeError" class="cars3-empty cars3-price-error" role="alert" @(Model.FilterError == CarsThreeFilterQuery.MileageRangeMessage ? null : "hidden")>Minimum mileage cannot be greater than maximum mileage.</p>
+                <h6 id="carEmpty" class="cars3-empty" @(Model.TotalCount == 0 && string.IsNullOrWhiteSpace(Model.FilterError) ? null : "hidden")>No vehicles match these filters.</h6>
                 <button type="button" class="rts-btn load-more-btn btn-border cars3-load" id="carLoadMore" @(Model.HasMore ? null : "hidden")>Load More</button>
             </section>
         </div>
@@ -737,6 +761,8 @@
             var clearBtn = document.getElementById("carClearFilters");
             var empty = document.getElementById("carEmpty");
             var priceRangeError = document.getElementById("carPriceRangeError");
+            var yearRangeError = document.getElementById("carYearRangeError");
+            var mileageRangeError = document.getElementById("carMileageRangeError");
             var loadMore = document.getElementById("carLoadMore");
             var resultCount = document.getElementById("carResultCount");
             var list = document.getElementById("carList");
@@ -756,6 +782,18 @@
             function priceRangeInvalid() {
                 var minEntered = parseNonNegativeFilter(minPrice.value);
                 var maxEntered = parseNonNegativeFilter(maxPrice.value);
+                return minEntered !== null && maxEntered !== null && minEntered > maxEntered;
+            }
+
+            function yearRangeInvalid() {
+                var minEntered = parseNonNegativeFilter(minYear.value);
+                var maxEntered = parseNonNegativeFilter(maxYear.value);
+                return minEntered !== null && maxEntered !== null && minEntered > maxEntered;
+            }
+
+            function mileageRangeInvalid() {
+                var minEntered = parseNonNegativeFilter(minMileageInput.value);
+                var maxEntered = parseNonNegativeFilter(maxMileageInput.value);
                 return minEntered !== null && maxEntered !== null && minEntered > maxEntered;
             }
 
@@ -779,7 +817,9 @@
                 appendParam(params, "transmission", transmission.value);
                 appendParam(params, "minMileage", parseNonNegativeFilter(minMileageInput.value));
                 appendParam(params, "maxMileage", parseNonNegativeFilter(maxMileageInput.value));
-                appendParam(params, "seats", seats.value);
+                Array.prototype.forEach.call(seats.querySelectorAll("input[type='checkbox']:checked"), function (box) {
+                    params.append("seats", box.value);
+                });
                 appendParam(params, "sort", sort.value || "latest");
                 params.set("page", String(page));
                 return params.toString();
@@ -818,18 +858,32 @@
                 })
                     .then(function (response) {
                         if (!response.ok) throw new Error("Listing request failed.");
+                        var filterError = response.headers.get("X-Cars3-Filter-Error");
                         currentPage = Number(response.headers.get("X-Cars3-Page") || page) || page;
                         totalCount = Number(response.headers.get("X-Cars3-Total-Count") || "0") || 0;
                         hasMore = response.headers.get("X-Cars3-Has-More") === "1";
-                        return response.text();
+                        return response.text().then(function (html) {
+                            return { html: html, filterError: filterError };
+                        });
                     })
-                    .then(function (html) {
+                    .then(function (result) {
                         if (token !== requestToken) return;
+                        if (result.filterError) {
+                            list.innerHTML = "";
+                            seenIds = {};
+                            totalCount = 0;
+                            hasMore = false;
+                            showRangeErrors(result.filterError);
+                            updateChrome();
+                            empty.hidden = true;
+                            return;
+                        }
+                        showRangeErrors("");
                         if (!append) {
                             list.innerHTML = "";
                             seenIds = {};
                         }
-                        appendUniqueCards(html || "");
+                        appendUniqueCards(result.html || "");
                         updateChrome();
                     })
                     .catch(function () {
@@ -849,10 +903,18 @@
                     });
             }
 
-            function resetToFirstPage() {
-                var invalidPriceRange = priceRangeInvalid();
+            function showRangeErrors(serverMessage) {
+                var invalidPriceRange = priceRangeInvalid() || serverMessage === "Minimum price cannot be greater than maximum price.";
+                var invalidYearRange = yearRangeInvalid() || serverMessage === "Minimum year cannot be greater than maximum year.";
+                var invalidMileageRange = mileageRangeInvalid() || serverMessage === "Minimum mileage cannot be greater than maximum mileage.";
                 priceRangeError.hidden = !invalidPriceRange;
-                if (invalidPriceRange) {
+                yearRangeError.hidden = !invalidYearRange;
+                mileageRangeError.hidden = !invalidMileageRange;
+                return invalidPriceRange || invalidYearRange || invalidMileageRange;
+            }
+
+            function resetToFirstPage() {
+                if (showRangeErrors("")) {
                     list.innerHTML = "";
                     seenIds = {};
                     totalCount = 0;
@@ -915,9 +977,11 @@
                 transmission.value = "";
                 minMileageInput.value = "";
                 maxMileageInput.value = "";
-                seats.value = "";
+                Array.prototype.forEach.call(seats.querySelectorAll("input[type='checkbox']"), function (box) {
+                    box.checked = false;
+                });
                 sort.value = "latest";
-                [brand, model, type, fuel, transmission, seats, sort].forEach(syncNiceSelect);
+                [brand, model, type, fuel, transmission, sort].forEach(syncNiceSelect);
                 resetToFirstPage();
             });
 

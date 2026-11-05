@@ -1,5 +1,4 @@
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Security;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -24,14 +23,12 @@ public sealed class AdminProductsController : AdminControllerBase
         return RedirectToAction("Index", "AdminParts");
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpGet("Create")]
     public IActionResult Create()
     {
         return RedirectToAction("Create", "AdminParts");
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
     public IActionResult CreatePost()

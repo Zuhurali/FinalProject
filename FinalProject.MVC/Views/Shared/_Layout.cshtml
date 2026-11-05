@@ -108,10 +108,7 @@
                                     <div class="bottom-right">
                                         <div class="button-area">
                                             <div class="account-notify-wrap">
-                                                <a asp-controller="Account" asp-action="@(User.Identity?.IsAuthenticated == true ? "Index" : "SignIn")" class="rts-btn btn-border radius-small icon" title="@(User.Identity?.IsAuthenticated == true ? User.Identity?.Name : null)">
-                                                    @(User.Identity?.IsAuthenticated == true ? "Account" : "Sign In")
-                                                    <partial name="_SignInIcon" />
-                                                </a>
+                                                <partial name="_AccountHeaderButtons" model='@("rts-btn btn-border radius-small icon")' />
                                                 @if (User.Identity?.IsAuthenticated == true)
                                                 {
                                                     <a asp-controller="Account"
@@ -325,7 +322,7 @@
 </html>
 
 <style>
-    .account-notify-wrap { position:relative; display:inline-flex; align-items:center; overflow:visible; }
+    .account-notify-wrap { position:relative; display:inline-flex; align-items:center; gap:10px; overflow:visible; }
     .nav-notification-badge {
         position:absolute; top:-10px; right:-10px; min-width:22px; height:22px; padding:0 7px;
         border-radius:999px; background:#e11d48; color:#fff !important; font-size:11px; font-weight:700;

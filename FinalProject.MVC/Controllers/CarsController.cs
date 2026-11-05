@@ -163,7 +163,34 @@ namespace FinalProject.MVC.Controllers
             ViewData["HeaderStyle"] = "three";
             var cars = await LoadCarsAsync();
             await MarkFavoritesAsync(cars);
+            ViewData["BrandIds"] = await LoadBrandIdsAsync();
             return View(cars);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> BrandModels(int brandId)
+        {
+            if (brandId <= 0)
+            {
+                return Json(Array.Empty<string>());
+            }
+
+            try
+            {
+                var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                var names = lookups.Models
+                    .Where(model => model.BrandId == brandId && !string.IsNullOrWhiteSpace(model.Name))
+                    .Select(model => model.Name.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+                return Json(names);
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Models for brand {BrandId} could not be loaded.", brandId);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = "Models are temporarily unavailable." });
+            }
         }
 
         public async Task<IActionResult> CarsThree(
@@ -179,7 +206,7 @@ namespace FinalProject.MVC.Controllers
             string? transmission,
             int? minMileage,
             int? maxMileage,
-            int? seats,
+            int[]? seats,
             string? sort,
             int page = 1)
         {
@@ -208,7 +235,7 @@ namespace FinalProject.MVC.Controllers
             string? transmission,
             int? minMileage,
             int? maxMileage,
-            int? seats,
+            int[]? seats,
             string? sort,
             int page = 1)
         {
@@ -222,6 +249,11 @@ namespace FinalProject.MVC.Controllers
             Response.Headers["X-Cars3-Total-Pages"] = pageModel.TotalPages.ToString();
             Response.Headers["X-Cars3-Has-More"] = pageModel.HasMore ? "1" : "0";
             Response.Headers["X-Cars3-Ids"] = string.Join(",", pageModel.Cars.Select(car => car.Id));
+            if (!string.IsNullOrWhiteSpace(pageModel.FilterError))
+            {
+                Response.Headers["X-Cars3-Filter-Error"] = pageModel.FilterError;
+            }
+
             return PartialView("_CarsThreeCards", pageModel);
         }
 
@@ -274,7 +306,7 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
-        public async Task<IActionResult> MostViewed(string? period, int page = 1)
+        public async Task<IActionResult> MostViewed(string? period, string? condition, int page = 1)
         {
             var selected = period?.Trim().ToLowerInvariant() switch
             {
@@ -282,9 +314,12 @@ namespace FinalProject.MVC.Controllers
                 "week" => "week",
                 _ => "all"
             };
+            var usedOnly = string.Equals(condition, "used", StringComparison.OrdinalIgnoreCase);
             return await ExplorePageAsync(
-                "Most Viewed Cars",
-                "Ranked by how many times each car's details page was opened.",
+                usedOnly ? "Used Cars" : "Most Viewed Cars",
+                usedOnly
+                    ? "Active used cars, ranked by how many times each car's details page was opened."
+                    : "Ranked by how many times each car's details page was opened.",
                 "viewed",
                 selected,
                 "views",
@@ -295,7 +330,8 @@ namespace FinalProject.MVC.Controllers
                     var result = await _carApi.GetMostViewedAsync(
                         selected,
                         page,
-                        CarExplorePage.PageSize,
+                        usedOnly ? CarExplorePage.UsedPageSize : CarExplorePage.PageSize,
+                        usedOnly,
                         HttpContext.RequestAborted);
                     return (
                         result.Items.Select(item => new CarExploreItem
@@ -307,7 +343,8 @@ namespace FinalProject.MVC.Controllers
                         result.CurrentPage,
                         result.TotalPages,
                         result.TotalCount);
-                });
+                },
+                usedOnly ? "used" : null);
         }
 
         public async Task<IActionResult> MostFavorited(int page = 1)
@@ -522,6 +559,23 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
+        private async Task<IReadOnlyDictionary<string, int>> LoadBrandIdsAsync()
+        {
+            try
+            {
+                var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                return lookups.Brands
+                    .Where(brand => !string.IsNullOrWhiteSpace(brand.Name))
+                    .GroupBy(brand => brand.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(group => group.Key, group => group.First().Id, StringComparer.OrdinalIgnoreCase);
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogWarning(exception, "Brand ids for Cars Two could not be loaded.");
+                return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
         private async Task<List<Car>> LoadCarsAsync()
         {
             var catalog = await LoadCatalogAsync();
@@ -541,7 +595,7 @@ namespace FinalProject.MVC.Controllers
             string? transmission,
             int? minMileage,
             int? maxMileage,
-            int? seats,
+            int[]? seats,
             string? sort,
             int page)
         {
@@ -565,7 +619,11 @@ namespace FinalProject.MVC.Controllers
                 Transmission = string.IsNullOrWhiteSpace(transmission) ? null : transmission.Trim(),
                 MinMileage = minMileage is >= 0 ? minMileage : null,
                 MaxMileage = maxMileage is >= 0 ? maxMileage : null,
-                Seats = seats is >= 1 and <= 12 ? seats : null,
+                Seats = (seats ?? Array.Empty<int>())
+                    .Where(seat => seat is >= 1 and <= 12)
+                    .Distinct()
+                    .OrderBy(seat => seat)
+                    .ToList(),
                 Sort = normalizedSort,
                 Page = page < 1 ? 1 : page
             };
@@ -580,9 +638,9 @@ namespace FinalProject.MVC.Controllers
                 Filters = filters,
                 Page = filters.Page,
                 PageSize = CarsThreeFilterQuery.PageSize,
-                Fuels = new[] { "Petrol", "Diesel", "Hybrid", "Electric", "Plug-in Hybrid" },
-                Transmissions = new[] { "Automatic", "Manual" },
-                SeatsOptions = Enumerable.Range(2, 7).ToList(),
+                Fuels = CarListingRules.Fuels,
+                Transmissions = CarListingRules.Transmissions,
+                SeatsOptions = CarListingRules.SeatChoices,
                 MinPriceBound = 0,
                 MaxPriceBound = 500_000,
                 MinYearBound = 1990,
@@ -612,6 +670,15 @@ namespace FinalProject.MVC.Controllers
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                         .ToList();
+                }
+
+                pageModel.FilterError = filters.RangeError();
+                if (pageModel.FilterError != null)
+                {
+                    pageModel.Cars = Array.Empty<Car>();
+                    pageModel.TotalCount = 0;
+                    pageModel.TotalPages = 0;
+                    return pageModel;
                 }
 
                 if (!TryCreateCarsThreeApiQuery(filters, lookups, out var apiQuery))
@@ -664,9 +731,11 @@ namespace FinalProject.MVC.Controllers
                 MaxYear = filters.MaxYear,
                 MinMileage = filters.MinMileage,
                 MaxMileage = filters.MaxMileage,
-                Seats = filters.Seats,
+                Seats = filters.Seats.Count == 1 ? filters.Seats[0] : null,
+                SeatCounts = filters.Seats.ToList(),
                 Fuel = filters.Fuel,
-                Transmission = filters.Transmission
+                Transmission = filters.Transmission,
+                IncludeListingText = true
             });
 
             if (filters.MinPrice is decimal minPrice
@@ -911,7 +980,8 @@ namespace FinalProject.MVC.Controllers
             string countLabel,
             string actionName,
             int pageNumber,
-            Func<Task<(List<CarExploreItem> Cars, int CurrentPage, int TotalPages, int TotalCount)>> load)
+            Func<Task<(List<CarExploreItem> Cars, int CurrentPage, int TotalPages, int TotalCount)>> load,
+            string? condition = null)
         {
             ViewData["Title"] = $"{heading} - AutoVault";
             var page = new CarExplorePage
@@ -922,6 +992,7 @@ namespace FinalProject.MVC.Controllers
                 Period = period,
                 CountLabel = countLabel,
                 ActionName = actionName,
+                Condition = string.Equals(condition, "used", StringComparison.OrdinalIgnoreCase) ? "used" : null,
                 Page = pageNumber < 1 ? 1 : pageNumber
             };
             try

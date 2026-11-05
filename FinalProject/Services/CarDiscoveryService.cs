@@ -41,11 +41,17 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         int page = 1,
         int pageSize = 9,
         DateTime? utcNow = null,
+        bool usedOnly = false,
         CancellationToken cancellationToken = default)
     {
         if (!CarDiscoveryRules.TryNormalizePeriod(period, out var normalized))
         {
             throw new ArgumentException("Unknown view period.", nameof(period));
+        }
+
+        if (usedOnly)
+        {
+            return await RankActiveUsedByViewsAsync(normalized, page, pageSize, utcNow ?? DateTime.UtcNow, cancellationToken);
         }
 
         (page, pageSize) = CarDiscoveryRules.NormalizePaging(page, pageSize);
@@ -163,6 +169,96 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
             DailyViews = daily,
             MostViewed = mostViewed.Items.ToList(),
             MostFavorited = mostFavorited.Items.ToList()
+        };
+    }
+
+    private async Task<PagedResultDto<RankedCarResponseDto>> RankActiveUsedByViewsAsync(
+        string period,
+        int page,
+        int pageSize,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        if (pageSize < 1)
+        {
+            pageSize = CarDiscoveryRules.DefaultPageSize;
+        }
+        else if (pageSize > CarDiscoveryRules.UsedBrowsePageSize)
+        {
+            pageSize = CarDiscoveryRules.UsedBrowsePageSize;
+        }
+
+        var cars = await _db.Cars
+            .AsNoTracking()
+            .Where(car =>
+                car.Status.ToLower() == CarPublicListing.ActiveStatus.ToLower()
+                && !car.IsNew)
+            .Select(car => new { car.Id, car.CreatedAt })
+            .ToListAsync(cancellationToken);
+        if (cars.Count == 0)
+        {
+            return EmptyRankedPage(page, pageSize);
+        }
+
+        var views = _db.CarViews.AsNoTracking();
+        var start = CarDiscoveryRules.PeriodStartUtc(period, utcNow);
+        if (start != null)
+        {
+            views = views.Where(view => view.ViewedAt >= start.Value);
+        }
+
+        var carIds = cars.Select(car => car.Id).ToList();
+        var counts = await views
+            .Where(view => carIds.Contains(view.CarId))
+            .GroupBy(view => view.CarId)
+            .Select(group => new { CarId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(group => group.CarId, group => group.Count, cancellationToken);
+
+        var ordered = cars
+            .Select(car => (car.Id, Count: counts.GetValueOrDefault(car.Id), car.CreatedAt))
+            .OrderByDescending(item => item.Count)
+            .ThenByDescending(item => item.CreatedAt)
+            .ThenByDescending(item => item.Id)
+            .ToList();
+
+        var totalCount = ordered.Count;
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        if (page > totalPages)
+        {
+            page = totalPages;
+        }
+
+        var pageSlice = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        var pageIds = pageSlice.Select(item => item.Id).ToList();
+        var loaded = await _db.Cars
+            .AsNoTracking()
+            .Where(car => pageIds.Contains(car.Id))
+            .Include(car => car.Brand)
+            .Include(car => car.Category)
+            .Include(car => car.Owner)
+            .Include(car => car.Images)
+            .AsSplitQuery()
+            .ToDictionaryAsync(car => car.Id, cancellationToken);
+
+        return new PagedResultDto<RankedCarResponseDto>
+        {
+            Items = pageSlice
+                .Where(item => loaded.ContainsKey(item.Id))
+                .Select(item => new RankedCarResponseDto
+                {
+                    Count = item.Count,
+                    Car = loaded[item.Id].ToResponse()
+                })
+                .ToList(),
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
         };
     }
 

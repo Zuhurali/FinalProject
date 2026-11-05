@@ -11,6 +11,7 @@ public interface ICarDiscoveryService
         int page = 1,
         int pageSize = 9,
         DateTime? utcNow = null,
+        bool usedOnly = false,
         CancellationToken cancellationToken = default);
 
     Task<PagedResultDto<RankedCarResponseDto>> GetMostFavoritedAsync(

@@ -185,7 +185,7 @@ public class CarsController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost("catalog")]
     [ProducesResponseType(typeof(CarResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -1,6 +1,6 @@
 @model AccountDashboardViewModel
 @{
-    ViewData["Title"] = "Account - AutoVault";
+    ViewData["Title"] = $"{Model.DisplayName} - AutoVault";
     ViewData["BodyClass"] = "account-page-body";
 }
 
@@ -8,10 +8,10 @@
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">My Account</h1>
+            <h1 class="title">@Model.DisplayName</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a href="#" class="current">Account</a>
+                <a href="#" class="current">@Model.DisplayName</a>
             </div>
         </div>
     </div>

@@ -67,6 +67,72 @@ public class CarListQueryFilterSortTests
     }
 
     [Theory]
+    [InlineData(2)]
+    [InlineData(4)]
+    [InlineData(7)]
+    public async Task Seats_filter_returns_only_the_persisted_count(int seats)
+    {
+        await using var db = CreateDb();
+        var match = await SeedAsync(db, "Match" + seats, seats: seats, description: "Listed as 9 seats in the description");
+        await SeedAsync(db, "Other", seats: seats == 4 ? 2 : 4);
+        await SeedAsync(db, "TextOnly", seats: null, description: $"{seats} seats, rear-wheel drive.");
+        var service = new CarService(db, new SilentNotifications());
+
+        var page = await service.QueryAsync(new CarListQueryDto
+        {
+            Seats = seats,
+            Page = 1,
+            PageSize = 50
+        });
+
+        Assert.Single(page.Items);
+        Assert.Equal(match.Id, page.Items[0].Id);
+        Assert.Equal(seats, page.Items[0].Seats);
+    }
+
+    [Fact]
+    public async Task Seats_filter_matches_any_selected_persisted_count()
+    {
+        await using var db = CreateDb();
+        var three = await SeedAsync(db, "Three", seats: 3, fuel: "Petrol");
+        var four = await SeedAsync(db, "Four", seats: 4, fuel: "Diesel");
+        await SeedAsync(db, "Five", seats: 5, fuel: "Petrol");
+        await SeedAsync(db, "Eight", seats: 8);
+        await SeedAsync(db, "Missing", seats: null, description: "A car with 3 seats written only in text");
+        var service = new CarService(db, new SilentNotifications());
+
+        var either = await service.QueryAsync(new CarListQueryDto
+        {
+            SeatCounts = [3, 4],
+            Page = 1,
+            PageSize = 50
+        });
+        Assert.Equal(new[] { three.Id, four.Id }.OrderBy(id => id), either.Items.Select(item => item.Id).OrderBy(id => id));
+
+        var otherPair = await service.QueryAsync(new CarListQueryDto
+        {
+            SeatCounts = [5, 8],
+            Page = 1,
+            PageSize = 50
+        });
+        Assert.Equal(2, otherPair.TotalCount);
+        Assert.All(otherPair.Items, item => Assert.Contains(item.Seats!.Value, new[] { 5, 8 }));
+
+        var cleared = await service.QueryAsync(new CarListQueryDto { Page = 1, PageSize = 50 });
+        Assert.Equal(5, cleared.TotalCount);
+
+        var withFuel = await service.QueryAsync(new CarListQueryDto
+        {
+            SeatCounts = [3, 4],
+            Fuel = "Petrol",
+            Page = 1,
+            PageSize = 50
+        });
+        Assert.Single(withFuel.Items);
+        Assert.Equal(three.Id, withFuel.Items[0].Id);
+    }
+
+    [Theory]
     [InlineData("latest")]
     [InlineData("price-asc")]
     [InlineData("price-desc")]
@@ -259,6 +325,125 @@ public class CarListQueryFilterSortTests
         Assert.Equal(hit.Id, page.Items[0].Id);
     }
 
+    [Fact]
+    public async Task Search_matches_make_model_and_description_keyword_separately()
+    {
+        await using var db = CreateDb();
+        var toyota = await EnsureBrandAsync(db, "Toyota");
+        var honda = await EnsureBrandAsync(db, "Honda");
+        var byMake = await SeedAsync(db, "Camry", brandId: toyota.Id, description: "Daily sedan");
+        var byModel = await SeedAsync(db, "Civic", brandId: honda.Id, description: "Commuter");
+        var byKeyword = await SeedAsync(db, "Accord", brandId: honda.Id, description: "Sunroof and leather keyword");
+        var service = new CarService(db, new SilentNotifications());
+
+        var makePage = await service.QueryAsync(new CarListQueryDto { Search = "Toyota", Page = 1, PageSize = 50 });
+        var modelPage = await service.QueryAsync(new CarListQueryDto { Search = "Civic", Page = 1, PageSize = 50 });
+        var keywordPage = await service.QueryAsync(new CarListQueryDto { Search = "sunroof", Page = 1, PageSize = 50 });
+
+        Assert.Equal(byMake.Id, Assert.Single(makePage.Items).Id);
+        Assert.Equal(byModel.Id, Assert.Single(modelPage.Items).Id);
+        Assert.Equal(byKeyword.Id, Assert.Single(keywordPage.Items).Id);
+    }
+
+    [Fact]
+    public async Task Listing_text_search_matches_color_features_and_category_only_when_enabled()
+    {
+        await using var db = CreateDb();
+        var coupe = await EnsureCategoryAsync(db, "Coupe");
+        var sedan = await EnsureCategoryAsync(db, "Sedan");
+        var byColor = await SeedAsync(db, "ColorCar", categoryId: sedan.Id, color: "Midnight Blue", description: "Plain");
+        var byFeatures = await SeedAsync(db, "FeatureCar", categoryId: sedan.Id, features: "Heated seats and sunroof", description: "Plain");
+        var byCategory = await SeedAsync(db, "CategoryCar", categoryId: coupe.Id, description: "Plain");
+        var service = new CarService(db, new SilentNotifications());
+
+        Assert.Empty((await service.QueryAsync(new CarListQueryDto { Search = "Midnight", Page = 1, PageSize = 20 })).Items);
+        Assert.Empty((await service.QueryAsync(new CarListQueryDto { Search = "Heated", Page = 1, PageSize = 20 })).Items);
+        Assert.Empty((await service.QueryAsync(new CarListQueryDto { Search = "Coupe", Page = 1, PageSize = 20 })).Items);
+
+        Assert.Equal(byColor.Id, Assert.Single((await service.QueryAsync(new CarListQueryDto
+        {
+            Search = "midnight",
+            IncludeListingText = true,
+            Page = 1,
+            PageSize = 20
+        })).Items).Id);
+        Assert.Equal(byFeatures.Id, Assert.Single((await service.QueryAsync(new CarListQueryDto
+        {
+            Search = "sunroof",
+            IncludeListingText = true,
+            Page = 1,
+            PageSize = 20
+        })).Items).Id);
+        Assert.Equal(byCategory.Id, Assert.Single((await service.QueryAsync(new CarListQueryDto
+        {
+            Search = "coupe",
+            IncludeListingText = true,
+            Page = 1,
+            PageSize = 20
+        })).Items).Id);
+    }
+
+    [Fact]
+    public async Task Listing_text_search_combines_with_filters_sort_and_pages()
+    {
+        await using var db = CreateDb();
+        var matchLow = await SeedAsync(db, "One", color: "Pearl", fuel: "Petrol", price: 12000, description: "Pearl sedan");
+        var matchHigh = await SeedAsync(db, "Two", color: "Pearl", fuel: "Petrol", price: 22000, description: "Pearl sedan");
+        await SeedAsync(db, "Three", color: "Pearl", fuel: "Diesel", price: 15000, description: "Pearl diesel");
+        await SeedAsync(db, "Four", color: "Black", fuel: "Petrol", price: 14000, description: "Other");
+        var service = new CarService(db, new SilentNotifications());
+
+        var query = new CarListQueryDto
+        {
+            Search = "Pearl",
+            IncludeListingText = true,
+            Fuel = "Petrol",
+            MinPrice = 10000,
+            MaxPrice = 25000,
+            Status = CarPublicListing.ActiveStatus,
+            Sort = "price-asc",
+            PageSize = 1
+        };
+
+        var page1 = await service.QueryAsync(new CarListQueryDto
+        {
+            Search = query.Search,
+            IncludeListingText = true,
+            Fuel = query.Fuel,
+            MinPrice = query.MinPrice,
+            MaxPrice = query.MaxPrice,
+            Status = query.Status,
+            Sort = query.Sort,
+            Page = 1,
+            PageSize = 1
+        });
+        var page2 = await service.QueryAsync(new CarListQueryDto
+        {
+            Search = query.Search,
+            IncludeListingText = true,
+            Fuel = query.Fuel,
+            MinPrice = query.MinPrice,
+            MaxPrice = query.MaxPrice,
+            Status = query.Status,
+            Sort = query.Sort,
+            Page = 2,
+            PageSize = 1
+        });
+
+        Assert.Equal(2, page1.TotalCount);
+        Assert.Equal(matchLow.Id, Assert.Single(page1.Items).Id);
+        Assert.Equal(matchHigh.Id, Assert.Single(page2.Items).Id);
+        Assert.NotEqual(page1.Items[0].Id, page2.Items[0].Id);
+    }
+
+    [Fact]
+    public void Year_and_mileage_ranges_are_rejected_before_a_query()
+    {
+        Assert.Contains("minYear", new CarListQueryDto { MinYear = 2024, MaxYear = 2018 }.Validate()!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("minMileage", new CarListQueryDto { MinMileage = 90000, MaxMileage = 1000 }.Validate()!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("minPrice", new CarListQueryDto { MinPrice = 20, MaxPrice = 10 }.Validate()!, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static FinalProjectDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<FinalProjectDbContext>()
@@ -305,6 +490,8 @@ public class CarListQueryFilterSortTests
         string fuel = "Petrol",
         string transmission = "Automatic",
         string status = "Active",
+        string color = "Black",
+        string? features = null,
         string? description = null,
         DateTime? createdAt = null)
     {
@@ -329,7 +516,8 @@ public class CarListQueryFilterSortTests
             Seats = seats,
             FuelType = fuel,
             Transmission = transmission,
-            Color = "Black",
+            Color = color,
+            Features = features,
             Description = description ?? model,
             Status = status,
             CreatedAt = createdAt ?? DateTime.UtcNow

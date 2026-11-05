@@ -7,14 +7,11 @@
 {
     <div class="alert alert-warning">The catalog service is temporarily unavailable.</div>
 }
-@if (User.IsInRole("SuperAdmin"))
-{
-    <form asp-action="Create" method="post" class="admin-card mb-3 d-flex gap-2">
-        @Html.AntiForgeryToken()
-        <input name="name" class="form-control" placeholder="New category" required maxlength="100">
-        <button class="btn btn-primary" type="submit">Add</button>
-    </form>
-}
+<form asp-action="Create" method="post" class="admin-card mb-3 d-flex gap-2">
+    @Html.AntiForgeryToken()
+    <input name="name" class="form-control" placeholder="New category" required maxlength="100">
+    <button class="btn btn-primary" type="submit">Add</button>
+</form>
 <div class="admin-card">
     <table class="table">
         <thead><tr><th>Name</th><th></th></tr></thead>

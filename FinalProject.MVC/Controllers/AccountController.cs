@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using FinalProject.MVC.Configuration;
 using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.DTOs;
@@ -34,6 +36,7 @@ namespace FinalProject.MVC.Controllers
         private readonly IContactRequestService _contactRequests;
         private readonly IShopCatalogService _shopCatalog;
         private readonly ICarImageUploadService _carImages;
+        private readonly ApplicationSettings _applicationSettings;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -51,7 +54,8 @@ namespace FinalProject.MVC.Controllers
             AccountActivityHistory activityHistory,
             IContactRequestService contactRequests,
             IShopCatalogService shopCatalog,
-            ICarImageUploadService carImages)
+            ICarImageUploadService carImages,
+            IOptions<ApplicationSettings>? applicationSettings = null)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -69,24 +73,23 @@ namespace FinalProject.MVC.Controllers
             _contactRequests = contactRequests;
             _shopCatalog = shopCatalog;
             _carImages = carImages;
+            _applicationSettings = applicationSettings?.Value ?? new ApplicationSettings();
         }
 
         [Authorize]
         public async Task<IActionResult> Index()
         {
-            ViewData["Title"] = "Account - AutoVault";
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return Challenge();
             }
 
-            var displayName = $"{user.FirstName} {user.LastName}".Trim();
+            var displayName = AccountDisplayName.Resolve(user.FirstName, user.LastName, user.UserName, user.Email);
+            ViewData["Title"] = $"{displayName} - AutoVault";
             var model = new AccountDashboardViewModel
             {
-                DisplayName = string.IsNullOrWhiteSpace(displayName)
-                    ? user.Email ?? user.UserName ?? "User"
-                    : displayName
+                DisplayName = displayName
             };
             try
             {
@@ -195,6 +198,7 @@ namespace FinalProject.MVC.Controllers
 
             ViewData["ReturnUrl"] = returnUrl;
             identifier = string.IsNullOrWhiteSpace(identifier) ? email : identifier;
+            TempData.Remove("UnconfirmedEmail");
 
             if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(password))
             {
@@ -216,9 +220,28 @@ namespace FinalProject.MVC.Controllers
                 return InvalidLogin();
             }
 
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                TempData["Error"] = "This account is temporarily locked after too many failed sign-in attempts. Try again later.";
+                return InvalidLogin();
+            }
+
+            if (!await _userManager.CheckPasswordAsync(user, password))
+            {
+                await _userManager.AccessFailedAsync(user);
+                if (await _userManager.IsLockedOutAsync(user))
+                {
+                    TempData["Error"] = "This account is temporarily locked after too many failed sign-in attempts. Try again later.";
+                    return InvalidLogin();
+                }
+
+                TempData["Error"] = "The email, username, or password is incorrect.";
+                return InvalidLogin();
+            }
+
             if (!user.EmailConfirmed)
             {
-                TempData["Error"] = "Please confirm your email before signing in.";
+                TempData["Error"] = "Please confirm your email address before signing in.";
                 TempData["UnconfirmedEmail"] = user.Email;
                 return InvalidLogin();
             }
@@ -241,13 +264,6 @@ namespace FinalProject.MVC.Controllers
             if (result.IsLockedOut)
             {
                 TempData["Error"] = "This account is temporarily locked after too many failed sign-in attempts. Try again later.";
-                return InvalidLogin();
-            }
-
-            if (result.IsNotAllowed)
-            {
-                TempData["Error"] = "Please confirm your email before signing in.";
-                TempData["UnconfirmedEmail"] = user.Email;
                 return InvalidLogin();
             }
 
@@ -335,7 +351,12 @@ namespace FinalProject.MVC.Controllers
                     return InvalidRegistration();
                 }
 
-                await SendConfirmationAsync(user);
+                var developmentLink = await SendConfirmationAsync(user);
+                if (!string.IsNullOrWhiteSpace(developmentLink))
+                {
+                    TempData["DevelopmentConfirmationLink"] = developmentLink;
+                }
+
                 return RedirectToAction(nameof(CheckEmail), new { email = user.Email });
             }
 
@@ -353,8 +374,7 @@ namespace FinalProject.MVC.Controllers
 
             ViewData["Title"] = "Check Your Email - AutoVault";
             ViewData["Email"] = email;
-            if (!string.IsNullOrWhiteSpace(email)
-                && _cache.TryGetValue(DevelopmentLinkKey(email), out string? link))
+            if (TempData["DevelopmentConfirmationLink"] is string link && !string.IsNullOrWhiteSpace(link))
             {
                 ViewData["DevelopmentConfirmationLink"] = link;
             }
@@ -367,50 +387,67 @@ namespace FinalProject.MVC.Controllers
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
             ViewData["Title"] = "Confirm Email - AutoVault";
-            var user = await _userManager.FindByIdAsync(userId);
+            const string invalidMessage = "This confirmation link is invalid, expired, or has already been used.";
+            var user = string.IsNullOrWhiteSpace(userId)
+                ? null
+                : await _userManager.FindByIdAsync(userId);
             if (user == null || string.IsNullOrWhiteSpace(token))
             {
-                ViewData["Confirmed"] = false;
-                return View();
+                ViewData["ErrorMessage"] = invalidMessage;
+                return View("ConfirmEmailFailed");
             }
 
-            var result = await _userManager.ConfirmEmailAsync(user, token);
-            ViewData["Confirmed"] = result.Succeeded;
-            return View();
+            if (!await TryConfirmEmailAsync(user, token))
+            {
+                ViewData["ErrorMessage"] = invalidMessage;
+                return View("ConfirmEmailFailed");
+            }
+
+            await _userManager.UpdateSecurityStampAsync(user);
+            return View("ConfirmEmail");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResendConfirmation(string email)
+        [HttpGet]
+        public IActionResult ResendConfirmation()
         {
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction(nameof(Index));
             }
 
-            if (string.IsNullOrWhiteSpace(email))
+            ViewData["Title"] = "Resend Confirmation Email - AutoVault";
+            return View(new ResendConfirmationViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendConfirmation(ResendConfirmationViewModel model)
+        {
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction(nameof(SignIn));
+                return RedirectToAction(nameof(Index));
             }
 
-            var cacheKey = $"confirm-resend:{email.Trim().ToLowerInvariant()}";
-            if (_cache.TryGetValue(cacheKey, out _))
+            ViewData["Title"] = "Resend Confirmation Email - AutoVault";
+            if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Please wait a minute before requesting another confirmation email.";
-                return RedirectToAction(nameof(CheckEmail), new { email });
+                return View(model);
             }
 
-            _cache.Set(cacheKey, true, TimeSpan.FromMinutes(1));
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user != null && !user.EmailConfirmed)
+            var email = model.Email.Trim();
+            var cacheKey = $"confirm-resend:{email.ToLowerInvariant()}";
+            if (!_cache.TryGetValue(cacheKey, out _))
             {
-                await SendConfirmationAsync(user);
+                _cache.Set(cacheKey, true, TimeSpan.FromMinutes(1));
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null && !user.EmailConfirmed && !user.IsDeleted)
+                {
+                    await SendConfirmationAsync(user);
+                }
             }
 
-            TempData["Success"] = _emailSender.IsConfigured
-                ? "If the account exists and is not confirmed, a new confirmation email has been sent."
-                : "Email delivery is not configured. A new confirmation link was prepared for development.";
-            return RedirectToAction(nameof(CheckEmail), new { email });
+            TempData["Success"] = "If an account with that email address is waiting for confirmation, a new confirmation email has been sent.";
+            return RedirectToAction(nameof(CheckEmail));
         }
 
         [HttpPost]
@@ -1328,7 +1365,6 @@ namespace FinalProject.MVC.Controllers
 
             user.FirstName = model.FirstName?.Trim();
             user.LastName = model.LastName?.Trim();
-            user.PhoneNumber = model.PhoneNumber?.Trim();
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
@@ -1492,32 +1528,78 @@ namespace FinalProject.MVC.Controllers
             };
         }
 
-        private async Task SendConfirmationAsync(ApplicationUser user)
+        private async Task<string?> SendConfirmationAsync(ApplicationUser user)
         {
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var link = Url.Action(
-                nameof(ConfirmEmail),
-                "Account",
-                new { userId = user.Id, token },
-                Request.Scheme);
-            if (string.IsNullOrWhiteSpace(link) || string.IsNullOrWhiteSpace(user.Email))
+            if (string.IsNullOrWhiteSpace(user.Email))
             {
-                return;
+                return null;
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = BuildPublicLink(nameof(ConfirmEmail), new { userId = user.Id, token = IdentityTokenCodec.Encode(token) });
+            if (string.IsNullOrWhiteSpace(link))
+            {
+                return null;
             }
 
             if (!_emailSender.IsConfigured)
             {
-                if (_environment.IsDevelopment())
-                {
-                    _cache.Set(DevelopmentLinkKey(user.Email), link, TimeSpan.FromMinutes(30));
-                }
-
-                return;
+                return _environment.IsDevelopment() ? link : null;
             }
 
-            var text = $"Confirm your AutoVault account: {link}";
-            var html = $"<p>Confirm your AutoVault account.</p><p><a href=\"{link}\">Confirm email</a></p>";
-            await _emailSender.SendAsync(user.Email, "Confirm your AutoVault account", html, text);
+            try
+            {
+                var (html, text) = AccountEmailContent.Confirmation(link);
+                await _emailSender.SendAsync(user.Email, AccountEmailContent.ConfirmationSubject, html, text);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Confirmation email could not be sent to {Recipient}.", user.Email);
+            }
+
+            return null;
+        }
+
+        private async Task<bool> TryConfirmEmailAsync(ApplicationUser user, string token)
+        {
+            if (IdentityTokenCodec.TryDecode(token, out var decoded)
+                && (await _userManager.ConfirmEmailAsync(user, decoded)).Succeeded)
+            {
+                return true;
+            }
+
+            return (await _userManager.ConfirmEmailAsync(user, token)).Succeeded;
+        }
+
+        private string? BuildPublicLink(string action, object values)
+        {
+            var path = Url.Action(action, "Account", values);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
+
+            if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return path;
+            }
+
+            var configured = _applicationSettings.PublicBaseUrl?.Trim();
+            if (!string.IsNullOrWhiteSpace(configured)
+                && Uri.TryCreate(configured, UriKind.Absolute, out var baseUri)
+                && string.IsNullOrEmpty(baseUri.UserInfo)
+                && (baseUri.Scheme == Uri.UriSchemeHttps || baseUri.Scheme == Uri.UriSchemeHttp))
+            {
+                return new Uri(new Uri(configured.TrimEnd('/') + "/"), path.TrimStart('/')).AbsoluteUri;
+            }
+
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                _logger.LogWarning("Application:PublicBaseUrl is not an absolute http or https URL. Email links used the current request host.");
+            }
+
+            return Url.Action(action, "Account", values, Request.Scheme, Request.Host.Value);
         }
 
         private async Task SendPasswordResetAsync(ApplicationUser user)
@@ -1547,9 +1629,6 @@ namespace FinalProject.MVC.Controllers
             var html = $"<p>Reset your AutoVault password.</p><p><a href=\"{link}\">Reset password</a></p>";
             await _emailSender.SendAsync(user.Email, "Reset your AutoVault password", html, text);
         }
-
-        private static string DevelopmentLinkKey(string email) =>
-            $"dev-confirm:{email.Trim().ToLowerInvariant()}";
 
         private static string DevelopmentResetLinkKey(string email) =>
             $"dev-reset:{email.Trim().ToLowerInvariant()}";

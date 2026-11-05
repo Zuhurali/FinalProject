@@ -1,7 +1,7 @@
 @model AdminCarsIndexViewModel
 @{
     Layout = "_AdminLayout";
-    var canCreate = User.IsInRole("SuperAdmin");
+    var canCreate = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
     var pages = Model.PageSize == 0 ? 1 : Math.Max(1, Model.TotalPages);
 }
 <div class="d-flex justify-content-between align-items-center mb-4">

@@ -17733,6 +17733,26 @@ a.category-wrapper2:hover {
   bottom: 20px;
   right: 30px;
 }
+.project-wrapper2 .image-area form.wishlist {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.project-wrapper2 .image-area form.wishlist button {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  line-height: 40px;
+  cursor: pointer;
+  appearance: none;
+}
 .project-wrapper2 .image-area .gallery-image {
   display: flex;
   background: #252525;

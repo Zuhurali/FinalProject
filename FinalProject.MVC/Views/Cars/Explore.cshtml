@@ -1,5 +1,6 @@
 @model CarExplorePage
 @{
+    var usedBrowse = string.Equals(Model.Condition, "used", StringComparison.OrdinalIgnoreCase);
     string PeriodClass(string period) => Model.Period == period ? "rts-btn btn-primary radius-small" : "rts-btn btn-border radius-small";
 }
 
@@ -41,6 +42,26 @@
         max-width: min(320px, calc(100vw - 40px));
     }
     #favorite-card-status.is-error { background: #8a1f1f; }
+    .project-wrapper2 .image-area form.wishlist {
+        border: 0;
+        padding: 0;
+        margin: 0;
+    }
+    .project-wrapper2 .image-area form.wishlist button {
+        border: 0;
+        outline: 0;
+        box-shadow: none;
+        background: transparent;
+        color: inherit;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        line-height: 40px;
+        cursor: pointer;
+        appearance: none;
+    }
 </style>
 
 <p id="favorite-card-status" role="status" aria-live="polite" hidden></p>
@@ -59,13 +80,16 @@
 
 <div class="rts-portfolio-area inner rts-section-gap">
     <div class="container">
-        <p class="mb-4">@Model.Intro</p>
-        @if (Model.Kind == "viewed")
+        @if (!usedBrowse)
+        {
+            <p class="mb-4">@Model.Intro</p>
+        }
+        @if (Model.Kind == "viewed" && !usedBrowse)
         {
             <div class="d-flex flex-wrap gap-2 mb-4">
-                <a class="@PeriodClass("today")" asp-action="MostViewed" asp-route-period="today" asp-route-page="1">Today</a>
-                <a class="@PeriodClass("week")" asp-action="MostViewed" asp-route-period="week" asp-route-page="1">Last 7 Days</a>
-                <a class="@PeriodClass("all")" asp-action="MostViewed" asp-route-period="all" asp-route-page="1">All Time</a>
+                <a class="@PeriodClass("today")" asp-action="MostViewed" asp-route-period="today" asp-route-condition="@Model.Condition" asp-route-page="1">Today</a>
+                <a class="@PeriodClass("week")" asp-action="MostViewed" asp-route-period="week" asp-route-condition="@Model.Condition" asp-route-page="1">Last 7 Days</a>
+                <a class="@PeriodClass("all")" asp-action="MostViewed" asp-route-period="all" asp-route-condition="@Model.Condition" asp-route-page="1">All Time</a>
             </div>
         }
         @if (Model.ApiUnavailable)
@@ -89,7 +113,7 @@
                         <div class="project-wrapper2">
                             <div class="image-area">
                                 <a asp-action="Details" asp-route-id="@car.Id"><img src="@Url.Content(car.ImagePath)" alt="@car.Name"></a>
-                                <span class="tag">@car.Badge</span>
+                                <span class="tag">@(string.Equals(Model.Condition, "used", StringComparison.OrdinalIgnoreCase) ? "Used" : car.Badge)</span>
                                 @if (User.Identity?.IsAuthenticated == true)
                                 {
                                     <form asp-action="@(car.IsFavorite ? "RemoveFavorite" : "AddFavorite")"
@@ -119,7 +143,7 @@
                             <span class="price">$@car.Price.ToString("N0")</span>
                             <div class="content-area">
                                 <h6 class="title"><a asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
-                                @if (!string.IsNullOrWhiteSpace(item.Detail))
+                                @if (!string.Equals(Model.Condition, "used", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(item.Detail))
                                 {
                                     <p class="mb-2">@item.Detail</p>
                                 }
@@ -159,6 +183,7 @@
                                         <a class="page-link"
                                            asp-action="@Model.ActionName"
                                            asp-route-period="@(Model.Kind == "viewed" ? Model.Period : null)"
+                                           asp-route-condition="@Model.Condition"
                                            asp-route-page="@(Model.Page - 1)"
                                            aria-label="Previous">
                                             <span aria-hidden="true">&laquo;</span>
@@ -170,6 +195,7 @@
                                             <a class="page-link"
                                                asp-action="@Model.ActionName"
                                                asp-route-period="@(Model.Kind == "viewed" ? Model.Period : null)"
+                                               asp-route-condition="@Model.Condition"
                                                asp-route-page="@i">@i</a>
                                         </li>
                                     }
@@ -177,6 +203,7 @@
                                         <a class="page-link"
                                            asp-action="@Model.ActionName"
                                            asp-route-period="@(Model.Kind == "viewed" ? Model.Period : null)"
+                                           asp-route-condition="@Model.Condition"
                                            asp-route-page="@(Model.Page + 1)"
                                            aria-label="Next">
                                             <span aria-hidden="true">&raquo;</span>
