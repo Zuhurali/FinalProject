@@ -15,7 +15,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
         _db = db;
     }
 
-    public async Task<AdminSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    public async Task<AdminSummaryResponseDto> GetSummaryAsync(CancellationToken cancellationToken = default)
     {
         var totalCars = await _db.Cars.CountAsync(cancellationToken);
         var activeListings = await _db.Cars.CountAsync(car => car.Status == "Active", cancellationToken);
@@ -44,7 +44,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
             .Select(item => item.Text)
             .ToList();
 
-        return new AdminSummaryResponse(
+        return new AdminSummaryResponseDto(
             totalCars,
             activeListings,
             totalConversations,
@@ -54,7 +54,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
             activity);
     }
 
-    public async Task<BrandResponse?> CreateBrandAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<BrandResponseDto?> CreateBrandAsync(string name, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed)
@@ -66,10 +66,10 @@ public sealed class CatalogAdminService : ICatalogAdminService
         var brand = new Brand { Name = trimmed, CreatedAt = DateTime.UtcNow };
         _db.Brands.Add(brand);
         await _db.SaveChangesAsync(cancellationToken);
-        return new BrandResponse { Id = brand.Id, Name = brand.Name };
+        return new BrandResponseDto { Id = brand.Id, Name = brand.Name };
     }
 
-    public async Task<BrandResponse?> UpdateBrandAsync(int id, string name, CancellationToken cancellationToken = default)
+    public async Task<BrandResponseDto?> UpdateBrandAsync(int id, string name, CancellationToken cancellationToken = default)
     {
         var brand = await _db.Brands.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         var trimmed = name.Trim();
@@ -82,7 +82,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
 
         brand.Name = trimmed;
         await _db.SaveChangesAsync(cancellationToken);
-        return new BrandResponse { Id = brand.Id, Name = brand.Name };
+        return new BrandResponseDto { Id = brand.Id, Name = brand.Name };
     }
 
     public async Task<bool> DeleteBrandAsync(int id, CancellationToken cancellationToken = default)
@@ -103,7 +103,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
         return true;
     }
 
-    public async Task<CategoryResponse?> CreateCategoryAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<CategoryResponseDto?> CreateCategoryAsync(string name, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed)
@@ -118,7 +118,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
         return ToCategoryResponse(category);
     }
 
-    public async Task<CategoryResponse?> UpdateCategoryAsync(int id, string name, CancellationToken cancellationToken = default)
+    public async Task<CategoryResponseDto?> UpdateCategoryAsync(int id, string name, CancellationToken cancellationToken = default)
     {
         var category = await _db.Categories.FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
         var trimmed = name.Trim();
@@ -152,7 +152,7 @@ public sealed class CatalogAdminService : ICatalogAdminService
         return true;
     }
 
-    private static CategoryResponse ToCategoryResponse(Category category) => new()
+    private static CategoryResponseDto ToCategoryResponse(Category category) => new()
     {
         Id = category.Id,
         Name = category.Name,

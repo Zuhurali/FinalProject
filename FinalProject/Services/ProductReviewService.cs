@@ -1,6 +1,6 @@
 using FinalProject.Commerce;
 using FinalProject.Data;
-using FinalProject.Models;
+using FinalProject.DTOs;
 using FinalProject.Models.Entities;
 using FinalProject.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +16,7 @@ public sealed class ProductReviewService : IProductReviewService
         _context = context;
     }
 
-    public async Task<IReadOnlyList<ProductReviewItem>?> GetReviewsAsync(
+    public async Task<IReadOnlyList<ProductReviewItemDto>?> GetReviewsAsync(
         int productId,
         string? currentUserId,
         bool includeHidden,
@@ -38,7 +38,7 @@ public sealed class ProductReviewService : IProductReviewService
         return reviews;
     }
 
-    public async Task<IReadOnlyList<ProductReviewItem>> GetAllForModerationAsync(
+    public async Task<IReadOnlyList<ProductReviewItemDto>> GetAllForModerationAsync(
         CancellationToken cancellationToken = default)
     {
         var query = _context.ProductReviews.AsNoTracking();
@@ -46,7 +46,7 @@ public sealed class ProductReviewService : IProductReviewService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<(ProductReviewItem? Review, string? Error)> SaveReviewAsync(
+    public async Task<(ProductReviewItemDto? Review, string? Error)> SaveReviewAsync(
         int productId,
         int? reviewId,
         string userId,
@@ -173,7 +173,7 @@ public sealed class ProductReviewService : IProductReviewService
         return true;
     }
 
-    public async Task<IReadOnlyList<ProductReviewRevisionItem>?> GetHistoryAsync(
+    public async Task<IReadOnlyList<ProductReviewRevisionItemDto>?> GetHistoryAsync(
         int reviewId,
         CancellationToken cancellationToken = default)
     {
@@ -188,7 +188,7 @@ public sealed class ProductReviewService : IProductReviewService
             .Where(revision => revision.ReviewId == reviewId)
             .OrderByDescending(revision => revision.EditedAt)
             .ThenByDescending(revision => revision.Id)
-            .Select(revision => new ProductReviewRevisionItem(
+            .Select(revision => new ProductReviewRevisionItemDto(
                 revision.Id,
                 revision.PreviousContent,
                 revision.EditedAt))
@@ -213,23 +213,28 @@ public sealed class ProductReviewService : IProductReviewService
         review.UpdatedAt = DateTime.UtcNow;
     }
 
-    private IQueryable<ProductReviewItem> Project(IQueryable<ProductReview> query, string? currentUserId, bool canModerate)
+    private IQueryable<ProductReviewItemDto> Project(IQueryable<ProductReview> query, string? currentUserId, bool canModerate)
     {
+        // Soft-deleted authors keep their review rows and UserId in storage.
+        // Public projection anonymizes the display name and omits UserId so
+        // profile links cannot target a deleted Member.
         return from review in query
             join user in _context.IdentityUsers.AsNoTracking() on review.UserId equals user.Id into users
             from user in users.DefaultIfEmpty()
             orderby review.CreatedAt descending
-            select new ProductReviewItem(
+            select new ProductReviewItemDto(
                 review.Id,
                 review.ProductId,
-                review.UserId,
-                (user.FirstName != null && user.FirstName != "") || (user.LastName != null && user.LastName != "")
-                    ? ((user.FirstName ?? "") + " " + (user.LastName ?? "")).Trim()
-                    : user.Email ?? user.UserName ?? "Customer",
+                user != null && user.IsDeleted ? string.Empty : review.UserId,
+                user != null && user.IsDeleted
+                    ? ReviewContentRules.DeletedAccountDisplayName
+                    : (user.FirstName != null && user.FirstName != "") || (user.LastName != null && user.LastName != "")
+                        ? ((user.FirstName ?? "") + " " + (user.LastName ?? "")).Trim()
+                        : user.Email ?? user.UserName ?? "Customer",
                 review.Content,
                 review.IsHidden,
                 review.CreatedAt,
-                review.UpdatedAt,
+                review.UpdatedAt ?? review.CreatedAt,
                 review.UserId == currentUserId,
                 review.IsEdited,
                 canModerate && review.IsEdited);

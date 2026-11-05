@@ -3,7 +3,7 @@ using FinalProject.Data;
 using FinalProject.DTOs;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Services;
 using FinalProject.Services;
 using Microsoft.AspNetCore.Http;
@@ -218,7 +218,7 @@ public class PartStockEditTests
         return (bound && controller.ModelState.IsValid, part, errors);
     }
 
-    private static SavePartRequest Copy(PartAdminItem part) => new()
+    private static SavePartRequestDto Copy(FinalProject.DTOs.PartAdminItemDto part) => new()
     {
         Id = part.Id,
         Name = part.Name,

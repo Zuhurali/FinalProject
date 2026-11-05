@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.Models.Entities;
 
-public sealed class UserNotification
+public sealed class UserNotification : BaseEntity
 {
-    public int Id { get; set; }
-
     [Required]
     [MaxLength(450)]
     public string UserId { get; set; } = string.Empty;
@@ -30,8 +28,6 @@ public sealed class UserNotification
     public string? DedupKey { get; set; }
 
     public bool IsRead { get; set; }
-
-    public DateTime CreatedAt { get; set; }
 
     public int? RelatedConversationId { get; set; }
 

@@ -3,12 +3,15 @@ using System.ComponentModel.DataAnnotations;
 namespace FinalProject.MVC.Models;
 
 /// <summary>Singleton homepage marketing content (one row, Id = 1).</summary>
-public class HomePageContent
+public class HomePageContent : BaseEntity
 {
+    public HomePageContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public const int SingletonId = 1;
-
-    public int Id { get; set; } = SingletonId;
-
     [Required, MaxLength(200)]
     public string HeroTitle { get; set; } = string.Empty;
 
@@ -164,6 +167,4 @@ public class HomePageContent
 
     [Required, MaxLength(80)]
     public string FeaturedHeadingHighlight { get; set; } = string.Empty;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -144,7 +144,7 @@ public class CarListingSelectionTests
         Assert.Contains("Remove photo", admin, StringComparison.Ordinal);
     }
 
-    private static SaveCarRequest Request(int year, string model, int brandId = 1, int categoryId = 1) => new()
+    private static SaveCarRequestDto Request(int year, string model, int brandId = 1, int categoryId = 1) => new()
     {
         BrandId = brandId,
         CategoryId = categoryId,
@@ -187,16 +187,16 @@ public class CarListingSelectionTests
 
     private sealed class SilentNotifications : INotificationService
     {
-        public Task<NotificationListResponse> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
+        public Task<NotificationListResponseDto> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
         public Task<int> GetUnreadCountAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationUnreadCountsResponse> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
+        public Task<NotificationUnreadCountsResponseDto> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationResponse?> CreateMessageNotificationAsync(
+        public Task<NotificationResponseDto?> CreateMessageNotificationAsync(
             string receiverId,
             string senderDisplayName,
             int conversationId,
@@ -205,13 +205,13 @@ public class CarListingSelectionTests
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<IReadOnlyList<NotificationResponse>> CreatePriceDropNotificationsAsync(
+        public Task<IReadOnlyList<NotificationResponseDto>> CreatePriceDropNotificationsAsync(
             int carId,
             string carName,
             decimal previousPrice,
             decimal newPrice,
             CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<NotificationResponse>>(Array.Empty<NotificationResponse>());
+            Task.FromResult<IReadOnlyList<NotificationResponseDto>>(Array.Empty<NotificationResponseDto>());
 
         public Task<bool> MarkReadAsync(int notificationId, string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

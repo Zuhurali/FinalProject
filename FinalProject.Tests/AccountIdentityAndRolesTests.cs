@@ -67,6 +67,7 @@ public class AccountIdentityAndRolesTests
                  {
                      nameof(AccountController.Profile),
                      nameof(AccountController.ChangePassword),
+                     nameof(AccountController.DeleteAccount),
                      nameof(AccountController.Favorites),
                      nameof(AccountController.PurchaseRequests),
                      nameof(AccountController.ProductQuestions),
@@ -163,6 +164,73 @@ public class AccountIdentityAndRolesTests
         Assert.True(changed.Succeeded);
         Assert.True(await harness.Users.CheckPasswordAsync(user, "Password2"));
         Assert.False(await harness.Users.CheckPasswordAsync(user, "Password1"));
+    }
+
+    [Fact]
+    public async Task Successful_login_change_and_reset_record_activity_timestamps()
+    {
+        await using var harness = await AccountHarness.CreateAsync();
+        var user = await harness.CreateConfirmedMemberAsync("activity@example.com", "Password1");
+        Assert.Null(user.LastLoginAt);
+        Assert.Null(user.LastPasswordChangedAt);
+        Assert.Null(user.LastPasswordResetAt);
+
+        var beforeLogin = DateTime.UtcNow.AddSeconds(-2);
+        var signInResult = await harness.CreateAccountController().SignIn(
+            "activity@example.com",
+            "Password1",
+            rememberMe: false) as RedirectToActionResult;
+        Assert.Equal("Index", signInResult!.ActionName);
+        Assert.Equal("Home", signInResult.ControllerName);
+
+        var afterLogin = await harness.Users.FindByIdAsync(user.Id);
+        Assert.NotNull(afterLogin!.LastLoginAt);
+        Assert.True(afterLogin.LastLoginAt >= beforeLogin);
+
+        var beforeChange = DateTime.UtcNow.AddSeconds(-2);
+        var changeResult = await harness.CreateAccountController(afterLogin).ChangePassword(
+            new ChangePasswordViewModel
+            {
+                CurrentPassword = "Password1",
+                NewPassword = "Password2",
+                ConfirmPassword = "Password2"
+            }) as RedirectToActionResult;
+        Assert.Equal(nameof(AccountController.ChangePassword), changeResult!.ActionName);
+
+        var afterChange = await harness.Users.FindByIdAsync(user.Id);
+        Assert.NotNull(afterChange!.LastPasswordChangedAt);
+        Assert.True(afterChange.LastPasswordChangedAt >= beforeChange);
+        Assert.Null(afterChange.LastPasswordResetAt);
+
+        var token = await harness.Users.GeneratePasswordResetTokenAsync(afterChange);
+        var beforeReset = DateTime.UtcNow.AddSeconds(-2);
+        var resetResult = await harness.CreateAccountController().ResetPassword(
+            new ResetPasswordViewModel
+            {
+                UserId = afterChange.Id,
+                Token = token,
+                Password = "Password9",
+                ConfirmPassword = "Password9"
+            }) as RedirectToActionResult;
+        Assert.Equal(nameof(AccountController.SignIn), resetResult!.ActionName);
+
+        var afterReset = await harness.Users.FindByIdAsync(user.Id);
+        Assert.NotNull(afterReset!.LastPasswordResetAt);
+        Assert.True(afterReset.LastPasswordResetAt >= beforeReset);
+        Assert.Equal(afterChange.LastPasswordChangedAt, afterReset.LastPasswordChangedAt);
+    }
+
+    [Fact]
+    public async Task Failed_login_does_not_set_LastLoginAt()
+    {
+        await using var harness = await AccountHarness.CreateAsync();
+        var user = await harness.CreateConfirmedMemberAsync("fail-login@example.com", "Password1");
+        await harness.CreateAccountController().SignIn(
+            "fail-login@example.com",
+            "Wrong-password-1",
+            rememberMe: false);
+        var reloaded = await harness.Users.FindByIdAsync(user.Id);
+        Assert.Null(reloaded!.LastLoginAt);
     }
 
     [Fact]

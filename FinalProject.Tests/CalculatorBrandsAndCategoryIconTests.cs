@@ -46,7 +46,7 @@ public class CalculatorBrandsAndCategoryIconTests
     {
         var root = FindRepoRoot();
         var entity = File.ReadAllText(Path.Combine(root, "FinalProject", "Models", "Entities", "Category.cs"));
-        var dto = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Models", "Api", "CarApiDto.cs"));
+        var dto = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "DTOs", "CarApiDto.cs"));
         var service = File.ReadAllText(Path.Combine(root, "FinalProject", "Services", "CarService.cs"));
         var migration = File.ReadAllText(Path.Combine(
             root, "FinalProject", "Data", "Migrations", "20261030184500_AddCategoryIconPath.cs"));

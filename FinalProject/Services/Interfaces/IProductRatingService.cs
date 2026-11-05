@@ -1,26 +1,26 @@
-using FinalProject.Models;
+using FinalProject.DTOs;
 
 namespace FinalProject.Services.Interfaces;
 
 public interface IProductRatingService
 {
-    Task<ProductRatingSummary?> GetProductRatingsAsync(
+    Task<ProductRatingSummaryDto?> GetProductRatingsAsync(
         int productId,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ProductRatingSummaryItem>> GetSummariesAsync(
+    Task<IReadOnlyList<ProductRatingSummaryItemDto>> GetSummariesAsync(
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ProductRatingItem>> GetAllForAdminAsync(
+    Task<IReadOnlyList<ProductRatingItemDto>> GetAllForAdminAsync(
         CancellationToken cancellationToken = default);
 
-    Task<CurrentUserProductRating?> GetUserRatingAsync(
+    Task<CurrentUserProductRatingDto?> GetUserRatingAsync(
         int productId,
         string userId,
         CancellationToken cancellationToken = default);
 
-    Task<CurrentUserProductRating?> SaveRatingAsync(
+    Task<CurrentUserProductRatingDto?> SaveRatingAsync(
         int productId,
         string userId,
         int rating,

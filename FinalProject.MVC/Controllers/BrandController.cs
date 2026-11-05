@@ -1,6 +1,6 @@
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Mappings;
 using FinalProject.MVC.Services.Interfaces;
@@ -41,7 +41,7 @@ public class BrandController : Controller
         try
         {
             var catalog = await _carApi.GetAllCarsAsync(
-                CarPublicListing.WithActiveStatus(new CarApiQuery { BrandId = brand.Id }),
+                CarPublicListing.WithActiveStatus(new CarApiQueryDto { BrandId = brand.Id }),
                 HttpContext.RequestAborted);
             cars = catalog.Select(CarApiMapper.ToCar).OrderBy(car => car.Name).ToList();
         }

@@ -1,8 +1,9 @@
-@model FinalProject.MVC.Models.Api.ConversationDetailsDto
+@model FinalProject.MVC.DTOs.ConversationDetailsDto
 @{
     ViewData["Title"] = $"Conversation - {Model.CarName}";
     ViewData["BodyClass"] = "account-page-body";
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var isSuperAdmin = User.IsInRole("SuperAdmin");
 }
 
 <div class="rts-breadcrumb-area service jarallax">
@@ -22,9 +23,25 @@
                     <h3>@Model.CarName</h3>
                     <p>@Model.Subject</p>
                     <p class="mb-1">
-                        <strong>Buyer:</strong> @Model.BuyerDisplayName
+                        <strong>Buyer:</strong>
+                        @if (isSuperAdmin && !string.Equals(currentUserId, Model.BuyerId, StringComparison.Ordinal))
+                        {
+                            <a asp-controller="Admin" asp-action="UserDetails" asp-route-id="@Model.BuyerId">@Model.BuyerDisplayName</a>
+                        }
+                        else
+                        {
+                            @Model.BuyerDisplayName
+                        }
                         &nbsp;·&nbsp;
-                        <strong>Dealer:</strong> @Model.SellerDisplayName
+                        <strong>Dealer:</strong>
+                        @if (isSuperAdmin && !string.Equals(currentUserId, Model.SellerId, StringComparison.Ordinal))
+                        {
+                            <a asp-controller="Admin" asp-action="UserDetails" asp-route-id="@Model.SellerId">@Model.SellerDisplayName</a>
+                        }
+                        else
+                        {
+                            @Model.SellerDisplayName
+                        }
                     </p>
                     <a asp-controller="Cars" asp-action="Details" asp-route-id="@Model.CarId">View car details</a>
                 </div>

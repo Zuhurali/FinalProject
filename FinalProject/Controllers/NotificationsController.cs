@@ -19,7 +19,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<NotificationListResponse>> Get(
+    public async Task<ActionResult<NotificationListResponseDto>> Get(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
@@ -30,7 +30,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpGet("unread-count")]
-    public async Task<ActionResult<NotificationUnreadCountsResponse>> GetUnreadCount(
+    public async Task<ActionResult<NotificationUnreadCountsResponseDto>> GetUnreadCount(
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -43,7 +43,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("{id:int}/read")]
-    public async Task<ActionResult<NotificationUnreadCountsResponse>> MarkRead(
+    public async Task<ActionResult<NotificationUnreadCountsResponseDto>> MarkRead(
         int id,
         CancellationToken cancellationToken)
     {
@@ -63,7 +63,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("read-all")]
-    public async Task<ActionResult<NotificationUnreadCountsResponse>> MarkAllRead(
+    public async Task<ActionResult<NotificationUnreadCountsResponseDto>> MarkAllRead(
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();

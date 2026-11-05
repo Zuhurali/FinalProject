@@ -2,11 +2,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class PartnerStripSettings
+public class PartnerStripSettings : BaseEntity
 {
     public const int SingletonId = 1;
 
-    public int Id { get; set; } = SingletonId;
+    public PartnerStripSettings()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     [Required, MaxLength(120)]
     public string Eyebrow { get; set; } = string.Empty;
@@ -16,13 +20,15 @@ public class PartnerStripSettings
 
     [Required, MaxLength(80)]
     public string HeadingHighlight { get; set; } = string.Empty;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
-public class PartnerStripItem
+public class PartnerStripItem : BaseEntity
 {
-    public int Id { get; set; }
+    public PartnerStripItem()
+    {
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     [Required, MaxLength(120)]
     public string Name { get; set; } = string.Empty;
@@ -37,10 +43,6 @@ public class PartnerStripItem
     public int SortOrder { get; set; }
 
     public bool IsPublished { get; set; } = true;
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public sealed class PartnerStripSettingsEditViewModel
@@ -75,10 +77,16 @@ public sealed class PartnerStripItemEditViewModel
     public bool IsPublished { get; set; } = true;
 }
 
-public class FaqPageContent
+public class FaqPageContent : BaseEntity
 {
     public const int SingletonId = 1;
-    public int Id { get; set; } = SingletonId;
+
+    public FaqPageContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     [Required, MaxLength(120)] public string BreadcrumbTitle { get; set; } = string.Empty;
     [Required, MaxLength(120)] public string Eyebrow { get; set; } = string.Empty;
     [Required, MaxLength(120)] public string HeadingBefore { get; set; } = string.Empty;
@@ -86,7 +94,6 @@ public class FaqPageContent
     [Required, MaxLength(500)] public string BannerImagePath { get; set; } = string.Empty;
     [Required, MaxLength(160)] public string SeoTitle { get; set; } = string.Empty;
     [Required, MaxLength(320)] public string SeoDescription { get; set; } = string.Empty;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public sealed class FaqPageContentEditViewModel
@@ -100,17 +107,22 @@ public sealed class FaqPageContentEditViewModel
     [Required, MaxLength(320), Display(Name = "SEO description")] public string SeoDescription { get; set; } = string.Empty;
 }
 
-public class TeamPageContent
+public class TeamPageContent : BaseEntity
 {
     public const int SingletonId = 1;
-    public int Id { get; set; } = SingletonId;
+
+    public TeamPageContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     [Required, MaxLength(120)] public string BreadcrumbTitle { get; set; } = string.Empty;
     [Required, MaxLength(120)] public string Eyebrow { get; set; } = string.Empty;
     [Required, MaxLength(120)] public string HeadingBefore { get; set; } = string.Empty;
     [Required, MaxLength(80)] public string HeadingHighlight { get; set; } = string.Empty;
     [Required, MaxLength(160)] public string SeoTitle { get; set; } = string.Empty;
     [Required, MaxLength(320)] public string SeoDescription { get; set; } = string.Empty;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public sealed class TeamPageContentEditViewModel
@@ -123,15 +135,20 @@ public sealed class TeamPageContentEditViewModel
     [Required, MaxLength(320), Display(Name = "SEO description")] public string SeoDescription { get; set; } = string.Empty;
 }
 
-public class DealerPageContent
+public class DealerPageContent : BaseEntity
 {
     public const int SingletonId = 1;
-    public int Id { get; set; } = SingletonId;
+
+    public DealerPageContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     [Required, MaxLength(120)] public string BreadcrumbTitle { get; set; } = string.Empty;
     [Required, MaxLength(160)] public string PageTitle { get; set; } = string.Empty;
     [Required, MaxLength(160)] public string SeoTitle { get; set; } = string.Empty;
     [Required, MaxLength(320)] public string SeoDescription { get; set; } = string.Empty;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public sealed class DealerPageContentEditViewModel
@@ -142,16 +159,21 @@ public sealed class DealerPageContentEditViewModel
     [Required, MaxLength(320), Display(Name = "SEO description")] public string SeoDescription { get; set; } = string.Empty;
 }
 
-public class CalculatorPageContent
+public class CalculatorPageContent : BaseEntity
 {
     public const int SingletonId = 1;
-    public int Id { get; set; } = SingletonId;
+
+    public CalculatorPageContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     [Required, MaxLength(120)] public string BreadcrumbTitle { get; set; } = string.Empty;
     [Required, MaxLength(160)] public string PageTitle { get; set; } = string.Empty;
     [Required, MaxLength(1000)] public string IntroText { get; set; } = string.Empty;
     [Required, MaxLength(160)] public string SeoTitle { get; set; } = string.Empty;
     [Required, MaxLength(320)] public string SeoDescription { get; set; } = string.Empty;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public sealed class CalculatorPageContentEditViewModel

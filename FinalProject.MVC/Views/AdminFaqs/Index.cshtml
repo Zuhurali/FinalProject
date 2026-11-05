@@ -62,7 +62,7 @@ else
                             <div class="text-muted small text-truncate" style="max-width:28rem;">@item.Answer</div>
                         </td>
                         <td>@(item.IsPublished ? "Published" : "Unpublished")</td>
-                        <td>@item.UpdatedAt.ToLocalTime().ToString("g")</td>
+                        <td>@((item.UpdatedAt ?? item.CreatedAt).ToLocalTime().ToString("g"))</td>
                         <td class="text-end text-nowrap">
                             <a class="btn btn-sm btn-outline-dark" asp-controller="AdminFaqs" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                             <form asp-controller="AdminFaqs" asp-action="Publish" asp-route-id="@item.Id" method="post" class="d-inline">

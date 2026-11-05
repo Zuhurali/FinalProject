@@ -1,7 +1,7 @@
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Mappings;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using Xunit;
 
 namespace FinalProject.Tests;

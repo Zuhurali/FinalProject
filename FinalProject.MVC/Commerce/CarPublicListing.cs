@@ -1,4 +1,4 @@
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 
 namespace FinalProject.MVC.Commerce;
 
@@ -15,24 +15,24 @@ public static class CarPublicListing
         string.Equals(status, ActiveStatus, StringComparison.OrdinalIgnoreCase)
         || string.Equals(status, SoldStatus, StringComparison.OrdinalIgnoreCase);
 
-    public static CarApiQuery WithActiveStatus(CarApiQuery query)
+    public static CarApiQueryDto WithActiveStatus(CarApiQueryDto query)
     {
         query.Status = ActiveStatus;
         return query;
     }
 
-    public static CarApiQuery CreateActiveQuery(int page = 1, int pageSize = CarApiQuery.MaxPageSize) =>
-        WithActiveStatus(new CarApiQuery
+    public static CarApiQueryDto CreateActiveQuery(int page = 1, int pageSize = CarApiQueryDto.MaxPageSize) =>
+        WithActiveStatus(new CarApiQueryDto
         {
             Page = page < 1 ? 1 : page,
-            PageSize = pageSize < 1 ? CarApiQuery.MaxPageSize : pageSize
+            PageSize = pageSize < 1 ? CarApiQueryDto.MaxPageSize : pageSize
         });
 
-    public static CarApiQuery CreateSoldQuery(int page = 1, int pageSize = CarApiQuery.MaxPageSize) =>
+    public static CarApiQueryDto CreateSoldQuery(int page = 1, int pageSize = CarApiQueryDto.MaxPageSize) =>
         new()
         {
             Status = SoldStatus,
             Page = page < 1 ? 1 : page,
-            PageSize = pageSize < 1 ? CarApiQuery.MaxPageSize : pageSize
+            PageSize = pageSize < 1 ? CarApiQueryDto.MaxPageSize : pageSize
         };
 }

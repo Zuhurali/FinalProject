@@ -19,7 +19,7 @@ public sealed class AdminShowroomController : ControllerBase
     }
 
     [HttpGet("requests")]
-    public async Task<ActionResult<IReadOnlyList<ShowroomRequestItem>>> ListRequests(
+    public async Task<ActionResult<IReadOnlyList<ShowroomRequestItemDto>>> ListRequests(
         [FromQuery] string? status,
         CancellationToken cancellationToken)
     {
@@ -27,16 +27,16 @@ public sealed class AdminShowroomController : ControllerBase
     }
 
     [HttpGet("requests/{id:int}")]
-    public async Task<ActionResult<ShowroomRequestItem>> GetRequest(int id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ShowroomRequestItemDto>> GetRequest(int id, CancellationToken cancellationToken)
     {
         var item = await _showroom.GetRequestAsync(id, cancellationToken);
         return item == null ? NotFound(new { message = "Request not found." }) : Ok(item);
     }
 
     [HttpPatch("requests/{id:int}/status")]
-    public async Task<ActionResult<ShowroomRequestItem>> SetRequestStatus(
+    public async Task<ActionResult<ShowroomRequestItemDto>> SetRequestStatus(
         int id,
-        [FromBody] UpdateShowroomRequestStatusRequest body,
+        [FromBody] UpdateShowroomRequestStatusRequestDto body,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -61,9 +61,9 @@ public sealed class AdminShowroomController : ControllerBase
     }
 
     [HttpPost("requests/{id:int}/complete-sale")]
-    public async Task<ActionResult<ShowroomSaleItem>> CompleteRequestSale(
+    public async Task<ActionResult<ShowroomSaleItemDto>> CompleteRequestSale(
         int id,
-        [FromBody] CompleteShowroomRequestSaleRequest? body,
+        [FromBody] CompleteShowroomRequestSaleRequestDto? body,
         CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -86,14 +86,14 @@ public sealed class AdminShowroomController : ControllerBase
     }
 
     [HttpGet("sales")]
-    public async Task<ActionResult<IReadOnlyList<ShowroomSaleItem>>> ListSales(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<ShowroomSaleItemDto>>> ListSales(CancellationToken cancellationToken)
     {
         return Ok(await _showroom.ListSalesAsync(cancellationToken));
     }
 
     [HttpPost("sales")]
-    public async Task<ActionResult<ShowroomSaleItem>> RecordSale(
-        [FromBody] RecordShowroomSaleRequest request,
+    public async Task<ActionResult<ShowroomSaleItemDto>> RecordSale(
+        [FromBody] RecordShowroomSaleRequestDto request,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)

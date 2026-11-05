@@ -666,7 +666,7 @@ namespace FinalProject.MVC.Controllers
             }
             catch (CarApiException)
             {
-                ViewBag.Reviews = Array.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
+                ViewBag.Reviews = Array.Empty<FinalProject.MVC.DTOs.ProductReviewDto>();
                 ViewData["ReviewServiceUnavailable"] = true;
             }
 

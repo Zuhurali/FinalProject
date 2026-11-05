@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.Models.Entities;
 
-public sealed class CarMessage
+public sealed class CarMessage : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ConversationId { get; set; }
 
     [Required]
@@ -21,8 +19,6 @@ public sealed class CarMessage
     public string Content { get; set; } = string.Empty;
 
     public bool IsRead { get; set; }
-
-    public DateTime CreatedAt { get; set; }
 
     public Conversation Conversation { get; set; } = null!;
 

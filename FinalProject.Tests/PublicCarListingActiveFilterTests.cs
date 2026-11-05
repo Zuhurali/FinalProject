@@ -1,7 +1,7 @@
 using FinalProject.Data;
 using FinalProject.DTOs;
 using FinalProject.Models.Entities;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.Services;
 using FinalProject.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +21,7 @@ public class PublicCarListingActiveFilterTests
         Assert.Equal(2, created.Page);
         Assert.Equal(6, created.PageSize);
 
-        var withBrand = MvcCarPublicListing.WithActiveStatus(new CarApiQuery { BrandId = 3, Status = "Draft" });
+        var withBrand = MvcCarPublicListing.WithActiveStatus(new CarApiQueryDto { BrandId = 3, Status = "Draft" });
         Assert.Equal(MvcCarPublicListing.ActiveStatus, withBrand.Status);
         Assert.Equal(3, withBrand.BrandId);
     }
@@ -55,7 +55,7 @@ public class PublicCarListingActiveFilterTests
         await SeedCarAsync(db, "SoldOne", "Sold");
         var service = new CarService(db, new SilentNotifications());
 
-        var page = await service.QueryAsync(new CarListQuery
+        var page = await service.QueryAsync(new CarListQueryDto
         {
             Status = ApiCarPublicListing.ActiveStatus,
             Page = 1,
@@ -76,7 +76,7 @@ public class PublicCarListingActiveFilterTests
         var sold = await SeedCarAsync(db, "SoldOne", "Sold");
         var service = new CarService(db, new SilentNotifications());
 
-        var page = await service.QueryAsync(new CarListQuery
+        var page = await service.QueryAsync(new CarListQueryDto
         {
             Status = ApiCarPublicListing.SoldStatus,
             Page = 1,
@@ -96,7 +96,7 @@ public class PublicCarListingActiveFilterTests
         await SeedCarAsync(db, "DraftOne", "Draft");
         var service = new CarService(db, new SilentNotifications());
 
-        var page = await service.QueryAsync(new CarListQuery { Page = 1, PageSize = 50 });
+        var page = await service.QueryAsync(new CarListQueryDto { Page = 1, PageSize = 50 });
 
         Assert.Equal(2, page.Items.Count);
         Assert.Contains(page.Items, item => item.Status == "Draft");
@@ -194,16 +194,16 @@ public class PublicCarListingActiveFilterTests
 
     private sealed class SilentNotifications : INotificationService
     {
-        public Task<NotificationListResponse> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
+        public Task<NotificationListResponseDto> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
         public Task<int> GetUnreadCountAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationUnreadCountsResponse> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
+        public Task<NotificationUnreadCountsResponseDto> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationResponse?> CreateMessageNotificationAsync(
+        public Task<NotificationResponseDto?> CreateMessageNotificationAsync(
             string receiverId,
             string senderDisplayName,
             int conversationId,
@@ -212,13 +212,13 @@ public class PublicCarListingActiveFilterTests
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<IReadOnlyList<NotificationResponse>> CreatePriceDropNotificationsAsync(
+        public Task<IReadOnlyList<NotificationResponseDto>> CreatePriceDropNotificationsAsync(
             int carId,
             string carName,
             decimal previousPrice,
             decimal newPrice,
             CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<NotificationResponse>>(Array.Empty<NotificationResponse>());
+            Task.FromResult<IReadOnlyList<NotificationResponseDto>>(Array.Empty<NotificationResponseDto>());
 
         public Task<bool> MarkReadAsync(int notificationId, string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

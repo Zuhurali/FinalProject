@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class ProductInquiry
+public class ProductInquiry : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ProductId { get; set; }
 
     public ShopCatalogProduct? Product { get; set; }
@@ -21,8 +19,6 @@ public class ProductInquiry
 
     [Required, MaxLength(1000)]
     public string Message { get; set; } = string.Empty;
-
-    public DateTime CreatedAt { get; set; }
 
     public bool IsHandled { get; set; }
 

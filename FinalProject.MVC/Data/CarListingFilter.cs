@@ -1,5 +1,5 @@
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 
 namespace FinalProject.MVC.Data;
 

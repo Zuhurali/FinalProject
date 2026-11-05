@@ -1,4 +1,4 @@
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Services;
 using Xunit;
 

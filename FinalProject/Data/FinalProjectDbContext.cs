@@ -125,6 +125,8 @@ public class FinalProjectDbContext : DbContext
                 "[Rating] >= 1 AND [Rating] <= 5"));
             entity.Property(rating => rating.UserId).IsRequired().HasMaxLength(450);
             entity.Property(rating => rating.Rating).IsRequired();
+            // Historically non-nullable; keep DB required while CLR uses DateTime? from BaseEntity.
+            entity.Property(rating => rating.UpdatedAt).IsRequired();
             entity.HasIndex(rating => new { rating.UserId, rating.ProductId })
                 .IsUnique()
                 .HasDatabaseName("UX_ProductRatings_UserId_ProductId");
@@ -141,6 +143,8 @@ public class FinalProjectDbContext : DbContext
                 "LEN([Content]) >= 1 AND LEN([Content]) <= 1000"));
             entity.Property(review => review.UserId).IsRequired().HasMaxLength(450);
             entity.Property(review => review.Content).IsRequired().HasMaxLength(1000);
+            // Historically non-nullable; keep DB required while CLR uses DateTime? from BaseEntity.
+            entity.Property(review => review.UpdatedAt).IsRequired();
             entity.HasIndex(review => review.ProductId)
                 .HasDatabaseName("IX_ProductReviews_ProductId");
             entity.HasIndex(review => new { review.UserId, review.ProductId })
@@ -290,6 +294,8 @@ public class FinalProjectDbContext : DbContext
             entity.Property(conversation => conversation.BuyerId).IsRequired().HasMaxLength(450);
             entity.Property(conversation => conversation.SellerId).IsRequired().HasMaxLength(450);
             entity.Property(conversation => conversation.Subject).HasMaxLength(200);
+            // Historically non-nullable; keep DB required while CLR uses DateTime? from BaseEntity.
+            entity.Property(conversation => conversation.UpdatedAt).IsRequired();
             entity.HasIndex(conversation => new
                 {
                     conversation.CarId,
@@ -384,10 +390,10 @@ public class FinalProjectDbContext : DbContext
 
         // Icon paths match the prior Home strip assignment (OrderBy Name → 01.svg…05.svg).
         modelBuilder.Entity<Category>().HasData(
-            new Category { Id = 1, Name = "Sedan", IconPath = "~/assets/images/category/04.svg" },
-            new Category { Id = 2, Name = "SUV", IconPath = "~/assets/images/category/05.svg" },
-            new Category { Id = 3, Name = "Coupe", IconPath = "~/assets/images/category/02.svg" },
-            new Category { Id = 4, Name = "Hatchback", IconPath = "~/assets/images/category/03.svg" },
-            new Category { Id = 5, Name = "Convertible", IconPath = "~/assets/images/category/01.svg" });
+            new Category { Id = 1, Name = "Sedan", IconPath = "~/assets/images/category/04.svg", CreatedAt = seededAt },
+            new Category { Id = 2, Name = "SUV", IconPath = "~/assets/images/category/05.svg", CreatedAt = seededAt },
+            new Category { Id = 3, Name = "Coupe", IconPath = "~/assets/images/category/02.svg", CreatedAt = seededAt },
+            new Category { Id = 4, Name = "Hatchback", IconPath = "~/assets/images/category/03.svg", CreatedAt = seededAt },
+            new Category { Id = 5, Name = "Convertible", IconPath = "~/assets/images/category/01.svg", CreatedAt = seededAt });
     }
 }

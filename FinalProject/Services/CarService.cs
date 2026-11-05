@@ -18,7 +18,7 @@ public class CarService : ICarService
         _notifications = notifications;
     }
 
-    public async Task<PagedResult<CarResponse>> QueryAsync(CarListQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedResultDto<CarResponseDto>> QueryAsync(CarListQueryDto query, CancellationToken cancellationToken = default)
     {
         var filtered = ApplyFilters(_dbContext.Cars.AsNoTracking(), query);
         var totalCount = await filtered.CountAsync(cancellationToken);
@@ -26,15 +26,10 @@ public class CarService : ICarService
             ? 0
             : (int)Math.Ceiling(totalCount / (double)query.PageSize);
 
-        IReadOnlyList<CarResponse> items = Array.Empty<CarResponse>();
+        IReadOnlyList<CarResponseDto> items = Array.Empty<CarResponseDto>();
         if (totalCount > 0 && query.Page <= totalPages)
         {
-            var cars = await filtered
-                .OrderBy(car => car.Brand.Name)
-                .ThenBy(car => car.Model)
-                .ThenByDescending(car => car.Year)
-                .ThenByDescending(car => car.CreatedAt)
-                .ThenBy(car => car.Id)
+            var cars = await ApplySort(filtered, query.Sort)
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .Include(car => car.Brand)
@@ -47,7 +42,7 @@ public class CarService : ICarService
             items = cars.Select(car => car.ToResponse()).ToList();
         }
 
-        return new PagedResult<CarResponse>
+        return new PagedResultDto<CarResponseDto>
         {
             Items = items,
             CurrentPage = query.Page,
@@ -57,7 +52,7 @@ public class CarService : ICarService
         };
     }
 
-    public async Task<IReadOnlyList<CarSuggestionResponse>> GetSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<CarSuggestionResponseDto>> GetSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default)
     {
         var term = query.Trim().ToLower();
         var brandNames = await _dbContext.Brands
@@ -80,10 +75,10 @@ public class CarService : ICarService
             .ToListAsync(cancellationToken);
 
         return brandNames
-            .Select(name => new CarSuggestionResponse { Text = name, Type = "brand" })
+            .Select(name => new CarSuggestionResponseDto { Text = name, Type = "brand" })
             .Concat(carNames
                 .Where(name => !brandNames.Contains(name, StringComparer.OrdinalIgnoreCase))
-                .Select(name => new CarSuggestionResponse { Text = name, Type = "car" }))
+                .Select(name => new CarSuggestionResponseDto { Text = name, Type = "car" }))
             .OrderBy(item => item.Type == "brand" ? 0 : 1)
             .ThenBy(item => SuggestionRank(item.Text, term))
             .ThenBy(item => item.Text, StringComparer.OrdinalIgnoreCase)
@@ -91,7 +86,7 @@ public class CarService : ICarService
             .ToList();
     }
 
-    public async Task<CarResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<CarResponseDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var car = await _dbContext.Cars
             .AsNoTracking()
@@ -104,7 +99,7 @@ public class CarService : ICarService
         return car?.ToResponse();
     }
 
-    public async Task<IReadOnlyList<CarResponse>> GetOwnedAsync(
+    public async Task<IReadOnlyList<CarResponseDto>> GetOwnedAsync(
         string ownerId,
         CancellationToken cancellationToken = default)
     {
@@ -122,9 +117,9 @@ public class CarService : ICarService
         return cars.Select(car => car.ToResponse()).ToList();
     }
 
-    public async Task<CarResponse?> CreateAsync(
+    public async Task<CarResponseDto?> CreateAsync(
         string ownerId,
-        SaveCarRequest request,
+        SaveCarRequestDto request,
         CancellationToken cancellationToken = default)
     {
         if (!await _dbContext.IdentityUsers.AnyAsync(user => user.Id == ownerId, cancellationToken)
@@ -172,8 +167,8 @@ public class CarService : ICarService
         return await GetByIdAsync(car.Id, cancellationToken);
     }
 
-    public async Task<CarResponse?> CreateCatalogAsync(
-        SaveCarRequest request,
+    public async Task<CarResponseDto?> CreateCatalogAsync(
+        SaveCarRequestDto request,
         CancellationToken cancellationToken = default)
     {
         if (!await LookupsExistAsync(request.BrandId, request.CategoryId, cancellationToken))
@@ -220,9 +215,9 @@ public class CarService : ICarService
         return await GetByIdAsync(car.Id, cancellationToken);
     }
 
-    public async Task<CarUpdateResult?> UpdateAsync(
+    public async Task<CarUpdateResultDto?> UpdateAsync(
         int id,
-        SaveCarRequest request,
+        SaveCarRequestDto request,
         CancellationToken cancellationToken = default)
     {
         if (!await LookupsExistAsync(request.BrandId, request.CategoryId, cancellationToken))
@@ -261,7 +256,7 @@ public class CarService : ICarService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        IReadOnlyList<NotificationResponse> notifications = Array.Empty<NotificationResponse>();
+        IReadOnlyList<NotificationResponseDto> notifications = Array.Empty<NotificationResponseDto>();
         if (Commerce.NotificationRules.IsPriceDrop(previousPrice, request.Price))
         {
             var carName = $"{car.Brand.Name} {car.Model}".Trim();
@@ -274,7 +269,7 @@ public class CarService : ICarService
         }
 
         var updated = await GetByIdAsync(id, cancellationToken);
-        return updated == null ? null : new CarUpdateResult(updated, notifications, removedImageUrls);
+        return updated == null ? null : new CarUpdateResultDto(updated, notifications, removedImageUrls);
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -290,12 +285,12 @@ public class CarService : ICarService
         return true;
     }
 
-    public async Task<CarLookupResponse> GetLookupsAsync(CancellationToken cancellationToken = default)
+    public async Task<CarLookupResponseDto> GetLookupsAsync(CancellationToken cancellationToken = default)
     {
         var brands = await _dbContext.Brands
             .AsNoTracking()
             .OrderBy(brand => brand.Name)
-            .Select(brand => new BrandResponse
+            .Select(brand => new BrandResponseDto
             {
                 Id = brand.Id,
                 Name = brand.Name,
@@ -305,7 +300,7 @@ public class CarService : ICarService
         var categories = await _dbContext.Categories
             .AsNoTracking()
             .OrderBy(category => category.Name)
-            .Select(category => new CategoryResponse
+            .Select(category => new CategoryResponseDto
             {
                 Id = category.Id,
                 Name = category.Name,
@@ -317,7 +312,7 @@ public class CarService : ICarService
             .Where(car => car.Model != "")
             .Select(car => new { car.BrandId, car.Model })
             .ToListAsync(cancellationToken);
-        var models = new List<BrandModelResponse>();
+        var models = new List<BrandModelResponseDto>();
         foreach (var brand in brands)
         {
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -337,11 +332,11 @@ public class CarService : ICarService
 
             foreach (var name in names.OrderBy(name => name, StringComparer.OrdinalIgnoreCase))
             {
-                models.Add(new BrandModelResponse(brand.Id, name));
+                models.Add(new BrandModelResponseDto(brand.Id, name));
             }
         }
 
-        return new CarLookupResponse(brands, categories, models);
+        return new CarLookupResponseDto(brands, categories, models);
     }
 
     private async Task EnsureModelMatchesBrandAsync(
@@ -386,7 +381,7 @@ public class CarService : ICarService
             && await _dbContext.Categories.AnyAsync(category => category.Id == categoryId, cancellationToken);
     }
 
-    private static IQueryable<Models.Entities.Car> ApplyFilters(IQueryable<Models.Entities.Car> cars, CarListQuery query)
+    private static IQueryable<Models.Entities.Car> ApplyFilters(IQueryable<Models.Entities.Car> cars, CarListQueryDto query)
     {
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -437,6 +432,21 @@ public class CarService : ICarService
             cars = cars.Where(car => car.Year <= maxYear);
         }
 
+        if (query.MinMileage is int minMileage)
+        {
+            cars = cars.Where(car => car.Mileage >= minMileage);
+        }
+
+        if (query.MaxMileage is int maxMileage)
+        {
+            cars = cars.Where(car => car.Mileage <= maxMileage);
+        }
+
+        if (query.Seats is int seats)
+        {
+            cars = cars.Where(car => car.Seats == seats);
+        }
+
         if (!string.IsNullOrWhiteSpace(query.Fuel))
         {
             var fuel = query.Fuel.Trim().ToLower();
@@ -463,6 +473,38 @@ public class CarService : ICarService
         return cars;
     }
 
+    private static IQueryable<Models.Entities.Car> ApplySort(
+        IQueryable<Models.Entities.Car> cars,
+        string? sort)
+    {
+        var mode = sort?.Trim().ToLowerInvariant();
+        return mode switch
+        {
+            "latest" => cars
+                .OrderByDescending(car => car.CreatedAt)
+                .ThenByDescending(car => car.Id),
+            "price-asc" => cars
+                .OrderBy(car => car.Price)
+                .ThenBy(car => car.Id),
+            "price-desc" => cars
+                .OrderByDescending(car => car.Price)
+                .ThenByDescending(car => car.Id),
+            "year-desc" => cars
+                .OrderByDescending(car => car.Year)
+                .ThenByDescending(car => car.Id),
+            "year-asc" => cars
+                .OrderBy(car => car.Year)
+                .ThenBy(car => car.Id),
+            // Legacy default: keep Index/admin callers stable when Sort is omitted.
+            _ => cars
+                .OrderBy(car => car.Brand.Name)
+                .ThenBy(car => car.Model)
+                .ThenByDescending(car => car.Year)
+                .ThenByDescending(car => car.CreatedAt)
+                .ThenBy(car => car.Id)
+        };
+    }
+
     private static int SuggestionRank(string text, string term)
     {
         var value = text.ToLowerInvariant();
@@ -474,7 +516,7 @@ public class CarService : ICarService
         return value.Contains(term, StringComparison.Ordinal) ? 1 : 2;
     }
 
-    private static void AppendGalleryImages(Models.Entities.Car car, SaveCarRequest request)
+    private static void AppendGalleryImages(Models.Entities.Car car, SaveCarRequestDto request)
     {
         if (!request.GallerySpecified)
         {
@@ -503,7 +545,7 @@ public class CarService : ICarService
 
     private async Task<IReadOnlyList<string>> SyncGalleryAsync(
         Models.Entities.Car car,
-        SaveCarRequest request,
+        SaveCarRequestDto request,
         CancellationToken cancellationToken)
     {
         var images = car.Images.ToList();
@@ -640,7 +682,7 @@ public class CarService : ICarService
         return candidates.Where(url => !shared.Contains(url)).ToList();
     }
 
-    private static void EnsurePrimaryImageSafe(SaveCarRequest request)
+    private static void EnsurePrimaryImageSafe(SaveCarRequestDto request)
     {
         if (!CarGalleryRules.IsSafeReference(request.ImageUrl))
         {
@@ -648,7 +690,7 @@ public class CarService : ICarService
         }
     }
 
-    private static IReadOnlyList<string> NormalizeAdditionalUrls(SaveCarRequest request, int existingCount)
+    private static IReadOnlyList<string> NormalizeAdditionalUrls(SaveCarRequestDto request, int existingCount)
     {
         var urls = new List<string>();
         foreach (var url in request.AdditionalImageUrls ?? [])
@@ -688,7 +730,7 @@ public class CarService : ICarService
         }
     }
 
-    private static void ApplySpecifications(Models.Entities.Car car, SaveCarRequest request)
+    private static void ApplySpecifications(Models.Entities.Car car, SaveCarRequestDto request)
     {
         car.Seats = request.Seats is > 0 and <= 12 ? request.Seats : null;
         car.DriveType = CarListingRules.CanonicalDrive(request.DriveType);

@@ -2,12 +2,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class ShopMarketingContent
+public class ShopMarketingContent : BaseEntity
 {
+    public ShopMarketingContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public const int SingletonId = 1;
-
-    public int Id { get; set; } = SingletonId;
-
     [Required, MaxLength(200)]
     public string HeroEyebrow { get; set; } = string.Empty;
 
@@ -148,6 +151,4 @@ public class ShopMarketingContent
 
     [Required, MaxLength(80)]
     public string HeroCtaVisit { get; set; } = string.Empty;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

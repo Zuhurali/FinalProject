@@ -1,10 +1,8 @@
 namespace FinalProject.Models.Entities;
 
 /// <summary>MVC-owned table; mapped for admin API read/write without owning migrations.</summary>
-public class ShowroomPurchaseRequestReference
+public class ShowroomPurchaseRequestReference : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ProductId { get; set; }
 
     public ShopProductReference? Product { get; set; }
@@ -26,8 +24,4 @@ public class ShowroomPurchaseRequestReference
     public string Status { get; set; } = "New";
 
     public string? UserId { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
 }

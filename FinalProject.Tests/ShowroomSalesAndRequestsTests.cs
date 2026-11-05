@@ -392,7 +392,7 @@ public class ShowroomSalesAndRequestsTests
         {
             var idempotencyKey = Guid.NewGuid();
             var (sale, error) = await service.RecordSaleAsync(
-                new RecordShowroomSaleRequest
+                new RecordShowroomSaleRequestDto
                 {
                     ProductId = product.Id,
                     Quantity = 1,
@@ -405,7 +405,7 @@ public class ShowroomSalesAndRequestsTests
             saleId = sale!.Id;
 
             var (retry, retryError) = await service.RecordSaleAsync(
-                new RecordShowroomSaleRequest
+                new RecordShowroomSaleRequestDto
                 {
                     ProductId = product.Id,
                     Quantity = 1,

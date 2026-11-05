@@ -2,6 +2,9 @@ namespace FinalProject.Commerce;
 
 public static class ReviewContentRules
 {
+    /// <summary>Public label for reviews whose author soft-deleted their Member account.</summary>
+    public const string DeletedAccountDisplayName = "Deleted Account";
+
     public const int MinLength = 1;
     public const int MaxLength = 1000;
 

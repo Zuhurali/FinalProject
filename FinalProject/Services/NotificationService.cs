@@ -16,7 +16,7 @@ public sealed class NotificationService : INotificationService
         _context = context;
     }
 
-    public async Task<NotificationListResponse> GetForUserAsync(
+    public async Task<NotificationListResponseDto> GetForUserAsync(
         string userId,
         int take = 50,
         CancellationToken cancellationToken = default)
@@ -32,7 +32,7 @@ public sealed class NotificationService : INotificationService
         var items = entities.Select(ToResponse).ToList();
 
         var unread = await GetUnreadCountAsync(userId, cancellationToken);
-        return new NotificationListResponse(unread, items);
+        return new NotificationListResponseDto(unread, items);
     }
 
     public Task<int> GetUnreadCountAsync(string userId, CancellationToken cancellationToken = default) =>
@@ -40,7 +40,7 @@ public sealed class NotificationService : INotificationService
             .AsNoTracking()
             .CountAsync(item => item.UserId == userId && !item.IsRead, cancellationToken);
 
-    public async Task<NotificationUnreadCountsResponse> GetUnreadCountsAsync(
+    public async Task<NotificationUnreadCountsResponseDto> GetUnreadCountsAsync(
         string userId,
         CancellationToken cancellationToken = default)
     {
@@ -73,7 +73,7 @@ public sealed class NotificationService : INotificationService
             }
         }
 
-        return new NotificationUnreadCountsResponse(
+        return new NotificationUnreadCountsResponseDto(
             unreadTypes.Count,
             messages,
             favorites,
@@ -81,7 +81,7 @@ public sealed class NotificationService : INotificationService
             other);
     }
 
-    public async Task<NotificationResponse?> CreateMessageNotificationAsync(
+    public async Task<NotificationResponseDto?> CreateMessageNotificationAsync(
         string receiverId,
         string senderDisplayName,
         int conversationId,
@@ -111,7 +111,7 @@ public sealed class NotificationService : INotificationService
         return await TryInsertAsync(entity, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<NotificationResponse>> CreatePriceDropNotificationsAsync(
+    public async Task<IReadOnlyList<NotificationResponseDto>> CreatePriceDropNotificationsAsync(
         int carId,
         string carName,
         decimal previousPrice,
@@ -120,7 +120,7 @@ public sealed class NotificationService : INotificationService
     {
         if (!NotificationRules.IsPriceDrop(previousPrice, newPrice))
         {
-            return Array.Empty<NotificationResponse>();
+            return Array.Empty<NotificationResponseDto>();
         }
 
         var favoriterIds = await _context.Favorites
@@ -132,12 +132,12 @@ public sealed class NotificationService : INotificationService
 
         if (favoriterIds.Count == 0)
         {
-            return Array.Empty<NotificationResponse>();
+            return Array.Empty<NotificationResponseDto>();
         }
 
         var body = NotificationRules.FormatPriceDropBody(carName, previousPrice, newPrice);
         var baseDedup = NotificationRules.PriceDropDedupKey(carId, previousPrice, newPrice);
-        var created = new List<NotificationResponse>();
+        var created = new List<NotificationResponseDto>();
         var now = DateTime.UtcNow;
 
         foreach (var userId in favoriterIds)
@@ -219,7 +219,7 @@ public sealed class NotificationService : INotificationService
             item => item.UserId == userId && item.DedupKey == dedupKey,
             cancellationToken);
 
-    private async Task<NotificationResponse?> TryInsertAsync(
+    private async Task<NotificationResponseDto?> TryInsertAsync(
         UserNotification entity,
         CancellationToken cancellationToken)
     {
@@ -236,7 +236,7 @@ public sealed class NotificationService : INotificationService
         }
     }
 
-    private static NotificationResponse ToResponse(UserNotification item) =>
+    private static NotificationResponseDto ToResponse(UserNotification item) =>
         new(
             item.Id,
             item.UserId,

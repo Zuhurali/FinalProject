@@ -3,7 +3,7 @@ using FinalProject.Commerce;
 
 namespace FinalProject.DTOs;
 
-public sealed class SaveCarRequest : IValidatableObject
+public sealed class SaveCarRequestDto : IValidatableObject
 {
     [Range(1, int.MaxValue)]
     public int BrandId { get; set; }
@@ -134,16 +134,16 @@ public sealed class SaveCarRequest : IValidatableObject
     }
 }
 
-public sealed record CarLookupResponse(
-    IReadOnlyList<BrandResponse> Brands,
-    IReadOnlyList<CategoryResponse> Categories,
-    IReadOnlyList<BrandModelResponse>? Models = null);
+public sealed record CarLookupResponseDto(
+    IReadOnlyList<BrandResponseDto> Brands,
+    IReadOnlyList<CategoryResponseDto> Categories,
+    IReadOnlyList<BrandModelResponseDto>? Models = null);
 
-public sealed record BrandModelResponse(int BrandId, string Name);
+public sealed record BrandModelResponseDto(int BrandId, string Name);
 
-public sealed record FavoriteResponse(int Id, DateTime CreatedAt, CarResponse Car);
+public sealed record FavoriteResponseDto(int Id, DateTime CreatedAt, CarResponseDto Car);
 
-public sealed record ProductFavoriteResponse(
+public sealed record ProductFavoriteResponseDto(
     int Id,
     DateTime CreatedAt,
     int ProductId,
@@ -155,7 +155,7 @@ public sealed record ProductFavoriteResponse(
     int Quantity,
     bool InStock);
 
-public sealed class StartConversationRequest
+public sealed class StartConversationRequestDto
 {
     [MaxLength(200)]
     public string? Subject { get; set; }
@@ -164,13 +164,13 @@ public sealed class StartConversationRequest
     public string Content { get; set; } = string.Empty;
 }
 
-public sealed class ReplyMessageRequest
+public sealed class ReplyMessageRequestDto
 {
     [Required, StringLength(4000, MinimumLength = 1)]
     public string Content { get; set; } = string.Empty;
 }
 
-public sealed record MessageResponse(
+public sealed record MessageResponseDto(
     int Id,
     string SenderId,
     string SenderDisplayName,
@@ -178,9 +178,9 @@ public sealed record MessageResponse(
     string Content,
     bool IsRead,
     DateTime CreatedAt,
-    NotificationResponse? Notification = null);
+    NotificationResponseDto? Notification = null);
 
-public sealed record ConversationSummaryResponse(
+public sealed record ConversationSummaryResponseDto(
     int Id,
     int CarId,
     string CarName,
@@ -190,7 +190,7 @@ public sealed record ConversationSummaryResponse(
     DateTime UpdatedAt,
     int UnreadCount);
 
-public sealed record ConversationDetailsResponse(
+public sealed record ConversationDetailsResponseDto(
     int Id,
     int CarId,
     string CarName,
@@ -200,18 +200,18 @@ public sealed record ConversationDetailsResponse(
     string SellerId,
     string SellerDisplayName,
     string? Subject,
-    IReadOnlyList<MessageResponse> Messages,
-    NotificationResponse? Notification = null);
+    IReadOnlyList<MessageResponseDto> Messages,
+    NotificationResponseDto? Notification = null);
 
-public sealed record AccountActivityResponse(
+public sealed record AccountActivityResponseDto(
     string Key,
     string Type,
     string Description,
     DateTime CreatedAt,
     string? Url);
 
-public sealed record AccountSummaryResponse(
+public sealed record AccountSummaryResponseDto(
     int ActiveListings,
     int Favorites,
     int UnreadMessages,
-    IReadOnlyList<AccountActivityResponse> RecentActivity);
+    IReadOnlyList<AccountActivityResponseDto> RecentActivity);

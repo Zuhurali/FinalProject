@@ -18,9 +18,9 @@ public sealed class CarDiscoveryController : ControllerBase
     }
 
     [HttpGet("most-viewed")]
-    [ProducesResponseType(typeof(PagedResult<RankedCarResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResultDto<RankedCarResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<PagedResult<RankedCarResponse>>> MostViewed(
+    public async Task<ActionResult<PagedResultDto<RankedCarResponseDto>>> MostViewed(
         [FromQuery] string? period,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = CarDiscoveryRules.DefaultPageSize,
@@ -35,8 +35,8 @@ public sealed class CarDiscoveryController : ControllerBase
     }
 
     [HttpGet("most-favorited")]
-    [ProducesResponseType(typeof(PagedResult<RankedCarResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResult<RankedCarResponse>>> MostFavorited(
+    [ProducesResponseType(typeof(PagedResultDto<RankedCarResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResultDto<RankedCarResponseDto>>> MostFavorited(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = CarDiscoveryRules.DefaultPageSize,
         CancellationToken cancellationToken = default)
@@ -45,8 +45,8 @@ public sealed class CarDiscoveryController : ControllerBase
     }
 
     [HttpGet("latest")]
-    [ProducesResponseType(typeof(PagedResult<CarResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResult<CarResponse>>> Latest(
+    [ProducesResponseType(typeof(PagedResultDto<CarResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResultDto<CarResponseDto>>> Latest(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = CarDiscoveryRules.DefaultPageSize,
         CancellationToken cancellationToken = default)
@@ -56,10 +56,10 @@ public sealed class CarDiscoveryController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("statistics")]
-    [ProducesResponseType(typeof(CarDiscoveryStatisticsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CarDiscoveryStatisticsResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<CarDiscoveryStatisticsResponse>> Statistics(CancellationToken cancellationToken)
+    public async Task<ActionResult<CarDiscoveryStatisticsResponseDto>> Statistics(CancellationToken cancellationToken)
     {
         return Ok(await _discovery.GetStatisticsAsync(cancellationToken: cancellationToken));
     }

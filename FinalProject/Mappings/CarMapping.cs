@@ -6,9 +6,9 @@ namespace FinalProject.Mappings;
 
 public static class CarMapping
 {
-    public static CarResponse ToResponse(this Car car)
+    public static CarResponseDto ToResponse(this Car car)
     {
-        return new CarResponse
+        return new CarResponseDto
         {
             Id = car.Id,
             Model = car.Model,
@@ -43,13 +43,13 @@ public static class CarMapping
             Status = car.Status,
             CreatedAt = car.CreatedAt,
             UpdatedAt = car.UpdatedAt,
-            Brand = new BrandResponse
+            Brand = new BrandResponseDto
             {
                 Id = car.Brand.Id,
                 Name = car.Brand.Name,
                 CreatedAt = car.Brand.CreatedAt
             },
-            Category = new CategoryResponse
+            Category = new CategoryResponseDto
             {
                 Id = car.Category.Id,
                 Name = car.Category.Name,
@@ -58,7 +58,7 @@ public static class CarMapping
             Images = car.Images
                 .OrderBy(image => image.DisplayOrder)
                 .ThenBy(image => image.Id)
-                .Select(image => new CarImageResponse
+                .Select(image => new CarImageResponseDto
                 {
                     Id = image.Id,
                     ImageUrl = image.ImageUrl,

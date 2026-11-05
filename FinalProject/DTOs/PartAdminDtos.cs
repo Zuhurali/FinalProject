@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.DTOs;
 
-public sealed class PartAdminItem
+public sealed class PartAdminItemDto
 {
     public int Id { get; set; }
 
@@ -39,9 +39,9 @@ public sealed class PartAdminItem
     public DateTime CreatedAt { get; set; }
 }
 
-public sealed class PartAdminListResponse
+public sealed class PartAdminListResponseDto
 {
-    public List<PartAdminItem> Items { get; set; } = new();
+    public List<PartAdminItemDto> Items { get; set; } = new();
 
     public List<string> Categories { get; set; } = new();
 
@@ -54,7 +54,7 @@ public sealed class PartAdminListResponse
     public int PageSize { get; set; }
 }
 
-public sealed class SavePartRequest
+public sealed class SavePartRequestDto
 {
     public int Id { get; set; }
 
@@ -100,7 +100,7 @@ public sealed class SavePartRequest
     public bool IsActive { get; set; } = true;
 }
 
-public sealed class PartDeleteResponse
+public sealed class PartDeleteResponseDto
 {
     public string Outcome { get; set; } = string.Empty;
 

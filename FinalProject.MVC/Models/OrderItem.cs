@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinalProject.MVC.Models
 {
-    public class OrderItem
+    public class OrderItem : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         [Required]
         public int OrderId { get; set; }
 

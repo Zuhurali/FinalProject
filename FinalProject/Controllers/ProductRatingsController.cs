@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using FinalProject.Models;
+using FinalProject.DTOs;
 using FinalProject.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +19,9 @@ public sealed class ProductRatingsController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet("{productId:int}/ratings")]
-    [ProducesResponseType<ProductRatingSummary>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProductRatingSummaryDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ProductRatingSummary>> GetRatings(
+    public async Task<ActionResult<ProductRatingSummaryDto>> GetRatings(
         int productId,
         CancellationToken cancellationToken)
     {
@@ -33,13 +33,13 @@ public sealed class ProductRatingsController : ControllerBase
 
         return User.IsInRole("Admin") || User.IsInRole("SuperAdmin")
             ? Ok(result)
-            : Ok(result with { Ratings = Array.Empty<ProductRatingItem>() });
+            : Ok(result with { Ratings = Array.Empty<ProductRatingItemDto>() });
     }
 
     [AllowAnonymous]
     [HttpGet("ratings")]
-    [ProducesResponseType<IReadOnlyList<ProductRatingSummaryItem>>(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ProductRatingSummaryItem>>> GetSummaries(
+    [ProducesResponseType<IReadOnlyList<ProductRatingSummaryItemDto>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<ProductRatingSummaryItemDto>>> GetSummaries(
         [FromQuery] int[] productIds,
         CancellationToken cancellationToken)
     {
@@ -49,10 +49,10 @@ public sealed class ProductRatingsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("ratings/admin")]
-    [ProducesResponseType<IReadOnlyList<ProductRatingItem>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<IReadOnlyList<ProductRatingItemDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<IReadOnlyList<ProductRatingItem>>> GetAllForAdmin(
+    public async Task<ActionResult<IReadOnlyList<ProductRatingItemDto>>> GetAllForAdmin(
         CancellationToken cancellationToken)
     {
         return Ok(await _ratingService.GetAllForAdminAsync(cancellationToken));
@@ -60,11 +60,11 @@ public sealed class ProductRatingsController : ControllerBase
 
     [Authorize]
     [HttpGet("{productId:int}/ratings/my")]
-    [ProducesResponseType<CurrentUserProductRating>(StatusCodes.Status200OK)]
+    [ProducesResponseType<CurrentUserProductRatingDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<CurrentUserProductRating>> GetMyRating(
+    public async Task<ActionResult<CurrentUserProductRatingDto>> GetMyRating(
         int productId,
         CancellationToken cancellationToken)
     {
@@ -86,14 +86,14 @@ public sealed class ProductRatingsController : ControllerBase
 
     [Authorize]
     [HttpPost("{productId:int}/ratings")]
-    [ProducesResponseType<CurrentUserProductRating>(StatusCodes.Status200OK)]
+    [ProducesResponseType<CurrentUserProductRatingDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<CurrentUserProductRating>> SaveRating(
+    public async Task<ActionResult<CurrentUserProductRatingDto>> SaveRating(
         int productId,
-        [FromBody] SaveProductRatingRequest request,
+        [FromBody] SaveProductRatingRequestDto request,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid || request.Rating is < 1 or > 5)

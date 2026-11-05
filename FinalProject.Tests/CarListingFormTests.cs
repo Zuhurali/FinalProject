@@ -145,7 +145,7 @@ public class CarListingFormTests
         Assert.Equal("km", updated.Car.MileageUnit);
         Assert.Equal("~/assets/images/portfolio/cars/uploads/existing.png", updated.Car.Images[0].ImageUrl);
 
-        var mapped = CarApiMapper.ToCar(new FinalProject.MVC.Models.Api.CarApiDto
+        var mapped = CarApiMapper.ToCar(new FinalProject.MVC.DTOs.CarApiDto
         {
             Id = updated.Car.Id,
             Model = updated.Car.Model,
@@ -161,9 +161,9 @@ public class CarListingFormTests
             Engine = updated.Car.Engine,
             Features = updated.Car.Features,
             Status = updated.Car.Status,
-            Brand = new FinalProject.MVC.Models.Api.BrandApiDto { Id = brand.Id, Name = brand.Name },
-            Category = new FinalProject.MVC.Models.Api.CategoryApiDto { Id = category.Id, Name = category.Name },
-            Images = updated.Car.Images.Select(image => new FinalProject.MVC.Models.Api.CarImageApiDto
+            Brand = new FinalProject.MVC.DTOs.BrandApiDto { Id = brand.Id, Name = brand.Name },
+            Category = new FinalProject.MVC.DTOs.CategoryApiDto { Id = category.Id, Name = category.Name },
+            Images = updated.Car.Images.Select(image => new FinalProject.MVC.DTOs.CarImageApiDto
             {
                 ImageUrl = image.ImageUrl,
                 IsMain = image.IsMain
@@ -231,7 +231,7 @@ public class CarListingFormTests
         Assert.Contains(".not('.av-native-select')", script, StringComparison.Ordinal);
     }
 
-    private static SaveCarRequest ValidRequest(int brandId = 1, int categoryId = 1) => new()
+    private static SaveCarRequestDto ValidRequest(int brandId = 1, int categoryId = 1) => new()
     {
         BrandId = brandId,
         CategoryId = categoryId,
@@ -257,7 +257,7 @@ public class CarListingFormTests
         Status = "Active"
     };
 
-    private static List<ValidationResult> Validate(SaveCarRequest request)
+    private static List<ValidationResult> Validate(SaveCarRequestDto request)
     {
         var results = new List<ValidationResult>();
         Validator.TryValidateObject(request, new ValidationContext(request), results, validateAllProperties: true);
@@ -291,16 +291,16 @@ public class CarListingFormTests
 
     private sealed class SilentNotifications : INotificationService
     {
-        public Task<NotificationListResponse> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
+        public Task<NotificationListResponseDto> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
         public Task<int> GetUnreadCountAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationUnreadCountsResponse> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
+        public Task<NotificationUnreadCountsResponseDto> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationResponse?> CreateMessageNotificationAsync(
+        public Task<NotificationResponseDto?> CreateMessageNotificationAsync(
             string receiverId,
             string senderDisplayName,
             int conversationId,
@@ -309,13 +309,13 @@ public class CarListingFormTests
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<IReadOnlyList<NotificationResponse>> CreatePriceDropNotificationsAsync(
+        public Task<IReadOnlyList<NotificationResponseDto>> CreatePriceDropNotificationsAsync(
             int carId,
             string carName,
             decimal previousPrice,
             decimal newPrice,
             CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<NotificationResponse>>(Array.Empty<NotificationResponse>());
+            Task.FromResult<IReadOnlyList<NotificationResponseDto>>(Array.Empty<NotificationResponseDto>());
 
         public Task<bool> MarkReadAsync(int notificationId, string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

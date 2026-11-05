@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.Models.Entities;
 
-public class CarImage
+public class CarImage : BaseEntity
 {
-    public int Id { get; set; }
-
     public int CarId { get; set; }
 
     [Required]

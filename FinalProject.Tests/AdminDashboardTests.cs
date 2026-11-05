@@ -29,6 +29,8 @@ public class AdminDashboardTests
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.ChangeRoles))!
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.UserDetails))!
+            .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
     }
 
     [Fact]
@@ -87,7 +89,7 @@ public class AdminDashboardTests
     [Fact]
     public void Admin_summary_response_includes_reviews_metric()
     {
-        var ctor = typeof(AdminSummaryResponse).GetConstructors().Single();
+        var ctor = typeof(AdminSummaryResponseDto).GetConstructors().Single();
         var names = ctor.GetParameters().Select(parameter => parameter.Name).ToArray();
         Assert.Contains("TotalReviews", names);
         Assert.Contains("TotalRatings", names);

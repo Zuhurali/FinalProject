@@ -4,9 +4,10 @@
     var currentUserId = ViewBag.CurrentUserId as string;
     var editableIndex = 0;
 }
-<h1 class="h3 mb-4">Users</h1>
+<h1 class="h3 mb-4">@(Model.ShowDeleted ? "Deleted Accounts" : "Users")</h1>
 
 <form asp-action="Users" method="get" class="admin-card mb-3">
+    <input type="hidden" name="showDeleted" value="@(Model.ShowDeleted ? "true" : "false")" />
     <div class="row g-2 align-items-end">
         <div class="col-12 col-md-8 col-lg-9">
             <label class="form-label mb-1" for="users-search">Search</label>
@@ -21,9 +22,20 @@
             <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
             @if (!string.IsNullOrWhiteSpace(Model.Search))
             {
-                <a asp-action="Users" class="btn btn-outline-secondary">Clear</a>
+                <a asp-action="Users" asp-route-showDeleted="@Model.ShowDeleted" class="btn btn-outline-secondary">Clear</a>
             }
         </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
+        @if (Model.ShowDeleted)
+        {
+            <a asp-action="Users" asp-route-search="@Model.Search" class="btn btn-outline-secondary btn-sm">Back to active users</a>
+            <span class="text-muted small">Soft-deleted Member accounts. Historical records are preserved.</span>
+        }
+        else
+        {
+            <a asp-action="Users" asp-route-showDeleted="true" asp-route-search="@Model.Search" class="btn btn-outline-secondary btn-sm">View deleted accounts</a>
+        }
     </div>
     @if (!string.IsNullOrWhiteSpace(Model.Search))
     {
@@ -35,6 +47,7 @@
 
 <form asp-action="ChangeRoles" method="post">
     @Html.AntiForgeryToken()
+    <input type="hidden" name="showDeleted" value="@(Model.ShowDeleted ? "true" : "false")" />
     <div class="admin-card">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
@@ -55,22 +68,40 @@
                 @if (Model.Users.Count == 0)
                 {
                     <tr>
-                        <td colspan="9" class="text-muted">No users matched this search.</td>
+                        <td colspan="9" class="text-muted">
+                            @(Model.ShowDeleted ? "No deleted accounts matched this search." : "No users matched this search.")
+                        </td>
                     </tr>
                 }
                 @foreach (var user in Model.Users)
                 {
+                    var label = string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName;
                     <tr>
-                        <td>@(string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName)</td>
-                        <td class="text-break">@user.Email</td>
+                        <td>
+                            <a asp-action="UserDetails" asp-route-id="@user.Id">@label</a>
+                        </td>
+                        <td class="text-break">
+                            <a asp-action="UserDetails" asp-route-id="@user.Id">@user.Email</a>
+                        </td>
                         <td class="text-nowrap">@(string.IsNullOrWhiteSpace(user.PhoneNumber) ? "—" : user.PhoneNumber)</td>
                         <td>@(user.EmailConfirmed ? "Confirmed" : "Unconfirmed")</td>
                         <td>@(user.PhoneNumberConfirmed ? "Confirmed" : "Unverified")</td>
                         <td class="text-nowrap">@user.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>@(user.IsLockedOut ? "Locked" : "Active")</td>
+                        <td>
+                            @user.AccountStatus
+                            @if (user.IsDeleted && user.DeletedAt.HasValue)
+                            {
+                                <div class="text-muted small">@user.DeletedAt.Value.ToLocalTime().ToString("yyyy-MM-dd")</div>
+                            }
+                        </td>
                         <td>@user.AccessFailedCount</td>
                         <td>
-                            @if (user.Id == currentUserId && user.IsSuperAdmin)
+                            @if (user.IsDeleted)
+                            {
+                                <span>@user.Role</span>
+                                <div class="text-muted small">Role changes disabled</div>
+                            }
+                            else if (user.Id == currentUserId && user.IsSuperAdmin)
                             {
                                 <span>SuperAdmin (you)</span>
                             }

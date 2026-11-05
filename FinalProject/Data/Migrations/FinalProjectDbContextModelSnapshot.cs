@@ -38,6 +38,9 @@ namespace FinalProject.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -228,6 +231,9 @@ namespace FinalProject.Data.Migrations
                     b.Property<int>("CarId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -238,6 +244,9 @@ namespace FinalProject.Data.Migrations
 
                     b.Property<bool>("IsMain")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -277,6 +286,9 @@ namespace FinalProject.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -322,6 +334,9 @@ namespace FinalProject.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("IconPath")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -334,6 +349,9 @@ namespace FinalProject.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -345,30 +363,35 @@ namespace FinalProject.Data.Migrations
                         new
                         {
                             Id = 1,
+                            CreatedAt = new DateTime(2026, 10, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             IconPath = "~/assets/images/category/04.svg",
                             Name = "Sedan"
                         },
                         new
                         {
                             Id = 2,
+                            CreatedAt = new DateTime(2026, 10, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             IconPath = "~/assets/images/category/05.svg",
                             Name = "SUV"
                         },
                         new
                         {
                             Id = 3,
+                            CreatedAt = new DateTime(2026, 10, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             IconPath = "~/assets/images/category/02.svg",
                             Name = "Coupe"
                         },
                         new
                         {
                             Id = 4,
+                            CreatedAt = new DateTime(2026, 10, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             IconPath = "~/assets/images/category/03.svg",
                             Name = "Hatchback"
                         },
                         new
                         {
                             Id = 5,
+                            CreatedAt = new DateTime(2026, 10, 2, 0, 0, 0, 0, DateTimeKind.Utc),
                             IconPath = "~/assets/images/category/01.svg",
                             Name = "Convertible"
                         });
@@ -402,7 +425,8 @@ namespace FinalProject.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .IsRequired()
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -431,7 +455,13 @@ namespace FinalProject.Data.Migrations
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("HiddenAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
@@ -465,6 +495,9 @@ namespace FinalProject.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(450)
@@ -495,6 +528,9 @@ namespace FinalProject.Data.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
@@ -524,6 +560,9 @@ namespace FinalProject.Data.Migrations
 
                     b.Property<int?>("CampaignId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("IdempotencyKey")
                         .HasMaxLength(64)
@@ -560,6 +599,9 @@ namespace FinalProject.Data.Migrations
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("VoidedAt")
                         .HasColumnType("datetime2");
 
@@ -593,6 +635,9 @@ namespace FinalProject.Data.Migrations
                     b.Property<bool>("AppliesToAllParts")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal?>("DiscountPercent")
                         .HasColumnType("decimal(5,2)");
 
@@ -616,6 +661,9 @@ namespace FinalProject.Data.Migrations
                     b.Property<DateTime>("StartsAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.ToTable("ProductCampaigns", null, t =>
@@ -637,6 +685,9 @@ namespace FinalProject.Data.Migrations
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -674,7 +725,8 @@ namespace FinalProject.Data.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .IsRequired()
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
@@ -725,7 +777,8 @@ namespace FinalProject.Data.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .IsRequired()
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
@@ -756,6 +809,9 @@ namespace FinalProject.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("EditedAt")
                         .HasColumnType("datetime2");
 
@@ -766,6 +822,9 @@ namespace FinalProject.Data.Migrations
 
                     b.Property<int>("ReviewId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -856,6 +915,9 @@ namespace FinalProject.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -970,6 +1032,9 @@ namespace FinalProject.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Url")
                         .IsRequired()

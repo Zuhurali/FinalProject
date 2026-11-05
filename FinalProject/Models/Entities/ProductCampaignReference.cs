@@ -1,10 +1,8 @@
 namespace FinalProject.Models.Entities;
 
 /// <summary>MVC-owned table; mapped for sale pricing without owning migrations.</summary>
-public class ProductCampaignReference
+public class ProductCampaignReference : BaseEntity
 {
-    public int Id { get; set; }
-
     public int? ProductId { get; set; }
 
     public bool AppliesToAllParts { get; set; }

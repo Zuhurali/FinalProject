@@ -1,10 +1,19 @@
 namespace FinalProject.DTOs;
 
-public class CarListQuery
+public class CarListQueryDto
 {
     public const int DefaultPageSize = 10;
 
     public const int MaxPageSize = 100;
+
+    public static readonly HashSet<string> AllowedSorts = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "latest",
+        "price-asc",
+        "price-desc",
+        "year-desc",
+        "year-asc"
+    };
 
     public string? Search { get; set; }
 
@@ -22,6 +31,12 @@ public class CarListQuery
 
     public int? MaxYear { get; set; }
 
+    public int? MinMileage { get; set; }
+
+    public int? MaxMileage { get; set; }
+
+    public int? Seats { get; set; }
+
     public string? Fuel { get; set; }
 
     public string? Transmission { get; set; }
@@ -29,6 +44,12 @@ public class CarListQuery
     public bool? IsNew { get; set; }
 
     public string? Status { get; set; }
+
+    /// <summary>
+    /// Optional server-side sort. When null/empty, callers keep the legacy Brand/Model/Year order.
+    /// Allowed: latest, price-asc, price-desc, year-desc, year-asc.
+    /// </summary>
+    public string? Sort { get; set; }
 
     public int Page { get; set; } = 1;
 
@@ -76,11 +97,31 @@ public class CarListQuery
             return "minYear cannot be greater than maxYear.";
         }
 
+        if (MinMileage is < 0 || MaxMileage is < 0)
+        {
+            return "Mileage filters cannot be negative.";
+        }
+
+        if (MinMileage is int minMileage && MaxMileage is int maxMileage && minMileage > maxMileage)
+        {
+            return "minMileage cannot be greater than maxMileage.";
+        }
+
+        if (Seats is int seats && (seats < 1 || seats > 12))
+        {
+            return "seats must be between 1 and 12.";
+        }
+
+        if (!string.IsNullOrWhiteSpace(Sort) && !AllowedSorts.Contains(Sort.Trim()))
+        {
+            return "sort must be one of: latest, price-asc, price-desc, year-desc, year-asc.";
+        }
+
         return null;
     }
 }
 
-public class PagedResult<T>
+public class PagedResultDto<T>
 {
     public IReadOnlyList<T> Items { get; set; } = Array.Empty<T>();
 

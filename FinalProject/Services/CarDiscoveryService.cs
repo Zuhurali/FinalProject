@@ -36,7 +36,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         return true;
     }
 
-    public async Task<PagedResult<RankedCarResponse>> GetMostViewedAsync(
+    public async Task<PagedResultDto<RankedCarResponseDto>> GetMostViewedAsync(
         string period,
         int page = 1,
         int pageSize = 9,
@@ -64,7 +64,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         return await RankPageAsync(counts.Select(item => (item.CarId, item.Count)), page, pageSize, cancellationToken);
     }
 
-    public async Task<PagedResult<RankedCarResponse>> GetMostFavoritedAsync(
+    public async Task<PagedResultDto<RankedCarResponseDto>> GetMostFavoritedAsync(
         int page = 1,
         int pageSize = 9,
         CancellationToken cancellationToken = default)
@@ -79,7 +79,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         return await RankPageAsync(counts.Select(item => (item.CarId, item.Count)), page, pageSize, cancellationToken);
     }
 
-    public async Task<PagedResult<CarResponse>> GetLatestArrivalsAsync(
+    public async Task<PagedResultDto<CarResponseDto>> GetLatestArrivalsAsync(
         int page = 1,
         int pageSize = 9,
         CancellationToken cancellationToken = default)
@@ -94,7 +94,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
             page = totalPages;
         }
 
-        IReadOnlyList<CarResponse> items = Array.Empty<CarResponse>();
+        IReadOnlyList<CarResponseDto> items = Array.Empty<CarResponseDto>();
         if (totalCount > 0)
         {
             var cars = await query
@@ -111,7 +111,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
             items = cars.Select(car => car.ToResponse()).ToList();
         }
 
-        return new PagedResult<CarResponse>
+        return new PagedResultDto<CarResponseDto>
         {
             Items = items,
             CurrentPage = page,
@@ -121,7 +121,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         };
     }
 
-    public async Task<CarDiscoveryStatisticsResponse> GetStatisticsAsync(
+    public async Task<CarDiscoveryStatisticsResponseDto> GetStatisticsAsync(
         DateTime? utcNow = null,
         CancellationToken cancellationToken = default)
     {
@@ -141,10 +141,10 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         var byDay = viewTimes
             .GroupBy(CarDiscoveryRules.LocalDate)
             .ToDictionary(group => group.Key, group => group.Count());
-        var daily = new List<DailyViewPoint>();
+        var daily = new List<DailyViewPointDto>();
         for (var day = trendStartLocal; day <= CarDiscoveryRules.LocalDate(now); day = day.AddDays(1))
         {
-            daily.Add(new DailyViewPoint
+            daily.Add(new DailyViewPointDto
             {
                 Date = day.ToString("yyyy-MM-dd"),
                 Views = byDay.GetValueOrDefault(day)
@@ -154,7 +154,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         var mostViewed = await GetMostViewedAsync(CarDiscoveryRules.All, page: 1, pageSize: 5, utcNow: now, cancellationToken: cancellationToken);
         var mostFavorited = await GetMostFavoritedAsync(page: 1, pageSize: 5, cancellationToken: cancellationToken);
 
-        return new CarDiscoveryStatisticsResponse
+        return new CarDiscoveryStatisticsResponseDto
         {
             TotalViews = await _db.CarViews.CountAsync(cancellationToken),
             ViewsToday = await _db.CarViews.CountAsync(view => view.ViewedAt >= todayStart, cancellationToken),
@@ -166,7 +166,7 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         };
     }
 
-    private async Task<PagedResult<RankedCarResponse>> RankPageAsync(
+    private async Task<PagedResultDto<RankedCarResponseDto>> RankPageAsync(
         IEnumerable<(int CarId, int Count)> counts,
         int page,
         int pageSize,
@@ -215,14 +215,14 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
 
         var pageItems = pageSlice
             .Where(item => cars.ContainsKey(item.CarId))
-            .Select(item => new RankedCarResponse
+            .Select(item => new RankedCarResponseDto
             {
                 Count = item.Count,
                 Car = cars[item.CarId].ToResponse()
             })
             .ToList();
 
-        return new PagedResult<RankedCarResponse>
+        return new PagedResultDto<RankedCarResponseDto>
         {
             Items = pageItems,
             CurrentPage = page,
@@ -232,10 +232,10 @@ public sealed class CarDiscoveryService : ICarDiscoveryService
         };
     }
 
-    private static PagedResult<RankedCarResponse> EmptyRankedPage(int page, int pageSize) =>
+    private static PagedResultDto<RankedCarResponseDto> EmptyRankedPage(int page, int pageSize) =>
         new()
         {
-            Items = Array.Empty<RankedCarResponse>(),
+            Items = Array.Empty<RankedCarResponseDto>(),
             CurrentPage = page,
             PageSize = pageSize,
             TotalCount = 0,

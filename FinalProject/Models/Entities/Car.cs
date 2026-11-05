@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinalProject.Models.Entities;
 
-public class Car
+public class Car : BaseEntity
 {
-    public int Id { get; set; }
-
     [Range(1, int.MaxValue)]
     public int BrandId { get; set; }
 
@@ -97,10 +95,6 @@ public class Car
     [Required]
     [MaxLength(30)]
     public string Status { get; set; } = "Active";
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
 
     public Brand Brand { get; set; } = null!;
 

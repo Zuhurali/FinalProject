@@ -1,6 +1,6 @@
 using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Security;
 using FinalProject.MVC.Services.Interfaces;
@@ -68,7 +68,7 @@ public sealed class AdminCarsController : AdminControllerBase
                 .ToList();
 
             var pageResult = await _cars.GetCarsAsync(
-                new CarApiQuery
+                new CarApiQueryDto
                 {
                     Search = model.Search,
                     BrandId = model.BrandId,

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 
 namespace FinalProject.MVC.Models;
 
@@ -60,6 +60,25 @@ public sealed class ChangePasswordViewModel
     [Display(Name = "Confirm new password")]
     [Compare(nameof(NewPassword), ErrorMessage = "The new password and confirmation password do not match.")]
     public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public sealed class DeleteAccountViewModel
+{
+    [Required(ErrorMessage = "Enter your current password.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Current password")]
+    public string CurrentPassword { get; set; } = string.Empty;
+
+    [MustBeTrue(ErrorMessage = "Confirm that you want to deactivate this account.")]
+    [Display(Name = "I understand my account will be deactivated and I will no longer be able to sign in.")]
+    public bool ConfirmDeactivation { get; set; }
+}
+
+/// <summary>Requires a checkbox to be checked (true). Preferable to Range(typeof(bool)) for clarity.</summary>
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class MustBeTrueAttribute : ValidationAttribute
+{
+    public override bool IsValid(object? value) => value is true;
 }
 
 public sealed class ForgotPasswordViewModel

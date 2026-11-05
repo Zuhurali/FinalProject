@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using FinalProject.Models;
+using FinalProject.DTOs;
 using FinalProject.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ public sealed class ProductReviewsController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet("{productId:int}/reviews")]
-    public async Task<ActionResult<IReadOnlyList<ProductReviewItem>>> Get(
+    public async Task<ActionResult<IReadOnlyList<ProductReviewItemDto>>> Get(
         int productId,
         CancellationToken cancellationToken)
     {
@@ -34,7 +34,7 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("reviews/moderation")]
-    public async Task<ActionResult<IReadOnlyList<ProductReviewItem>>> Moderate(
+    public async Task<ActionResult<IReadOnlyList<ProductReviewItemDto>>> Moderate(
         CancellationToken cancellationToken)
     {
         return Ok(await _reviews.GetAllForModerationAsync(cancellationToken));
@@ -42,9 +42,9 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize]
     [HttpPost("{productId:int}/reviews")]
-    public async Task<ActionResult<ProductReviewItem>> Create(
+    public async Task<ActionResult<ProductReviewItemDto>> Create(
         int productId,
-        SaveProductReviewRequest request,
+        SaveProductReviewRequestDto request,
         CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -59,10 +59,10 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize]
     [HttpPut("{productId:int}/reviews/{reviewId:int}")]
-    public async Task<ActionResult<ProductReviewItem>> Update(
+    public async Task<ActionResult<ProductReviewItemDto>> Update(
         int productId,
         int reviewId,
-        SaveProductReviewRequest request,
+        SaveProductReviewRequestDto request,
         CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -115,7 +115,7 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("reviews/{reviewId:int}/history")]
-    public async Task<ActionResult<IReadOnlyList<ProductReviewRevisionItem>>> History(
+    public async Task<ActionResult<IReadOnlyList<ProductReviewRevisionItemDto>>> History(
         int reviewId,
         CancellationToken cancellationToken)
     {

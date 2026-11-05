@@ -4,15 +4,15 @@ namespace FinalProject.Services.Interfaces;
 
 public interface IMarketplaceService
 {
-    Task<IReadOnlyList<FavoriteResponse>> GetFavoritesAsync(string userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<FavoriteResponseDto>> GetFavoritesAsync(string userId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<int>> GetFavoriteIdsAsync(string userId, CancellationToken cancellationToken = default);
 
-    Task<FavoriteResponse?> AddFavoriteAsync(string userId, int carId, CancellationToken cancellationToken = default);
+    Task<FavoriteResponseDto?> AddFavoriteAsync(string userId, int carId, CancellationToken cancellationToken = default);
 
     Task<bool> RemoveFavoriteAsync(string userId, int carId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ProductFavoriteResponse>> GetProductFavoritesAsync(
+    Task<IReadOnlyList<ProductFavoriteResponseDto>> GetProductFavoritesAsync(
         string userId,
         CancellationToken cancellationToken = default);
 
@@ -20,7 +20,7 @@ public interface IMarketplaceService
         string userId,
         CancellationToken cancellationToken = default);
 
-    Task<ProductFavoriteResponse?> AddProductFavoriteAsync(
+    Task<ProductFavoriteResponseDto?> AddProductFavoriteAsync(
         string userId,
         int productId,
         CancellationToken cancellationToken = default);
@@ -30,25 +30,25 @@ public interface IMarketplaceService
         int productId,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ConversationSummaryResponse>> GetConversationsAsync(
+    Task<IReadOnlyList<ConversationSummaryResponseDto>> GetConversationsAsync(
         string userId,
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default);
 
-    Task<ConversationDetailsResponse?> GetConversationAsync(
+    Task<ConversationDetailsResponseDto?> GetConversationAsync(
         int id,
         string userId,
         bool markRead,
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default);
 
-    Task<ConversationDetailsResponse?> StartConversationAsync(
+    Task<ConversationDetailsResponseDto?> StartConversationAsync(
         int carId,
         string buyerId,
-        StartConversationRequest request,
+        StartConversationRequestDto request,
         CancellationToken cancellationToken = default);
 
-    Task<MessageResponse?> ReplyAsync(
+    Task<MessageResponseDto?> ReplyAsync(
         int conversationId,
         string senderId,
         string content,
@@ -61,7 +61,7 @@ public interface IMarketplaceService
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default);
 
-    Task<AccountSummaryResponse> GetSummaryAsync(
+    Task<AccountSummaryResponseDto> GetSummaryAsync(
         string userId,
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default);

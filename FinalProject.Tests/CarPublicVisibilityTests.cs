@@ -41,10 +41,10 @@ public class CarPublicVisibilityTests
         Assert.IsType<NotFoundResult>((await controller.GetById(draft.Id, CancellationToken.None)).Result);
 
         var soldOk = Assert.IsType<OkObjectResult>((await controller.GetById(sold.Id, CancellationToken.None)).Result);
-        Assert.Equal(sold.Id, Assert.IsType<CarResponse>(soldOk.Value).Id);
+        Assert.Equal(sold.Id, Assert.IsType<CarResponseDto>(soldOk.Value).Id);
 
         var ok = Assert.IsType<OkObjectResult>((await controller.GetById(active.Id, CancellationToken.None)).Result);
-        var payload = Assert.IsType<CarResponse>(ok.Value);
+        var payload = Assert.IsType<CarResponseDto>(ok.Value);
         Assert.Equal(active.Id, payload.Id);
     }
 
@@ -57,7 +57,7 @@ public class CarPublicVisibilityTests
         var controller = CreateCarsController(db, admin);
 
         var ok = Assert.IsType<OkObjectResult>((await controller.GetById(draft.Id, CancellationToken.None)).Result);
-        var payload = Assert.IsType<CarResponse>(ok.Value);
+        var payload = Assert.IsType<CarResponseDto>(ok.Value);
         Assert.Equal(draft.Id, payload.Id);
         Assert.Equal("Draft", payload.Status);
     }
@@ -72,7 +72,7 @@ public class CarPublicVisibilityTests
         var controller = CreateCarsController(db, Principal("owner-1", "Member"));
 
         var ok = Assert.IsType<OkObjectResult>((await controller.GetById(sold.Id, CancellationToken.None)).Result);
-        Assert.Equal(sold.Id, Assert.IsType<CarResponse>(ok.Value).Id);
+        Assert.Equal(sold.Id, Assert.IsType<CarResponseDto>(ok.Value).Id);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class CarPublicVisibilityTests
     [Fact]
     public void Unsafe_primary_image_url_fails_validation()
     {
-        var request = new SaveCarRequest
+        var request = new SaveCarRequestDto
         {
             BrandId = 1,
             CategoryId = 1,
@@ -116,7 +116,7 @@ public class CarPublicVisibilityTests
         };
 
         var results = request.Validate(new ValidationContext(request)).ToList();
-        Assert.Contains(results, item => item.MemberNames.Contains(nameof(SaveCarRequest.ImageUrl)));
+        Assert.Contains(results, item => item.MemberNames.Contains(nameof(SaveCarRequestDto.ImageUrl)));
     }
 
     [Fact]
@@ -216,16 +216,16 @@ public class CarPublicVisibilityTests
 
     private sealed class SilentNotifications : INotificationService
     {
-        public Task<NotificationListResponse> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
+        public Task<NotificationListResponseDto> GetForUserAsync(string userId, int take = 50, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
         public Task<int> GetUnreadCountAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationUnreadCountsResponse> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
+        public Task<NotificationUnreadCountsResponseDto> GetUnreadCountsAsync(string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<NotificationResponse?> CreateMessageNotificationAsync(
+        public Task<NotificationResponseDto?> CreateMessageNotificationAsync(
             string receiverId,
             string senderDisplayName,
             int conversationId,
@@ -234,13 +234,13 @@ public class CarPublicVisibilityTests
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task<IReadOnlyList<NotificationResponse>> CreatePriceDropNotificationsAsync(
+        public Task<IReadOnlyList<NotificationResponseDto>> CreatePriceDropNotificationsAsync(
             int carId,
             string carName,
             decimal previousPrice,
             decimal newPrice,
             CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<NotificationResponse>>(Array.Empty<NotificationResponse>());
+            Task.FromResult<IReadOnlyList<NotificationResponseDto>>(Array.Empty<NotificationResponseDto>());
 
         public Task<bool> MarkReadAsync(int notificationId, string userId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

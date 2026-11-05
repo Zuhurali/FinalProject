@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using FinalProject.Commerce;
 using FinalProject.Controllers;
-using FinalProject.Models;
+using FinalProject.DTOs;
 using FinalProject.MVC.Commerce;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -107,8 +107,8 @@ public class ShowroomRuleTests
     [Fact]
     public void Rating_request_accepts_only_one_to_five()
     {
-        var valid = new SaveProductRatingRequest { Rating = 5 };
-        var invalid = new SaveProductRatingRequest { Rating = 0 };
+        var valid = new SaveProductRatingRequestDto { Rating = 5 };
+        var invalid = new SaveProductRatingRequestDto { Rating = 0 };
         Assert.True(Validator.TryValidateObject(valid, new ValidationContext(valid), null, true));
         Assert.False(Validator.TryValidateObject(invalid, new ValidationContext(invalid), null, true));
     }

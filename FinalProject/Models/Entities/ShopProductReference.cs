@@ -1,9 +1,7 @@
 namespace FinalProject.Models.Entities;
 
-public class ShopProductReference
+public class ShopProductReference : BaseEntity
 {
-    public int Id { get; set; }
-
     public string Name { get; set; } = string.Empty;
 
     public decimal Price { get; set; }
@@ -27,8 +25,6 @@ public class ShopProductReference
     public string Description { get; set; } = string.Empty;
 
     public bool InStock { get; set; }
-
-    public DateTime CreatedAt { get; set; }
 
     public string Color { get; set; } = string.Empty;
 

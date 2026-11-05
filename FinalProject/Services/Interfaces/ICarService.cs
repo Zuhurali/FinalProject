@@ -4,21 +4,21 @@ namespace FinalProject.Services.Interfaces;
 
 public interface ICarService
 {
-    Task<PagedResult<CarResponse>> QueryAsync(CarListQuery query, CancellationToken cancellationToken = default);
+    Task<PagedResultDto<CarResponseDto>> QueryAsync(CarListQueryDto query, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<CarSuggestionResponse>> GetSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CarSuggestionResponseDto>> GetSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default);
 
-    Task<CarResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<CarResponseDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<CarResponse>> GetOwnedAsync(string ownerId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CarResponseDto>> GetOwnedAsync(string ownerId, CancellationToken cancellationToken = default);
 
-    Task<CarResponse?> CreateAsync(string ownerId, SaveCarRequest request, CancellationToken cancellationToken = default);
+    Task<CarResponseDto?> CreateAsync(string ownerId, SaveCarRequestDto request, CancellationToken cancellationToken = default);
 
-    Task<CarResponse?> CreateCatalogAsync(SaveCarRequest request, CancellationToken cancellationToken = default);
+    Task<CarResponseDto?> CreateCatalogAsync(SaveCarRequestDto request, CancellationToken cancellationToken = default);
 
-    Task<CarUpdateResult?> UpdateAsync(int id, SaveCarRequest request, CancellationToken cancellationToken = default);
+    Task<CarUpdateResultDto?> UpdateAsync(int id, SaveCarRequestDto request, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<CarLookupResponse> GetLookupsAsync(CancellationToken cancellationToken = default);
+    Task<CarLookupResponseDto> GetLookupsAsync(CancellationToken cancellationToken = default);
 }

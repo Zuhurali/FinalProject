@@ -1,8 +1,13 @@
 namespace FinalProject.MVC.Models
 {
-    public class Dealer
+    public class Dealer : BaseEntity
     {
-        public int Id { get; set; }
+        public Dealer()
+        {
+            CreatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public string Name { get; set; } = string.Empty;
         public string CardImage { get; set; } = string.Empty;
         public string DetailImage { get; set; } = string.Empty;
@@ -40,8 +45,6 @@ namespace FinalProject.MVC.Models
         public string EngineConfig { get; set; } = string.Empty;
         public int SortOrder { get; set; }
         public bool IsPublished { get; set; } = true;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 
     public class DealerDetailsViewModel

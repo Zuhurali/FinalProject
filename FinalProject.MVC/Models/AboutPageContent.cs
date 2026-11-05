@@ -2,12 +2,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class AboutPageContent
+public class AboutPageContent : BaseEntity
 {
+    public AboutPageContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public const int SingletonId = 1;
-
-    public int Id { get; set; } = SingletonId;
-
     [Required, MaxLength(160)]
     public string PageTitle { get; set; } = string.Empty;
 
@@ -85,6 +88,4 @@ public class AboutPageContent
 
     [Required, MaxLength(500)]
     public string Showcase4ImagePath { get; set; } = string.Empty;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

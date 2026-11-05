@@ -56,6 +56,29 @@ namespace FinalProject.MVC.Data
         {
             base.OnModelCreating(builder);
 
+            // Historically non-nullable UpdatedAt columns: keep DB required while CLR uses DateTime? from BaseEntity.
+            foreach (var entityType in new[]
+                     {
+                         typeof(FaqItem),
+                         typeof(TeamMember),
+                         typeof(Dealer),
+                         typeof(PartnerStripItem),
+                         typeof(PartnerStripSettings),
+                         typeof(SiteSettings),
+                         typeof(HomePageContent),
+                         typeof(AboutPageContent),
+                         typeof(ContactPageContent),
+                         typeof(LegalPageContent),
+                         typeof(ShopMarketingContent),
+                         typeof(FaqPageContent),
+                         typeof(TeamPageContent),
+                         typeof(DealerPageContent),
+                         typeof(CalculatorPageContent)
+                     })
+            {
+                builder.Entity(entityType).Property(nameof(BaseEntity.UpdatedAt)).IsRequired();
+            }
+
             builder.Entity<FaqItem>(entity =>
             {
                 entity.Property(item => item.Question).HasMaxLength(300).IsRequired();

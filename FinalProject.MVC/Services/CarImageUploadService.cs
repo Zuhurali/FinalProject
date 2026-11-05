@@ -1,5 +1,5 @@
 using FinalProject.MVC.Commerce;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Services.Interfaces;
 
 namespace FinalProject.MVC.Services;

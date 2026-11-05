@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.Models.Entities;
 
-public class ProductReviewRevision
+public class ProductReviewRevision : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ReviewId { get; set; }
 
     [Required]

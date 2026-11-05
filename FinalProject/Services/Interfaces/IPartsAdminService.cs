@@ -4,7 +4,7 @@ namespace FinalProject.Services.Interfaces;
 
 public interface IPartsAdminService
 {
-    Task<PartAdminListResponse> ListAsync(
+    Task<PartAdminListResponseDto> ListAsync(
         string? search,
         string? category,
         string? brand,
@@ -12,11 +12,11 @@ public interface IPartsAdminService
         int pageSize,
         CancellationToken cancellationToken = default);
 
-    Task<PartAdminItem?> GetAsync(int id, CancellationToken cancellationToken = default);
+    Task<PartAdminItemDto?> GetAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<(PartAdminItem? Part, string? Error)> CreateAsync(SavePartRequest request, CancellationToken cancellationToken = default);
+    Task<(PartAdminItemDto? Part, string? Error)> CreateAsync(SavePartRequestDto request, CancellationToken cancellationToken = default);
 
-    Task<(PartAdminItem? Part, string? Error)> UpdateAsync(int id, SavePartRequest request, CancellationToken cancellationToken = default);
+    Task<(PartAdminItemDto? Part, string? Error)> UpdateAsync(int id, SavePartRequestDto request, CancellationToken cancellationToken = default);
 
     Task<(bool Found, string Outcome, string Message)> DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

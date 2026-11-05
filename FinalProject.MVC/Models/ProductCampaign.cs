@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class ProductCampaign
+public class ProductCampaign : BaseEntity
 {
-    public int Id { get; set; }
-
     /// <summary>
     /// Set for single-product campaigns. Null when <see cref="AppliesToAllParts"/> is true.
     /// </summary>

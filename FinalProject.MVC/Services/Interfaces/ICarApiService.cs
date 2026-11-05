@@ -1,12 +1,12 @@
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 
 namespace FinalProject.MVC.Services.Interfaces;
 
 public interface ICarApiService
 {
-    Task<PagedCarsDto> GetCarsAsync(CarApiQuery query, CancellationToken cancellationToken = default);
+    Task<PagedCarsDto> GetCarsAsync(CarApiQueryDto query, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<CarApiDto>> GetAllCarsAsync(CarApiQuery? query = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CarApiDto>> GetAllCarsAsync(CarApiQueryDto? query = null, CancellationToken cancellationToken = default);
 
     Task<CarApiDto?> GetCarByIdAsync(int id, string? accessToken = null, CancellationToken cancellationToken = default);
 
@@ -15,6 +15,11 @@ public interface ICarApiService
     Task<CarLookupDto> GetLookupsAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<CarApiDto>> GetMyCarsAsync(string accessToken, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CarApiDto>> GetCarsByOwnerAsync(
+        string ownerId,
+        string accessToken,
+        CancellationToken cancellationToken = default);
 
     Task<CarApiDto> CreateCarAsync(SaveCarDto car, string accessToken, CancellationToken cancellationToken = default);
 

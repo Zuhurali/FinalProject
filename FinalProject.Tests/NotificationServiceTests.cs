@@ -157,7 +157,7 @@ public class NotificationServiceTests
         Assert.Empty(again!.Notifications);
     }
 
-    private static FinalProject.DTOs.SaveCarRequest SaveCar(decimal price) =>
+    private static FinalProject.DTOs.SaveCarRequestDto SaveCar(decimal price) =>
         new()
         {
             BrandId = 200,

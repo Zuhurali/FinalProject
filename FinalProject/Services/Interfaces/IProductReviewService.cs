@@ -1,19 +1,19 @@
-using FinalProject.Models;
+using FinalProject.DTOs;
 
 namespace FinalProject.Services.Interfaces;
 
 public interface IProductReviewService
 {
-    Task<IReadOnlyList<ProductReviewItem>?> GetReviewsAsync(
+    Task<IReadOnlyList<ProductReviewItemDto>?> GetReviewsAsync(
         int productId,
         string? currentUserId,
         bool includeHidden,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ProductReviewItem>> GetAllForModerationAsync(
+    Task<IReadOnlyList<ProductReviewItemDto>> GetAllForModerationAsync(
         CancellationToken cancellationToken = default);
 
-    Task<(ProductReviewItem? Review, string? Error)> SaveReviewAsync(
+    Task<(ProductReviewItemDto? Review, string? Error)> SaveReviewAsync(
         int productId,
         int? reviewId,
         string userId,
@@ -33,7 +33,7 @@ public interface IProductReviewService
         int reviewId,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ProductReviewRevisionItem>?> GetHistoryAsync(
+    Task<IReadOnlyList<ProductReviewRevisionItemDto>?> GetHistoryAsync(
         int reviewId,
         CancellationToken cancellationToken = default);
 

@@ -3,10 +3,8 @@ using FinalProject.Commerce;
 
 namespace FinalProject.Models.Entities;
 
-public class ProductReview
+public class ProductReview : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ProductId { get; set; }
 
     [Required]
@@ -20,10 +18,6 @@ public class ProductReview
     public bool IsHidden { get; set; }
 
     public bool IsEdited { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime UpdatedAt { get; set; }
 
     public bool IsDemo { get; set; }
 }

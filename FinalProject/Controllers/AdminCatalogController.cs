@@ -18,15 +18,15 @@ public sealed class AdminCatalogController : ControllerBase
     }
 
     [HttpGet("summary")]
-    public async Task<ActionResult<AdminSummaryResponse>> Summary(CancellationToken cancellationToken)
+    public async Task<ActionResult<AdminSummaryResponseDto>> Summary(CancellationToken cancellationToken)
     {
         return Ok(await _catalogAdmin.GetSummaryAsync(cancellationToken));
     }
 
     [Authorize(Roles = "SuperAdmin")]
     [HttpPost("brands")]
-    public async Task<ActionResult<BrandResponse>> CreateBrand(
-        [FromBody] SaveLookupRequest request,
+    public async Task<ActionResult<BrandResponseDto>> CreateBrand(
+        [FromBody] SaveLookupRequestDto request,
         CancellationToken cancellationToken)
     {
         var brand = await _catalogAdmin.CreateBrandAsync(request.Name, cancellationToken);
@@ -34,9 +34,9 @@ public sealed class AdminCatalogController : ControllerBase
     }
 
     [HttpPut("brands/{id:int}")]
-    public async Task<ActionResult<BrandResponse>> UpdateBrand(
+    public async Task<ActionResult<BrandResponseDto>> UpdateBrand(
         int id,
-        [FromBody] SaveLookupRequest request,
+        [FromBody] SaveLookupRequestDto request,
         CancellationToken cancellationToken)
     {
         var brand = await _catalogAdmin.UpdateBrandAsync(id, request.Name, cancellationToken);
@@ -53,8 +53,8 @@ public sealed class AdminCatalogController : ControllerBase
 
     [Authorize(Roles = "SuperAdmin")]
     [HttpPost("categories")]
-    public async Task<ActionResult<CategoryResponse>> CreateCategory(
-        [FromBody] SaveLookupRequest request,
+    public async Task<ActionResult<CategoryResponseDto>> CreateCategory(
+        [FromBody] SaveLookupRequestDto request,
         CancellationToken cancellationToken)
     {
         var category = await _catalogAdmin.CreateCategoryAsync(request.Name, cancellationToken);
@@ -62,9 +62,9 @@ public sealed class AdminCatalogController : ControllerBase
     }
 
     [HttpPut("categories/{id:int}")]
-    public async Task<ActionResult<CategoryResponse>> UpdateCategory(
+    public async Task<ActionResult<CategoryResponseDto>> UpdateCategory(
         int id,
-        [FromBody] SaveLookupRequest request,
+        [FromBody] SaveLookupRequestDto request,
         CancellationToken cancellationToken)
     {
         var category = await _catalogAdmin.UpdateCategoryAsync(id, request.Name, cancellationToken);

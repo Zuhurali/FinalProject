@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Security;
 using FinalProject.MVC.Services;
@@ -210,6 +210,12 @@ namespace FinalProject.MVC.Controllers
                 return InvalidLogin();
             }
 
+            if (user.IsDeleted)
+            {
+                TempData["Error"] = "This account has been deactivated and can no longer sign in.";
+                return InvalidLogin();
+            }
+
             if (!user.EmailConfirmed)
             {
                 TempData["Error"] = "Please confirm your email before signing in.";
@@ -221,6 +227,9 @@ namespace FinalProject.MVC.Controllers
 
             if (result.Succeeded)
             {
+                user.LastLoginAt = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
+
                 if (IsSafeReturnUrl(returnUrl))
                 {
                     return LocalRedirect(returnUrl!);
@@ -451,7 +460,7 @@ namespace FinalProject.MVC.Controllers
             _cache.Set(cacheKey, true, TimeSpan.FromMinutes(1));
 
             var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            if (user != null && !user.IsDeleted)
             {
                 await SendPasswordResetAsync(user);
             }
@@ -518,9 +527,9 @@ namespace FinalProject.MVC.Controllers
             }
 
             var user = await _userManager.FindByIdAsync(model.UserId);
-            if (user == null)
+            if (user == null || user.IsDeleted)
             {
-                // Do not reveal whether the user id was valid.
+                // Do not reveal whether the user id was valid; deleted accounts cannot regain access.
                 TempData["Success"] = "If the account exists, the password has been updated. You can sign in now.";
                 return RedirectToAction(nameof(SignIn));
             }
@@ -536,6 +545,8 @@ namespace FinalProject.MVC.Controllers
                 return View(model);
             }
 
+            user.LastPasswordResetAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
             await _userManager.ResetAccessFailedCountAsync(user);
             TempData["Success"] = "Your password was updated. You can sign in now.";
             return RedirectToAction(nameof(SignIn));
@@ -580,6 +591,8 @@ namespace FinalProject.MVC.Controllers
                 return View(model);
             }
 
+            user.LastPasswordChangedAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
             await _signInManager.RefreshSignInAsync(user);
             TempData["Success"] = "Your password was changed.";
             return RedirectToAction(nameof(ChangePassword));
@@ -1291,13 +1304,8 @@ namespace FinalProject.MVC.Controllers
                 return Challenge();
             }
 
-            return View(new AccountProfileViewModel
-            {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email ?? string.Empty,
-                PhoneNumber = user.PhoneNumber
-            });
+            await PrepareProfilePageAsync(user);
+            return View(await BuildProfileViewModelAsync(user));
         }
 
         [Authorize]
@@ -1311,6 +1319,7 @@ namespace FinalProject.MVC.Controllers
                 return Challenge();
             }
 
+            await PrepareProfilePageAsync(user);
             model.Email = user.Email ?? string.Empty;
             if (!ModelState.IsValid)
             {
@@ -1335,11 +1344,125 @@ namespace FinalProject.MVC.Controllers
             return RedirectToAction(nameof(Profile));
         }
 
+        /// <summary>
+        /// Soft-deletes the signed-in Member's own account after password confirmation.
+        /// Admin/SuperAdmin cannot use this endpoint. Historical records are preserved.
+        /// </summary>
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAccount(DeleteAccountViewModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Challenge();
+            }
+
+            if (await IsStaffAccountAsync(user))
+            {
+                return Forbid();
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, AppRoles.Member))
+            {
+                return Forbid();
+            }
+
+            if (user.IsDeleted)
+            {
+                await _signInManager.SignOutAsync();
+                TempData["Success"] = "This account is already deactivated.";
+                return RedirectToAction(nameof(SignIn));
+            }
+
+            await PrepareProfilePageAsync(user);
+            ViewData["DeleteAccount"] = model;
+            ViewData["DeleteAccountAttempted"] = true;
+
+            // Re-assert confirmation rules so property errors stay visible even if
+            // binder/attribute edge cases leave ModelState incomplete.
+            if (string.IsNullOrWhiteSpace(model.CurrentPassword))
+            {
+                ModelState.Remove(nameof(DeleteAccountViewModel.CurrentPassword));
+                ModelState.AddModelError(
+                    nameof(DeleteAccountViewModel.CurrentPassword),
+                    "Enter your current password.");
+            }
+
+            if (!model.ConfirmDeactivation)
+            {
+                ModelState.Remove(nameof(DeleteAccountViewModel.ConfirmDeactivation));
+                ModelState.AddModelError(
+                    nameof(DeleteAccountViewModel.ConfirmDeactivation),
+                    "Confirm that you want to deactivate this account.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(nameof(Profile), await BuildProfileViewModelAsync(user));
+            }
+
+            if (!await _userManager.CheckPasswordAsync(user, model.CurrentPassword))
+            {
+                ModelState.AddModelError(
+                    nameof(DeleteAccountViewModel.CurrentPassword),
+                    "The password is incorrect.");
+                return View(nameof(Profile), await BuildProfileViewModelAsync(user));
+            }
+
+            // Soft-delete only: keep AspNetUsers row and all historical associations.
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.UtcNow;
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.MaxValue;
+            var update = await _userManager.UpdateAsync(user);
+            if (!update.Succeeded)
+            {
+                foreach (var error in update.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return View(nameof(Profile), await BuildProfileViewModelAsync(user));
+            }
+
+            // Invalidate any existing cookie/session immediately.
+            await _userManager.UpdateSecurityStampAsync(user);
+            await _signInManager.SignOutAsync();
+
+            TempData["Success"] = "Your account has been deactivated. You can no longer sign in.";
+            return RedirectToAction(nameof(SignIn));
+        }
+
         public IActionResult AccessDenied()
         {
             ViewData["Title"] = "Access Denied - AutoVault";
             return View();
         }
+
+        private async Task<bool> IsStaffAccountAsync(ApplicationUser user) =>
+            await _userManager.IsInRoleAsync(user, AppRoles.Admin)
+            || await _userManager.IsInRoleAsync(user, AppRoles.SuperAdmin);
+
+        private async Task PrepareProfilePageAsync(ApplicationUser user)
+        {
+            ViewData["Title"] = "Profile Settings - AutoVault";
+            ViewData["BodyClass"] = "account-page-body";
+            var isMember = await _userManager.IsInRoleAsync(user, AppRoles.Member);
+            var isStaff = await IsStaffAccountAsync(user);
+            ViewData["ShowDeleteAccount"] = isMember && !isStaff && !user.IsDeleted;
+            ViewData["DeleteAccount"] ??= new DeleteAccountViewModel();
+        }
+
+        private static Task<AccountProfileViewModel> BuildProfileViewModelAsync(ApplicationUser user) =>
+            Task.FromResult(new AccountProfileViewModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber
+            });
 
         private async Task<ApplicationUser?> FindByIdentifierAsync(string identifier)
         {

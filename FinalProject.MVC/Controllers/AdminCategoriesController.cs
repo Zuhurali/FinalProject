@@ -1,4 +1,4 @@
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Security;
 using FinalProject.MVC.Services.Interfaces;

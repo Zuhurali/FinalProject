@@ -1,50 +1,18 @@
-@model IReadOnlyList<FinalProject.MVC.Models.Car>
+@model CarsThreePageModel
 @{
     ViewData["Title"] = "Cars Three - AutoVault";
-    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
-    var makes = Model
-        .Where(car => !string.IsNullOrWhiteSpace(car.Make))
-        .GroupBy(car => car.Make)
-        .OrderBy(group => group.Key)
-        .Select(group => group.Key)
-        .ToList();
-    var models = Model
-        .Where(car => !string.IsNullOrWhiteSpace(car.Model))
-        .GroupBy(car => car.Model)
-        .OrderBy(group => group.Key)
-        .Select(group => group.Key)
-        .ToList();
-    var types = Model
-        .Where(car => !string.IsNullOrWhiteSpace(car.Category))
-        .GroupBy(car => car.Category)
-        .OrderBy(group => group.Key)
-        .Select(group => group.Key)
-        .ToList();
-    var fuels = Model
-        .Where(car => !string.IsNullOrWhiteSpace(car.Fuel))
-        .GroupBy(car => car.Fuel)
-        .OrderBy(group => group.Key)
-        .Select(group => group.Key)
-        .ToList();
-    var transmissions = Model
-        .Where(car => !string.IsNullOrWhiteSpace(car.Transmission))
-        .GroupBy(car => car.Transmission)
-        .OrderBy(group => group.Key)
-        .Select(group => group.Key)
-        .ToList();
-    var seats = Model
-        .Where(car => car.Seats > 0)
-        .GroupBy(car => car.Seats)
-        .OrderBy(group => group.Key)
-        .Select(group => group.Key)
-        .ToList();
-    var minPrice = Model.Count == 0 ? 0m : Model.Min(car => car.Price);
-    var maxPrice = Model.Count == 0 ? 0m : Model.Max(car => car.Price);
-    var minYear = Model.Count == 0 ? 0 : Model.Min(car => car.Year);
-    var maxYear = Model.Count == 0 ? 0 : Model.Max(car => car.Year);
-    var minMileage = Model.Count == 0 ? 0 : Model.Min(car => car.Mileage);
-    var maxMileage = Model.Count == 0 ? 0 : Model.Max(car => car.Mileage);
-    const int pageSize = 9;
+    var makes = Model.Makes;
+    var models = Model.Models;
+    var types = Model.Types;
+    var fuels = Model.Fuels;
+    var transmissions = Model.Transmissions;
+    var seats = Model.SeatsOptions;
+    var minPrice = Model.MinPriceBound;
+    var maxPrice = Model.MaxPriceBound;
+    var minYear = Model.MinYearBound;
+    var maxYear = Model.MaxYearBound;
+    var pageSize = Model.PageSize > 0 ? Model.PageSize : CarsThreeFilterQuery.PageSize;
+    var resultsUrl = Url.Action("CarsThreeResults", "Cars") ?? "/Cars/CarsThreeResults";
 }
 
 <style>
@@ -601,9 +569,9 @@
 
 <div class="rts-section-gapNew cars3-advanced cars-three-page">
     <div class="container">
-        @if (ViewData["CarApiError"] is string carApiError)
+        @if (!string.IsNullOrWhiteSpace(Model.ApiError))
         {
-            <h3 class="title text-center">@carApiError</h3>
+            <h3 class="title text-center">@Model.ApiError</h3>
         }
 
         <div class="cars3-shell">
@@ -712,7 +680,7 @@
 
             <section class="cars3-results" aria-label="Vehicle results">
                 <div class="cars3-panel cars3-toolbar">
-                    <p class="cars3-toolbar__count"><span id="carResultCount">@Model.Count</span> vehicles found</p>
+                    <p class="cars3-toolbar__count"><span id="carResultCount">@Model.TotalCount</span> vehicles found</p>
                     <div class="cars3-toolbar__sort">
                         <label for="carSort">Sort</label>
                         <select id="carSort">
@@ -726,120 +694,12 @@
                 </div>
 
                 <div id="carList">
-                    @{
-                        var index = 0;
-                    }
-                    @foreach (var car in Model)
-                    {
-                        var displayName = string.IsNullOrWhiteSpace(car.Name)
-                            ? $"{car.Make} {car.Model}".Trim()
-                            : car.Name;
-                        <article class="cars3-panel cars3-card car-card@(index >= pageSize ? " d-none" : null)"
-                                 data-id="@car.Id"
-                                 data-search="@($"{displayName} {car.Make} {car.Model} {car.Category}")"
-                                 data-make="@car.Make"
-                                 data-model="@car.Model"
-                                 data-type="@car.Category"
-                                 data-price="@car.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                 data-year="@car.Year.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                 data-fuel="@car.Fuel"
-                                 data-transmission="@car.Transmission"
-                                 data-mileage="@car.Mileage.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                 data-seats="@car.Seats.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                 data-created="@car.CreatedAt.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture)">
-                            <div class="cars3-card__media">
-                                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
-                                    <img src="@Url.Content(car.ImagePath)" alt="@displayName" loading="lazy" />
-                                </a>
-                                @if (!string.IsNullOrWhiteSpace(car.Badge))
-                                {
-                                    <span class="cars3-card__badge">@car.Badge</span>
-                                }
-                            </div>
-                            <div class="cars3-card__body">
-                                <h3 class="cars3-card__title">
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@displayName</a>
-                                </h3>
-                                <ul class="cars3-card__meta">
-                                    @if (car.Year > 0)
-                                    {
-                                        <li><strong>Year:</strong> @car.Year</li>
-                                    }
-                                    <li><strong>Mileage:</strong> @car.MileageText</li>
-                                    @if (!string.IsNullOrWhiteSpace(car.Fuel))
-                                    {
-                                        <li><strong>Fuel:</strong> @car.Fuel</li>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(car.Transmission))
-                                    {
-                                        <li><strong>Transmission:</strong> @car.Transmission</li>
-                                    }
-                                    @if (car.Seats > 0)
-                                    {
-                                        <li><strong>Seats:</strong> @car.Seats</li>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(car.Category))
-                                    {
-                                        <li><strong>Type:</strong> @car.Category</li>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(car.DriveType))
-                                    {
-                                        <li><strong>Drive:</strong> @car.DriveType</li>
-                                    }
-                                    @if (car.Horsepower > 0)
-                                    {
-                                        <li><strong>HP:</strong> @car.Horsepower</li>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(car.Color))
-                                    {
-                                        <li><strong>Color:</strong> @car.Color</li>
-                                    }
-                                </ul>
-                            </div>
-                            <div class="cars3-card__aside">
-                                <p class="cars3-card__price">$@car.Price.ToString("N0")</p>
-                                <div class="cars3-card__actions">
-                                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
-                                    <div class="cars3-fav">
-                                        @if (User.Identity?.IsAuthenticated == true)
-                                        {
-                                            <form asp-controller="Cars"
-                                                  asp-action="@(car.IsFavorite ? "RemoveFavorite" : "AddFavorite")"
-                                                  asp-route-id="@car.Id"
-                                                  method="post"
-                                                  class="wishlist"
-                                                  data-favorite-toggle
-                                                  data-is-favorite="@(car.IsFavorite ? "true" : "false")"
-                                                  data-add-url="@Url.Action("AddFavorite", "Cars", new { id = car.Id })"
-                                                  data-remove-url="@Url.Action("RemoveFavorite", "Cars", new { id = car.Id })">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                                <button type="submit"
-                                                        data-favorite-button
-                                                        aria-pressed="@(car.IsFavorite ? "true" : "false")"
-                                                        title="@(car.IsFavorite ? "Remove from favorites" : "Add to favorites")">
-                                                    <i class="@(car.IsFavorite ? "fa-solid" : "fa-regular") fa-heart" data-favorite-icon></i>
-                                                    <span>Favorite</span>
-                                                </button>
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@returnUrl" title="Sign in to favorite">
-                                                <i class="fa-regular fa-heart"></i>
-                                                <span>Favorite</span>
-                                            </a>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-                        index++;
-                    }
+                    <partial name="_CarsThreeCards" model="Model" />
                 </div>
 
-                <h6 id="carEmpty" class="cars3-empty" hidden>No vehicles match these filters.</h6>
-                <button type="button" class="rts-btn load-more-btn btn-border cars3-load" id="carLoadMore">Load More</button>
+                <p id="carPriceRangeError" class="cars3-empty cars3-price-error" role="alert" hidden>Minimum price cannot be greater than maximum price.</p>
+                <h6 id="carEmpty" class="cars3-empty" @(Model.TotalCount == 0 ? null : "hidden")>No vehicles match these filters.</h6>
+                <button type="button" class="rts-btn load-more-btn btn-border cars3-load" id="carLoadMore" @(Model.HasMore ? null : "hidden")>Load More</button>
             </section>
         </div>
     </div>
@@ -852,11 +712,13 @@
     <script>
         (function () {
             var pageSize = @pageSize;
-            var shown = pageSize;
-            var priceFloor = @minPrice.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var priceCeil = @maxPrice.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var yearFloor = @minYear.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var yearCeil = @maxYear.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var currentPage = @Model.Page;
+            var totalCount = @Model.TotalCount;
+            var hasMore = @(Model.HasMore ? "true" : "false");
+            var resultsUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(resultsUrl));
+            var requestToken = 0;
+            var loading = false;
+            var seenIds = {};
 
             var search = document.getElementById("carSearch");
             var brand = document.getElementById("filterBrand");
@@ -874,21 +736,15 @@
             var sort = document.getElementById("carSort");
             var clearBtn = document.getElementById("carClearFilters");
             var empty = document.getElementById("carEmpty");
+            var priceRangeError = document.getElementById("carPriceRangeError");
             var loadMore = document.getElementById("carLoadMore");
             var resultCount = document.getElementById("carResultCount");
             var list = document.getElementById("carList");
-            var cards = Array.prototype.slice.call(document.querySelectorAll(".car-card"));
 
-            function num(value, fallback) {
-                var parsed = Number(String(value).trim().replace(/,/g, ""));
-                return Number.isFinite(parsed) ? parsed : fallback;
-            }
+            Array.prototype.forEach.call(list.querySelectorAll(".car-card[data-id]"), function (card) {
+                seenIds[String(card.getAttribute("data-id"))] = true;
+            });
 
-            function norm(value) {
-                return String(value == null ? "" : value).trim().toLowerCase();
-            }
-
-            // null => filter bound inactive (empty / invalid input)
             function parseNonNegativeFilter(raw) {
                 var text = String(raw == null ? "" : raw).trim().replace(/\s/g, "").replace(/,/g, "");
                 if (text === "") return null;
@@ -897,97 +753,122 @@
                 return parsed;
             }
 
-            function matchingCards() {
-                var query = (search.value || "").trim().toLowerCase();
-                var brandValue = norm(brand.value);
-                var modelValue = norm(model.value);
-                var typeValue = norm(type.value);
-                var fuelValue = norm(fuel.value);
-                var transmissionValue = norm(transmission.value);
-                var seatsValue = norm(seats.value);
-                var minP = minPrice.value === "" ? priceFloor : num(minPrice.value, priceFloor);
-                var maxP = maxPrice.value === "" ? priceCeil : num(maxPrice.value, priceCeil);
-                var minY = minYear.value === "" ? yearFloor : num(minYear.value, yearFloor);
-                var maxY = maxYear.value === "" ? yearCeil : num(maxYear.value, yearCeil);
-                var minM = parseNonNegativeFilter(minMileageInput.value);
-                var maxM = parseNonNegativeFilter(maxMileageInput.value);
-
-                return cards.filter(function (card) {
-                    var price = num(card.getAttribute("data-price"), 0);
-                    var year = num(card.getAttribute("data-year"), 0);
-                    var mileage = num(card.getAttribute("data-mileage"), 0);
-                    if (query && norm(card.getAttribute("data-search")).indexOf(query) === -1) return false;
-                    if (brandValue && norm(card.getAttribute("data-make")) !== brandValue) return false;
-                    if (modelValue && norm(card.getAttribute("data-model")) !== modelValue) return false;
-                    if (typeValue && norm(card.getAttribute("data-type")) !== typeValue) return false;
-                    if (fuelValue && norm(card.getAttribute("data-fuel")) !== fuelValue) return false;
-                    if (transmissionValue && norm(card.getAttribute("data-transmission")) !== transmissionValue) return false;
-                    if (seatsValue && norm(card.getAttribute("data-seats")) !== seatsValue) return false;
-                    if (price < minP || price > maxP) return false;
-                    if (year < minY || year > maxY) return false;
-                    if (minM !== null && mileage < minM) return false;
-                    if (maxM !== null && mileage > maxM) return false;
-                    return true;
-                });
+            function priceRangeInvalid() {
+                var minEntered = parseNonNegativeFilter(minPrice.value);
+                var maxEntered = parseNonNegativeFilter(maxPrice.value);
+                return minEntered !== null && maxEntered !== null && minEntered > maxEntered;
             }
 
-            // Filter first. An active minimum price sorts matches cheapest-first.
-            // With no minimum price, the Sort dropdown selection is unchanged.
-            function sortCards(matches) {
-                var mode = parseNonNegativeFilter(minPrice.value) !== null ? "price-asc" : sort.value;
-                return matches.slice().sort(function (a, b) {
-                    var priceA = num(a.getAttribute("data-price"), 0);
-                    var priceB = num(b.getAttribute("data-price"), 0);
-                    var yearA = num(a.getAttribute("data-year"), 0);
-                    var yearB = num(b.getAttribute("data-year"), 0);
-                    var createdA = num(a.getAttribute("data-created"), 0);
-                    var createdB = num(b.getAttribute("data-created"), 0);
-                    if (mode === "price-asc") return priceA - priceB;
-                    if (mode === "price-desc") return priceB - priceA;
-                    if (mode === "year-desc") return yearB - yearA;
-                    if (mode === "year-asc") return yearA - yearB;
-                    return createdB - createdA;
-                });
+            function appendParam(params, name, value) {
+                if (value === null || value === undefined) return;
+                var text = String(value).trim();
+                if (text !== "") params.set(name, text);
             }
 
-            function apply() {
-                var matches = sortCards(matchingCards());
-                var matchSet = new Set(matches);
-                var visible = matches.slice(0, shown);
+            function buildQuery(page) {
+                var params = new URLSearchParams();
+                appendParam(params, "search", search.value);
+                appendParam(params, "brand", brand.value);
+                appendParam(params, "model", model.value);
+                appendParam(params, "type", type.value);
+                appendParam(params, "minPrice", parseNonNegativeFilter(minPrice.value));
+                appendParam(params, "maxPrice", parseNonNegativeFilter(maxPrice.value));
+                appendParam(params, "minYear", minYear.value);
+                appendParam(params, "maxYear", maxYear.value);
+                appendParam(params, "fuel", fuel.value);
+                appendParam(params, "transmission", transmission.value);
+                appendParam(params, "minMileage", parseNonNegativeFilter(minMileageInput.value));
+                appendParam(params, "maxMileage", parseNonNegativeFilter(maxMileageInput.value));
+                appendParam(params, "seats", seats.value);
+                appendParam(params, "sort", sort.value || "latest");
+                params.set("page", String(page));
+                return params.toString();
+            }
 
-                cards.forEach(function (card) {
-                    card.classList.add("d-none");
-                });
+            function updateChrome() {
+                resultCount.textContent = String(totalCount);
+                empty.hidden = totalCount > 0;
+                loadMore.hidden = !hasMore;
+            }
 
-                visible.forEach(function (card) {
-                    list.appendChild(card);
-                    card.classList.remove("d-none");
-                });
-
-                // Keep remaining matches after visible ones for stable Load More order.
-                matches.slice(shown).forEach(function (card) {
+            function appendUniqueCards(html) {
+                var wrapper = document.createElement("div");
+                wrapper.innerHTML = html;
+                Array.prototype.forEach.call(wrapper.querySelectorAll(".car-card[data-id]"), function (card) {
+                    var id = String(card.getAttribute("data-id"));
+                    if (seenIds[id]) return;
+                    seenIds[id] = true;
                     list.appendChild(card);
                 });
-
-                // Non-matching cards stay at the end, hidden.
-                cards.forEach(function (card) {
-                    if (!matchSet.has(card)) {
-                        list.appendChild(card);
-                    }
-                });
-
-                resultCount.textContent = String(matches.length);
-                empty.hidden = matches.length > 0;
-                loadMore.hidden = matches.length <= shown;
             }
 
-            function resetPagingAndApply() {
-                shown = pageSize;
-                apply();
+            function fetchPage(page, append) {
+                if (loading) return;
+                var token = ++requestToken;
+                loading = true;
+                loadMore.disabled = true;
+
+                fetch(resultsUrl + "?" + buildQuery(page), {
+                    method: "GET",
+                    headers: {
+                        Accept: "text/html",
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    credentials: "same-origin"
+                })
+                    .then(function (response) {
+                        if (!response.ok) throw new Error("Listing request failed.");
+                        currentPage = Number(response.headers.get("X-Cars3-Page") || page) || page;
+                        totalCount = Number(response.headers.get("X-Cars3-Total-Count") || "0") || 0;
+                        hasMore = response.headers.get("X-Cars3-Has-More") === "1";
+                        return response.text();
+                    })
+                    .then(function (html) {
+                        if (token !== requestToken) return;
+                        if (!append) {
+                            list.innerHTML = "";
+                            seenIds = {};
+                        }
+                        appendUniqueCards(html || "");
+                        updateChrome();
+                    })
+                    .catch(function () {
+                        if (token !== requestToken) return;
+                        if (!append) {
+                            list.innerHTML = "";
+                            seenIds = {};
+                            totalCount = 0;
+                            hasMore = false;
+                            updateChrome();
+                        }
+                    })
+                    .finally(function () {
+                        if (token !== requestToken) return;
+                        loading = false;
+                        loadMore.disabled = false;
+                    });
+            }
+
+            function resetToFirstPage() {
+                var invalidPriceRange = priceRangeInvalid();
+                priceRangeError.hidden = !invalidPriceRange;
+                if (invalidPriceRange) {
+                    list.innerHTML = "";
+                    seenIds = {};
+                    totalCount = 0;
+                    hasMore = false;
+                    currentPage = 1;
+                    updateChrome();
+                    empty.hidden = true;
+                    return;
+                }
+
+                currentPage = 1;
+                fetchPage(1, false);
             }
 
             function onFilterChange() {
-                resetPagingAndApply();
+                resetToFirstPage();
             }
 
             // nice-select updates the <select> then fires jQuery .trigger("change"),
@@ -1037,19 +918,19 @@
                 seats.value = "";
                 sort.value = "latest";
                 [brand, model, type, fuel, transmission, seats, sort].forEach(syncNiceSelect);
-                resetPagingAndApply();
+                resetToFirstPage();
             });
 
             loadMore.addEventListener("click", function (event) {
                 event.preventDefault();
                 event.stopPropagation();
+                if (!hasMore || loading) return;
                 var scrollY = window.scrollY || window.pageYOffset || 0;
-                shown += pageSize;
-                apply();
+                fetchPage(currentPage + 1, true);
                 window.scrollTo(0, scrollY);
             });
 
-            apply();
+            updateChrome();
         })();
     </script>
 }

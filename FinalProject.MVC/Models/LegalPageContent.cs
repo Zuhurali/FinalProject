@@ -2,12 +2,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class LegalPageContent
+public class LegalPageContent : BaseEntity
 {
+    public LegalPageContent()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public const int SingletonId = 1;
-
-    public int Id { get; set; } = SingletonId;
-
     [Required, MaxLength(160)]
     public string PrivacyTitle { get; set; } = string.Empty;
 
@@ -31,6 +34,4 @@ public class LegalPageContent
 
     [Required, MaxLength(320)]
     public string TermsSeoDescription { get; set; } = string.Empty;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

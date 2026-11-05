@@ -1,6 +1,6 @@
 namespace FinalProject.DTOs;
 
-public sealed record NotificationResponse(
+public sealed record NotificationResponseDto(
     int Id,
     string UserId,
     string Type,
@@ -12,18 +12,18 @@ public sealed record NotificationResponse(
     int? RelatedConversationId,
     int? RelatedCarId);
 
-public sealed record NotificationListResponse(
+public sealed record NotificationListResponseDto(
     int UnreadCount,
-    IReadOnlyList<NotificationResponse> Items);
+    IReadOnlyList<NotificationResponseDto> Items);
 
-public sealed record NotificationUnreadCountsResponse(
+public sealed record NotificationUnreadCountsResponseDto(
     int Count,
     int Messages,
     int Favorites,
     int Listings,
     int Other);
 
-public sealed record CarUpdateResult(
-    CarResponse Car,
-    IReadOnlyList<NotificationResponse> Notifications,
+public sealed record CarUpdateResultDto(
+    CarResponseDto Car,
+    IReadOnlyList<NotificationResponseDto> Notifications,
     IReadOnlyList<string>? RemovedImageUrls = null);

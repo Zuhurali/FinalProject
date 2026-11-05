@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.DTOs;
 
-public sealed class ShowroomRequestItem
+public sealed class ShowroomRequestItemDto
 {
     public int Id { get; set; }
 
@@ -35,13 +35,13 @@ public sealed class ShowroomRequestItem
     public IReadOnlyList<string> AllowedNextStatuses { get; set; } = Array.Empty<string>();
 }
 
-public sealed class UpdateShowroomRequestStatusRequest
+public sealed class UpdateShowroomRequestStatusRequestDto
 {
     [Required, MaxLength(20)]
     public string Status { get; set; } = string.Empty;
 }
 
-public sealed class RecordShowroomSaleRequest
+public sealed class RecordShowroomSaleRequestDto
 {
     [Range(1, int.MaxValue)]
     public int ProductId { get; set; }
@@ -56,13 +56,13 @@ public sealed class RecordShowroomSaleRequest
     public Guid? IdempotencyKey { get; set; }
 }
 
-public sealed class CompleteShowroomRequestSaleRequest
+public sealed class CompleteShowroomRequestSaleRequestDto
 {
     [MaxLength(500)]
     public string? Note { get; set; }
 }
 
-public sealed class ShowroomSaleItem
+public sealed class ShowroomSaleItemDto
 {
     public int Id { get; set; }
 

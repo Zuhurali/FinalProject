@@ -15,6 +15,7 @@ namespace FinalProject.MVC.Controllers;
 public sealed class AdminController : AdminControllerBase
 {
     private readonly IAdminApiService _adminApi;
+    private readonly ICarApiService _cars;
     private readonly ApplicationDbContext _db;
     private readonly RoleManager<IdentityRole> _roleManager;
 
@@ -22,11 +23,13 @@ public sealed class AdminController : AdminControllerBase
         UserManager<ApplicationUser> userManager,
         IApiAccessTokenService tokenService,
         IAdminApiService adminApi,
+        ICarApiService cars,
         ApplicationDbContext db,
         RoleManager<IdentityRole> roleManager)
         : base(userManager, tokenService)
     {
         _adminApi = adminApi;
+        _cars = cars;
         _db = db;
         _roleManager = roleManager;
     }
@@ -92,10 +95,15 @@ public sealed class AdminController : AdminControllerBase
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpGet("Users")]
-    public async Task<IActionResult> Users(string? search, CancellationToken cancellationToken)
+    public async Task<IActionResult> Users(string? search, bool showDeleted = false, CancellationToken cancellationToken = default)
     {
         ViewData["Title"] = "Users - AutoVault";
-        var users = await UserManager.Users
+        var usersQuery = UserManager.Users.AsQueryable();
+        usersQuery = showDeleted
+            ? usersQuery.Where(user => user.IsDeleted)
+            : usersQuery.Where(user => !user.IsDeleted);
+
+        var users = await usersQuery
             .OrderBy(user => user.Email)
             .ToListAsync(cancellationToken);
 
@@ -126,6 +134,8 @@ public sealed class AdminController : AdminControllerBase
                     : roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member,
                 CreatedAt = user.CreatedAt,
                 IsLockedOut = await UserManager.IsLockedOutAsync(user),
+                IsDeleted = user.IsDeleted,
+                DeletedAt = user.DeletedAt,
                 AccessFailedCount = user.AccessFailedCount,
                 IsSuperAdmin = roles.Contains(AppRoles.SuperAdmin)
             });
@@ -135,30 +145,130 @@ public sealed class AdminController : AdminControllerBase
         return View(new AdminUsersPageViewModel
         {
             Search = search?.Trim(),
+            ShowDeleted = showDeleted,
             Users = models
         });
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
+    [HttpGet("UserDetails/{id}")]
+    public async Task<IActionResult> UserDetails(string id, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return NotFound();
+        }
+
+        var user = await UserManager.FindByIdAsync(id.Trim());
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        ViewData["Title"] = "User Details - AutoVault";
+        var roles = await UserManager.GetRolesAsync(user);
+        var role = roles.Contains(AppRoles.SuperAdmin)
+            ? AppRoles.SuperAdmin
+            : roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
+
+        var model = new AdminUserDetailsViewModel
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
+            EmailConfirmed = user.EmailConfirmed,
+            PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+            Role = role,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt,
+            LastPasswordChangedAt = user.LastPasswordChangedAt,
+            LastPasswordResetAt = user.LastPasswordResetAt,
+            IsLockedOut = await UserManager.IsLockedOutAsync(user),
+            IsDeleted = user.IsDeleted,
+            DeletedAt = user.DeletedAt,
+            AccessFailedCount = user.AccessFailedCount
+        };
+
+        var token = await CreateTokenAsync();
+        if (token != null)
+        {
+            try
+            {
+                var cars = await _cars.GetCarsByOwnerAsync(user.Id, token, cancellationToken);
+                model.Listings = cars
+                    .OrderByDescending(car => car.CreatedAt)
+                    .Select(car => new AdminUserListingRow
+                    {
+                        Id = car.Id,
+                        Title = $"{car.Brand?.Name} {car.Model} ({car.Year})".Trim(),
+                        Status = car.Status,
+                        CreatedAt = car.CreatedAt
+                    })
+                    .ToList();
+            }
+            catch (CarApiException)
+            {
+                model.ListingsUnavailable = true;
+            }
+        }
+        else
+        {
+            model.ListingsUnavailable = true;
+        }
+
+        model.ContactRequests = await _db.ContactRequests
+            .AsNoTracking()
+            .Where(request => request.UserId == user.Id)
+            .OrderByDescending(request => request.CreatedAt)
+            .Select(request => new AdminUserRequestRow
+            {
+                Id = request.Id,
+                Summary = request.Interest,
+                Status = request.Status,
+                CreatedAt = request.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        model.PurchaseRequests = await _db.ShowroomPurchaseRequests
+            .AsNoTracking()
+            .Where(request => request.UserId == user.Id)
+            .OrderByDescending(request => request.CreatedAt)
+            .Select(request => new AdminUserRequestRow
+            {
+                Id = request.Id,
+                Summary = request.Product != null
+                    ? request.Product.Name
+                    : $"Product #{request.ProductId}",
+                Status = request.Status,
+                CreatedAt = request.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        return View(model);
+    }
+
+    [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Users/Role")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangeRole(string userId, string role)
+    public async Task<IActionResult> ChangeRole(string userId, string role, bool showDeleted = false)
     {
         var (ok, message) = await ApplyRoleChangeAsync(userId, role);
         TempData[ok ? "Success" : "Error"] = message;
-        return RedirectToAction(nameof(Users));
+        return RedirectToAction(nameof(Users), new { showDeleted });
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
     [HttpPost("Users/Roles")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangeRoles(List<AdminUserRoleChangeItem>? items)
+    public async Task<IActionResult> ChangeRoles(List<AdminUserRoleChangeItem>? items, bool showDeleted = false)
     {
         items ??= [];
         if (items.Count == 0)
         {
             TempData["Error"] = "No role changes were submitted.";
-            return RedirectToAction(nameof(Users));
+            return RedirectToAction(nameof(Users), new { showDeleted });
         }
 
         var updated = 0;
@@ -203,7 +313,7 @@ public sealed class AdminController : AdminControllerBase
             TempData["Success"] = "No role changes were needed.";
         }
 
-        return RedirectToAction(nameof(Users));
+        return RedirectToAction(nameof(Users), new { showDeleted });
     }
 
     private async Task<(bool Ok, string Message)> ApplyRoleChangeAsync(string userId, string role)
@@ -217,6 +327,11 @@ public sealed class AdminController : AdminControllerBase
         if (user == null)
         {
             return (false, "User not found.");
+        }
+
+        if (user.IsDeleted)
+        {
+            return (false, "Deleted accounts cannot have their roles changed.");
         }
 
         var currentUserId = UserManager.GetUserId(User);

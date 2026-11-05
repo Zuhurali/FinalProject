@@ -1,4 +1,4 @@
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 
 namespace FinalProject.MVC.Services.Interfaces;
 

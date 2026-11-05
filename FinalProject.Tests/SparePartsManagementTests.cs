@@ -50,14 +50,14 @@ public class SparePartsManagementTests
         // Mirrors AdminPartsController.AcceptResolvedImagePath after ApplyImageAsync succeeds.
         var modelState = new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary();
         modelState.AddModelError("ImagePath", "The ImagePath field is required.");
-        modelState.AddModelError(nameof(FinalProject.MVC.Models.Api.SavePartDto.ImagePath), "The ImagePath field is required.");
+        modelState.AddModelError(nameof(FinalProject.MVC.DTOs.SavePartDto.ImagePath), "The ImagePath field is required.");
 
-        modelState.Remove(nameof(FinalProject.MVC.Models.Api.SavePartDto.ImagePath));
+        modelState.Remove(nameof(FinalProject.MVC.DTOs.SavePartDto.ImagePath));
         modelState.Remove("ImagePath");
         modelState.Remove("part.ImagePath");
 
         Assert.False(modelState.ContainsKey("ImagePath"));
-        Assert.False(modelState.ContainsKey(nameof(FinalProject.MVC.Models.Api.SavePartDto.ImagePath)));
+        Assert.False(modelState.ContainsKey(nameof(FinalProject.MVC.DTOs.SavePartDto.ImagePath)));
         Assert.True(modelState.IsValid);
     }
 
@@ -67,7 +67,7 @@ public class SparePartsManagementTests
         await using var db = CreateDb();
         var service = new PartsAdminService(db);
 
-        var (missing, missingError) = await service.CreateAsync(new SavePartRequest
+        var (missing, missingError) = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "A",
             Category = "Filters",
@@ -78,7 +78,7 @@ public class SparePartsManagementTests
         Assert.Null(missing);
         Assert.Equal("Enter a part name.", missingError);
 
-        var (created, error) = await service.CreateAsync(new SavePartRequest
+        var (created, error) = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "Oil Filter XF-200",
             Category = "Filters",
@@ -112,7 +112,7 @@ public class SparePartsManagementTests
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
         var edit = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminParts", "Edit.cshtml"));
-        var dto = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Models", "Api", "PartAdminDtos.cs"));
+        var dto = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "DTOs", "PartAdminDtos.cs"));
         var apiDto = File.ReadAllText(Path.Combine(root, "FinalProject", "DTOs", "PartAdminDtos.cs"));
         var service = File.ReadAllText(Path.Combine(root, "FinalProject", "Services", "PartsAdminService.cs"));
 
@@ -129,7 +129,7 @@ public class SparePartsManagementTests
         await using var db = CreateDb();
         var service = new PartsAdminService(db);
 
-        var (created, createError) = await service.CreateAsync(new SavePartRequest
+        var (created, createError) = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "Caliper Cover",
             Category = "Brakes",
@@ -148,7 +148,7 @@ public class SparePartsManagementTests
         Assert.NotNull(created);
         Assert.Equal(string.Empty, created!.Color);
 
-        var update = new SavePartRequest
+        var update = new SavePartRequestDto
         {
             Id = created.Id,
             Name = created.Name,
@@ -193,7 +193,7 @@ public class SparePartsManagementTests
         await using var db = CreateDb();
         var service = new PartsAdminService(db);
 
-        var (neg, negError) = await service.CreateAsync(new SavePartRequest
+        var (neg, negError) = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "Brake Pad",
             Category = "Brakes",
@@ -204,7 +204,7 @@ public class SparePartsManagementTests
         Assert.Null(neg);
         Assert.Equal("Stock cannot be negative.", negError);
 
-        var (sku, skuError) = await service.CreateAsync(new SavePartRequest
+        var (sku, skuError) = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "Brake Pad",
             Category = "Brakes",

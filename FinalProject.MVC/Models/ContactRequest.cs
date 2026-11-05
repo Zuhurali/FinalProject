@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class ContactRequest
+public class ContactRequest : BaseEntity
 {
-    public int Id { get; set; }
-
     [Required, MaxLength(80)]
     public string CustomerName { get; set; } = string.Empty;
 
@@ -27,10 +25,6 @@ public class ContactRequest
     /// <summary>Identity user id when submitted while signed in; null for anonymous guests.</summary>
     [MaxLength(450)]
     public string? UserId { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
 }
 
 public static class ContactRequestStatus

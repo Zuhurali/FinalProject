@@ -1,0 +1,114 @@
+@model CarsThreePageModel
+@{
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    if (Context.Request.Path.StartsWithSegments("/Cars/CarsThreeResults"))
+    {
+        returnUrl = Url.Action("CarsThree", "Cars") ?? "/Cars/CarsThree";
+    }
+}
+@foreach (var car in Model.Cars)
+{
+    var displayName = string.IsNullOrWhiteSpace(car.Name)
+        ? $"{car.Make} {car.Model}".Trim()
+        : car.Name;
+    <article class="cars3-panel cars3-card car-card"
+             data-id="@car.Id"
+             data-search="@($"{displayName} {car.Make} {car.Model} {car.Category}")"
+             data-make="@car.Make"
+             data-model="@car.Model"
+             data-type="@car.Category"
+             data-price="@car.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+             data-year="@car.Year.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+             data-fuel="@car.Fuel"
+             data-transmission="@car.Transmission"
+             data-mileage="@car.Mileage.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+             data-seats="@car.Seats.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+             data-created="@car.CreatedAt.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+        <div class="cars3-card__media">
+            <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">
+                <img src="@Url.Content(car.ImagePath)" alt="@displayName" loading="lazy" />
+            </a>
+            @if (!string.IsNullOrWhiteSpace(car.Badge))
+            {
+                <span class="cars3-card__badge">@car.Badge</span>
+            }
+        </div>
+        <div class="cars3-card__body">
+            <h3 class="cars3-card__title">
+                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@displayName</a>
+            </h3>
+            <ul class="cars3-card__meta">
+                @if (car.Year > 0)
+                {
+                    <li><strong>Year:</strong> @car.Year</li>
+                }
+                <li><strong>Mileage:</strong> @car.MileageText</li>
+                @if (!string.IsNullOrWhiteSpace(car.Fuel))
+                {
+                    <li><strong>Fuel:</strong> @car.Fuel</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(car.Transmission))
+                {
+                    <li><strong>Transmission:</strong> @car.Transmission</li>
+                }
+                @if (car.Seats > 0)
+                {
+                    <li><strong>Seats:</strong> @car.Seats</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(car.Category))
+                {
+                    <li><strong>Type:</strong> @car.Category</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(car.DriveType))
+                {
+                    <li><strong>Drive:</strong> @car.DriveType</li>
+                }
+                @if (car.Horsepower > 0)
+                {
+                    <li><strong>HP:</strong> @car.Horsepower</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(car.Color))
+                {
+                    <li><strong>Color:</strong> @car.Color</li>
+                }
+            </ul>
+        </div>
+        <div class="cars3-card__aside">
+            <p class="cars3-card__price">$@car.Price.ToString("N0")</p>
+            <div class="cars3-card__actions">
+                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                <div class="cars3-fav">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form asp-controller="Cars"
+                              asp-action="@(car.IsFavorite ? "RemoveFavorite" : "AddFavorite")"
+                              asp-route-id="@car.Id"
+                              method="post"
+                              class="wishlist"
+                              data-favorite-toggle
+                              data-is-favorite="@(car.IsFavorite ? "true" : "false")"
+                              data-add-url="@Url.Action("AddFavorite", "Cars", new { id = car.Id })"
+                              data-remove-url="@Url.Action("RemoveFavorite", "Cars", new { id = car.Id })">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <button type="submit"
+                                    data-favorite-button
+                                    aria-pressed="@(car.IsFavorite ? "true" : "false")"
+                                    title="@(car.IsFavorite ? "Remove from favorites" : "Add to favorites")">
+                                <i class="@(car.IsFavorite ? "fa-solid" : "fa-regular") fa-heart" data-favorite-icon></i>
+                                <span>Favorite</span>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@returnUrl" title="Sign in to favorite">
+                            <i class="fa-regular fa-heart"></i>
+                            <span>Favorite</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </article>
+}

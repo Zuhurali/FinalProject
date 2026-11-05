@@ -16,7 +16,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         _db = db;
     }
 
-    public async Task<IReadOnlyList<ShowroomRequestItem>> ListRequestsAsync(
+    public async Task<IReadOnlyList<ShowroomRequestItemDto>> ListRequestsAsync(
         string? status = null,
         CancellationToken cancellationToken = default)
     {
@@ -40,7 +40,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         return rows.Select(MapRequest).ToList();
     }
 
-    public async Task<ShowroomRequestItem?> GetRequestAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<ShowroomRequestItemDto?> GetRequestAsync(int id, CancellationToken cancellationToken = default)
     {
         var row = await _db.ShowroomPurchaseRequests.AsNoTracking()
             .Include(request => request.Product)
@@ -48,7 +48,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         return row == null ? null : MapRequest(row);
     }
 
-    public async Task<(ShowroomRequestItem? Item, string? Error)> SetRequestStatusAsync(
+    public async Task<(ShowroomRequestItemDto? Item, string? Error)> SetRequestStatusAsync(
         int id,
         string status,
         CancellationToken cancellationToken = default)
@@ -88,8 +88,8 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         return (true, null);
     }
 
-    public async Task<(ShowroomSaleItem? Sale, string? Error)> RecordSaleAsync(
-        RecordShowroomSaleRequest request,
+    public async Task<(ShowroomSaleItemDto? Sale, string? Error)> RecordSaleAsync(
+        RecordShowroomSaleRequestDto request,
         string recordedByUserId,
         CancellationToken cancellationToken = default)
     {
@@ -184,7 +184,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         return (MapSale(sale), null);
     }
 
-    public async Task<(ShowroomSaleItem? Sale, string? Error)> CompleteRequestWithSaleAsync(
+    public async Task<(ShowroomSaleItemDto? Sale, string? Error)> CompleteRequestWithSaleAsync(
         int requestId,
         string recordedByUserId,
         string? note,
@@ -239,7 +239,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         var request = await _db.ShowroomPurchaseRequests.AsNoTracking()
             .FirstAsync(item => item.Id == requestId, cancellationToken);
 
-        async Task<(ShowroomSaleItem? Sale, string? Error)> FailAfterClaimAsync(string error)
+        async Task<(ShowroomSaleItemDto? Sale, string? Error)> FailAfterClaimAsync(string error)
         {
             await transaction.RollbackAsync(cancellationToken);
             return (null, error);
@@ -315,7 +315,7 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         return (MapSale(sale), null);
     }
 
-    public async Task<IReadOnlyList<ShowroomSaleItem>> ListSalesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ShowroomSaleItemDto>> ListSalesAsync(CancellationToken cancellationToken = default)
     {
         var rows = await _db.InPersonSales.AsNoTracking()
             .Where(sale => !sale.IsDemo && sale.VoidedAt == null)
@@ -432,9 +432,9 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         return (unit, product.Price, offer.Id, percent);
     }
 
-    private static ShowroomRequestItem MapRequest(ShowroomPurchaseRequestReference request)
+    private static ShowroomRequestItemDto MapRequest(ShowroomPurchaseRequestReference request)
     {
-        return new ShowroomRequestItem
+        return new ShowroomRequestItemDto
         {
             Id = request.Id,
             ProductId = request.ProductId,
@@ -456,9 +456,9 @@ public sealed class ShowroomAdminService : IShowroomAdminService
         };
     }
 
-    private static ShowroomSaleItem MapSale(InPersonSaleReference sale)
+    private static ShowroomSaleItemDto MapSale(InPersonSaleReference sale)
     {
-        return new ShowroomSaleItem
+        return new ShowroomSaleItemDto
         {
             Id = sale.Id,
             ProductId = sale.ProductId,

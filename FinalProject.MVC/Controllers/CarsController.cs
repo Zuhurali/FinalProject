@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Mappings;
 using FinalProject.MVC.Services.Interfaces;
@@ -166,14 +166,63 @@ namespace FinalProject.MVC.Controllers
             return View(cars);
         }
 
-        public async Task<IActionResult> CarsThree()
+        public async Task<IActionResult> CarsThree(
+            string? search,
+            string? brand,
+            string? model,
+            string? type,
+            decimal? minPrice,
+            decimal? maxPrice,
+            int? minYear,
+            int? maxYear,
+            string? fuel,
+            string? transmission,
+            int? minMileage,
+            int? maxMileage,
+            int? seats,
+            string? sort,
+            int page = 1)
         {
             ViewData["Title"] = "Cars Three - AutoVault";
             ViewData["BodyClass"] = "with-sidebar";
             ViewData["HeaderStyle"] = "three";
-            var cars = await LoadCarsAsync();
-            await MarkFavoritesAsync(cars);
-            return View(cars);
+
+            var filters = NormalizeCarsThreeFilters(
+                search, brand, model, type, minPrice, maxPrice, minYear, maxYear,
+                fuel, transmission, minMileage, maxMileage, seats, sort, page);
+            var pageModel = await BuildCarsThreePageAsync(filters, includeFacets: true);
+            return View(pageModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CarsThreeResults(
+            string? search,
+            string? brand,
+            string? model,
+            string? type,
+            decimal? minPrice,
+            decimal? maxPrice,
+            int? minYear,
+            int? maxYear,
+            string? fuel,
+            string? transmission,
+            int? minMileage,
+            int? maxMileage,
+            int? seats,
+            string? sort,
+            int page = 1)
+        {
+            var filters = NormalizeCarsThreeFilters(
+                search, brand, model, type, minPrice, maxPrice, minYear, maxYear,
+                fuel, transmission, minMileage, maxMileage, seats, sort, page);
+            var pageModel = await BuildCarsThreePageAsync(filters, includeFacets: false);
+            Response.Headers["X-Cars3-Page"] = pageModel.Page.ToString();
+            Response.Headers["X-Cars3-PageSize"] = pageModel.PageSize.ToString();
+            Response.Headers["X-Cars3-Total-Count"] = pageModel.TotalCount.ToString();
+            Response.Headers["X-Cars3-Total-Pages"] = pageModel.TotalPages.ToString();
+            Response.Headers["X-Cars3-Has-More"] = pageModel.HasMore ? "1" : "0";
+            Response.Headers["X-Cars3-Ids"] = string.Join(",", pageModel.Cars.Select(car => car.Id));
+            return PartialView("_CarsThreeCards", pageModel);
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -479,6 +528,196 @@ namespace FinalProject.MVC.Controllers
             return catalog;
         }
 
+        private static CarsThreeFilterQuery NormalizeCarsThreeFilters(
+            string? search,
+            string? brand,
+            string? model,
+            string? type,
+            decimal? minPrice,
+            decimal? maxPrice,
+            int? minYear,
+            int? maxYear,
+            string? fuel,
+            string? transmission,
+            int? minMileage,
+            int? maxMileage,
+            int? seats,
+            string? sort,
+            int page)
+        {
+            var normalizedSort = string.IsNullOrWhiteSpace(sort) ? "latest" : sort.Trim().ToLowerInvariant();
+            if (normalizedSort is not ("latest" or "price-asc" or "price-desc" or "year-desc" or "year-asc"))
+            {
+                normalizedSort = "latest";
+            }
+
+            return new CarsThreeFilterQuery
+            {
+                Search = string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+                Brand = string.IsNullOrWhiteSpace(brand) ? null : brand.Trim(),
+                Model = string.IsNullOrWhiteSpace(model) ? null : model.Trim(),
+                Type = string.IsNullOrWhiteSpace(type) ? null : type.Trim(),
+                MinPrice = minPrice is >= 0 ? minPrice : null,
+                MaxPrice = maxPrice is >= 0 ? maxPrice : null,
+                MinYear = minYear is >= 0 ? minYear : null,
+                MaxYear = maxYear is >= 0 ? maxYear : null,
+                Fuel = string.IsNullOrWhiteSpace(fuel) ? null : fuel.Trim(),
+                Transmission = string.IsNullOrWhiteSpace(transmission) ? null : transmission.Trim(),
+                MinMileage = minMileage is >= 0 ? minMileage : null,
+                MaxMileage = maxMileage is >= 0 ? maxMileage : null,
+                Seats = seats is >= 1 and <= 12 ? seats : null,
+                Sort = normalizedSort,
+                Page = page < 1 ? 1 : page
+            };
+        }
+
+        private async Task<CarsThreePageModel> BuildCarsThreePageAsync(
+            CarsThreeFilterQuery filters,
+            bool includeFacets)
+        {
+            var pageModel = new CarsThreePageModel
+            {
+                Filters = filters,
+                Page = filters.Page,
+                PageSize = CarsThreeFilterQuery.PageSize,
+                Fuels = new[] { "Petrol", "Diesel", "Hybrid", "Electric", "Plug-in Hybrid" },
+                Transmissions = new[] { "Automatic", "Manual" },
+                SeatsOptions = Enumerable.Range(2, 7).ToList(),
+                MinPriceBound = 0,
+                MaxPriceBound = 500_000,
+                MinYearBound = 1990,
+                MaxYearBound = DateTime.UtcNow.Year + 1
+            };
+
+            try
+            {
+                var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
+                if (includeFacets)
+                {
+                    pageModel.Makes = lookups.Brands
+                        .Where(item => !string.IsNullOrWhiteSpace(item.Name))
+                        .Select(item => item.Name.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    pageModel.Models = lookups.Models
+                        .Where(item => !string.IsNullOrWhiteSpace(item.Name))
+                        .Select(item => item.Name.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    pageModel.Types = lookups.Categories
+                        .Where(item => !string.IsNullOrWhiteSpace(item.Name))
+                        .Select(item => item.Name.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                }
+
+                if (!TryCreateCarsThreeApiQuery(filters, lookups, out var apiQuery))
+                {
+                    pageModel.Cars = Array.Empty<Car>();
+                    pageModel.TotalCount = 0;
+                    pageModel.TotalPages = 0;
+                    return pageModel;
+                }
+
+                var page = await _carApi.GetCarsAsync(apiQuery, HttpContext.RequestAborted);
+                if (page.TotalPages > 0 && apiQuery.Page > page.TotalPages)
+                {
+                    apiQuery.Page = page.TotalPages;
+                    page = await _carApi.GetCarsAsync(apiQuery, HttpContext.RequestAborted);
+                }
+
+                var cars = page.Items.Select(CarApiMapper.ToCar).ToList();
+                await MarkFavoritesAsync(cars);
+                pageModel.Cars = cars;
+                pageModel.Page = page.CurrentPage < 1 ? filters.Page : page.CurrentPage;
+                pageModel.TotalCount = page.TotalCount;
+                pageModel.TotalPages = page.TotalPages;
+            }
+            catch (CarApiException exception)
+            {
+                _logger.LogError(exception, "Cars Three listing could not be loaded.");
+                pageModel.ApiError = exception.Message;
+                pageModel.Cars = Array.Empty<Car>();
+            }
+
+            return pageModel;
+        }
+
+        private static bool TryCreateCarsThreeApiQuery(
+            CarsThreeFilterQuery filters,
+            CarLookupDto lookups,
+            out CarApiQueryDto apiQuery)
+        {
+            apiQuery = CarPublicListing.WithActiveStatus(new CarApiQueryDto
+            {
+                Page = filters.Page < 1 ? 1 : filters.Page,
+                PageSize = CarsThreeFilterQuery.PageSize,
+                Sort = string.IsNullOrWhiteSpace(filters.Sort) ? "latest" : filters.Sort,
+                Search = filters.Search,
+                Model = filters.Model,
+                MinPrice = filters.MinPrice,
+                MaxPrice = filters.MaxPrice,
+                MinYear = filters.MinYear,
+                MaxYear = filters.MaxYear,
+                MinMileage = filters.MinMileage,
+                MaxMileage = filters.MaxMileage,
+                Seats = filters.Seats,
+                Fuel = filters.Fuel,
+                Transmission = filters.Transmission
+            });
+
+            if (filters.MinPrice is decimal minPrice
+                && filters.MaxPrice is decimal maxPrice
+                && minPrice > maxPrice)
+            {
+                return false;
+            }
+
+            if (filters.MinYear is int minYear
+                && filters.MaxYear is int maxYear
+                && minYear > maxYear)
+            {
+                return false;
+            }
+
+            if (filters.MinMileage is int minMileage
+                && filters.MaxMileage is int maxMileage
+                && minMileage > maxMileage)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Brand))
+            {
+                var brandId = lookups.Brands
+                    .FirstOrDefault(item => string.Equals(item.Name, filters.Brand, StringComparison.OrdinalIgnoreCase))
+                    ?.Id;
+                if (brandId == null)
+                {
+                    return false;
+                }
+
+                apiQuery.BrandId = brandId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Type))
+            {
+                var category = lookups.Categories
+                    .FirstOrDefault(item => CarCategories.Matches(item.Name, filters.Type));
+                if (category == null)
+                {
+                    return false;
+                }
+
+                apiQuery.CategoryId = category.Id;
+            }
+
+            return true;
+        }
+
         private async Task<List<Car>> LoadCatalogAsync()
         {
             try
@@ -527,7 +766,7 @@ namespace FinalProject.MVC.Controllers
         {
             var lookups = await _carApi.GetLookupsAsync(HttpContext.RequestAborted);
             var brandId = ResolveBrandId(query.Make, catalogDtos, lookups.Brands);
-            if (!TryCreateApiQuery(query, lookups.Categories, CarApiQuery.MaxPageSize, brandId, out var apiQuery))
+            if (!TryCreateApiQuery(query, lookups.Categories, CarApiQueryDto.MaxPageSize, brandId, out var apiQuery))
             {
                 return new List<Car>();
             }
@@ -560,9 +799,9 @@ namespace FinalProject.MVC.Controllers
             IReadOnlyList<CategoryApiDto> categories,
             int pageSize,
             int? brandId,
-            out CarApiQuery apiQuery)
+            out CarApiQueryDto apiQuery)
         {
-            apiQuery = CarPublicListing.WithActiveStatus(new CarApiQuery
+            apiQuery = CarPublicListing.WithActiveStatus(new CarApiQueryDto
             {
                 Page = query.Page < 1 ? 1 : query.Page,
                 PageSize = pageSize

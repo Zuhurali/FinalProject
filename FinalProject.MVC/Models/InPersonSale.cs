@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class InPersonSale
+public class InPersonSale : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ProductId { get; set; }
 
     public ShopCatalogProduct? Product { get; set; }

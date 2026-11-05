@@ -12,8 +12,8 @@
     var stockText = Model.Quantity <= 0
         ? "Out of stock"
         : Model.StockStatus == "Low Stock"
-            ? $"Low stock · {Model.Quantity} left"
-            : $"In stock · {Model.Quantity} available";
+            ? $"Low stock ï¿½ {Model.Quantity} left"
+            : $"In stock ï¿½ {Model.Quantity} available";
     var related = ViewBag.RelatedProducts as IReadOnlyList<ShopProduct> ?? Array.Empty<ShopProduct>();
     var photos = ProductImageCredits.Gallery(Model.ImagePath);
     var hasPhoto = photos.Count > 0;
@@ -169,7 +169,7 @@
                 </div>
                 @if (Model.HasOffer)
                 {
-                    <p class="av-detail__offer">@($"{Model.DiscountPercent}% OFF")@(string.IsNullOrWhiteSpace(Model.OfferEndLabel) ? "" : $" · Ends {Model.OfferEndLabel}")</p>
+                    <p class="av-detail__offer">@($"{Model.DiscountPercent}% OFF")@(string.IsNullOrWhiteSpace(Model.OfferEndLabel) ? "" : $" ï¿½ Ends {Model.OfferEndLabel}")</p>
                 }
 
                 <p class="av-detail__description">@Model.Description</p>
@@ -268,7 +268,7 @@
                     }
 
                     <ul class="av-request__contact">
-                        <li><i class="fa-regular fa-location-dot" aria-hidden="true"></i> Babek Prospekti 22–24, Baku, Azerbaijan</li>
+                        <li><i class="fa-regular fa-location-dot" aria-hidden="true"></i> Babek Prospekti 22ï¿½24, Baku, Azerbaijan</li>
                         <li><i class="fa-regular fa-phone" aria-hidden="true"></i> <a href="@Site.Contact.TelHref" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">@Site.Contact.DisplayPhone</a></li>
                         <li><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> <a href="@Site.Contact.WhatsAppHref" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat with AutoVault">WhatsApp</a></li>
                         <li><i class="fa-regular fa-envelope" aria-hidden="true"></i> <a href="@Site.Contact.MailtoHref">@Site.Contact.Email</a></li>
@@ -302,11 +302,11 @@
                         {
                             <article class="av-ask__qa mb-3 p-3 border rounded">
                                 <p class="fw-semibold mb-1">Q: @qa.Message</p>
-                                <p class="text-muted small mb-1">@qa.CustomerName · @qa.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                <p class="text-muted small mb-1">@qa.CustomerName ï¿½ @qa.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
                                 <p class="mb-0"><strong>A:</strong> @qa.AdminReply</p>
                                 @if (qa.AdminRepliedAt.HasValue)
                                 {
-                                    <p class="text-muted small mb-0">Store reply · @qa.AdminRepliedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                    <p class="text-muted small mb-0">Store reply ï¿½ @qa.AdminRepliedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</p>
                                 }
                             </article>
                         }
@@ -380,7 +380,7 @@
             <div class="tab-content">
                 <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                     <p>@Model.Description</p>
-                    <p>Buy and collect this item at the AutoVault store, Babek Prospekti 22–24, Baku. Compatibility is listed only when it is known for this product.</p>
+                    <p>Buy and collect this item at the AutoVault store, Babek Prospekti 22ï¿½24, Baku. Compatibility is listed only when it is known for this product.</p>
                 </div>
                 <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
                     <div class="ms-section-title">
@@ -424,8 +424,8 @@
                 <div class="tab-pane" id="messages" role="tabpanel" aria-labelledby="messages-tab" tabindex="0">
                     <div id="reviews" class="woocommerce-Reviews" data-can-view-history="@((User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) ? "true" : "false")">
                         @{
-                            var reviews = ViewBag.Reviews as IEnumerable<FinalProject.MVC.Models.Api.ProductReviewDto>
-                                ?? Enumerable.Empty<FinalProject.MVC.Models.Api.ProductReviewDto>();
+                            var reviews = ViewBag.Reviews as IEnumerable<FinalProject.MVC.DTOs.ProductReviewDto>
+                                ?? Enumerable.Empty<FinalProject.MVC.DTOs.ProductReviewDto>();
                         }
                         @if (ViewData["ReviewServiceUnavailable"] as bool? == true)
                         {
@@ -443,12 +443,12 @@
                                 {
                                     <p><em>Hidden from the shop.</em></p>
                                 }
-                                @* Static content — JS replaces this on inline edit *@
+                                @* Static content ï¿½ JS replaces this on inline edit *@
                                 <p id="review-content-@review.Id">@review.Content</p>
 
                                 @if (review.CanEdit && User.Identity?.IsAuthenticated == true)
                                 {
-                                    @* Inline edit section — hidden until user clicks Edit *@
+                                    @* Inline edit section ï¿½ hidden until user clicks Edit *@
                                     <div id="review-view-actions-@review.Id">
                                         <button type="button"
                                                 class="btn btn-link p-0 review-edit-open"
@@ -497,7 +497,7 @@
                             <h2 class="mb--30">Write a review</h2>
                             @if (User.Identity?.IsAuthenticated == true)
                             {
-                                @* New-review form — unchanged full-page POST *@
+                                @* New-review form ï¿½ unchanged full-page POST *@
                                 <form asp-controller="Shop" asp-action="SaveReview" method="post">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="productId" value="@Model.Id" />
@@ -722,7 +722,7 @@
             return field ? field.value : '';
         }
 
-        // Open editor in place — preserve scroll position
+        // Open editor in place ï¿½ preserve scroll position
         $(document).on('click', '.review-edit-open', function () {
             const reviewId = $(this).data('review-id');
             $('#review-view-actions-' + reviewId).hide();
@@ -733,7 +733,7 @@
             ta.setSelectionRange(ta.value.length, ta.value.length);
         });
 
-        // Cancel — close editor, restore original text, stay at same scroll position
+        // Cancel ï¿½ close editor, restore original text, stay at same scroll position
         $(document).on('click', '.review-edit-cancel', function () {
             const reviewId = $(this).data('review-id');
             $('#review-editor-' + reviewId).hide();
@@ -744,7 +744,7 @@
             $('#review-editor-error-' + reviewId).hide().text('');
         });
 
-        // Save review via fetch — update DOM in place, no page reload
+        // Save review via fetch ï¿½ update DOM in place, no page reload
         $(document).on('click', '.review-edit-save', async function () {
             const reviewId = $(this).data('review-id');
             const productId = $(this).data('product-id');
@@ -762,7 +762,7 @@
                 return;
             }
 
-            btn.prop('disabled', true).text('Saving…');
+            btn.prop('disabled', true).text('Savingï¿½');
             errEl.hide();
 
             try {
@@ -813,7 +813,7 @@
                 }
 
             } catch (err) {
-                errEl.text('Network error. Your review was not saved — please try again.').show();
+                errEl.text('Network error. Your review was not saved ï¿½ please try again.').show();
             } finally {
                 btn.prop('disabled', false).text('Save');
             }
@@ -843,7 +843,7 @@
                 (data.items || []).forEach(function (item) {
                     const when = document.createElement('div');
                     when.className = 'text-muted';
-                    when.textContent = 'Previous text · ' + item.editedAt;
+                    when.textContent = 'Previous text ï¿½ ' + item.editedAt;
                     const body = document.createElement('p');
                     body.style.whiteSpace = 'pre-wrap';
                     body.textContent = item.previousContent;

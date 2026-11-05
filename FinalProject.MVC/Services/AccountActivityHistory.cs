@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using Microsoft.AspNetCore.Identity;
 
 namespace FinalProject.MVC.Services;

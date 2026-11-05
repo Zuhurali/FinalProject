@@ -1,6 +1,6 @@
 namespace FinalProject.DTOs;
 
-public class BrandResponse
+public class BrandResponseDto
 {
     public int Id { get; set; }
 
@@ -9,7 +9,7 @@ public class BrandResponse
     public DateTime CreatedAt { get; set; }
 }
 
-public class CategoryResponse
+public class CategoryResponseDto
 {
     public int Id { get; set; }
 
@@ -18,7 +18,7 @@ public class CategoryResponse
     public string IconPath { get; set; } = string.Empty;
 }
 
-public class CarImageResponse
+public class CarImageResponseDto
 {
     public int Id { get; set; }
 
@@ -29,7 +29,7 @@ public class CarImageResponse
     public int DisplayOrder { get; set; }
 }
 
-public class CarResponse
+public class CarResponseDto
 {
     public int Id { get; set; }
 
@@ -93,9 +93,9 @@ public class CarResponse
 
     public DateTime? UpdatedAt { get; set; }
 
-    public BrandResponse Brand { get; set; } = null!;
+    public BrandResponseDto Brand { get; set; } = null!;
 
-    public CategoryResponse Category { get; set; } = null!;
+    public CategoryResponseDto Category { get; set; } = null!;
 
-    public List<CarImageResponse> Images { get; set; } = new();
+    public List<CarImageResponseDto> Images { get; set; } = new();
 }

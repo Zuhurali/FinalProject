@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinalProject.MVC.Models
 {
-    public class CouponUsage
+    public class CouponUsage : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         [Required]
         [MaxLength(450)]
         public string UserId { get; set; } = string.Empty;

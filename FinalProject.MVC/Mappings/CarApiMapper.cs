@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Services.Interfaces;
 
 namespace FinalProject.MVC.Mappings;
@@ -11,6 +11,11 @@ public static class CarApiMapper
 {
     private static readonly Regex EngineText = new(
         @"^(\d+(\.\d+)?L\b.*|(single|dual|tri|quad)[- ]motor)$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    /// <summary>Matches an explicit seat count token such as "5 seats" (1–12 only).</summary>
+    private static readonly Regex SeatsToken = new(
+        @"\b([1-9]|1[0-2])\s+seats\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     public static Car ToCar(CarApiDto dto)
@@ -22,7 +27,8 @@ public static class CarApiMapper
         var name = string.IsNullOrWhiteSpace(description)
             ? fallbackName
             : description.Split(". ", 2, StringSplitOptions.None)[0];
-        var seats = dto.Seats is > 0 ? dto.Seats.Value : 0;
+        // Prefer the persisted API/DB Seats value; description is fallback only.
+        var seats = ResolveSeats(dto.Seats, description);
         var driveType = NormalizeDriveType(dto.DriveType);
         var engine = string.IsNullOrWhiteSpace(dto.Engine) ? string.Empty : dto.Engine.Trim();
         var descriptionIsSpecSummary = string.IsNullOrWhiteSpace(description)
@@ -34,12 +40,8 @@ public static class CarApiMapper
                 .Trim()
                 .TrimEnd('.')
                 .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            if (specParts.Length is > 0 and <= 3 && TryParseSeats(specParts[0], out var parsedSeats))
+            if (specParts.Length is > 0 and <= 3 && TryParseSeats(specParts[0], out _))
             {
-                if (seats == 0)
-                {
-                    seats = parsedSeats;
-                }
                 var recognised = 1;
                 foreach (var part in specParts.Skip(1))
                 {
@@ -136,12 +138,39 @@ public static class CarApiMapper
         return count == 1 ? "1 Car" : $"{count} Cars";
     }
 
+    /// <summary>
+    /// Uses the database/API seat count when it is a valid 1–12 value.
+    /// Otherwise falls back only to an explicit "N seats" phrase in the description.
+    /// </summary>
+    private static int ResolveSeats(int? apiSeats, string? description)
+    {
+        if (apiSeats is >= 1 and <= 12)
+        {
+            return apiSeats.Value;
+        }
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return 0;
+        }
+
+        var match = SeatsToken.Match(description);
+        if (match.Success
+            && int.TryParse(match.Groups[1].Value, out var seats)
+            && seats is >= 1 and <= 12)
+        {
+            return seats;
+        }
+
+        return 0;
+    }
+
     private static bool TryParseSeats(string part, out int seats)
     {
         seats = 0;
         return part.EndsWith(" seats", StringComparison.OrdinalIgnoreCase)
             && int.TryParse(part[..^" seats".Length], out seats)
-            && seats > 0;
+            && seats is >= 1 and <= 12;
     }
 
     public static string NormalizeDriveType(string? value)

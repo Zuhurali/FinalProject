@@ -25,7 +25,7 @@ public sealed class MarketplaceService : IMarketplaceService
         _notifications = notifications;
     }
 
-    public async Task<IReadOnlyList<FavoriteResponse>> GetFavoritesAsync(
+    public async Task<IReadOnlyList<FavoriteResponseDto>> GetFavoritesAsync(
         string userId,
         CancellationToken cancellationToken = default)
     {
@@ -43,7 +43,7 @@ public sealed class MarketplaceService : IMarketplaceService
             .ToListAsync(cancellationToken);
 
         return favorites
-            .Select(favorite => new FavoriteResponse(
+            .Select(favorite => new FavoriteResponseDto(
                 favorite.Id,
                 favorite.CreatedAt,
                 favorite.Car.ToResponse()))
@@ -64,7 +64,7 @@ public sealed class MarketplaceService : IMarketplaceService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<FavoriteResponse?> AddFavoriteAsync(
+    public async Task<FavoriteResponseDto?> AddFavoriteAsync(
         string userId,
         int carId,
         CancellationToken cancellationToken = default)
@@ -102,13 +102,13 @@ public sealed class MarketplaceService : IMarketplaceService
             .AsSplitQuery()
             .SingleAsync(item => item.Id == existing.Id, cancellationToken);
 
-        return new FavoriteResponse(
+        return new FavoriteResponseDto(
             favorite.Id,
             favorite.CreatedAt,
             favorite.Car.ToResponse());
     }
 
-    public async Task<IReadOnlyList<ProductFavoriteResponse>> GetProductFavoritesAsync(
+    public async Task<IReadOnlyList<ProductFavoriteResponseDto>> GetProductFavoritesAsync(
         string userId,
         CancellationToken cancellationToken = default)
     {
@@ -144,7 +144,7 @@ public sealed class MarketplaceService : IMarketplaceService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ProductFavoriteResponse?> AddProductFavoriteAsync(
+    public async Task<ProductFavoriteResponseDto?> AddProductFavoriteAsync(
         string userId,
         int productId,
         CancellationToken cancellationToken = default)
@@ -233,7 +233,7 @@ public sealed class MarketplaceService : IMarketplaceService
         return true;
     }
 
-    public async Task<IReadOnlyList<ConversationSummaryResponse>> GetConversationsAsync(
+    public async Task<IReadOnlyList<ConversationSummaryResponseDto>> GetConversationsAsync(
         string userId,
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default)
@@ -271,20 +271,20 @@ public sealed class MarketplaceService : IMarketplaceService
                 .OrderByDescending(message => message.CreatedAt)
                 .FirstOrDefault();
 
-            return new ConversationSummaryResponse(
+            return new ConversationSummaryResponseDto(
                 conversation.Id,
                 conversation.CarId,
                 CarName(conversation.Car),
                 MainImage(conversation.Car),
                 DisplayName(other),
                 MarketplaceMessagingRules.StripGeneratedListingText(lastMessage?.Content),
-                conversation.UpdatedAt,
+                conversation.UpdatedAt ?? conversation.CreatedAt,
                 conversation.Messages.Count(message =>
                     message.ReceiverId == userId && !message.IsRead));
         }).ToList();
     }
 
-    public async Task<ConversationDetailsResponse?> GetConversationAsync(
+    public async Task<ConversationDetailsResponseDto?> GetConversationAsync(
         int id,
         string userId,
         bool markRead,
@@ -325,10 +325,10 @@ public sealed class MarketplaceService : IMarketplaceService
         return ToDetails(conversation);
     }
 
-    public async Task<ConversationDetailsResponse?> StartConversationAsync(
+    public async Task<ConversationDetailsResponseDto?> StartConversationAsync(
         int carId,
         string buyerId,
-        StartConversationRequest request,
+        StartConversationRequestDto request,
         CancellationToken cancellationToken = default)
     {
         var car = await _context.Cars
@@ -421,7 +421,7 @@ public sealed class MarketplaceService : IMarketplaceService
             : details with { Notification = notification };
     }
 
-    public async Task<MessageResponse?> ReplyAsync(
+    public async Task<MessageResponseDto?> ReplyAsync(
         int conversationId,
         string senderId,
         string content,
@@ -475,7 +475,7 @@ public sealed class MarketplaceService : IMarketplaceService
                 message.Content,
                 cancellationToken);
 
-        return new MessageResponse(
+        return new MessageResponseDto(
             message.Id,
             message.SenderId,
             senderDisplayName,
@@ -530,7 +530,7 @@ public sealed class MarketplaceService : IMarketplaceService
         return true;
     }
 
-    public async Task<AccountSummaryResponse> GetSummaryAsync(
+    public async Task<AccountSummaryResponseDto> GetSummaryAsync(
         string userId,
         bool asStoreStaff = false,
         CancellationToken cancellationToken = default)
@@ -626,7 +626,7 @@ public sealed class MarketplaceService : IMarketplaceService
             .Concat(messageActivities)
             .OrderByDescending(item => item.CreatedAt)
             .Take(5)
-            .Select(item => new AccountActivityResponse(
+            .Select(item => new AccountActivityResponseDto(
                 ActivityKey(item.Type, item.Url, item.CreatedAt),
                 item.Type,
                 item.Description,
@@ -634,7 +634,7 @@ public sealed class MarketplaceService : IMarketplaceService
                 item.Url))
             .ToList();
 
-        return new AccountSummaryResponse(
+        return new AccountSummaryResponseDto(
             activeListings,
             favorites,
             unreadMessages,
@@ -656,7 +656,7 @@ public sealed class MarketplaceService : IMarketplaceService
         _context.ConversationHides.RemoveRange(hides);
     }
 
-    private static ProductFavoriteResponse MapProductFavorite(
+    private static ProductFavoriteResponseDto MapProductFavorite(
         int id,
         DateTime createdAt,
         ShopProductReference product) =>
@@ -721,9 +721,9 @@ public sealed class MarketplaceService : IMarketplaceService
     private static bool CanAccessConversation(Conversation conversation, string userId) =>
         conversation.BuyerId == userId || conversation.SellerId == userId;
 
-    private static ConversationDetailsResponse ToDetails(Conversation conversation)
+    private static ConversationDetailsResponseDto ToDetails(Conversation conversation)
     {
-        return new ConversationDetailsResponse(
+        return new ConversationDetailsResponseDto(
             conversation.Id,
             conversation.CarId,
             CarName(conversation.Car),
@@ -735,7 +735,7 @@ public sealed class MarketplaceService : IMarketplaceService
             conversation.Subject,
             conversation.Messages
                 .OrderBy(message => message.CreatedAt)
-                .Select(message => new MessageResponse(
+                .Select(message => new MessageResponseDto(
                     message.Id,
                     message.SenderId,
                     DisplayName(message.Sender),

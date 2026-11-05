@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class ShowroomPurchaseRequest
+public class ShowroomPurchaseRequest : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ProductId { get; set; }
 
     public ShopCatalogProduct? Product { get; set; }
@@ -34,10 +32,6 @@ public class ShowroomPurchaseRequest
     /// <summary>Optional Identity user when the request was submitted while signed in.</summary>
     [MaxLength(450)]
     public string? UserId { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? UpdatedAt { get; set; }
 }
 
 public static class ShowroomRequestStatus

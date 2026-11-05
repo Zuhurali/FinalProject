@@ -1,10 +1,8 @@
 namespace FinalProject.Models.Entities;
 
 /// <summary>MVC-owned table; mapped for admin API read/write without owning migrations.</summary>
-public class InPersonSaleReference
+public class InPersonSaleReference : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ProductId { get; set; }
 
     public ShopProductReference? Product { get; set; }

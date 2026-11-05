@@ -18,7 +18,7 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/account/summary")]
-    public async Task<ActionResult<AccountSummaryResponse>> GetAccountSummary(
+    public async Task<ActionResult<AccountSummaryResponseDto>> GetAccountSummary(
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -28,7 +28,7 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/favorites")]
-    public async Task<ActionResult<IReadOnlyList<FavoriteResponse>>> GetFavorites(
+    public async Task<ActionResult<IReadOnlyList<FavoriteResponseDto>>> GetFavorites(
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -48,7 +48,7 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/cars/{carId:int}/favorite")]
-    public async Task<ActionResult<FavoriteResponse>> AddFavorite(
+    public async Task<ActionResult<FavoriteResponseDto>> AddFavorite(
         int carId,
         CancellationToken cancellationToken)
     {
@@ -80,7 +80,7 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/product-favorites")]
-    public async Task<ActionResult<IReadOnlyList<ProductFavoriteResponse>>> GetProductFavorites(
+    public async Task<ActionResult<IReadOnlyList<ProductFavoriteResponseDto>>> GetProductFavorites(
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -100,7 +100,7 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/products/{productId:int}/favorite")]
-    public async Task<ActionResult<ProductFavoriteResponse>> AddProductFavorite(
+    public async Task<ActionResult<ProductFavoriteResponseDto>> AddProductFavorite(
         int productId,
         CancellationToken cancellationToken)
     {
@@ -132,7 +132,7 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/conversations")]
-    public async Task<ActionResult<IReadOnlyList<ConversationSummaryResponse>>> GetConversations(
+    public async Task<ActionResult<IReadOnlyList<ConversationSummaryResponseDto>>> GetConversations(
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -142,7 +142,7 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/conversations/{id:int}")]
-    public async Task<ActionResult<ConversationDetailsResponse>> GetConversation(
+    public async Task<ActionResult<ConversationDetailsResponseDto>> GetConversation(
         int id,
         CancellationToken cancellationToken)
     {
@@ -161,9 +161,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/cars/{carId:int}/conversations")]
-    public async Task<ActionResult<ConversationDetailsResponse>> StartConversation(
+    public async Task<ActionResult<ConversationDetailsResponseDto>> StartConversation(
         int carId,
-        [FromBody] StartConversationRequest request,
+        [FromBody] StartConversationRequestDto request,
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();
@@ -186,9 +186,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/conversations/{id:int}/messages")]
-    public async Task<ActionResult<MessageResponse>> Reply(
+    public async Task<ActionResult<MessageResponseDto>> Reply(
         int id,
-        [FromBody] ReplyMessageRequest request,
+        [FromBody] ReplyMessageRequestDto request,
         CancellationToken cancellationToken)
     {
         var userId = CurrentUserId();

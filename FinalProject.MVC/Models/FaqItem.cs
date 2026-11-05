@@ -3,9 +3,13 @@ using FinalProject.MVC.Commerce;
 
 namespace FinalProject.MVC.Models;
 
-public class FaqItem
+public class FaqItem : BaseEntity
 {
-    public int Id { get; set; }
+    public FaqItem()
+    {
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     [Required, MinLength(FaqContentRules.QuestionMinLength), MaxLength(FaqContentRules.QuestionMaxLength)]
     public string Question { get; set; } = string.Empty;
@@ -20,8 +24,4 @@ public class FaqItem
     public bool ShowOnFaqPage { get; set; } = true;
 
     public bool ShowOnShop { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

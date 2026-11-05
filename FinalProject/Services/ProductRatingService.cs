@@ -1,5 +1,5 @@
 using FinalProject.Data;
-using FinalProject.Models;
+using FinalProject.DTOs;
 using FinalProject.Models.Entities;
 using FinalProject.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ public sealed class ProductRatingService : IProductRatingService
         _context = context;
     }
 
-    public async Task<ProductRatingSummary?> GetProductRatingsAsync(
+    public async Task<ProductRatingSummaryDto?> GetProductRatingsAsync(
         int productId,
         CancellationToken cancellationToken = default)
     {
@@ -30,24 +30,24 @@ public sealed class ProductRatingService : IProductRatingService
                 on rating.UserId equals user.Id
             where rating.ProductId == productId
             orderby rating.UpdatedAt descending
-            select new ProductRatingItem(
+            select new ProductRatingItemDto(
                 rating.Id,
                 rating.ProductId,
                 rating.UserId,
                 user.Email ?? user.UserName ?? "User",
                 rating.Rating,
                 rating.CreatedAt,
-                rating.UpdatedAt))
+                rating.UpdatedAt ?? rating.CreatedAt))
             .ToListAsync(cancellationToken);
 
-        return new ProductRatingSummary(
+        return new ProductRatingSummaryDto(
             productId,
             ratings.Count == 0 ? 0 : Math.Round(ratings.Average(item => item.Rating), 2),
             ratings.Count,
             ratings);
     }
 
-    public async Task<IReadOnlyList<ProductRatingSummaryItem>> GetSummariesAsync(
+    public async Task<IReadOnlyList<ProductRatingSummaryItemDto>> GetSummariesAsync(
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken = default)
     {
@@ -57,7 +57,7 @@ public sealed class ProductRatingService : IProductRatingService
             .AsNoTracking()
             .Where(rating => validIds.Contains(rating.ProductId))
             .GroupBy(rating => rating.ProductId)
-            .Select(group => new ProductRatingSummaryItem(
+            .Select(group => new ProductRatingSummaryItemDto(
                 group.Key,
                 Math.Round(group.Average(rating => rating.Rating), 2),
                 group.Count()))
@@ -66,11 +66,11 @@ public sealed class ProductRatingService : IProductRatingService
         var byProduct = aggregates.ToDictionary(item => item.ProductId);
         return validIds
             .Select(productId => byProduct.GetValueOrDefault(productId)
-                ?? new ProductRatingSummaryItem(productId, 0, 0))
+                ?? new ProductRatingSummaryItemDto(productId, 0, 0))
             .ToList();
     }
 
-    public async Task<IReadOnlyList<ProductRatingItem>> GetAllForAdminAsync(
+    public async Task<IReadOnlyList<ProductRatingItemDto>> GetAllForAdminAsync(
         CancellationToken cancellationToken = default)
     {
         return await (
@@ -78,18 +78,18 @@ public sealed class ProductRatingService : IProductRatingService
             join user in _context.IdentityUsers.AsNoTracking()
                 on rating.UserId equals user.Id
             orderby rating.UpdatedAt descending
-            select new ProductRatingItem(
+            select new ProductRatingItemDto(
                 rating.Id,
                 rating.ProductId,
                 rating.UserId,
                 user.Email ?? user.UserName ?? "User",
                 rating.Rating,
                 rating.CreatedAt,
-                rating.UpdatedAt))
+                rating.UpdatedAt ?? rating.CreatedAt))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<CurrentUserProductRating?> GetUserRatingAsync(
+    public async Task<CurrentUserProductRatingDto?> GetUserRatingAsync(
         int productId,
         string userId,
         CancellationToken cancellationToken = default)
@@ -102,16 +102,16 @@ public sealed class ProductRatingService : IProductRatingService
         return await _context.ProductRatings
             .AsNoTracking()
             .Where(rating => rating.ProductId == productId && rating.UserId == userId)
-            .Select(rating => new CurrentUserProductRating(
+            .Select(rating => new CurrentUserProductRatingDto(
                 rating.Id,
                 rating.ProductId,
                 rating.Rating,
                 rating.CreatedAt,
-                rating.UpdatedAt))
+                rating.UpdatedAt ?? rating.CreatedAt))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<CurrentUserProductRating?> SaveRatingAsync(
+    public async Task<CurrentUserProductRatingDto?> SaveRatingAsync(
         int productId,
         string userId,
         int rating,
@@ -136,12 +136,12 @@ public sealed class ProductRatingService : IProductRatingService
         {
             // Signal "already rated" with a distinct sentinel value so callers can
             // distinguish "rating rejected" from "user/product not found".
-            return new CurrentUserProductRating(
+            return new CurrentUserProductRatingDto(
                 existing.Id,
                 existing.ProductId,
                 existing.Rating,
                 existing.CreatedAt,
-                existing.UpdatedAt)
+                existing.UpdatedAt ?? existing.CreatedAt)
             { AlreadyExists = true };
         }
 
@@ -156,12 +156,12 @@ public sealed class ProductRatingService : IProductRatingService
         _context.ProductRatings.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new CurrentUserProductRating(
+        return new CurrentUserProductRatingDto(
             entity.Id,
             entity.ProductId,
             entity.Rating,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt ?? entity.CreatedAt);
     }
 
     public async Task<bool> DeleteRatingAsync(

@@ -6,10 +6,8 @@ namespace FinalProject.Models.Entities;
 /// Per-user hide of a conversation from the Messages list.
 /// Does not delete the conversation or any messages.
 /// </summary>
-public sealed class ConversationHide
+public sealed class ConversationHide : BaseEntity
 {
-    public int Id { get; set; }
-
     public int ConversationId { get; set; }
 
     [Required]

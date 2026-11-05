@@ -1,0 +1,154 @@
+@model AdminUserDetailsViewModel
+@{
+    Layout = "_AdminLayout";
+    string FormatStamp(DateTime? utc) =>
+        utc.HasValue ? utc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : "—";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="h3 mb-0">User details</h1>
+    <a asp-action="Users" class="btn btn-outline-secondary btn-sm">Back to Users</a>
+</div>
+
+<div class="admin-card mb-3">
+    <h2 class="h5 mb-3">Profile</h2>
+    <dl class="row mb-0">
+        <dt class="col-sm-4 col-lg-3">First name</dt>
+        <dd class="col-sm-8 col-lg-9">@(string.IsNullOrWhiteSpace(Model.FirstName) ? "—" : Model.FirstName)</dd>
+        <dt class="col-sm-4 col-lg-3">Last name</dt>
+        <dd class="col-sm-8 col-lg-9">@(string.IsNullOrWhiteSpace(Model.LastName) ? "—" : Model.LastName)</dd>
+        <dt class="col-sm-4 col-lg-3">Email</dt>
+        <dd class="col-sm-8 col-lg-9 text-break">@Model.Email</dd>
+        <dt class="col-sm-4 col-lg-3">Phone</dt>
+        <dd class="col-sm-8 col-lg-9">@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "—" : Model.PhoneNumber)</dd>
+        <dt class="col-sm-4 col-lg-3">Email status</dt>
+        <dd class="col-sm-8 col-lg-9">@(Model.EmailConfirmed ? "Confirmed" : "Unconfirmed")</dd>
+        <dt class="col-sm-4 col-lg-3">Phone status</dt>
+        <dd class="col-sm-8 col-lg-9">@(Model.PhoneNumberConfirmed ? "Confirmed" : "Unverified")</dd>
+        <dt class="col-sm-4 col-lg-3">Role</dt>
+        <dd class="col-sm-8 col-lg-9">@Model.Role</dd>
+        <dt class="col-sm-4 col-lg-3">Registered</dt>
+        <dd class="col-sm-8 col-lg-9">@Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</dd>
+    </dl>
+</div>
+
+<div class="admin-card mb-3">
+    <h2 class="h5 mb-3">Account activity</h2>
+    <dl class="row mb-0">
+        <dt class="col-sm-4 col-lg-3">Last successful login</dt>
+        <dd class="col-sm-8 col-lg-9">@FormatStamp(Model.LastLoginAt)</dd>
+        <dt class="col-sm-4 col-lg-3">Last password change</dt>
+        <dd class="col-sm-8 col-lg-9">@FormatStamp(Model.LastPasswordChangedAt)</dd>
+        <dt class="col-sm-4 col-lg-3">Last password reset</dt>
+        <dd class="col-sm-8 col-lg-9">@FormatStamp(Model.LastPasswordResetAt)</dd>
+        <dt class="col-sm-4 col-lg-3">Account status</dt>
+        <dd class="col-sm-8 col-lg-9">
+            @Model.AccountStatus
+            @if (Model.IsDeleted && Model.DeletedAt.HasValue)
+            {
+                <span class="text-muted">(deactivated @Model.DeletedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm"))</span>
+            }
+        </dd>
+        <dt class="col-sm-4 col-lg-3">Failed login attempts</dt>
+        <dd class="col-sm-8 col-lg-9">@Model.AccessFailedCount</dd>
+    </dl>
+</div>
+
+<div class="admin-card mb-3">
+    <h2 class="h5 mb-3">Car listings</h2>
+    @if (Model.ListingsUnavailable)
+    {
+        <p class="text-muted mb-0">Car listings could not be loaded from the API.</p>
+    }
+    else if (Model.Listings.Count == 0)
+    {
+        <p class="text-muted mb-0">This user has no car listings.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Listing</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var car in Model.Listings)
+                {
+                    <tr>
+                        <td>@car.Title</td>
+                        <td>@car.Status</td>
+                        <td class="text-nowrap">@car.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="admin-card mb-3">
+    <h2 class="h5 mb-3">Contact requests</h2>
+    @if (Model.ContactRequests.Count == 0)
+    {
+        <p class="text-muted mb-0">No contact requests linked to this account.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Interest</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var request in Model.ContactRequests)
+                {
+                    <tr>
+                        <td>@request.Summary</td>
+                        <td>@request.Status</td>
+                        <td class="text-nowrap">@request.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="admin-card mb-3">
+    <h2 class="h5 mb-3">Purchase requests</h2>
+    @if (Model.PurchaseRequests.Count == 0)
+    {
+        <p class="text-muted mb-0">No showroom purchase requests linked to this account.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var request in Model.PurchaseRequests)
+                {
+                    <tr>
+                        <td>@request.Summary</td>
+                        <td>@request.Status</td>
+                        <td class="text-nowrap">@request.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

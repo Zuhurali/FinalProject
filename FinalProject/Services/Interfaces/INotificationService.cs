@@ -4,18 +4,18 @@ namespace FinalProject.Services.Interfaces;
 
 public interface INotificationService
 {
-    Task<NotificationListResponse> GetForUserAsync(
+    Task<NotificationListResponseDto> GetForUserAsync(
         string userId,
         int take = 50,
         CancellationToken cancellationToken = default);
 
     Task<int> GetUnreadCountAsync(string userId, CancellationToken cancellationToken = default);
 
-    Task<NotificationUnreadCountsResponse> GetUnreadCountsAsync(
+    Task<NotificationUnreadCountsResponseDto> GetUnreadCountsAsync(
         string userId,
         CancellationToken cancellationToken = default);
 
-    Task<NotificationResponse?> CreateMessageNotificationAsync(
+    Task<NotificationResponseDto?> CreateMessageNotificationAsync(
         string receiverId,
         string senderDisplayName,
         int conversationId,
@@ -23,7 +23,7 @@ public interface INotificationService
         string preview,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<NotificationResponse>> CreatePriceDropNotificationsAsync(
+    Task<IReadOnlyList<NotificationResponseDto>> CreatePriceDropNotificationsAsync(
         int carId,
         string carName,
         decimal previousPrice,

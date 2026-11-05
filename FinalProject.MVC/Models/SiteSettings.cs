@@ -3,11 +3,15 @@ using System.ComponentModel.DataAnnotations;
 namespace FinalProject.MVC.Models;
 
 /// <summary>Singleton site identity and contact settings (one row, Id = 1).</summary>
-public class SiteSettings
+public class SiteSettings : BaseEntity
 {
     public const int SingletonId = 1;
 
-    public int Id { get; set; } = SingletonId;
+    public SiteSettings()
+    {
+        Id = SingletonId;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     [Required, MaxLength(120)]
     public string SiteName { get; set; } = "AutoVault";
@@ -67,6 +71,4 @@ public class SiteSettings
 
     [Required, MaxLength(200)]
     public string CallCtaHeadline { get; set; } = "If you have any questions Please Call.";
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

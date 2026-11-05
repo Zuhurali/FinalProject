@@ -32,84 +32,87 @@
     status.classList.toggle("is-error", !!isError);
   }
 
-  function bindForm(form) {
-    form.addEventListener("submit", function (event) {
-      if (!window.fetch) {
-        return;
-      }
+  function handleFavoriteSubmit(form, event) {
+    if (!window.fetch) {
+      return;
+    }
 
-      event.preventDefault();
-      var button = form.querySelector("[data-favorite-button]");
-      if (!button || button.disabled) {
-        return;
-      }
+    event.preventDefault();
+    var button = form.querySelector("[data-favorite-button]");
+    if (!button || button.disabled) {
+      return;
+    }
 
-      var wasFavorite = form.getAttribute("data-is-favorite") === "true";
-      var url = wasFavorite
-        ? form.getAttribute("data-remove-url")
-        : form.getAttribute("data-add-url");
-      var body = new FormData(form);
-      if (!body.get("__RequestVerificationToken")) {
-        body.append("__RequestVerificationToken", getToken(form));
-      }
+    var wasFavorite = form.getAttribute("data-is-favorite") === "true";
+    var url = wasFavorite
+      ? form.getAttribute("data-remove-url")
+      : form.getAttribute("data-add-url");
+    var body = new FormData(form);
+    if (!body.get("__RequestVerificationToken")) {
+      body.append("__RequestVerificationToken", getToken(form));
+    }
 
-      button.disabled = true;
-      showStatus("");
+    button.disabled = true;
+    showStatus("");
 
-      fetch(url, {
-        method: "POST",
-        body: body,
-        headers: {
-          Accept: "application/json",
-          "X-Requested-With": "fetch"
-        },
-        credentials: "same-origin"
+    fetch(url, {
+      method: "POST",
+      body: body,
+      headers: {
+        Accept: "application/json",
+        "X-Requested-With": "fetch"
+      },
+      credentials: "same-origin"
+    })
+      .then(function (response) {
+        if (response.status === 401) {
+          window.location.href =
+            "/Account/SignIn?returnUrl=" + encodeURIComponent(window.location.pathname + window.location.search);
+          return null;
+        }
+
+        return response
+          .json()
+          .catch(function () {
+            return {};
+          })
+          .then(function (payload) {
+            if (!response.ok) {
+              throw new Error(
+                payload.message || "Your favourites could not be updated. Please try again."
+              );
+            }
+            return payload;
+          });
       })
-        .then(function (response) {
-          if (response.status === 401) {
-            window.location.href =
-              "/Account/SignIn?returnUrl=" + encodeURIComponent(window.location.pathname + window.location.search);
-            return null;
-          }
+      .then(function (payload) {
+        if (!payload) {
+          return;
+        }
 
-          return response
-            .json()
-            .catch(function () {
-              return {};
-            })
-            .then(function (payload) {
-              if (!response.ok) {
-                throw new Error(
-                  payload.message || "Your favourites could not be updated. Please try again."
-                );
-              }
-              return payload;
-            });
-        })
-        .then(function (payload) {
-          if (!payload) {
-            return;
-          }
-
-          var isFavorite = payload.isFavorite === true;
-          render(form, isFavorite);
-          showStatus(
-            isFavorite ? "Saved to your favourites." : "Removed from your favourites.",
-            false
-          );
-        })
-        .catch(function (error) {
-          render(form, wasFavorite);
-          showStatus(error.message || "Your favourites could not be updated.", true);
-        })
-        .finally(function () {
-          button.disabled = false;
-        });
-    });
+        var isFavorite = payload.isFavorite === true;
+        render(form, isFavorite);
+        showStatus(
+          isFavorite ? "Saved to your favourites." : "Removed from your favourites.",
+          false
+        );
+      })
+      .catch(function (error) {
+        render(form, wasFavorite);
+        showStatus(error.message || "Your favourites could not be updated.", true);
+      })
+      .finally(function () {
+        button.disabled = false;
+      });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    // Bind any favorite toggle form (wishlist class optional for older markup).
-    document.querySelectorAll("form[data-favorite-toggle]").forEach(bindForm);
+  // Event delegation so dynamically appended CarsThree cards keep working.
+  document.addEventListener("submit", function (event) {
+    var form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute("data-favorite-toggle")) {
+      return;
+    }
+
+    handleFavoriteSubmit(form, event);
   });
 })();

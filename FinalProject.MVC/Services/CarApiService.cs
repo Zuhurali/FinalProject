@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Exceptions;
-using FinalProject.MVC.Models.Api;
+using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Services.Interfaces;
 
 namespace FinalProject.MVC.Services;
@@ -21,7 +21,7 @@ public class CarApiService : ICarApiService
         _httpClient = httpClient;
     }
 
-    public async Task<PagedCarsDto> GetCarsAsync(CarApiQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedCarsDto> GetCarsAsync(CarApiQueryDto query, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(BuildCarsUrl(query), cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -38,7 +38,7 @@ public class CarApiService : ICarApiService
         return page;
     }
 
-    public async Task<IReadOnlyList<CarApiDto>> GetAllCarsAsync(CarApiQuery? query = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<CarApiDto>> GetAllCarsAsync(CarApiQueryDto? query = null, CancellationToken cancellationToken = default)
     {
         // Public bulk loads default to Active. Callers that need another status must set it explicitly.
         // Admin listing uses GetCarsAsync (not this method) so Draft/Sold remain visible there.
@@ -49,7 +49,7 @@ public class CarApiService : ICarApiService
         }
 
         firstQuery.Page = 1;
-        firstQuery.PageSize = CarApiQuery.MaxPageSize;
+        firstQuery.PageSize = CarApiQueryDto.MaxPageSize;
 
         var firstPage = await GetCarsAsync(firstQuery, cancellationToken);
         var cars = new List<CarApiDto>(firstPage.Items);
@@ -63,7 +63,7 @@ public class CarApiService : ICarApiService
         {
             var nextQuery = Copy(firstQuery);
             nextQuery.Page = pageNumber;
-            nextQuery.PageSize = CarApiQuery.MaxPageSize;
+            nextQuery.PageSize = CarApiQueryDto.MaxPageSize;
             var nextPage = await GetCarsAsync(nextQuery, cancellationToken);
             cars.AddRange(nextPage.Items);
         }
@@ -215,6 +215,25 @@ public class CarApiService : ICarApiService
                ?? [];
     }
 
+    public async Task<IReadOnlyList<CarApiDto>> GetCarsByOwnerAsync(
+        string ownerId,
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(ownerId);
+        using var response = await SendAuthorizedAsync(
+            HttpMethod.Get,
+            $"api/cars/by-owner/{Uri.EscapeDataString(ownerId.Trim())}",
+            accessToken,
+            null,
+            cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<List<CarApiDto>>(
+                   JsonOptions,
+                   cancellationToken)
+               ?? [];
+    }
+
     public async Task<CarApiDto> CreateCarAsync(
         SaveCarDto car,
         string accessToken,
@@ -345,10 +364,10 @@ public class CarApiService : ICarApiService
         throw new CarApiException(message);
     }
 
-    private static CarApiQuery Copy(CarApiQuery? query)
+    private static CarApiQueryDto Copy(CarApiQueryDto? query)
     {
-        query ??= new CarApiQuery();
-        return new CarApiQuery
+        query ??= new CarApiQueryDto();
+        return new CarApiQueryDto
         {
             Search = query.Search,
             BrandId = query.BrandId,
@@ -358,16 +377,20 @@ public class CarApiService : ICarApiService
             MaxPrice = query.MaxPrice,
             MinYear = query.MinYear,
             MaxYear = query.MaxYear,
+            MinMileage = query.MinMileage,
+            MaxMileage = query.MaxMileage,
+            Seats = query.Seats,
             Fuel = query.Fuel,
             Transmission = query.Transmission,
             IsNew = query.IsNew,
             Status = query.Status,
+            Sort = query.Sort,
             Page = query.Page,
             PageSize = query.PageSize
         };
     }
 
-    private static string BuildCarsUrl(CarApiQuery query)
+    private static string BuildCarsUrl(CarApiQueryDto query)
     {
         var parameters = new List<string>
         {
@@ -410,6 +433,23 @@ public class CarApiService : ICarApiService
         {
             parameters.Add($"maxYear={maxYear}");
         }
+
+        if (query.MinMileage is int minMileage)
+        {
+            parameters.Add($"minMileage={minMileage}");
+        }
+
+        if (query.MaxMileage is int maxMileage)
+        {
+            parameters.Add($"maxMileage={maxMileage}");
+        }
+
+        if (query.Seats is int seats)
+        {
+            parameters.Add($"seats={seats}");
+        }
+
+        Add(parameters, "sort", query.Sort);
 
         if (query.IsNew is bool isNew)
         {

@@ -40,7 +40,7 @@ public class SparePartsImageAndCatalogTests
     {
         await using var db = CreateApiDb();
         var service = new PartsAdminService(db);
-        var unsafeImage = await service.CreateAsync(new SavePartRequest
+        var unsafeImage = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "Unsafe Path Part",
             Category = "Filters",
@@ -52,7 +52,7 @@ public class SparePartsImageAndCatalogTests
         Assert.Null(unsafeImage.Part);
         Assert.Equal("The product image path is not allowed.", unsafeImage.Error);
 
-        var negative = await service.CreateAsync(new SavePartRequest
+        var negative = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "Negative Stock Part",
             Category = "Filters",
@@ -70,7 +70,7 @@ public class SparePartsImageAndCatalogTests
     {
         await using var db = CreateApiDb();
         var service = new PartsAdminService(db);
-        var (part, error) = await service.CreateAsync(new SavePartRequest
+        var (part, error) = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "E2E Cabin Filter",
             Category = "Filters",

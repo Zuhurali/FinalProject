@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinalProject.MVC.Models;
 
-public class Coupon
+public class Coupon : BaseEntity
 {
-    public int Id { get; set; }
-
     [Required, MaxLength(50)]
     public string Code { get; set; } = string.Empty;
 
@@ -37,6 +35,4 @@ public class Coupon
     public int? ProductId { get; set; }
 
     public ShopCatalogProduct? Product { get; set; }
-
-    public DateTime CreatedAt { get; set; }
 }

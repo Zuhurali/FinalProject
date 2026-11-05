@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FinalProject.MVC.Models;
 
-public class ShopCatalogProduct
+public class ShopCatalogProduct : BaseEntity
 {
-    public int Id { get; set; }
-
     [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
@@ -41,8 +39,6 @@ public class ShopCatalogProduct
     public bool InStock { get; set; } = true;
 
     public bool IsActive { get; set; } = true;
-
-    public DateTime CreatedAt { get; set; }
 
     [MaxLength(50)]
     public string Color { get; set; } = string.Empty;

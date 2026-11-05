@@ -19,7 +19,7 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PartAdminListResponse>> List(
+    public async Task<ActionResult<PartAdminListResponseDto>> List(
         [FromQuery] string? search,
         [FromQuery] string? category,
         [FromQuery] string? brand,
@@ -31,7 +31,7 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<PartAdminItem>> Get(int id, CancellationToken cancellationToken)
+    public async Task<ActionResult<PartAdminItemDto>> Get(int id, CancellationToken cancellationToken)
     {
         var part = await _parts.GetAsync(id, cancellationToken);
         return part == null ? NotFound(new { message = "The part was not found." }) : Ok(part);
@@ -39,8 +39,8 @@ public sealed class AdminPartsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost]
-    public async Task<ActionResult<PartAdminItem>> Create(
-        [FromBody] SavePartRequest request,
+    public async Task<ActionResult<PartAdminItemDto>> Create(
+        [FromBody] SavePartRequestDto request,
         CancellationToken cancellationToken)
     {
         var (part, error) = await _parts.CreateAsync(request, cancellationToken);
@@ -48,9 +48,9 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<PartAdminItem>> Update(
+    public async Task<ActionResult<PartAdminItemDto>> Update(
         int id,
-        [FromBody] SavePartRequest request,
+        [FromBody] SavePartRequestDto request,
         CancellationToken cancellationToken)
     {
         var (part, error) = await _parts.UpdateAsync(id, request, cancellationToken);
@@ -63,7 +63,7 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult<PartDeleteResponse>> Delete(int id, CancellationToken cancellationToken)
+    public async Task<ActionResult<PartDeleteResponseDto>> Delete(int id, CancellationToken cancellationToken)
     {
         var (found, outcome, message) = await _parts.DeleteAsync(id, cancellationToken);
         if (!found)
@@ -71,6 +71,6 @@ public sealed class AdminPartsController : ControllerBase
             return NotFound(new { message });
         }
 
-        return Ok(new PartDeleteResponse { Outcome = outcome, Message = message });
+        return Ok(new PartDeleteResponseDto { Outcome = outcome, Message = message });
     }
 }

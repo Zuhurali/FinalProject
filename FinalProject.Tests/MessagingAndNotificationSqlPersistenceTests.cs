@@ -40,7 +40,7 @@ public class MessagingAndNotificationSqlPersistenceTests
             var started = await marketplace.StartConversationAsync(
                 carId,
                 buyerId,
-                new StartConversationRequest
+                new StartConversationRequestDto
                 {
                     Subject = $"Inquiry {marker}",
                     Content = $"Is {marker} still available?"
@@ -123,7 +123,7 @@ public class MessagingAndNotificationSqlPersistenceTests
             var started = await marketplace.StartConversationAsync(
                 carId,
                 buyerId,
-                new StartConversationRequest { Content = $"Hide check {marker}" });
+                new StartConversationRequestDto { Content = $"Hide check {marker}" });
             Assert.NotNull(started);
             conversationId = started!.Id;
 
@@ -174,7 +174,7 @@ public class MessagingAndNotificationSqlPersistenceTests
             var started = await marketplace.StartConversationAsync(
                 carId,
                 buyerId,
-                new StartConversationRequest { Content = $"Isolation {marker}" });
+                new StartConversationRequestDto { Content = $"Isolation {marker}" });
             Assert.NotNull(started);
             conversationId = started!.Id;
             var messageId = started.Messages.Single().Id;

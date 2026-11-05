@@ -1,6 +1,6 @@
 namespace FinalProject.DTOs;
 
-public class CarSuggestionResponse
+public class CarSuggestionResponseDto
 {
     public string Text { get; set; } = string.Empty;
 

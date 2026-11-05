@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinalProject.MVC.Models
 {
-    public class Order
+    public class Order : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         [MaxLength(450)]
         public string? UserId { get; set; }
 
