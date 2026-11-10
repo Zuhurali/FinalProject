@@ -27,9 +27,13 @@
                 <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"><img src="@Url.Content(car.ImagePath)" alt="@car.Name"></a>
                 <span class="tag">@car.Badge</span>
                 <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                <a href="@Url.Content(car.ImagePath)" class="gallery-image">
+                    <img src="~/assets/images/icon/image.svg" alt="">
+                    @car.ImageCount
+                </a>
                 @if (seatCount.HasValue)
                 {
-                    <span class="gallery-image cars-two-seat-badge" title="@seatCount.Value seats" aria-label="@seatCount.Value seats">
+                    <span class="cars-two-seat-badge" title="@seatCount.Value seats" aria-label="@seatCount.Value seats">
                         @seatCount.Value seats
                     </span>
                 }

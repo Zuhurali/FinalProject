@@ -287,6 +287,37 @@ public class HomeCarShowcaseTests
         Assert.Single(HomeCarShowcase.InStockCars(usedOnly));
     }
 
+    [Fact]
+    public void Home_trending_tab_hides_condition_badge_while_new_and_used_keep_it()
+    {
+        var root = FindRepoRoot();
+        var home = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Home", "Index.cshtml"));
+        var card = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_CatalogCarCard.cshtml"));
+
+        Assert.Contains("[\"ShowConditionBadge\"] = tab.Id != \"trending\"", home, StringComparison.Ordinal);
+        Assert.Contains("ViewData[\"ShowConditionBadge\"] as bool? ?? true", card, StringComparison.Ordinal);
+        Assert.Contains("@if (showConditionBadge)", card, StringComparison.Ordinal);
+        Assert.Contains("HomeCarShowcase.ConditionBadge(Model)", card, StringComparison.Ordinal);
+        Assert.DoesNotContain("IsNew =", home, StringComparison.Ordinal);
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "FinalProject.slnx"))
+                || File.Exists(Path.Combine(dir.FullName, "FinalProject.sln")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the repository root.");
+    }
+
     private static Car Car(
         int id,
         bool isNew,

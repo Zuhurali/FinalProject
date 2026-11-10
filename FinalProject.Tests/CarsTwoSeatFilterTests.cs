@@ -189,7 +189,10 @@ public class CarsTwoSeatFilterTests
         Assert.Contains("CarsTwoSeatCount.Resolve(car.Seats, car.Description)", cards, StringComparison.Ordinal);
         Assert.Contains("cars-two-seat-badge", cards, StringComparison.Ordinal);
         Assert.Contains("@seatCount.Value seats", cards, StringComparison.Ordinal);
-        Assert.DoesNotContain("@car.ImageCount", cards, StringComparison.Ordinal);
+        Assert.Contains("@car.ImageCount", cards, StringComparison.Ordinal);
+        Assert.Contains("class=\"gallery-image\"", cards, StringComparison.Ordinal);
+        Assert.DoesNotContain("gallery-image cars-two-seat-badge", cards, StringComparison.Ordinal);
+        Assert.Contains("bindResultGallery", view, StringComparison.Ordinal);
         Assert.Contains("refreshColorAndSeatFilters", view, StringComparison.Ordinal);
         Assert.Contains("refreshSeatFilters", view, StringComparison.Ordinal);
         Assert.Contains("catalogForSeatFacets", view, StringComparison.Ordinal);

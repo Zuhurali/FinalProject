@@ -2,6 +2,7 @@
 @using FinalProject.MVC.Commerce
 @{
     var imagePath = string.IsNullOrWhiteSpace(Model.ImagePath) ? string.Empty : Model.ImagePath;
+    var showConditionBadge = ViewData["ShowConditionBadge"] as bool? ?? true;
     var conditionBadge = HomeCarShowcase.ConditionBadge(Model);
 }
 <div class="project-wrapper3 home-car-card">
@@ -12,9 +13,12 @@
                 <img src="@Url.Content(imagePath)" alt="@Model.Name">
             }
         </a>
-        <div class="home-car-badges" aria-label="Vehicle condition">
-            <span class="home-car-badge condition">@conditionBadge</span>
-        </div>
+        @if (showConditionBadge)
+        {
+            <div class="home-car-badges" aria-label="Vehicle condition">
+                <span class="home-car-badge condition">@conditionBadge</span>
+            </div>
+        }
         <span class="home-car-brand">@Model.Make</span>
         <span class="price">$@Model.Price.ToString("N0")</span>
     </div>

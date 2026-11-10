@@ -692,7 +692,9 @@
                                                 @foreach (var car in tab.Cars)
                                                 {
                                                     <div class="swiper-slide">
-                                                        <partial name="_CatalogCarCard" model="car" />
+                                                        <partial name="_CatalogCarCard"
+                                                                 model="car"
+                                                                 view-data="@(new ViewDataDictionary(ViewData) { ["ShowConditionBadge"] = tab.Id != "trending" })" />
                                                     </div>
                                                 }
                                             </div>

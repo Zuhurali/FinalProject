@@ -46,10 +46,19 @@
     }
 
     .cars-two-seat-badge {
+        display: flex;
+        align-items: center;
+        background: #252525;
+        border-radius: 30px;
+        padding: 8px 14px;
+        line-height: 1;
+        position: absolute;
+        z-index: 1;
+        left: 30px;
+        bottom: 58px;
+        color: var(--color-white);
         pointer-events: none;
         white-space: nowrap;
-        min-width: auto;
-        padding: 4px 10px;
         font-size: 13px;
         font-weight: 600;
     }
@@ -595,6 +604,22 @@
                 history.replaceState(null, "", window.location.pathname + (query ? "?" + query : "") + window.location.hash);
             }
 
+            function bindResultGallery() {
+                if (!(window.jQuery && jQuery.fn && jQuery.fn.magnificPopup)) {
+                    return;
+                }
+                var $links = jQuery(grid).find("a.gallery-image");
+                if (!$links.length) {
+                    return;
+                }
+                $links.magnificPopup({
+                    type: "image",
+                    gallery: {
+                        enabled: true
+                    }
+                });
+            }
+
             function reloadSeatResults() {
                 var requestId = ++seatRequest;
                 var params = new URLSearchParams();
@@ -616,6 +641,7 @@
                     }
                     grid.innerHTML = html;
                     cards = Array.prototype.slice.call(grid.querySelectorAll(".car-card"));
+                    bindResultGallery();
                     resetPagingAndApply();
                 }).catch(function () {
                     if (requestId !== seatRequest) {
