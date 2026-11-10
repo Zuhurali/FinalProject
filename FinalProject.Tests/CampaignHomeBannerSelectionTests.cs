@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
@@ -131,7 +132,7 @@ public class CampaignHomeBannerSelectionTests
 public class CampaignHomeBannerShopTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task All_parts_campaign_appears_on_home_and_shop_filter_shows_its_eligible_products()
@@ -141,7 +142,7 @@ public class CampaignHomeBannerShopTests
             .Options;
         await using var db = new ApplicationDbContext(options);
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
 
         var active = await db.ProductCampaigns.Where(campaign => campaign.IsActive).ToListAsync();
         foreach (var campaign in active)

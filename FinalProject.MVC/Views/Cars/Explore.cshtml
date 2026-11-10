@@ -47,6 +47,35 @@
         padding: 0;
         margin: 0;
     }
+    .av-explore-grid .av-card-stat,
+    .av-explore-grid .av-card-listed {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0 14px;
+        padding: 0 30px;
+        color: #333333;
+        font-family: var(--font-primary);
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.4;
+        letter-spacing: 0;
+    }
+    .av-explore-grid .av-card-stat i {
+        color: var(--color-primary);
+        font-size: 16px;
+        line-height: 1;
+        flex: 0 0 auto;
+    }
+    .av-explore-grid .av-card-listed {
+        display: block;
+    }
+    @@media (max-width: 575.98px) {
+        .av-explore-grid .av-card-stat,
+        .av-explore-grid .av-card-listed {
+            font-size: 15px;
+        }
+    }
     .project-wrapper2 .image-area form.wishlist button {
         border: 0;
         outline: 0;
@@ -143,9 +172,23 @@
                             <span class="price">$@car.Price.ToString("N0")</span>
                             <div class="content-area">
                                 <h6 class="title"><a asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
-                                @if (!string.Equals(Model.Condition, "used", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(item.Detail))
+                                @if (string.Equals(Model.Kind, "favorited", StringComparison.OrdinalIgnoreCase) && item.Count is int savedBy)
                                 {
-                                    <p class="mb-2">@item.Detail</p>
+                                    <p class="av-card-stat">
+                                        <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                                        <span>Saved by @savedBy @(savedBy == 1 ? "member" : "members")</span>
+                                    </p>
+                                }
+                                else if (string.Equals(Model.Kind, "viewed", StringComparison.OrdinalIgnoreCase) && !usedBrowse && item.Count is int viewCount)
+                                {
+                                    <p class="av-card-stat">
+                                        <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                        <span>@viewCount @(viewCount == 1 ? "view" : "views")</span>
+                                    </p>
+                                }
+                                else if (!usedBrowse && !string.IsNullOrWhiteSpace(item.Detail))
+                                {
+                                    <p class="av-card-listed">@item.Detail</p>
                                 }
                                 <ul class="feature-area">
                                     <li>@car.Year</li>

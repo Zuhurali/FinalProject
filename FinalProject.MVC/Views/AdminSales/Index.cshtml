@@ -5,7 +5,7 @@
     var submissionKey = (Guid)ViewBag.SubmissionKey;
 }
 <h1 class="h3 mb-4">In-person sales</h1>
-<p class="text-muted">AutoVault does not take online payment. Record store counter sales here (SQL <code>InPersonSales</code> + stock). Live campaigns adjust unit price automatically. Optional coupons redeem into <code>CouponUsages</code> for a signed-in customer email.</p>
+<p class="text-muted">AutoVault does not take online payment. Record store counter sales here (SQL <code>InPersonSales</code> + stock). Live campaigns adjust unit price automatically.</p>
 <form method="post" class="admin-card mb-4" id="sale-form">
     @Html.AntiForgeryToken()
     <input type="hidden" name="submissionKey" value="@submissionKey" />
@@ -36,14 +36,6 @@
         <div class="col-md-5">
             <label>Note</label>
             <input name="note" class="form-control" maxlength="500" />
-        </div>
-        <div class="col-md-4">
-            <label>Coupon code <span class="text-muted">(optional)</span></label>
-            <input name="couponCode" class="form-control" maxlength="50" autocomplete="off" />
-        </div>
-        <div class="col-md-8">
-            <label>Customer account email <span class="text-muted">(required with coupon)</span></label>
-            <input name="customerEmail" type="email" class="form-control" maxlength="256" autocomplete="off" />
         </div>
         <div class="col-12">
             <div class="alert alert-light border mb-0" id="sale-price-preview">Select a part to see the unit price that will be recorded.</div>

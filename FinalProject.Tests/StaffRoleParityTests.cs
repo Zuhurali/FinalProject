@@ -68,10 +68,11 @@ public class StaffRoleParityTests
     }
 
     [Fact]
-    public void Only_SuperAdmin_can_open_users_or_change_roles()
+    public void Admin_and_SuperAdmin_can_manage_users_but_only_SuperAdmin_changes_roles()
     {
-        Assert.Equal(AppRoles.SuperAdmin, EffectiveRoles(typeof(AdminController), nameof(AdminController.Users)));
-        Assert.Equal(AppRoles.SuperAdmin, EffectiveRoles(typeof(AdminController), nameof(AdminController.UserDetails)));
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", EffectiveRoles(typeof(AdminController), nameof(AdminController.Users)));
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", EffectiveRoles(typeof(AdminController), nameof(AdminController.UserDetails)));
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", EffectiveRoles(typeof(AdminController), nameof(AdminController.DeleteUser)));
         Assert.Equal(AppRoles.SuperAdmin, EffectiveRoles(typeof(AdminController), nameof(AdminController.ChangeRole)));
         Assert.Equal(AppRoles.SuperAdmin, EffectiveRoles(typeof(AdminController), nameof(AdminController.ChangeRoles)));
         Assert.Equal(

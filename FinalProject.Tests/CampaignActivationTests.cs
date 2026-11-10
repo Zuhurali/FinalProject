@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
@@ -11,14 +12,14 @@ namespace FinalProject.Tests;
 public class CampaignActivationTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task Deactivate_then_reactivate_persists_is_active_without_changing_dates()
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         await SilenceActiveCampaignsAsync(db);
         var turboId = await db.ShopProducts.AsNoTracking()
             .Where(product => product.Name == "Turbocharger Assembly")
@@ -70,7 +71,7 @@ public class CampaignActivationTests
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         await SilenceActiveCampaignsAsync(db);
         var turboId = await db.ShopProducts.AsNoTracking()
             .Where(product => product.Name == "Turbocharger Assembly")
@@ -114,7 +115,7 @@ public class CampaignActivationTests
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         await SilenceActiveCampaignsAsync(db);
         var turboId = await db.ShopProducts.AsNoTracking()
             .Where(product => product.Name == "Turbocharger Assembly")

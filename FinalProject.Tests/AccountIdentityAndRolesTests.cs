@@ -33,13 +33,14 @@ public class AccountIdentityAndRolesTests
     public void Privileged_mvc_and_api_surfaces_require_Admin_or_SuperAdmin()
     {
         Assert.Equal("Admin,SuperAdmin", typeof(AdminController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-        Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.Users))!
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", typeof(AdminController).GetMethod(nameof(AdminController.Users))!
+            .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", typeof(AdminController).GetMethod(nameof(AdminController.DeleteUser))!
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.ChangeRole))!
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminPartsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminCouponsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-        Assert.Equal("Admin,SuperAdmin", typeof(AdminRequestsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminSalesController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminOrdersController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(
@@ -69,7 +70,6 @@ public class AccountIdentityAndRolesTests
                      nameof(AccountController.ChangePassword),
                      nameof(AccountController.DeleteAccount),
                      nameof(AccountController.Favorites),
-                     nameof(AccountController.PurchaseRequests),
                      nameof(AccountController.ProductQuestions),
                      nameof(AccountController.Messages),
                      nameof(AccountController.ContactRequests)
@@ -456,6 +456,8 @@ public class AccountIdentityAndRolesTests
     private sealed class UnconfiguredEmailSender : IEmailSender
     {
         public bool IsConfigured => false;
+
+        public bool IsExternalConfigured => false;
 
         public Task SendAsync(
             string toEmail,

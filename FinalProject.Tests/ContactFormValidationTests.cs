@@ -41,7 +41,7 @@ public class ContactFormValidationTests
         var errors = ContactFormRules.Validate(model);
 
         Assert.True(errors.ContainsKey("phone"));
-        Assert.Equal(PhoneNumberValidation.ErrorMessage, errors["phone"]);
+        Assert.Equal(InternationalPhoneNumber.ErrorMessage, errors["phone"]);
         Assert.Equal("1234567abc", model.Phone);
     }
 
@@ -72,6 +72,23 @@ public class ContactFormValidationTests
         Assert.Contains("phone", errors.Keys);
         Assert.Contains("car", errors.Keys);
         Assert.Contains("message", errors.Keys);
+    }
+
+    [Theory]
+    [InlineData("AZ", "501234567", "+994501234567")]
+    [InlineData("TR", "5321234567", "+905321234567")]
+    [InlineData("US", "5551234567", "+15551234567")]
+    [InlineData("GB", "7400123456", "+447400123456")]
+    public void ContactFormRules_stores_the_complete_international_number(string country, string national, string expected)
+    {
+        var model = ValidModel();
+        model.PhoneCountry = country;
+        model.Phone = national;
+
+        var errors = ContactFormRules.Validate(model);
+
+        Assert.Empty(errors);
+        Assert.Equal(expected, model.Phone);
     }
 
     private static ContactFormModel ValidModel() => new()

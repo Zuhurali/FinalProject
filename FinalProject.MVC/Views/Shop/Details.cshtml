@@ -1,5 +1,4 @@
 @model FinalProject.MVC.Models.ShopProduct
-@using System.Text.Json
 @using FinalProject.MVC.Commerce
 @{
     ViewData["Title"] = $"{Model.Name} - AutoVault";
@@ -12,27 +11,14 @@
     var stockText = Model.Quantity <= 0
         ? "Out of stock"
         : Model.StockStatus == "Low Stock"
-            ? $"Low stock � {Model.Quantity} left"
-            : $"In stock � {Model.Quantity} available";
+            ? $"Low stock · {Model.Quantity} left"
+            : $"In stock · {Model.Quantity} available";
     var related = ViewBag.RelatedProducts as IReadOnlyList<ShopProduct> ?? Array.Empty<ShopProduct>();
     var photos = ProductImageCredits.Gallery(Model.ImagePath);
     var hasPhoto = photos.Count > 0;
     var hasGallery = photos.Count > 1;
     var signedInEmail = ViewBag.AskEmail as string ?? "";
     var signedInDisplayName = ViewBag.AskDisplayName as string ?? "";
-
-    var form = new Dictionary<string, string?>();
-    if (TempData["RequestForm"] is string formJson)
-    {
-        foreach (var property in JsonDocument.Parse(formJson).RootElement.EnumerateObject())
-        {
-            form[property.Name] = property.Value.ValueKind == JsonValueKind.Null ? null : property.Value.ToString();
-        }
-    }
-    string? Field(string name, string? fallback = null) => form.TryGetValue(name, out var value) ? value : fallback;
-
-    var maxRequestQuantity = Math.Min(Model.Quantity, ShowroomRequestRules.MaxQuantityPerRequest);
-    var today = DateTime.Now.Date;
 }
 
 <!-- Breadcrumb area start -->
@@ -169,7 +155,7 @@
                 </div>
                 @if (Model.HasOffer)
                 {
-                    <p class="av-detail__offer">@($"{Model.DiscountPercent}% OFF")@(string.IsNullOrWhiteSpace(Model.OfferEndLabel) ? "" : $" � Ends {Model.OfferEndLabel}")</p>
+                    <p class="av-detail__offer">@($"{Model.DiscountPercent}% OFF")@(string.IsNullOrWhiteSpace(Model.OfferEndLabel) ? "" : $" · Ends {Model.OfferEndLabel}")</p>
                 }
 
                 <p class="av-detail__description">@Model.Description</p>
@@ -195,80 +181,23 @@
                     }
                 </dl>
 
-                <section class="av-request" id="request-to-buy" aria-labelledby="request-to-buy-title">
+                <section class="av-request" aria-labelledby="buy-in-store-title">
                     <div class="av-request__head">
                         <div>
-                            <h3 id="request-to-buy-title">Buy in Store</h3>
-                            <p class="av-request__lead">No online payment. Send a request and our team will contact you. You pay and collect in person.</p>
+                            <h3 id="buy-in-store-title">Buy in Store</h3>
+                            <p class="av-request__lead">No online payment. Visit the store to inspect this part and buy it in person.</p>
                         </div>
                     </div>
-
-                    @if (TempData["RequestSuccess"] != null)
+                    @if (Model.Quantity <= 0)
                     {
-                        <div class="alert alert-success" role="status" id="request-success">@TempData["RequestSuccess"]</div>
-                    }
-
-                    @if (Model.Quantity > 0)
-                    {
-                        var requestError = TempData["RequestError"] as string;
-                        <button type="button" class="av-btn av-btn--primary av-request__toggle" id="request-toggle" aria-expanded="@(requestError != null ? "true" : "false")" aria-controls="request-panel" @(requestError != null ? "hidden" : "")>Request to Buy</button>
-                        <div class="av-request__panel" id="request-panel" @(requestError == null ? "hidden" : "")>
-                        @if (requestError != null)
-                        {
-                            <div class="alert alert-danger" role="alert">@requestError</div>
-                        }
-                        <form asp-controller="Shop" asp-action="RequestToBuy" method="post" class="av-request__form" id="request-form">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="ProductId" value="@Model.Id" />
-                            <input type="hidden" name="SubmissionKey" value="@ViewBag.SubmissionKey" />
-                            <div class="av-form-grid">
-                                <label>
-                                    <span>Name</span>
-                                    <input class="form-control" type="text" name="CustomerName" minlength="2" maxlength="80" autocomplete="name" value="@Field("CustomerName")" required />
-                                </label>
-                                <label>
-                                    <span>Phone</span>
-                                    <input class="form-control" type="tel" name="Phone" maxlength="40" autocomplete="tel" placeholder="+994 ..." value="@Field("Phone")" required />
-                                </label>
-                                <label class="av-form-grid__wide">
-                                    <span>Email</span>
-                                    <input class="form-control" type="email" name="Email" maxlength="200" autocomplete="email" value="@Field("Email", signedInEmail)" required />
-                                </label>
-                                <label>
-                                    <span>Quantity (max @maxRequestQuantity)</span>
-                                    <input class="form-control" type="number" name="Quantity" min="1" max="@maxRequestQuantity" step="1" value="@Field("Quantity", "1")" required />
-                                </label>
-                                <label>
-                                    <span>Preferred visit date <em>(optional)</em></span>
-                                    <input class="form-control" type="date" name="PreferredVisitDate" min="@today.ToString("yyyy-MM-dd")" max="@today.AddDays(ShowroomRequestRules.MaxVisitDaysAhead).ToString("yyyy-MM-dd")" value="@Field("PreferredVisitDate")" />
-                                </label>
-                                <label class="av-form-grid__wide">
-                                    <span>Note <em>(optional)</em></span>
-                                    <textarea class="form-control" name="Note" maxlength="@ShowroomRequestRules.MaxNoteLength" rows="2">@Field("Note")</textarea>
-                                </label>
-                            </div>
-                            <p class="av-request__fine">A request is not a confirmed purchase, and stock is not held until our team confirms.</p>
-                            <div class="av-request__actions">
-                                <button type="submit" class="av-btn av-btn--primary" id="request-submit">Send Request</button>
-                                <button type="button" class="av-btn av-btn--ghost" id="request-cancel">Cancel</button>
-                            </div>
-                        </form>
-                        </div>
-                    }
-                    else
-                    {
-                        if (TempData["RequestError"] is string closedError)
-                        {
-                            <div class="alert alert-danger" role="alert">@closedError</div>
-                        }
                         <div class="av-request__closed" role="note">
                             <strong>Out of stock.</strong>
-                            Purchase requests reopen when the store has this item again. You can ask a question below or call the store.
+                            You can ask a question below or call the store.
                         </div>
                     }
 
                     <ul class="av-request__contact">
-                        <li><i class="fa-regular fa-location-dot" aria-hidden="true"></i> Babek Prospekti 22�24, Baku, Azerbaijan</li>
+                        <li><i class="fa-regular fa-location-dot" aria-hidden="true"></i> Babek Prospekti 22-24, Baku, Azerbaijan</li>
                         <li><i class="fa-regular fa-phone" aria-hidden="true"></i> <a href="@Site.Contact.TelHref" aria-label="Call AutoVault at @Site.Contact.DisplayPhone">@Site.Contact.DisplayPhone</a></li>
                         <li><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> <a href="@Site.Contact.WhatsAppHref" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat with AutoVault">WhatsApp</a></li>
                         <li><i class="fa-regular fa-envelope" aria-hidden="true"></i> <a href="@Site.Contact.MailtoHref">@Site.Contact.Email</a></li>
@@ -302,11 +231,11 @@
                         {
                             <article class="av-ask__qa mb-3 p-3 border rounded">
                                 <p class="fw-semibold mb-1">Q: @qa.Message</p>
-                                <p class="text-muted small mb-1">@qa.CustomerName � @qa.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                <p class="text-muted small mb-1">@qa.CustomerName · @qa.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</p>
                                 <p class="mb-0"><strong>A:</strong> @qa.AdminReply</p>
                                 @if (qa.AdminRepliedAt.HasValue)
                                 {
-                                    <p class="text-muted small mb-0">Store reply � @qa.AdminRepliedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</p>
+                                    <p class="text-muted small mb-0">AutoVault Support · @qa.AdminRepliedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</p>
                                 }
                             </article>
                         }
@@ -380,7 +309,7 @@
             <div class="tab-content">
                 <div class="tab-pane active" id="home" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                     <p>@Model.Description</p>
-                    <p>Buy and collect this item at the AutoVault store, Babek Prospekti 22�24, Baku. Compatibility is listed only when it is known for this product.</p>
+                    <p>Buy and collect this item at the AutoVault store, Babek Prospekti 22-24, Baku. Compatibility is listed only when it is known for this product.</p>
                 </div>
                 <div class="tab-pane" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
                     <div class="ms-section-title">
@@ -563,43 +492,6 @@
             ask.scrollIntoView({ block: 'start' });
         }
 
-        function openRequestPanel(focus) {
-            const panel = document.getElementById('request-panel');
-            if (!panel) {
-                return;
-            }
-            panel.hidden = false;
-            $('#request-toggle').attr('aria-expanded', 'true').prop('hidden', true);
-            if (focus) {
-                panel.querySelector('input[name="CustomerName"]').focus();
-            }
-        }
-
-        $('#request-toggle').on('click', function() {
-            openRequestPanel(true);
-        });
-        $('#request-cancel').on('click', function() {
-            document.getElementById('request-panel').hidden = true;
-            $('#request-toggle').attr('aria-expanded', 'false').prop('hidden', false).trigger('focus');
-        });
-        if (location.hash === '#request-to-buy' && !document.getElementById('request-success')) {
-            openRequestPanel(false);
-        }
-
-        $('#request-form').on('submit', function(event) {
-            const button = $('#request-submit');
-            if (button.prop('disabled')) {
-                event.preventDefault();
-                return;
-            }
-            button.prop('disabled', true).text('Sending...');
-            $('#request-cancel').prop('disabled', true);
-        });
-        window.addEventListener('pageshow', function() {
-            $('#request-submit').prop('disabled', false).text('Send Request');
-            $('#request-cancel').prop('disabled', false);
-        });
-
         function paintUserRating(value) {
             $('.rating-star').each(function() {
                 const active = Number($(this).data('rating')) <= value;
@@ -762,7 +654,7 @@
                 return;
             }
 
-            btn.prop('disabled', true).text('Saving�');
+            btn.prop('disabled', true).text('Saving...');
             errEl.hide();
 
             try {
@@ -813,7 +705,7 @@
                 }
 
             } catch (err) {
-                errEl.text('Network error. Your review was not saved � please try again.').show();
+                errEl.text('Network error. Your review was not saved - please try again.').show();
             } finally {
                 btn.prop('disabled', false).text('Save');
             }
@@ -843,7 +735,7 @@
                 (data.items || []).forEach(function (item) {
                     const when = document.createElement('div');
                     when.className = 'text-muted';
-                    when.textContent = 'Previous text � ' + item.editedAt;
+                    when.textContent = 'Previous text · ' + item.editedAt;
                     const body = document.createElement('p');
                     body.style.whiteSpace = 'pre-wrap';
                     body.textContent = item.previousContent;

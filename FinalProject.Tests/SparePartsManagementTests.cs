@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using System.Reflection;
 using System.Security.Claims;
 using FinalProject.Data;
@@ -65,7 +66,7 @@ public class SparePartsManagementTests
     public async Task PartsAdminService_rejects_invalid_create_and_accepts_sku_fitment()
     {
         await using var db = CreateDb();
-        var service = new PartsAdminService(db);
+        var service = new PartsAdminService(new FinalProjectRepository(db));
 
         var (missing, missingError) = await service.CreateAsync(new SavePartRequestDto
         {
@@ -112,9 +113,9 @@ public class SparePartsManagementTests
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
         var edit = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminParts", "Edit.cshtml"));
-        var dto = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "DTOs", "PartAdminDtos.cs"));
-        var apiDto = File.ReadAllText(Path.Combine(root, "FinalProject", "DTOs", "PartAdminDtos.cs"));
-        var service = File.ReadAllText(Path.Combine(root, "FinalProject", "Services", "PartsAdminService.cs"));
+        var dto = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "DTOs", "PartAdminDtos.cs"));
+        var apiDto = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "DTOs", "PartAdminDtos.cs"));
+        var service = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "Services", "PartsAdminService.cs"));
 
         Assert.Contains("asp-for=\"Color\"", edit, StringComparison.Ordinal);
         Assert.Contains("public string? Color { get; set; }", dto, StringComparison.Ordinal);
@@ -127,7 +128,7 @@ public class SparePartsManagementTests
     public async Task PartsAdminService_saves_color_and_preserves_other_fields()
     {
         await using var db = CreateDb();
-        var service = new PartsAdminService(db);
+        var service = new PartsAdminService(new FinalProjectRepository(db));
 
         var (created, createError) = await service.CreateAsync(new SavePartRequestDto
         {
@@ -191,7 +192,7 @@ public class SparePartsManagementTests
     public async Task PartsAdminService_rejects_negative_stock_and_oversized_sku()
     {
         await using var db = CreateDb();
-        var service = new PartsAdminService(db);
+        var service = new PartsAdminService(new FinalProjectRepository(db));
 
         var (neg, negError) = await service.CreateAsync(new SavePartRequestDto
         {

@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using System.ComponentModel.DataAnnotations;
 using FinalProject.Commerce;
 using FinalProject.Data;
@@ -51,7 +52,7 @@ public class CarListingSelectionTests
         var audi = db.Brands.Add(new Brand { Name = "Audi", CreatedAt = DateTime.UtcNow }).Entity;
         var category = db.Categories.Add(new Category { Name = "Sedan" }).Entity;
         await db.SaveChangesAsync();
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var wrong = await Assert.ThrowsAsync<CarListingException>(() =>
             service.CreateCatalogAsync(Request(2024, "M340i", audi.Id, category.Id)));
@@ -92,7 +93,7 @@ public class CarListingSelectionTests
         });
         await db.SaveChangesAsync();
 
-        var lookups = await new CarService(db, new SilentNotifications()).GetLookupsAsync();
+        var lookups = await new CarService(new FinalProjectRepository(db), new SilentNotifications()).GetLookupsAsync();
         var bmwModels = lookups.Models!.Where(item => item.BrandId == bmw.Id).Select(item => item.Name).ToList();
         var audiModels = lookups.Models!.Where(item => item.BrandId == audi.Id).Select(item => item.Name).ToList();
 

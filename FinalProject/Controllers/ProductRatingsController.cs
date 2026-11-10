@@ -20,7 +20,7 @@ public sealed class ProductRatingsController : ControllerBase
     [AllowAnonymous]
     [HttpGet("{productId:int}/ratings")]
     [ProducesResponseType<ProductRatingSummaryDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProductRatingSummaryDto>> GetRatings(
         int productId,
         CancellationToken cancellationToken)
@@ -63,7 +63,7 @@ public sealed class ProductRatingsController : ControllerBase
     [ProducesResponseType<CurrentUserProductRatingDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CurrentUserProductRatingDto>> GetMyRating(
         int productId,
         CancellationToken cancellationToken)
@@ -87,10 +87,10 @@ public sealed class ProductRatingsController : ControllerBase
     [Authorize]
     [HttpPost("{productId:int}/ratings")]
     [ProducesResponseType<CurrentUserProductRatingDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProductRatingConflictResponse), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<CurrentUserProductRatingDto>> SaveRating(
         int productId,
         [FromBody] SaveProductRatingRequestDto request,
@@ -143,7 +143,7 @@ public sealed class ProductRatingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteMyRating(
         int productId,
         int ratingId,
@@ -168,7 +168,7 @@ public sealed class ProductRatingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteRating(
         int productId,
         int ratingId,

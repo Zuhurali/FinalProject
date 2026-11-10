@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Data;
 using FinalProject.DTOs;
 using FinalProject.Models.Entities;
@@ -18,6 +19,7 @@ public class PublicCarListingActiveFilterTests
     {
         var created = MvcCarPublicListing.CreateActiveQuery(page: 2, pageSize: 6);
         Assert.Equal(MvcCarPublicListing.ActiveStatus, created.Status);
+        Assert.Equal("latest", created.Sort);
         Assert.Equal(2, created.Page);
         Assert.Equal(6, created.PageSize);
 
@@ -31,7 +33,7 @@ public class PublicCarListingActiveFilterTests
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
         var controller = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "CarsController.cs"));
-        var mapper = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Mappings", "CarApiMapper.cs"));
+        var mapper = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "Mappings", "CarApiMapper.cs"));
         var brand = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "BrandController.cs"));
         var admin = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "AdminCarsController.cs"));
 
@@ -53,7 +55,7 @@ public class PublicCarListingActiveFilterTests
         var active = await SeedCarAsync(db, "ActiveOne", "Active");
         await SeedCarAsync(db, "DraftOne", "Draft");
         await SeedCarAsync(db, "SoldOne", "Sold");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -74,7 +76,7 @@ public class PublicCarListingActiveFilterTests
         await SeedCarAsync(db, "ActiveOne", "Active");
         await SeedCarAsync(db, "DraftOne", "Draft");
         var sold = await SeedCarAsync(db, "SoldOne", "Sold");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -94,7 +96,7 @@ public class PublicCarListingActiveFilterTests
         await using var db = CreateDb();
         await SeedCarAsync(db, "ActiveOne", "Active");
         await SeedCarAsync(db, "DraftOne", "Draft");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto { Page = 1, PageSize = 50 });
 
@@ -123,7 +125,7 @@ public class PublicCarListingActiveFilterTests
         await using var db = CreateDb();
         var active = await SeedCarAsync(db, "ActiveExplore", "Active");
         var draft = await SeedCarAsync(db, "DraftExplore", "Draft");
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var when = DateTime.UtcNow;
 
         Assert.True(await discovery.RecordViewAsync(active.Id, when));
@@ -144,7 +146,7 @@ public class PublicCarListingActiveFilterTests
         await using var db = CreateDb();
         await SeedCarAsync(db, "CamryActive", "Active", description: "Toyota Camry Active Listing");
         await SeedCarAsync(db, "CamryDraft", "Draft", description: "Toyota Camry Draft Listing");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var suggestions = await service.GetSuggestionsAsync("Camry", limit: 10);
 

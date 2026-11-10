@@ -146,6 +146,41 @@ public class AccountDeleteTests
         Assert.NotNull(reloaded.DeletedAt);
         Assert.True(reloaded.LockoutEnabled);
         Assert.True(reloaded.LockoutEnd.HasValue && reloaded.LockoutEnd > DateTimeOffset.UtcNow);
+        Assert.True(SoftDeletedAccountIdentity.IsReleasedIdentifier(reloaded.Email));
+        Assert.True(SoftDeletedAccountIdentity.IsReleasedIdentifier(reloaded.UserName));
+        Assert.Null(await harness.Users.FindByEmailAsync("member-delete@example.com"));
+    }
+
+    [Fact]
+    public async Task Register_reclaims_soft_deleted_account_email_without_opening_new_inbox()
+    {
+        await using var harness = await DeleteHarness.CreateAsync();
+        var deleted = await harness.CreateConfirmedMemberAsync("reuse-me@example.com", "Password1", userName: "reuseuser");
+        deleted.IsDeleted = true;
+        deleted.DeletedAt = DateTime.UtcNow;
+        deleted.LockoutEnabled = true;
+        deleted.LockoutEnd = DateTimeOffset.MaxValue;
+        Assert.True((await harness.Users.UpdateAsync(deleted)).Succeeded);
+
+        var controller = harness.CreateAccountController();
+        var result = await controller.Register(
+            "reuse-me@example.com",
+            "reuseuser",
+            "Password2!",
+            "Password2!",
+            "Reuse",
+            "User") as RedirectToActionResult;
+
+        Assert.Equal(nameof(AccountController.CheckEmail), result!.ActionName);
+        Assert.Equal("reuse-me@example.com", result.RouteValues!["email"]);
+
+        var restored = await harness.Users.FindByEmailAsync("reuse-me@example.com");
+        Assert.NotNull(restored);
+        Assert.Equal(deleted.Id, restored!.Id);
+        Assert.False(restored.IsDeleted);
+        Assert.Null(restored.DeletedAt);
+        Assert.False(restored.EmailConfirmed);
+        Assert.True(await harness.Users.CheckPasswordAsync(restored, "Password2!"));
     }
 
     [Fact]
@@ -263,15 +298,17 @@ public class AccountDeleteTests
         });
 
         var signInController = harness.CreateAccountController();
-        var result = await signInController.SignIn("gone@example.com", "Password1") as RedirectToActionResult;
+        var result = (await signInController.SignIn("gone@example.com", "Password1")) as RedirectToActionResult;
 
         Assert.Equal(nameof(AccountController.SignIn), result!.ActionName);
-        Assert.Equal("This account has been deactivated and can no longer sign in.", signInController.TempData["Error"]);
+        // Soft-delete frees email/username, so the old login looks like a missing account.
+        Assert.Equal("The email, username, or password is incorrect.", signInController.TempData["Error"]);
+        Assert.Null(await harness.Users.FindByEmailAsync("gone@example.com"));
 
-        var check = await harness.SignIn.CheckPasswordSignInAsync(
-            (await harness.Users.FindByIdAsync(user.Id))!,
-            "Password1",
-            lockoutOnFailure: true);
+        var tombstone = await harness.Users.FindByIdAsync(user.Id);
+        Assert.True(tombstone!.IsDeleted);
+        Assert.True(SoftDeletedAccountIdentity.IsReleasedIdentifier(tombstone.Email));
+        var check = await harness.SignIn.CheckPasswordSignInAsync(tombstone, "Password1", lockoutOnFailure: true);
         Assert.False(check.Succeeded);
         Assert.True(check.IsLockedOut);
     }
@@ -371,14 +408,18 @@ public class AccountDeleteTests
             return harness;
         }
 
-        public Task<ApplicationUser> CreateConfirmedMemberAsync(string email, string password) =>
-            CreateConfirmedUserAsync(email, password, AppRoles.Member);
+        public Task<ApplicationUser> CreateConfirmedMemberAsync(string email, string password, string? userName = null) =>
+            CreateConfirmedUserAsync(email, password, AppRoles.Member, userName);
 
-        public async Task<ApplicationUser> CreateConfirmedUserAsync(string email, string password, string role)
+        public async Task<ApplicationUser> CreateConfirmedUserAsync(
+            string email,
+            string password,
+            string role,
+            string? userName = null)
         {
             var user = new ApplicationUser
             {
-                UserName = email,
+                UserName = userName ?? email,
                 Email = email,
                 EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow
@@ -458,6 +499,8 @@ public class AccountDeleteTests
     private sealed class UnconfiguredEmailSender : IEmailSender
     {
         public bool IsConfigured => false;
+
+        public bool IsExternalConfigured => false;
 
         public Task SendAsync(
             string toEmail,

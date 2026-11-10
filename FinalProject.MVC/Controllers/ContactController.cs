@@ -47,6 +47,7 @@ public class ContactController : Controller
         [FromForm] string? name,
         [FromForm] string? email,
         [FromForm] string? phone,
+        [FromForm] string? phoneCountry,
         [FromForm] string? car,
         [FromForm] string? message,
         [FromForm] string? company,
@@ -69,6 +70,7 @@ public class ContactController : Controller
             Name = name ?? string.Empty,
             Email = email ?? string.Empty,
             Phone = phone ?? string.Empty,
+            PhoneCountry = phoneCountry,
             Car = car ?? string.Empty,
             Message = message ?? string.Empty
         };

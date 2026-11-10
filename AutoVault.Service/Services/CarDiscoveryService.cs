@@ -1,0 +1,280 @@
+using FinalProject.Commerce;
+using FinalProject.DTOs;
+using FinalProject.Mappings;
+using FinalProject.Models.Entities;
+using FinalProject.Repositories;
+using FinalProject.Services.Interfaces;
+
+namespace FinalProject.Services;
+
+public sealed class CarDiscoveryService : ICarDiscoveryService
+{
+    private readonly ICarRepository _cars;
+
+    public CarDiscoveryService(ICarRepository cars)
+    {
+        _cars = cars;
+    }
+
+    public async Task<bool> RecordViewAsync(int carId, DateTime? viewedAtUtc = null, CancellationToken cancellationToken = default)
+    {
+        if (carId <= 0
+            || !await _cars.ActiveCarExistsAsync(carId, CarPublicListing.ActiveStatus, cancellationToken))
+        {
+            return false;
+        }
+
+        var viewedAt = viewedAtUtc ?? DateTime.UtcNow;
+        await _cars.AddCarViewAsync(new CarView
+        {
+            CarId = carId,
+            ViewedAt = DateTime.SpecifyKind(viewedAt, DateTimeKind.Utc)
+        }, cancellationToken);
+        return true;
+    }
+
+    public async Task<PagedResultDto<RankedCarResponseDto>> GetMostViewedAsync(
+        string period,
+        int page = 1,
+        int pageSize = 9,
+        DateTime? utcNow = null,
+        bool usedOnly = false,
+        CancellationToken cancellationToken = default)
+    {
+        if (!CarDiscoveryRules.TryNormalizePeriod(period, out var normalized))
+        {
+            throw new ArgumentException("Unknown view period.", nameof(period));
+        }
+
+        if (usedOnly)
+        {
+            return await RankActiveUsedByViewsAsync(normalized, page, pageSize, utcNow ?? DateTime.UtcNow, cancellationToken);
+        }
+
+        (page, pageSize) = CarDiscoveryRules.NormalizePaging(page, pageSize);
+        var start = CarDiscoveryRules.PeriodStartUtc(normalized, utcNow ?? DateTime.UtcNow);
+        var counts = await _cars.GetCarViewCountsAsync(start, cancellationToken);
+
+        return await RankPageAsync(counts.Select(item => (item.CarId, item.Count)), page, pageSize, cancellationToken);
+    }
+
+    public async Task<PagedResultDto<RankedCarResponseDto>> GetMostFavoritedAsync(
+        int page = 1,
+        int pageSize = 9,
+        CancellationToken cancellationToken = default)
+    {
+        (page, pageSize) = CarDiscoveryRules.NormalizePaging(page, pageSize);
+        var counts = await _cars.GetFavoriteCountsByCarAsync(cancellationToken);
+
+        return await RankPageAsync(counts.Select(item => (item.CarId, item.Count)), page, pageSize, cancellationToken);
+    }
+
+    public async Task<PagedResultDto<CarResponseDto>> GetLatestArrivalsAsync(
+        int page = 1,
+        int pageSize = 9,
+        CancellationToken cancellationToken = default)
+    {
+        (page, pageSize) = CarDiscoveryRules.NormalizePaging(page, pageSize);
+        var totalCount = await _cars.CountActiveCarsAsync(CarPublicListing.ActiveStatus, cancellationToken);
+        var totalPages = totalCount == 0 ? 0 : (int)Math.Ceiling(totalCount / (double)pageSize);
+        if (totalPages > 0 && page > totalPages)
+        {
+            page = totalPages;
+        }
+
+        IReadOnlyList<CarResponseDto> items = Array.Empty<CarResponseDto>();
+        if (totalCount > 0)
+        {
+            var cars = await _cars.GetLatestActiveCarsPageAsync(
+                CarPublicListing.ActiveStatus,
+                page,
+                pageSize,
+                cancellationToken);
+            items = cars.Select(car => car.ToResponse()).ToList();
+        }
+
+        return new PagedResultDto<CarResponseDto>
+        {
+            Items = items,
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
+    }
+
+    public async Task<CarDiscoveryStatisticsResponseDto> GetStatisticsAsync(
+        DateTime? utcNow = null,
+        CancellationToken cancellationToken = default)
+    {
+        var now = utcNow ?? DateTime.UtcNow;
+        var todayStart = CarDiscoveryRules.PeriodStartUtc(CarDiscoveryRules.Today, now);
+        var weekStart = CarDiscoveryRules.PeriodStartUtc(CarDiscoveryRules.Week, now);
+        var trendStartLocal = CarDiscoveryRules.LocalDate(now).AddDays(-13);
+        var trendStartUtc = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(trendStartLocal, DateTimeKind.Unspecified),
+            CarDiscoveryRules.DealershipZone);
+
+        var viewTimes = await _cars.GetCarViewTimesSinceAsync(trendStartUtc, cancellationToken);
+        var byDay = viewTimes
+            .GroupBy(CarDiscoveryRules.LocalDate)
+            .ToDictionary(group => group.Key, group => group.Count());
+        var daily = new List<DailyViewPointDto>();
+        for (var day = trendStartLocal; day <= CarDiscoveryRules.LocalDate(now); day = day.AddDays(1))
+        {
+            daily.Add(new DailyViewPointDto
+            {
+                Date = day.ToString("yyyy-MM-dd"),
+                Views = byDay.GetValueOrDefault(day)
+            });
+        }
+
+        var mostViewed = await GetMostViewedAsync(CarDiscoveryRules.All, page: 1, pageSize: 5, utcNow: now, cancellationToken: cancellationToken);
+        var mostFavorited = await GetMostFavoritedAsync(page: 1, pageSize: 5, cancellationToken: cancellationToken);
+
+        return new CarDiscoveryStatisticsResponseDto
+        {
+            TotalViews = await _cars.CountCarViewsAsync(cancellationToken),
+            ViewsToday = await _cars.CountCarViewsSinceAsync(todayStart!.Value, cancellationToken),
+            ViewsLast7Days = await _cars.CountCarViewsSinceAsync(weekStart!.Value, cancellationToken),
+            TotalFavorites = await _cars.CountFavoritesAsync(cancellationToken),
+            DailyViews = daily,
+            MostViewed = mostViewed.Items.ToList(),
+            MostFavorited = mostFavorited.Items.ToList()
+        };
+    }
+
+    private async Task<PagedResultDto<RankedCarResponseDto>> RankActiveUsedByViewsAsync(
+        string period,
+        int page,
+        int pageSize,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        if (pageSize < 1)
+        {
+            pageSize = CarDiscoveryRules.DefaultPageSize;
+        }
+        else if (pageSize > CarDiscoveryRules.UsedBrowsePageSize)
+        {
+            pageSize = CarDiscoveryRules.UsedBrowsePageSize;
+        }
+
+        var cars = await _cars.GetActiveUsedCarSummariesAsync(CarPublicListing.ActiveStatus, cancellationToken);
+        if (cars.Count == 0)
+        {
+            return EmptyRankedPage(page, pageSize);
+        }
+
+        var start = CarDiscoveryRules.PeriodStartUtc(period, utcNow);
+        var carIds = cars.Select(car => car.Id).ToList();
+        var countRows = await _cars.GetCarViewCountsForCarsAsync(carIds, start, cancellationToken);
+        var counts = countRows.ToDictionary(row => row.CarId, row => row.Count);
+
+        var ordered = cars
+            .Select(car => (car.Id, Count: counts.GetValueOrDefault(car.Id), car.CreatedAt))
+            .OrderByDescending(item => item.Count)
+            .ThenByDescending(item => item.CreatedAt)
+            .ThenByDescending(item => item.Id)
+            .ToList();
+
+        var totalCount = ordered.Count;
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        if (page > totalPages)
+        {
+            page = totalPages;
+        }
+
+        var pageSlice = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        var pageIds = pageSlice.Select(item => item.Id).ToList();
+        var loadedList = await _cars.GetCarsWithDetailsByIdsAsync(pageIds, cancellationToken);
+        var loaded = loadedList.ToDictionary(car => car.Id);
+
+        return new PagedResultDto<RankedCarResponseDto>
+        {
+            Items = pageSlice
+                .Where(item => loaded.ContainsKey(item.Id))
+                .Select(item => new RankedCarResponseDto
+                {
+                    Count = item.Count,
+                    Car = loaded[item.Id].ToResponse()
+                })
+                .ToList(),
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
+    }
+
+    private async Task<PagedResultDto<RankedCarResponseDto>> RankPageAsync(
+        IEnumerable<(int CarId, int Count)> counts,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var rankedIds = counts.Where(item => item.Count > 0).ToList();
+        if (rankedIds.Count == 0)
+        {
+            return EmptyRankedPage(page, pageSize);
+        }
+
+        var carIds = rankedIds.Select(item => item.CarId).ToList();
+        var createdAt = await _cars.GetActiveCarCreatedAtByIdsAsync(
+            CarPublicListing.ActiveStatus,
+            carIds,
+            cancellationToken);
+
+        var ordered = rankedIds
+            .Where(item => createdAt.ContainsKey(item.CarId))
+            .OrderByDescending(item => item.Count)
+            .ThenByDescending(item => createdAt[item.CarId])
+            .ThenByDescending(item => item.CarId)
+            .ToList();
+
+        var totalCount = ordered.Count;
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        if (page > totalPages)
+        {
+            page = totalPages;
+        }
+
+        var pageSlice = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        var pageIds = pageSlice.Select(item => item.CarId).ToList();
+        var loadedList = await _cars.GetCarsWithDetailsByIdsAsync(pageIds, cancellationToken);
+        var cars = loadedList.ToDictionary(car => car.Id);
+
+        var pageItems = pageSlice
+            .Where(item => cars.ContainsKey(item.CarId))
+            .Select(item => new RankedCarResponseDto
+            {
+                Count = item.Count,
+                Car = cars[item.CarId].ToResponse()
+            })
+            .ToList();
+
+        return new PagedResultDto<RankedCarResponseDto>
+        {
+            Items = pageItems,
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
+    }
+
+    private static PagedResultDto<RankedCarResponseDto> EmptyRankedPage(int page, int pageSize) =>
+        new()
+        {
+            Items = Array.Empty<RankedCarResponseDto>(),
+            CurrentPage = page,
+            PageSize = pageSize,
+            TotalCount = 0,
+            TotalPages = 0
+        };
+}

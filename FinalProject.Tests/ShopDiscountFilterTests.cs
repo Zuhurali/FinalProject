@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Services;
 using Microsoft.EntityFrameworkCore;
@@ -9,14 +10,14 @@ namespace FinalProject.Tests;
 public class ShopDiscountFilterTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task Fifteen_percent_filter_returns_only_live_offer_parts()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(ConnectionString).Options;
         await using var db = new ApplicationDbContext(options);
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var shop = await catalog.GetAllAsync();
 
         var fifteenPercent = shop

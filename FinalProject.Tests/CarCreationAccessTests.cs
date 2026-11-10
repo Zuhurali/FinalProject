@@ -179,7 +179,7 @@ public class CarCreationAccessTests
         Assert.Contains("ValidationInterval = TimeSpan.Zero", program, StringComparison.Ordinal);
 
         var users = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "AdminController.cs"));
-        Assert.DoesNotContain("UpdateSecurityStampAsync", users, StringComparison.Ordinal);
+        Assert.Contains("UpdateSecurityStampAsync(user)", users, StringComparison.Ordinal);
     }
 
     private static void AssertCreationRoles(Type controller, string methodName)
@@ -353,7 +353,7 @@ public class CarCreationAccessTests
             string role)
         {
             var users = _provider.GetRequiredService<UserManager<ApplicationUser>>();
-            var controller = new AdminController(users, null!, null!, null!, null!, null!)
+            var controller = new AdminController(users, null!, null!, null!, null!)
             {
                 ControllerContext = new ControllerContext
                 {

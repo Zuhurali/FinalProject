@@ -26,30 +26,35 @@
     min-width: 0;
 }
 
-.rts-contact-area.inner.av-contact-page .contact-map-area-fluid {
-    height: 100%;
-    min-height: 420px;
-    max-height: 520px;
+.rts-contact-area.inner.av-contact-page .section-inner .map-area {
+    display: flex;
+}
+
+.rts-contact-area.inner.av-contact-page .section-inner .map-area .contact-map-area-fluid {
+    height: auto;
+    min-height: 100%;
+    max-height: none;
+    flex: 1 1 auto;
     overflow: hidden;
     border-radius: 12px;
     border: 1px solid rgba(85, 85, 85, 0.12);
     background: #f4f4f4;
 }
 
-.rts-contact-area.inner.av-contact-page .contact-map {
+.rts-contact-area.inner.av-contact-page .section-inner .map-area .contact-map {
     display: block;
     width: 100%;
     height: 100%;
     min-height: 420px;
-    max-height: 520px;
+    max-height: none;
     border: 0;
 }
 
-.rts-contact-area.inner.av-contact-page .get-in-touch-area {
+.rts-contact-area.inner.av-contact-page .section-inner .get-in-touch-area {
     background: transparent;
 }
 
-.rts-contact-area.inner.av-contact-page .get-in-touch-area .contact-form {
+.rts-contact-area.inner.av-contact-page .section-inner .get-in-touch-area .contact-form {
     max-width: none;
     height: auto;
     padding: 28px 30px;
@@ -60,9 +65,19 @@
     text-align: left;
 }
 
+.av-contact-hero .breadcrumb-area-wrapper .title {
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
 .av-contact-form-title {
-    margin-bottom: 8px;
+    margin: 0 0 10px;
+    color: #333333;
+    font-size: 1.35rem;
     font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: normal;
+    word-break: keep-all;
 }
 
 .av-contact-form-intro {
@@ -143,8 +158,8 @@
         width: 100%;
     }
 
-    .rts-contact-area.inner.av-contact-page .contact-map-area-fluid,
-    .rts-contact-area.inner.av-contact-page .contact-map {
+    .rts-contact-area.inner.av-contact-page .section-inner .map-area .contact-map-area-fluid,
+    .rts-contact-area.inner.av-contact-page .section-inner .map-area .contact-map {
         min-height: 240px;
         max-height: 300px;
     }
@@ -197,4 +212,37 @@
     color: #8a4b08;
     background: rgba(255, 160, 0, 0.12);
     border: 1px solid rgba(255, 160, 0, 0.35);
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__row {
+    grid-template-columns: minmax(9.5rem, 1fr) minmax(0, 1.15fr);
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__country,
+.rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__number {
+    padding: 0 12px;
+    min-height: 48px;
+    border-radius: 8px;
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__number-wrap {
+    border-radius: 8px;
+    border-color: rgba(85, 85, 85, 0.18);
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__number.is-invalid {
+    box-shadow: inset 0 0 0 1px #c62828;
+}
+
+.rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__country:focus,
+.rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__number:focus {
+    outline: none;
+    border-color: #ff3600;
+    box-shadow: 0 0 0 3px rgba(255, 54, 0, 0.16);
+}
+
+@media (max-width: 575.98px) {
+    .rts-contact-area.inner.av-contact-page .av-contact-phone .av-phone-field__row {
+        grid-template-columns: 1fr;
+    }
 }

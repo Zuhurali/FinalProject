@@ -30,8 +30,17 @@ public class ApiProductionSecurityTests
         // Swagger stays Development-only; JWT and HTTPS redirection remain.
         Assert.Contains("IsDevelopment()", apiProgram, StringComparison.Ordinal);
         Assert.Contains("UseSwagger", apiProgram, StringComparison.Ordinal);
+        Assert.Contains("IPAddress.IsLoopback", apiProgram, StringComparison.Ordinal);
+        Assert.Contains("localhost", apiProgram, StringComparison.Ordinal);
+        Assert.Equal(1, CountOf(apiProgram, "UseSwagger("));
         Assert.Contains("UseHttpsRedirection", apiProgram, StringComparison.Ordinal);
         Assert.Contains("AddJwtBearer", apiProgram, StringComparison.Ordinal);
+        Assert.Contains("SwaggerAuthorizeOperationFilter", apiProgram, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddSecurityRequirement", apiProgram, StringComparison.Ordinal);
+        Assert.Contains(
+            "return BadRequest(new { message = \"Car id must be greater than zero.\" });",
+            File.ReadAllText(Path.Combine(FindRepoRoot(), "FinalProject", "Controllers", "CarsController.cs")),
+            StringComparison.Ordinal);
         Assert.DoesNotContain("UseCors", apiProgram, StringComparison.Ordinal);
 
         var swaggerIndex = apiProgram.IndexOf("UseSwagger", StringComparison.Ordinal);
@@ -73,13 +82,26 @@ public class ApiProductionSecurityTests
     [Fact]
     public void Mvc_RecordViewAsync_still_posts_anonymous_views_path()
     {
-        var carApi = File.ReadAllText(Path.Combine(FindRepoRoot(), "FinalProject.MVC", "Services", "CarApiService.cs"));
+        var carApi = File.ReadAllText(Path.Combine(FindRepoRoot(), "AutoVault.Service", "MVC", "Services", "CarApiService.cs"));
 
         Assert.Contains(
             "HttpMethod.Post, $\"api/cars/{id}/views\"",
             carApi,
             StringComparison.Ordinal);
         Assert.DoesNotContain("Authorized(HttpMethod.Post, $\"api/cars/{id}/views\"", carApi, StringComparison.Ordinal);
+    }
+
+    private static int CountOf(string text, string value)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = text.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+
+        return count;
     }
 
     private static string FindRepoRoot()

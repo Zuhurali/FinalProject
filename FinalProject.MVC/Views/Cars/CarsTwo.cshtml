@@ -3,16 +3,6 @@
     ViewData["Title"] = "Cars Two - AutoVault";
     var makes = Model.GroupBy(car => car.Make).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
     var brandIds = ViewData["BrandIds"] as IReadOnlyDictionary<string, int> ?? new Dictionary<string, int>();
-    var seatCounts = new int[10];
-    foreach (var listedCar in Model)
-    {
-        var listedSeat = CarsTwoSeatCount.Resolve(listedCar.Seats, listedCar.Description);
-        if (listedSeat is int countedSeat)
-        {
-            seatCounts[countedSeat]++;
-        }
-    }
-    var colors = Model.GroupBy(car => car.Color).OrderBy(group => group.Key).Select(group => new { Name = group.Key, Count = group.Count() }).ToList();
     var fuels = Model.GroupBy(car => car.Fuel).OrderBy(group => group.Key).Select(group => group.Key).ToList();
     var minPrice = Model.Count == 0 ? 0 : Model.Min(car => car.Price);
     var maxPrice = Model.Count == 0 ? 0 : Model.Max(car => car.Price);
@@ -147,17 +137,8 @@
                         </div>
                         <div class="car-make side-box">
                             <h2>Car Color</h2>
-                            <ul class="checkbox-list">
-                                @foreach (var color in colors)
-                                {
-                                    <li class="checkbox-item">
-                                        <label class="checkbox-label">
-                                            <input type="checkbox" class="color-filter" value="@color.Name" />
-                                            <span>@color.Name</span>
-                                        </label>
-                                        <span>(@color.Count)</span>
-                                    </li>
-                                }
+                            <ul class="checkbox-list" id="carColorList">
+                                <li class="cars-two-model-hint">Select a brand first</li>
                             </ul>
                         </div>
                         <div class="tag-area side-box">
@@ -172,16 +153,7 @@
                         <div class="car-make side-box">
                             <h2>Car Seats</h2>
                             <ul class="checkbox-list" id="carSeatList">
-                                @for (var seat = 1; seat <= 9; seat++)
-                                {
-                                    <li class="checkbox-item">
-                                        <label class="checkbox-label">
-                                            <input type="checkbox" class="seat-filter" value="@seat" />
-                                            <span>@seat seats</span>
-                                        </label>
-                                        <span>(@seatCounts[seat])</span>
-                                    </li>
-                                }
+                                <li class="cars-two-model-hint">Select a brand first</li>
                             </ul>
                         </div>
                     </div>
@@ -202,6 +174,8 @@
                         @foreach (var car in Model)
                         {
                             <div class="col-lg-6 car-card @(index >= pageSize ? "d-none" : null)"
+                                 data-id="@car.Id"
+                                 data-created="@car.CreatedAt.Ticks"
                                  data-search="@($"{car.Name} {car.Make} {car.Model}")"
                                  data-make="@car.Make"
                                  data-model="@car.Model"
@@ -274,6 +248,8 @@
             var loadMore = document.getElementById("carLoadMore");
             var cards = Array.prototype.slice.call(document.querySelectorAll(".car-card"));
             var modelList = document.getElementById("carModelList");
+            var colorList = document.getElementById("carColorList");
+            var seatList = document.getElementById("carSeatList");
             var modelsUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Action("BrandModels", "Cars")));
             var modelRequest = 0;
 
@@ -325,6 +301,11 @@
                     if (colorValues.length && colorValues.indexOf(card.getAttribute("data-color")) === -1) return false;
                     if (fuelValues.length && fuelValues.indexOf(card.getAttribute("data-fuel")) === -1) return false;
                     return price >= bounds.min && price <= bounds.max;
+                }).sort(function (left, right) {
+                    var leftCreated = parseInt(left.getAttribute("data-created") || "0", 10);
+                    var rightCreated = parseInt(right.getAttribute("data-created") || "0", 10);
+                    if (rightCreated !== leftCreated) return rightCreated - leftCreated;
+                    return parseInt(right.getAttribute("data-id") || "0", 10) - parseInt(left.getAttribute("data-id") || "0", 10);
                 });
             }
 
@@ -374,12 +355,50 @@
                 return Array.prototype.slice.call(document.querySelectorAll(".make-filter:checked"));
             }
 
-            function renderModelPlaceholder(text) {
-                modelList.innerHTML = "";
+            function cardsForFacetScope() {
+                var makes = selectedMakes();
+                if (!makes.length) return [];
+                var models = selected(".model-filter");
+                return cards.filter(function (card) {
+                    if (!makes.some(function (input) {
+                        return input.value === card.getAttribute("data-make");
+                    })) return false;
+                    if (models.length && models.indexOf(card.getAttribute("data-model")) === -1) return false;
+                    return true;
+                });
+            }
+
+            function renderListPlaceholder(list, text) {
+                list.innerHTML = "";
                 var hint = document.createElement("li");
                 hint.className = "cars-two-model-hint";
                 hint.textContent = text;
-                modelList.appendChild(hint);
+                list.appendChild(hint);
+            }
+
+            function renderModelPlaceholder(text) {
+                renderListPlaceholder(modelList, text);
+            }
+
+            function appendCheckboxItem(list, className, value, labelText, count, checked) {
+                var item = document.createElement("li");
+                item.className = "checkbox-item";
+                var label = document.createElement("label");
+                label.className = "checkbox-label";
+                var input = document.createElement("input");
+                input.type = "checkbox";
+                input.className = className;
+                input.value = value;
+                if (checked) input.checked = true;
+                var title = document.createElement("span");
+                title.textContent = labelText;
+                label.appendChild(input);
+                label.appendChild(title);
+                var total = document.createElement("span");
+                total.textContent = "(" + count + ")";
+                item.appendChild(label);
+                item.appendChild(total);
+                list.appendChild(item);
             }
 
             function renderModels(names, makes) {
@@ -396,29 +415,79 @@
                             return input.value === card.getAttribute("data-make");
                         });
                     }).length;
-                    var item = document.createElement("li");
-                    item.className = "checkbox-item";
-                    var label = document.createElement("label");
-                    label.className = "checkbox-label";
-                    var input = document.createElement("input");
-                    input.type = "checkbox";
-                    input.className = "model-filter";
-                    input.value = name;
-                    var title = document.createElement("span");
-                    title.textContent = name;
-                    label.appendChild(input);
-                    label.appendChild(title);
-                    var total = document.createElement("span");
-                    total.textContent = "(" + count + ")";
-                    item.appendChild(label);
-                    item.appendChild(total);
-                    modelList.appendChild(item);
+                    appendCheckboxItem(modelList, "model-filter", name, name, count, false);
                 });
+            }
+
+            function refreshColorAndSeatFilters() {
+                var makes = selectedMakes();
+                var keepColors = selected(".color-filter");
+                var keepSeats = selected(".seat-filter");
+                if (!makes.length) {
+                    renderListPlaceholder(colorList, "Select a brand first");
+                    renderListPlaceholder(seatList, "Select a brand first");
+                    return;
+                }
+
+                var scoped = cardsForFacetScope();
+                var colorCounts = {};
+                var seatCounts = {};
+                scoped.forEach(function (card) {
+                    var color = (card.getAttribute("data-color") || "").trim();
+                    if (color) {
+                        colorCounts[color] = (colorCounts[color] || 0) + 1;
+                    }
+                    var seats = (card.getAttribute("data-seats") || "").trim();
+                    if (seats) {
+                        seatCounts[seats] = (seatCounts[seats] || 0) + 1;
+                    }
+                });
+
+                var emptyHint = selected(".model-filter").length
+                    ? "No options for this model"
+                    : "No options for this brand";
+
+                var colorNames = Object.keys(colorCounts).sort(function (left, right) {
+                    return left.localeCompare(right);
+                });
+                colorList.innerHTML = "";
+                if (!colorNames.length) {
+                    renderListPlaceholder(colorList, emptyHint);
+                } else {
+                    colorNames.forEach(function (name) {
+                        appendCheckboxItem(
+                            colorList,
+                            "color-filter",
+                            name,
+                            name,
+                            colorCounts[name],
+                            keepColors.indexOf(name) !== -1);
+                    });
+                }
+
+                var seatNames = Object.keys(seatCounts).sort(function (left, right) {
+                    return parseInt(left, 10) - parseInt(right, 10);
+                });
+                seatList.innerHTML = "";
+                if (!seatNames.length) {
+                    renderListPlaceholder(seatList, emptyHint);
+                } else {
+                    seatNames.forEach(function (name) {
+                        appendCheckboxItem(
+                            seatList,
+                            "seat-filter",
+                            name,
+                            name + " seats",
+                            seatCounts[name],
+                            keepSeats.indexOf(name) !== -1);
+                    });
+                }
             }
 
             function loadModels() {
                 var makes = selectedMakes();
                 var requestId = ++modelRequest;
+                refreshColorAndSeatFilters();
                 if (!makes.length) {
                     renderModelPlaceholder("Select a brand first");
                     resetPagingAndApply();
@@ -473,11 +542,19 @@
             });
             modelList.addEventListener("change", function (event) {
                 if (event.target && event.target.classList.contains("model-filter")) {
+                    refreshColorAndSeatFilters();
                     resetPagingAndApply();
                 }
             });
-            document.querySelectorAll(".seat-filter, .color-filter").forEach(function (input) {
-                input.addEventListener("change", resetPagingAndApply);
+            colorList.addEventListener("change", function (event) {
+                if (event.target && event.target.classList.contains("color-filter")) {
+                    resetPagingAndApply();
+                }
+            });
+            seatList.addEventListener("change", function (event) {
+                if (event.target && event.target.classList.contains("seat-filter")) {
+                    resetPagingAndApply();
+                }
             });
             document.querySelectorAll(".fuel-filter").forEach(function (item) {
                 item.addEventListener("click", function () {
@@ -490,6 +567,7 @@
                 apply();
             });
             updateRange();
+            refreshColorAndSeatFilters();
             apply();
         })();
     </script>

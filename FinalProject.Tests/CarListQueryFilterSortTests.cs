@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.DTOs;
@@ -30,7 +31,7 @@ public class CarListQueryFilterSortTests
         var low = await SeedAsync(db, "Low", mileage: 1000);
         var mid = await SeedAsync(db, "Mid", mileage: 5000);
         var high = await SeedAsync(db, "High", mileage: 9000);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -53,7 +54,7 @@ public class CarListQueryFilterSortTests
         var five = await SeedAsync(db, "Five", seats: 5);
         await SeedAsync(db, "Seven", seats: 7);
         await SeedAsync(db, "NullSeats", seats: null, description: "Family car with 5 seats listed in text");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -76,7 +77,7 @@ public class CarListQueryFilterSortTests
         var match = await SeedAsync(db, "Match" + seats, seats: seats, description: "Listed as 9 seats in the description");
         await SeedAsync(db, "Other", seats: seats == 4 ? 2 : 4);
         await SeedAsync(db, "TextOnly", seats: null, description: $"{seats} seats, rear-wheel drive.");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -99,7 +100,7 @@ public class CarListQueryFilterSortTests
         await SeedAsync(db, "Five", seats: 5, fuel: "Petrol");
         await SeedAsync(db, "Eight", seats: 8);
         await SeedAsync(db, "Missing", seats: null, description: "A car with 3 seats written only in text");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var either = await service.QueryAsync(new CarListQueryDto
         {
@@ -144,7 +145,7 @@ public class CarListQueryFilterSortTests
         var olderCheap = await SeedAsync(db, "A", price: 10000, year: 2018, createdAt: DateTime.UtcNow.AddDays(-3));
         var newerMid = await SeedAsync(db, "B", price: 20000, year: 2020, createdAt: DateTime.UtcNow.AddDays(-1));
         var newestExpensive = await SeedAsync(db, "C", price: 30000, year: 2022, createdAt: DateTime.UtcNow);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -180,7 +181,7 @@ public class CarListQueryFilterSortTests
         var betaCar = await SeedAsync(db, "Zeta", brandId: brandB.Id, categoryId: category.Id, year: 2024);
         var alphaOlder = await SeedAsync(db, "Model", brandId: brandA.Id, categoryId: category.Id, year: 2020);
         var alphaNewer = await SeedAsync(db, "Model", brandId: brandA.Id, categoryId: category.Id, year: 2024);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto { Page = 1, PageSize = 50 });
         Assert.Equal(new[] { alphaNewer.Id, alphaOlder.Id, betaCar.Id }, page.Items.Select(item => item.Id));
@@ -228,7 +229,7 @@ public class CarListQueryFilterSortTests
             fuel: "Petrol",
             transmission: "Automatic",
             status: "Active");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -268,7 +269,7 @@ public class CarListQueryFilterSortTests
                 createdAt: DateTime.UtcNow.AddMinutes(-i));
         }
 
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
         var page1 = await service.QueryAsync(new CarListQueryDto
         {
             Status = CarPublicListing.ActiveStatus,
@@ -309,7 +310,7 @@ public class CarListQueryFilterSortTests
         var hit = await SeedAsync(db, "Corolla", fuel: "Petrol", transmission: "Manual", description: "Reliable daily driver");
         await SeedAsync(db, "Corolla", fuel: "Diesel", transmission: "Manual", description: "Other fuel");
         await SeedAsync(db, "Yaris", fuel: "Petrol", transmission: "Automatic", description: "Reliable hatch");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -334,7 +335,7 @@ public class CarListQueryFilterSortTests
         var byMake = await SeedAsync(db, "Camry", brandId: toyota.Id, description: "Daily sedan");
         var byModel = await SeedAsync(db, "Civic", brandId: honda.Id, description: "Commuter");
         var byKeyword = await SeedAsync(db, "Accord", brandId: honda.Id, description: "Sunroof and leather keyword");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var makePage = await service.QueryAsync(new CarListQueryDto { Search = "Toyota", Page = 1, PageSize = 50 });
         var modelPage = await service.QueryAsync(new CarListQueryDto { Search = "Civic", Page = 1, PageSize = 50 });
@@ -354,7 +355,7 @@ public class CarListQueryFilterSortTests
         var byColor = await SeedAsync(db, "ColorCar", categoryId: sedan.Id, color: "Midnight Blue", description: "Plain");
         var byFeatures = await SeedAsync(db, "FeatureCar", categoryId: sedan.Id, features: "Heated seats and sunroof", description: "Plain");
         var byCategory = await SeedAsync(db, "CategoryCar", categoryId: coupe.Id, description: "Plain");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         Assert.Empty((await service.QueryAsync(new CarListQueryDto { Search = "Midnight", Page = 1, PageSize = 20 })).Items);
         Assert.Empty((await service.QueryAsync(new CarListQueryDto { Search = "Heated", Page = 1, PageSize = 20 })).Items);
@@ -391,7 +392,7 @@ public class CarListQueryFilterSortTests
         var matchHigh = await SeedAsync(db, "Two", color: "Pearl", fuel: "Petrol", price: 22000, description: "Pearl sedan");
         await SeedAsync(db, "Three", color: "Pearl", fuel: "Diesel", price: 15000, description: "Pearl diesel");
         await SeedAsync(db, "Four", color: "Black", fuel: "Petrol", price: 14000, description: "Other");
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var query = new CarListQueryDto
         {

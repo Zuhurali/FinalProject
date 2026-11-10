@@ -1,5 +1,7 @@
 using FinalProject.Data;
 using FinalProject.Hosting;
+using FinalProject.Repositories;
+using FinalProject.Repositories.Implementations;
 using FinalProject.Security;
 using FinalProject.Services;
 using FinalProject.Services.Interfaces;
@@ -18,7 +20,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<FinalProjectDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.MigrationsHistoryTable(FinalProjectDbContext.MigrationsHistoryTable)));
+        sql =>
+        {
+            sql.MigrationsHistoryTable(FinalProjectDbContext.MigrationsHistoryTable);
+            // FinalProjectDbContext owns the car, favorite, review, and messaging tables.
+            // Shared shop and Identity tables are excluded from these migrations.
+            sql.MigrationsAssembly(typeof(DevelopmentHostAnnouncement).Assembly.GetName().Name);
+        }));
+
+builder.Services.AddScoped<FinalProjectRepository>();
+builder.Services.AddScoped<ICarRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
+builder.Services.AddScoped<IProductReviewRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
+builder.Services.AddScoped<IProductRatingRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
+builder.Services.AddScoped<IMarketplaceRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
+builder.Services.AddScoped<INotificationRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
+builder.Services.AddScoped<IPartsRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
+builder.Services.AddScoped<IShowroomRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
+builder.Services.AddScoped<ICatalogAdminRepository>(sp => sp.GetRequiredService<FinalProjectRepository>());
 
 builder.Services.AddScoped<ICarService, CarService>();
 builder.Services.AddScoped<ICarDiscoveryService, CarDiscoveryService>();
@@ -82,29 +100,38 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "MVC-issued access token for an authenticated application user."
+        Description = "MVC-issued JWT for an authenticated application user. Issuer: FinalProject.MVC. Audience: FinalProject.API. Lifetime: 5 minutes."
     });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+    options.OperationFilter<SwaggerAuthorizeOperationFilter>();
 });
 
 var app = builder.Build();
 
+// Anonymous readiness probe used by the MVC development host. It does not touch the database.
+app.MapGet("/health/ready", () => Results.Ok(new { status = "ok" }));
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments("/swagger"))
+        {
+            var host = context.Request.Host.Host;
+            var localHost = host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                || host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+                || host.Equals("::1", StringComparison.OrdinalIgnoreCase);
+            var remote = context.Connection.RemoteIpAddress;
+            var localRemote = remote is null || System.Net.IPAddress.IsLoopback(remote);
+            if (!localHost || !localRemote)
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                return;
+            }
+        }
+
+        await next();
+    });
     app.UseSwagger();
     app.UseSwaggerUI();
 }

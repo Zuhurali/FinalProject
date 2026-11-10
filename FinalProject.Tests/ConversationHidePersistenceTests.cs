@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Data;
 using FinalProject.Models.Entities;
 using FinalProject.Services;
@@ -14,7 +15,7 @@ public class ConversationHidePersistenceTests
     {
         await using var context = CreateContext();
         SeedConversation(context, out var conversationId, out var buyerId, out var sellerId);
-        var service = new MarketplaceService(context, EmptyConfig(), new NotificationService(context));
+        var service = new MarketplaceService(new FinalProjectRepository(context), new FinalProjectRepository(context), EmptyConfig(), new NotificationService(new FinalProjectRepository(context)));
 
         Assert.True(await service.HideConversationAsync(conversationId, buyerId));
 
@@ -59,7 +60,7 @@ public class ConversationHidePersistenceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new MarketplaceService(context, EmptyConfig(), new NotificationService(context));
+        var service = new MarketplaceService(new FinalProjectRepository(context), new FinalProjectRepository(context), EmptyConfig(), new NotificationService(new FinalProjectRepository(context)));
         Assert.False(await service.HideConversationAsync(conversationId, "stranger"));
         Assert.Equal(0, await context.ConversationHides.CountAsync());
     }

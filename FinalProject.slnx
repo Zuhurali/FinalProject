@@ -1,4 +1,8 @@
 <Solution>
+  <Project Path="AutoVault.Domain/AutoVault.Domain.csproj" />
+  <Project Path="AutoVault.Repository/AutoVault.Repository.csproj" />
+  <Project Path="AutoVault.Service/AutoVault.Service.csproj" />
   <Project Path="FinalProject.MVC/FinalProject.MVC.csproj" />
   <Project Path="FinalProject/FinalProject.csproj" />
+  <Project Path="FinalProject.Tests/FinalProject.Tests.csproj" />
 </Solution>

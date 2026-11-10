@@ -1,3 +1,5 @@
+using FinalProject.MVC.Repositories.Implementations;
+using FinalProject.Repositories.Implementations;
 using FinalProject.Data;
 using FinalProject.DTOs;
 using FinalProject.MVC.Commerce;
@@ -25,7 +27,7 @@ namespace FinalProject.Tests;
 public class SqlPersistenceVerificationTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task Lookups_categories_match_sql_categories_table()
@@ -37,7 +39,7 @@ public class SqlPersistenceVerificationTests
             .ToListAsync();
         Assert.NotEmpty(fromTable);
 
-        var lookups = await new CarService(db, new SilentNotifications()).GetLookupsAsync();
+        var lookups = await new CarService(new FinalProjectRepository(db), new SilentNotifications()).GetLookupsAsync();
         Assert.Equal(fromTable.Count, lookups.Categories.Count);
         Assert.Equal(
             fromTable.Select(category => category.Id).ToList(),
@@ -81,7 +83,7 @@ public class SqlPersistenceVerificationTests
         await using var db = CreateMvcDb();
         var env = new TestEnvironment();
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var partners = new PartnerStripService(db, cache, env);
+        var partners = new PartnerStripService(new ApplicationRepository(db), cache, env);
 
         var sqlPublished = await db.PartnerStripItems.AsNoTracking()
             .Where(item => item.IsPublished)
@@ -148,7 +150,7 @@ public class SqlPersistenceVerificationTests
         });
         db.SaveChanges();
 
-        var partners = new PartnerStripService(db, new MemoryCache(new MemoryCacheOptions()), new TestEnvironment());
+        var partners = new PartnerStripService(new ApplicationRepository(db), new MemoryCache(new MemoryCacheOptions()), new TestEnvironment());
         var published = partners.GetPublishedItems();
         Assert.Empty(published);
         Assert.DoesNotContain(published, item => item.Name.Equals("Jeep", StringComparison.OrdinalIgnoreCase));
@@ -184,7 +186,7 @@ public class SqlPersistenceVerificationTests
                 UPDATE Cars SET IsFeatured = CAST(0 AS bit) WHERE Id = {otherId};
                 """);
 
-            var service = new CarService(db, new SilentNotifications());
+            var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
             var featured = await service.GetByIdAsync(featuredId);
             var other = await service.GetByIdAsync(otherId);
             Assert.NotNull(featured);
@@ -215,7 +217,7 @@ public class SqlPersistenceVerificationTests
     public async Task Public_answered_inquiries_are_scoped_to_product_and_strip_contact_pii()
     {
         await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.AsNoTracking().FirstAsync(item => item.IsActive);
         var email = $"pii-{Guid.NewGuid():N}@example.com";
         var (ok, error) = await catalog.SaveInquiryAsync(new ProductInquiry
@@ -262,8 +264,8 @@ public class SqlPersistenceVerificationTests
         var missingId = int.MaxValue - 91;
         Assert.False(await db.ShopProducts.AsNoTracking().AnyAsync(item => item.Id == missingId));
 
-        var ratings = new ProductRatingService(db);
-        var reviews = new ProductReviewService(db);
+        var ratings = new ProductRatingService(new FinalProjectRepository(db));
+        var reviews = new ProductReviewService(new FinalProjectRepository(db), new FinalProjectRepository(db));
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
 
         Assert.Null(await ratings.GetProductRatingsAsync(missingId));

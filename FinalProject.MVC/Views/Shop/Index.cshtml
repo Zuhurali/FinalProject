@@ -277,7 +277,7 @@
                                     <h6 class="title">@marketing.Why1Title</h6>
                                     <p class="desc">@marketing.Why1Description</p>
                                     <div class="icon">
-                                        <img src="~/assets/images/why-choose/icon-05.svg" alt="">
+                                        <img src="@Url.Content(marketing.Why1IconPath)" alt="">
                                         <div class="left"></div>
                                         <div class="right"></div>
                                     </div>
@@ -288,7 +288,7 @@
                                     <h6 class="title">@marketing.Why2Title</h6>
                                     <p class="desc">@marketing.Why2Description</p>
                                     <div class="icon">
-                                        <img src="~/assets/images/why-choose/icon-06.svg" alt="">
+                                        <img src="@Url.Content(marketing.Why2IconPath)" alt="">
                                         <div class="left"></div>
                                         <div class="right"></div>
                                     </div>
@@ -299,7 +299,7 @@
                                     <h6 class="title">@marketing.Why3Title</h6>
                                     <p class="desc">@marketing.Why3Description</p>
                                     <div class="icon">
-                                        <img src="~/assets/images/why-choose/icon-07.svg" alt="">
+                                        <img src="@Url.Content(marketing.Why3IconPath)" alt="">
                                         <div class="left"></div>
                                         <div class="right"></div>
                                     </div>
@@ -310,7 +310,7 @@
                                     <h6 class="title">@marketing.Why4Title</h6>
                                     <p class="desc">@marketing.Why4Description</p>
                                     <div class="icon">
-                                        <img src="~/assets/images/why-choose/icon-08.svg" alt="">
+                                        <img src="@Url.Content(marketing.Why4IconPath)" alt="">
                                         <div class="left"></div>
                                         <div class="right"></div>
                                     </div>
@@ -645,9 +645,7 @@
             const price = product.hasOffer
                 ? `<s>${money(product.price)}</s> <strong>${money(product.salePrice)}</strong>${offerEnd}`
                 : `<span>${money(product.price)}</span>`;
-            const cta = quantity > 0
-                ? `<a class="av-card__cta" href="${detailsUrl}#request-to-buy">Request to Buy</a>`
-                : `<a class="av-card__cta av-card__cta--ghost" href="${detailsUrl}">View details</a>`;
+            const cta = `<a class="av-card__cta${quantity > 0 ? '' : ' av-card__cta--ghost'}" href="${detailsUrl}">View details</a>`;
 
             return `
                 <article class="av-card">

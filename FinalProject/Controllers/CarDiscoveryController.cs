@@ -19,7 +19,7 @@ public sealed class CarDiscoveryController : ControllerBase
 
     [HttpGet("most-viewed")]
     [ProducesResponseType(typeof(PagedResultDto<RankedCarResponseDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PagedResultDto<RankedCarResponseDto>>> MostViewed(
         [FromQuery] string? period,
         [FromQuery] int page = 1,

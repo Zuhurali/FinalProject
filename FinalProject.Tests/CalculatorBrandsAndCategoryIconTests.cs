@@ -45,9 +45,9 @@ public class CalculatorBrandsAndCategoryIconTests
     public void Category_entity_and_api_lookups_expose_icon_path()
     {
         var root = FindRepoRoot();
-        var entity = File.ReadAllText(Path.Combine(root, "FinalProject", "Models", "Entities", "Category.cs"));
-        var dto = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "DTOs", "CarApiDto.cs"));
-        var service = File.ReadAllText(Path.Combine(root, "FinalProject", "Services", "CarService.cs"));
+        var entity = File.ReadAllText(Path.Combine(root, "AutoVault.Domain", "Models", "Entities", "Category.cs"));
+        var dto = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "DTOs", "CarApiDto.cs"));
+        var service = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "Services", "CarService.cs"));
         var migration = File.ReadAllText(Path.Combine(
             root, "FinalProject", "Data", "Migrations", "20261030184500_AddCategoryIconPath.cs"));
 

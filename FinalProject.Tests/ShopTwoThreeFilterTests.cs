@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Services;
@@ -10,7 +11,7 @@ namespace FinalProject.Tests;
 public class ShopTwoThreeFilterTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void ShopTwo_category_chips_come_from_viewbag_not_hardcoded_list()
@@ -33,9 +34,9 @@ public class ShopTwoThreeFilterTests
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
         var shopThree = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shop", "ShopThree.cshtml"));
-        var shopModel = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Models", "ShopProduct.cs"));
+        var shopModel = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "Models", "ShopProduct.cs"));
         var shopController = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "ShopController.cs"));
-        var catalog = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Services", "ShopCatalogService.cs"));
+        var catalog = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "Services", "ShopCatalogService.cs"));
 
         Assert.Contains("selectedColors: selectedColors", shopThree, StringComparison.Ordinal);
         Assert.Contains("public List<string>? SelectedColors { get; set; }", shopModel, StringComparison.Ordinal);
@@ -50,7 +51,7 @@ public class ShopTwoThreeFilterTests
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(ConnectionString).Options;
         await using var db = new ApplicationDbContext(options);
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var products = (await catalog.GetAllAsync()).ToList();
 
         Assert.NotEmpty(products);

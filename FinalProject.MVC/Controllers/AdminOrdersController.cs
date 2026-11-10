@@ -1,37 +1,22 @@
-using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinalProject.MVC.Controllers;
 
+/// <summary>
+/// Legacy online-order archive was removed from admin navigation.
+/// New sales are recorded under In-Store Sales.
+/// </summary>
 [Authorize(Roles = "Admin,SuperAdmin")]
 [Route("Admin/Orders")]
 public sealed class AdminOrdersController : Controller
 {
-    private readonly IOrderService _orders;
-
-    public AdminOrdersController(IOrderService orders)
-    {
-        _orders = orders;
-    }
-
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
-    {
-        ViewData["Title"] = "Legacy Order Archive - AutoVault";
-        return View(await _orders.GetRecentOrdersAsync(cancellationToken: cancellationToken));
-    }
-
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
+    public IActionResult Index(int? id = null)
     {
-        ViewData["Title"] = $"Legacy order #{id} - AutoVault";
-        var order = await _orders.GetOrderAsync(id, cancellationToken);
-        if (order == null)
-        {
-            return NotFound();
-        }
-
-        return View(order);
+        TempData["Error"] =
+            "Legacy Orders was removed. AutoVault does not take online payment — use In-Store Sales.";
+        return RedirectToAction("Index", "Admin");
     }
 }

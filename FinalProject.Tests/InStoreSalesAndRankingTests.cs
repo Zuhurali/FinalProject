@@ -2,6 +2,7 @@ using System.Reflection;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Controllers;
 using FinalProject.MVC.Data;
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,7 @@ namespace FinalProject.Tests;
 public class InStoreSalesAndRankingTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_sales_recording_requires_Admin_or_SuperAdmin_and_post_antiforgery()
@@ -31,7 +32,7 @@ public class InStoreSalesAndRankingTests
     public async Task RecordSaleAsync_reduces_stock_once_and_persists_non_demo_sale()
     {
         await using var db = CreateDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.FirstAsync(item => item.Quantity >= 2);
         var originalQty = product.Quantity;
         var note = "E2E genuine sale " + Guid.NewGuid().ToString("N");
@@ -69,8 +70,8 @@ public class InStoreSalesAndRankingTests
     public async Task RecordSaleAsync_with_coupon_persists_CouponUsage_in_sql()
     {
         await using var db = CreateDb();
-        var coupons = new CouponService(db);
-        var catalog = new ShopCatalogService(db, coupons);
+        var coupons = new CouponService(new ApplicationRepository(db));
+        var catalog = new ShopCatalogService(new ApplicationRepository(db), coupons);
         await coupons.EnsureSeedAsync();
 
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 1 && item.Price > 0);
@@ -144,7 +145,7 @@ public class InStoreSalesAndRankingTests
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.AsNoTracking().Select(item => new { item.Id, item.Price }).FirstAsync();
 
         await db.Database.ExecuteSqlInterpolatedAsync($"""
@@ -170,8 +171,8 @@ public class InStoreSalesAndRankingTests
     public async Task Popularity_apply_uses_recorded_sales_and_zero_when_empty()
     {
         await using var db = CreateDb();
-        var popularity = new ProductPopularityService(db);
-        var catalog = new ShopCatalogService(db);
+        var popularity = new ProductPopularityService(new ApplicationRepository(db));
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var products = (await catalog.GetAllAsync()).Take(3).ToList();
         Assert.NotEmpty(products);
 

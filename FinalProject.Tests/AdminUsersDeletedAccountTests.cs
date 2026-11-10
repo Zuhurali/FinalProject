@@ -1,8 +1,10 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Security.Claims;
 using FinalProject.MVC.Controllers;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Security;
+using FinalProject.MVC.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -17,16 +19,60 @@ namespace FinalProject.Tests;
 public class AdminUsersDeletedAccountTests
 {
     [Fact]
-    public void Users_view_separates_deleted_accounts_and_disables_role_edits()
+    public void Users_view_separates_deleted_accounts_and_exposes_delete_action()
     {
-        var root = FindRepoRoot();
-        var view = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Admin", "Users.cshtml"));
+        var view = LocateUsersViewContent();
         Assert.Contains("View deleted accounts", view, StringComparison.Ordinal);
         Assert.Contains("Back to active users", view, StringComparison.Ordinal);
         Assert.Contains("user.AccountStatus", view, StringComparison.Ordinal);
         Assert.Contains("user.IsDeleted", view, StringComparison.Ordinal);
         Assert.Contains("Role changes disabled", view, StringComparison.Ordinal);
         Assert.Contains("showDeleted", view, StringComparison.Ordinal);
+        Assert.Contains("DeleteUser", view, StringComparison.Ordinal);
+        Assert.Contains(">Delete<", view, StringComparison.Ordinal);
+        Assert.NotNull(typeof(AdminController).GetMethod(nameof(AdminController.DeleteUser)));
+    }
+
+    [Fact]
+    public async Task DeleteUser_soft_deletes_member_and_blocks_future_sign_in_flags()
+    {
+        await using var harness = await UsersHarness.CreateAsync();
+        var member = await harness.CreateMemberAsync("remove-me@example.com");
+
+        var result = await harness.Controller.DeleteUser(member.Id) as RedirectToActionResult;
+        Assert.Equal(nameof(AdminController.Users), result!.ActionName);
+
+        var deleted = await harness.Users.FindByIdAsync(member.Id);
+        Assert.NotNull(deleted);
+        Assert.True(deleted!.IsDeleted);
+        Assert.NotNull(deleted.DeletedAt);
+        Assert.True(deleted.LockoutEnabled);
+        Assert.True(deleted.LockoutEnd.HasValue && deleted.LockoutEnd > DateTimeOffset.UtcNow);
+        Assert.True(SoftDeletedAccountIdentity.IsReleasedIdentifier(deleted.Email));
+        Assert.True(SoftDeletedAccountIdentity.IsReleasedIdentifier(deleted.UserName));
+        Assert.Null(await harness.Users.FindByEmailAsync("remove-me@example.com"));
+        Assert.Contains("can no longer sign in", harness.Controller.TempData["Success"]?.ToString(), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("register again", harness.Controller.TempData["Success"]?.ToString(), StringComparison.OrdinalIgnoreCase);
+
+        var activeList = Assert.IsType<AdminUsersPageViewModel>(
+            Assert.IsType<ViewResult>(await harness.Controller.Users(null, showDeleted: false)).Model);
+        Assert.DoesNotContain(activeList.Users, user => user.Id == member.Id);
+
+        var deletedList = Assert.IsType<AdminUsersPageViewModel>(
+            Assert.IsType<ViewResult>(await harness.Controller.Users(null, showDeleted: true)).Model);
+        Assert.Contains(deletedList.Users, user => user.Id == member.Id && user.IsDeleted);
+    }
+
+    [Fact]
+    public async Task DeleteUser_rejects_self_delete()
+    {
+        await using var harness = await UsersHarness.CreateAsync();
+        var result = await harness.Controller.DeleteUser("super-admin-1") as RedirectToActionResult;
+        Assert.Equal(nameof(AdminController.Users), result!.ActionName);
+        Assert.Equal(
+            "You cannot delete your own account from the admin panel.",
+            harness.Controller.TempData["Error"]);
+        Assert.False((await harness.Users.FindByIdAsync("super-admin-1"))!.IsDeleted);
     }
 
     [Fact]
@@ -109,20 +155,37 @@ public class AdminUsersDeletedAccountTests
         Assert.Contains(AppRoles.Member, await harness.Users.GetRolesAsync(deleted));
     }
 
-    private static string FindRepoRoot()
+    private static string LocateUsersViewContent()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
+        var relative = Path.Combine("FinalProject.MVC", "Views", "Admin", "Users.cshtml");
+        foreach (var start in new[]
+                 {
+                     Directory.GetCurrentDirectory(),
+                     AppContext.BaseDirectory,
+                     Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..")),
+                     @"C:\Users\HP\OneDrive\Desktop\codeACA\codeACA\FinalProject"
+                 })
         {
-            if (File.Exists(Path.Combine(dir.FullName, "FinalProject.MVC", "Views", "Admin", "Users.cshtml")))
+            var candidate = Path.Combine(start, relative);
+            if (File.Exists(candidate))
             {
-                return dir.FullName;
+                return File.ReadAllText(candidate);
             }
 
-            dir = dir.Parent;
+            var dir = new DirectoryInfo(start);
+            while (dir != null)
+            {
+                candidate = Path.Combine(dir.FullName, relative);
+                if (File.Exists(candidate))
+                {
+                    return File.ReadAllText(candidate);
+                }
+
+                dir = dir.Parent;
+            }
         }
 
-        throw new InvalidOperationException("Could not locate the repository root.");
+        throw new InvalidOperationException("Could not locate Admin/Users.cshtml.");
     }
 
     private sealed class UsersHarness : IAsyncDisposable
@@ -212,8 +275,7 @@ public class AdminUsersDeletedAccountTests
                 tokenService: null!,
                 adminApi: null!,
                 cars: null!,
-                db,
-                roles)
+                dashboard: new AdminDashboardService(new ApplicationRepository(db), roles))
             {
                 ControllerContext = new ControllerContext { HttpContext = http },
                 TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(

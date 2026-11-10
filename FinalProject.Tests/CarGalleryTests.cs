@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.DTOs;
@@ -17,7 +18,7 @@ public class CarGalleryTests
     {
         await using var db = CreateDb();
         var car = await SeedGalleryCarAsync(db);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var updated = await service.UpdateAsync(car.Id, Request(car, gallery: true, additional:
         [
@@ -39,7 +40,7 @@ public class CarGalleryTests
         await using var db = CreateDb();
         var car = await SeedGalleryCarAsync(db);
         var second = car.Images.Single(image => image.DisplayOrder == 1);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var updated = await service.UpdateAsync(car.Id, Request(car, gallery: true, remove: [second.Id]));
 
@@ -57,7 +58,7 @@ public class CarGalleryTests
         await using var db = CreateDb();
         var car = await SeedGalleryCarAsync(db);
         var interior = car.Images.Single(image => image.DisplayOrder == 2);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
         var request = Request(car, gallery: true);
         request.PrimaryImageId = interior.Id;
         request.ImageUrl = interior.ImageUrl;
@@ -75,7 +76,7 @@ public class CarGalleryTests
     {
         await using var db = CreateDb();
         var car = await SeedGalleryCarAsync(db);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
         var request = Request(car, gallery: true);
         request.PrimaryImageId = car.Images.Single(image => image.IsMain).Id;
         request.ImageUrl = "~/assets/images/portfolio/cars/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg";
@@ -94,7 +95,7 @@ public class CarGalleryTests
     {
         await using var db = CreateDb();
         var car = await SeedGalleryCarAsync(db);
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
         var request = Request(car, gallery: false);
         request.Price = 91000;
 
@@ -137,7 +138,7 @@ public class CarGalleryTests
         db.Cars.Add(other);
         await db.SaveChangesAsync();
 
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
         var unsafeRequest = Request(car, gallery: true, additional: ["../secret.png"]);
         await Assert.ThrowsAsync<CarGalleryException>(() => service.UpdateAsync(car.Id, unsafeRequest));
 
@@ -154,7 +155,7 @@ public class CarGalleryTests
         var brand = db.Brands.Add(new Brand { Name = "Gallery", CreatedAt = DateTime.UtcNow }).Entity;
         var category = db.Categories.Add(new Category { Name = "Coupe" }).Entity;
         await db.SaveChangesAsync();
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var created = await service.CreateCatalogAsync(new SaveCarRequestDto
         {

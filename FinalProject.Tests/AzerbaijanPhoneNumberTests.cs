@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Diagnostics;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
@@ -47,7 +48,7 @@ public class AzerbaijanPhoneNumberTests
     public async Task Team_create_and_edit_store_a_normalized_number_and_reject_invalid_numbers()
     {
         await using var db = CreateDb();
-        var service = new TeamMemberService(db, new TestEnvironment());
+        var service = new TeamMemberService(new ApplicationRepository(db), new TestEnvironment());
         var created = Member();
         created.Phone = "0501234567";
         created.ImagePath = "/uploads/team/ada.webp";
@@ -79,7 +80,7 @@ public class AzerbaijanPhoneNumberTests
     public async Task Edit_keeps_the_stored_phone_until_a_valid_number_is_saved()
     {
         await using var db = CreateDb();
-        var service = new TeamMemberService(db, new TestEnvironment());
+        var service = new TeamMemberService(new ApplicationRepository(db), new TestEnvironment());
         var created = Member();
         created.Phone = "+994503546767";
         created.ImagePath = "/uploads/team/ada.webp";
@@ -114,7 +115,7 @@ public class AzerbaijanPhoneNumberTests
     public async Task Save_rejects_incomplete_or_invalid_numbers_and_keeps_the_stored_phone(string phone)
     {
         await using var db = CreateDb();
-        var service = new TeamMemberService(db, new TestEnvironment());
+        var service = new TeamMemberService(new ApplicationRepository(db), new TestEnvironment());
         var created = Member();
         created.Phone = "+994503546767";
         created.ImagePath = "/uploads/team/ada.webp";

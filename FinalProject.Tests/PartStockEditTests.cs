@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using System.Globalization;
 using FinalProject.Data;
 using FinalProject.DTOs;
@@ -20,7 +21,7 @@ namespace FinalProject.Tests;
 public class PartStockEditTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task Stock_update_persists_quantity_preserves_other_fields_and_rejects_negative()
@@ -28,7 +29,7 @@ public class PartStockEditTests
         var options = new DbContextOptionsBuilder<FinalProjectDbContext>().UseSqlServer(ConnectionString).Options;
         await using var db = new FinalProjectDbContext(options);
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var parts = new PartsAdminService(db);
+        var parts = new PartsAdminService(new FinalProjectRepository(db));
         var existing = await parts.GetAsync(15);
         Assert.NotNull(existing);
         Assert.True(string.IsNullOrEmpty(existing!.Brand));

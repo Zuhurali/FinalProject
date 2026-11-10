@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
@@ -11,14 +12,14 @@ namespace FinalProject.Tests;
 public class CampaignBannerAndDeleteTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task Live_banners_include_only_active_in_window_campaigns_and_hide_when_none()
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         await SilenceActiveCampaignsAsync(db);
         await ClearNamedAsync(db, "E2E Banner ");
 
@@ -114,7 +115,7 @@ public class CampaignBannerAndDeleteTests
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         await SilenceActiveCampaignsAsync(db);
         await ClearNamedAsync(db, "E2E Delete ");
 

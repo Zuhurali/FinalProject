@@ -19,6 +19,8 @@ public sealed class ProductReviewsController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet("{productId:int}/reviews")]
+    [ProducesResponseType(typeof(IReadOnlyList<ProductReviewItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IReadOnlyList<ProductReviewItemDto>>> Get(
         int productId,
         CancellationToken cancellationToken)
@@ -34,6 +36,9 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("reviews/moderation")]
+    [ProducesResponseType(typeof(IReadOnlyList<ProductReviewItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<ProductReviewItemDto>>> Moderate(
         CancellationToken cancellationToken)
     {
@@ -42,6 +47,9 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize]
     [HttpPost("{productId:int}/reviews")]
+    [ProducesResponseType(typeof(ProductReviewItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ProductReviewItemDto>> Create(
         int productId,
         SaveProductReviewRequestDto request,
@@ -59,6 +67,10 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize]
     [HttpPut("{productId:int}/reviews/{reviewId:int}")]
+    [ProducesResponseType(typeof(ProductReviewItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProductReviewItemDto>> Update(
         int productId,
         int reviewId,
@@ -84,6 +96,10 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize]
     [HttpDelete("reviews/{reviewId:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int reviewId, CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -106,7 +122,7 @@ public sealed class ProductReviewsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AdminDelete(int reviewId, CancellationToken cancellationToken)
     {
         var deleted = await _reviews.DeleteReviewAsAdminAsync(reviewId, cancellationToken);
@@ -115,6 +131,10 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpGet("reviews/{reviewId:int}/history")]
+    [ProducesResponseType(typeof(IReadOnlyList<ProductReviewRevisionItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IReadOnlyList<ProductReviewRevisionItemDto>>> History(
         int reviewId,
         CancellationToken cancellationToken)
@@ -125,6 +145,10 @@ public sealed class ProductReviewsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost("reviews/{reviewId:int}/visibility")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SetVisibility(
         int reviewId,
         [FromQuery] bool hidden,

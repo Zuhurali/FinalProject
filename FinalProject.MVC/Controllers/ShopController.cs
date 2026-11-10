@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Models;
-using FinalProject.MVC.Data;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace FinalProject.MVC.Controllers
 {
@@ -14,7 +12,6 @@ namespace FinalProject.MVC.Controllers
     {
         private List<ShopProduct> _allProducts = new();
         private bool _catalogLoaded;
-        private readonly ApplicationDbContext _context;
         private readonly IProductRatingApiService _ratingApiService;
         private readonly IApiAccessTokenService _tokenService;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -22,12 +19,10 @@ namespace FinalProject.MVC.Controllers
         private readonly IProductReviewApiService _reviewApiService;
         private readonly IProductPopularityService _popularity;
         private readonly IMarketplaceApiService _marketplaceApi;
-        private readonly ICouponService _coupons;
         private readonly IShopMarketingContentService _shopMarketing;
         private readonly IFaqService _faqs;
 
         public ShopController(
-            ApplicationDbContext context,
             IProductRatingApiService ratingApiService,
             IApiAccessTokenService tokenService,
             UserManager<ApplicationUser> userManager,
@@ -35,11 +30,9 @@ namespace FinalProject.MVC.Controllers
             IProductReviewApiService reviewApiService,
             IProductPopularityService popularity,
             IMarketplaceApiService marketplaceApi,
-            ICouponService coupons,
             IShopMarketingContentService shopMarketing,
             IFaqService faqs)
         {
-            _context = context;
             _ratingApiService = ratingApiService;
             _tokenService = tokenService;
             _userManager = userManager;
@@ -47,7 +40,6 @@ namespace FinalProject.MVC.Controllers
             _reviewApiService = reviewApiService;
             _popularity = popularity;
             _marketplaceApi = marketplaceApi;
-            _coupons = coupons;
             _shopMarketing = shopMarketing;
             _faqs = faqs;
         }
@@ -678,7 +670,6 @@ namespace FinalProject.MVC.Controllers
                 .ToList();
             await ApplyRatingsAsync(related, cancellationToken);
             ViewBag.RelatedProducts = related;
-            ViewBag.SubmissionKey = Guid.NewGuid();
 
             ViewBag.ProductInquiries = await _shopCatalog.GetAnsweredInquiriesForProductAsync(
                 product.Id,
@@ -1030,281 +1021,6 @@ namespace FinalProject.MVC.Controllers
                 ? "Your question was sent to the store. Visit Babek Prospekti to inspect the item before you buy."
                 : error;
             return RedirectToAction(nameof(Details), "Shop", new { id = inquiry.ProductId }, "ask-question");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RequestToBuy(ShowroomPurchaseRequest request, CancellationToken cancellationToken)
-        {
-            // Never trust a posted UserId — bind ownership only from the signed-in account.
-            request.UserId = null;
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var user = await _userManager.GetUserAsync(User);
-                request.UserId = user?.Id;
-            }
-
-            var result = await _shopCatalog.SavePurchaseRequestAsync(request, cancellationToken);
-            if (result.Ok)
-            {
-                TempData["RequestSuccess"] = result.Duplicate
-                    ? $"We already received this request (#{result.RequestId}). It was not sent twice."
-                    : $"Request #{result.RequestId} sent. This is not a confirmed purchase. Our team will contact you to confirm availability, and you complete the purchase in person at Babek Prospekti 22-24, Baku.";
-            }
-            else
-            {
-                TempData["RequestError"] = result.Error;
-                TempData["RequestForm"] = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    request.CustomerName,
-                    request.Email,
-                    request.Phone,
-                    request.Quantity,
-                    PreferredVisitDate = request.PreferredVisitDate?.ToString("yyyy-MM-dd"),
-                    request.Note
-                });
-            }
-
-            return RedirectToAction(nameof(Details), "Shop", new { id = request.ProductId }, "request-to-buy");
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> AddToCart([FromBody] AddToCartRequest request, CancellationToken cancellationToken)
-        {
-            await EnsureCatalogAsync(cancellationToken);
-            var product = _allProducts.FirstOrDefault(p => p.Id == request.ProductId);
-            if (product == null)
-            {
-                return Json(new { success = false, message = "Product not found" });
-            }
-
-            if (product.Quantity <= 0)
-            {
-                return Json(new { success = false, message = "This product is out of stock." });
-            }
-
-            var cart = GetCartFromSession();
-            var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
-            var nextQuantity = (existingItem?.Quantity ?? 0) + request.Quantity;
-            if (request.Quantity < 1 || nextQuantity > product.Quantity)
-            {
-                return Json(new { success = false, message = "That quantity is not available." });
-            }
-
-            if (existingItem != null)
-            {
-                existingItem.Quantity = nextQuantity;
-                existingItem.Price = product.EffectivePrice;
-            }
-            else
-            {
-                cart.Items.Add(new CartItem
-                {
-                    ProductId = product.Id,
-                    ProductName = product.Name,
-                    Price = product.EffectivePrice,
-                    Quantity = request.Quantity,
-                    ImagePath = product.ImagePath
-                });
-            }
-
-            await RecalculateSessionCouponAsync(cart, cancellationToken);
-            SaveCartToSession(cart);
-
-            return Json(new
-            {
-                success = true,
-                message = "Added to your inquiry list. Collect it at the Baku store.",
-                cartCount = cart.Items.Sum(i => i.Quantity),
-                cartTotal = cart.Total
-            });
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> UpdateQuantity(
-            [FromBody] UpdateQuantityRequest request,
-            CancellationToken cancellationToken)
-        {
-            if (request.Quantity < 1)
-            {
-                return Json(new { success = false, message = "Quantity must be at least 1" });
-            }
-
-            var cart = GetCartFromSession();
-            var item = cart.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
-
-            if (item == null)
-            {
-                return Json(new { success = false, message = "Item not found in cart" });
-            }
-
-            item.Quantity = request.Quantity;
-            await RecalculateSessionCouponAsync(cart, cancellationToken);
-            SaveCartToSession(cart);
-
-            return Json(new
-            {
-                success = true,
-                itemSubtotal = item.Subtotal,
-                cartSubtotal = cart.Subtotal,
-                cartDiscount = cart.DiscountAmount,
-                cartTotal = cart.Total,
-                couponCode = cart.CouponCode
-            });
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> RemoveItem(
-            [FromBody] int productId,
-            CancellationToken cancellationToken)
-        {
-            var cart = GetCartFromSession();
-            var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-
-            if (item != null)
-            {
-                cart.Items.Remove(item);
-                await RecalculateSessionCouponAsync(cart, cancellationToken);
-                SaveCartToSession(cart);
-            }
-
-            return Json(new
-            {
-                success = true,
-                cartSubtotal = cart.Subtotal,
-                cartDiscount = cart.DiscountAmount,
-                cartTotal = cart.Total,
-                couponCode = cart.CouponCode,
-                isEmpty = cart.IsEmpty
-            });
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> ApplyCoupon(
-            [FromBody] ApplyCouponRequest request,
-            CancellationToken cancellationToken)
-        {
-            var cart = GetCartFromSession();
-
-            if (!User.Identity?.IsAuthenticated ?? true)
-            {
-                return Json(new CouponResult
-                {
-                    Success = false,
-                    Message = "Please sign in to use a coupon.",
-                    DiscountAmount = 0,
-                    NewTotal = cart.Total
-                });
-            }
-
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Json(new CouponResult
-                {
-                    Success = false,
-                    Message = "User authentication error. Please sign in again.",
-                    DiscountAmount = 0,
-                    NewTotal = cart.Total
-                });
-            }
-
-            var (ok, message, discount, code) = await _coupons.PreviewApplyAsync(
-                request.CouponCode,
-                userId,
-                cart,
-                cancellationToken);
-
-            if (!ok || code == null)
-            {
-                // Leave any previously applied session coupon untouched on failure.
-                return Json(new CouponResult
-                {
-                    Success = false,
-                    Message = message,
-                    DiscountAmount = cart.DiscountAmount,
-                    NewTotal = cart.Total
-                });
-            }
-
-            cart.CouponCode = code;
-            cart.DiscountAmount = discount;
-            SaveCartToSession(cart);
-
-            return Json(new CouponResult
-            {
-                Success = true,
-                Message = message,
-                DiscountAmount = cart.DiscountAmount,
-                NewTotal = cart.Total
-            });
-        }
-
-        [HttpPost]
-        public JsonResult RemoveCoupon()
-        {
-            var cart = GetCartFromSession();
-            cart.CouponCode = null;
-            cart.DiscountAmount = 0;
-            SaveCartToSession(cart);
-
-            return Json(new CouponResult
-            {
-                Success = true,
-                Message = "Coupon removed.",
-                DiscountAmount = 0,
-                NewTotal = cart.Total
-            });
-        }
-
-        private async Task RecalculateSessionCouponAsync(CartViewModel cart, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(cart.CouponCode))
-            {
-                cart.DiscountAmount = 0;
-                return;
-            }
-
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                cart.CouponCode = null;
-                cart.DiscountAmount = 0;
-                return;
-            }
-
-            var (ok, _, discount, code) = await _coupons.PreviewApplyAsync(
-                cart.CouponCode,
-                userId,
-                cart,
-                cancellationToken);
-            if (!ok || code == null)
-            {
-                cart.CouponCode = null;
-                cart.DiscountAmount = 0;
-                return;
-            }
-
-            cart.CouponCode = code;
-            cart.DiscountAmount = discount;
-        }
-
-        // Helper methods for session management
-        private CartViewModel GetCartFromSession()
-        {
-            var cartJson = HttpContext.Session.GetString("Cart");
-            if (string.IsNullOrEmpty(cartJson))
-            {
-                return new CartViewModel();
-            }
-
-            return System.Text.Json.JsonSerializer.Deserialize<CartViewModel>(cartJson) ?? new CartViewModel();
-        }
-
-        private void SaveCartToSession(CartViewModel cart)
-        {
-            var cartJson = System.Text.Json.JsonSerializer.Serialize(cart);
-            HttpContext.Session.SetString("Cart", cartJson);
         }
 
         public IActionResult Checkout()

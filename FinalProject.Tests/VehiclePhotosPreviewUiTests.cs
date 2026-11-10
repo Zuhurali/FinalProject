@@ -5,7 +5,7 @@ namespace FinalProject.Tests;
 
 public class VehiclePhotosPreviewUiTests
 {
-    private const string BaseUrl = "https://localhost:7245";
+    private const string BaseUrl = "https://localhost:7255";
     private static readonly byte[] TinyPng = Convert.FromBase64String(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
 

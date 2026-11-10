@@ -28,9 +28,9 @@ public class CarsThreeListingTests
         var root = FindRepoRoot();
         var controller = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "CarsController.cs"));
         var view = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Cars", "CarsThree.cshtml"));
-        var mapper = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Mappings", "CarApiMapper.cs"));
-        var apiClient = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Services", "CarApiService.cs"));
-        var queryModel = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "DTOs", "CarApiDto.cs"));
+        var mapper = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "Mappings", "CarApiMapper.cs"));
+        var apiClient = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "Services", "CarApiService.cs"));
+        var queryModel = File.ReadAllText(Path.Combine(root, "AutoVault.Service", "MVC", "DTOs", "CarApiDto.cs"));
         var favorites = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "wwwroot", "js", "car-favorites.js"));
         var cardsPartial = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Cars", "_CarsThreeCards.cshtml"));
 
@@ -164,7 +164,8 @@ public class CarsThreeListingTests
         Assert.DoesNotContain("IncludeListingText", carsOneAction, StringComparison.Ordinal);
         Assert.DoesNotContain("IncludeListingText", carsTwoAction, StringComparison.Ordinal);
         Assert.Contains("LoadMatchingCarsAsync", carsOneAction, StringComparison.Ordinal);
-        Assert.Contains("var cars = await LoadCarsAsync();", carsTwoAction, StringComparison.Ordinal);
+        Assert.Contains("LoadCarsAsync()", carsTwoAction, StringComparison.Ordinal);
+        Assert.Contains("OrderByDescending(car => car.CreatedAt)", carsTwoAction, StringComparison.Ordinal);
     }
 
     private static string ExtractCarsThreeMethod(string controllerSource)

@@ -129,7 +129,7 @@ public class ShowroomRuleTests
         Assert.NotNull(delete.GetCustomAttribute<AuthorizeAttribute>());
         Assert.Null(delete.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         var users = typeof(FinalProject.MVC.Controllers.AdminController).GetMethod("Users")!;
-        Assert.Equal("SuperAdmin", users.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal("Admin,SuperAdmin", users.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         var changeRoles = typeof(FinalProject.MVC.Controllers.AdminController).GetMethod("ChangeRoles")!;
         Assert.Equal("SuperAdmin", changeRoles.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.NotNull(changeRoles.GetCustomAttribute<HttpPostAttribute>());
@@ -207,7 +207,7 @@ public class ShowroomRuleTests
         ProductId = 9,
         CustomerName = "Nigar Aliyeva",
         Email = "nigar@example.com",
-        Phone = "+994 50 123 45 67",
+        Phone = "501234567",
         Quantity = 2,
         SubmissionKey = Guid.NewGuid()
     };
@@ -253,24 +253,10 @@ public class ShowroomRuleTests
         var tooFar = ValidPurchaseRequest();
         tooFar.PreferredVisitDate = today.AddDays(ShowroomRequestRules.MaxVisitDaysAhead + 1);
 
-        Assert.NotNull(ShowroomRequestRules.Validate(noPhone, 31, today));
+        Assert.Equal(InternationalPhoneNumber.ErrorMessage, ShowroomRequestRules.Validate(noPhone, 31, today));
         Assert.NotNull(ShowroomRequestRules.Validate(badEmail, 31, today));
         Assert.NotNull(ShowroomRequestRules.Validate(noKey, 31, today));
         Assert.NotNull(ShowroomRequestRules.Validate(past, 31, today));
         Assert.NotNull(ShowroomRequestRules.Validate(tooFar, 31, today));
-    }
-
-    [Fact]
-    public void Purchase_requests_are_reviewed_only_by_admins()
-    {
-        var controller = typeof(FinalProject.MVC.Controllers.AdminRequestsController);
-        Assert.Equal("Admin,SuperAdmin", controller.GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-        var delete = controller.GetMethod(nameof(FinalProject.MVC.Controllers.AdminRequestsController.Delete))!;
-        Assert.NotNull(delete.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpPostAttribute>());
-        Assert.NotNull(delete.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
-        Assert.Null(delete.GetCustomAttribute<Microsoft.AspNetCore.Mvc.HttpGetAttribute>());
-        var requestToBuy = typeof(FinalProject.MVC.Controllers.ShopController)
-            .GetMethod(nameof(FinalProject.MVC.Controllers.ShopController.RequestToBuy))!;
-        Assert.NotNull(requestToBuy.GetCustomAttribute<Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute>());
     }
 }

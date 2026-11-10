@@ -16,51 +16,151 @@
     <link rel="stylesheet" href="~/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
-        body.admin-shell { background:#f4f6f8; }
+        /*
+          Cause: sticky + align-self:flex-start sized the aside to menu height only,
+          so scrolling long main content exposed body.admin-shell's light background
+          under/beside the navy column. Fix: viewport-locked shell; both panes
+          stretch to 100% height and scroll independently.
+        */
+        html:has(body.admin-shell) {
+            height: 100%;
+            overflow: hidden;
+        }
+        body.admin-shell {
+            background: #f4f6f8;
+            margin: 0;
+            min-height: 100%;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body.admin-shell::before {
+            display: none;
+        }
         .admin-sidebar {
-            background:#111827;
-            min-height:100vh;
-            color:#fff;
-            padding:24px 18px;
+            background: #111827;
+            color: #fff;
+            padding: 20px 14px 28px;
         }
         .admin-sidebar h4 {
-            white-space:nowrap;
-            margin-bottom:1.25rem;
-            color:#fff;
+            white-space: nowrap;
+            margin-bottom: 1rem;
+            color: #fff;
+            font-size: 1.2rem;
         }
         .admin-sidebar a {
-            display:block;
-            color:#d1d5db;
-            padding:10px 12px;
-            border-radius:8px;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
+            display: block;
+            color: #d1d5db;
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            line-height: 1.4;
+            white-space: normal;
         }
         .admin-sidebar a:hover,
         .admin-sidebar a.active {
-            background:#1f2937;
-            color:#fff;
+            background: #1f2937;
+            color: #fff;
         }
-        .admin-main { padding:28px; }
-        .admin-card { background:#fff; border-radius:12px; padding:18px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-        .admin-stat { font-size:28px; font-weight:700; }
-        @@media (max-width: 991.98px) {
+        .admin-main {
+            padding: 28px;
+            min-width: 0;
+            background: #f4f6f8;
+        }
+        .admin-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+            overflow-x: auto;
+        }
+        .admin-stat { font-size: 28px; font-weight: 700; }
+        .admin-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 11rem;
+        }
+        .admin-actions .form-select,
+        .admin-actions .form-control,
+        .admin-actions .btn {
+            width: 100%;
+        }
+        @@media (min-width: 992px) {
+            body.admin-shell,
+            body.admin-shell.with-sidebar {
+                height: 100vh;
+                height: 100dvh;
+                overflow: hidden !important;
+            }
+            .admin-shell > .container-fluid {
+                height: 100%;
+                max-width: none;
+                padding-left: 0;
+                padding-right: 0;
+                overflow: hidden;
+            }
+            .admin-shell > .container-fluid > .row {
+                height: 100%;
+                margin-left: 0;
+                margin-right: 0;
+                flex-wrap: nowrap;
+                align-items: stretch;
+            }
             .admin-sidebar {
-                min-height:auto;
-                padding-bottom:12px;
+                height: 100%;
+                max-height: 100%;
+                min-height: 0;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                align-self: stretch;
+                position: relative;
             }
-            .admin-sidebar a {
-                white-space:normal;
+            .admin-main {
+                height: 100%;
+                max-height: 100%;
+                min-height: 0;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior: contain;
             }
+        }
+        @@media (max-width: 991.98px) {
+            html:has(body.admin-shell) {
+                overflow: auto;
+            }
+            body.admin-shell {
+                height: auto;
+                overflow: auto !important;
+            }
+            .admin-sidebar {
+                min-height: auto;
+                padding-bottom: 12px;
+            }
+        }
+        /* Public theme draws label::before/::after. Bootstrap already draws .form-check-input. */
+        body.admin-shell input.form-check-input ~ label::before,
+        body.admin-shell input.form-check-input ~ label::after {
+            content: none !important;
+            display: none !important;
+            border: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        body.admin-shell input.form-check-input ~ label {
+            padding-left: 0.35rem;
+        }
+        body.admin-shell .form-check-input {
+            float: none;
+            margin-left: 0;
         }
     </style>
 </head>
 <body class="admin-shell">
     <div class="container-fluid">
-        <div class="row">
+        <div class="row g-0">
             <aside class="col-12 col-lg-3 col-xl-2 admin-sidebar" aria-label="Admin navigation">
-                <h4 class="mb-4">AutoVault</h4>
+                <h4 class="mb-3">AutoVault</h4>
                 <a class="@(IsActive("Admin", "Index") ? "active" : null)" asp-controller="Admin" asp-action="Index">Dashboard</a>
                 <a class="@(IsActive("AdminSettings") ? "active" : null)" asp-controller="AdminSettings" asp-action="Index">Site Settings</a>
                 <a class="@(IsActive("AdminHome") ? "active" : null)" asp-controller="AdminHome" asp-action="Index">Home Page</a>
@@ -80,18 +180,15 @@
                 <a class="@(IsActive("AdminStatistics") ? "active" : null)" asp-controller="AdminStatistics" asp-action="Index">Car Statistics</a>
                 <a class="@(IsActive("AdminParts") ? "active" : null)" asp-controller="AdminParts" asp-action="Index">Spare Parts</a>
                 <a class="@(IsActive("AdminCampaigns") ? "active" : null)" asp-controller="AdminCampaigns" asp-action="Index">Campaigns</a>
-                <a class="@(IsActive("AdminCoupons") ? "active" : null)" asp-controller="AdminCoupons" asp-action="Index">Coupons</a>
-                <a class="@(IsActive("AdminOrders") ? "active" : null)" asp-controller="AdminOrders" asp-action="Index">Legacy Orders</a>
                 <a class="@(IsActive("AdminSales") ? "active" : null)" asp-controller="AdminSales" asp-action="Index">In-Store Sales</a>
                 <a class="@(IsActive("AdminBrands") ? "active" : null)" asp-controller="AdminBrands" asp-action="Index">Brands</a>
                 <a class="@(IsActive("AdminCategories") ? "active" : null)" asp-controller="AdminCategories" asp-action="Index">Categories</a>
                 <a class="@(IsActive("AdminRatings") ? "active" : null)" asp-controller="AdminRatings" asp-action="Index">Ratings</a>
                 <a class="@(IsActive("AdminReviews") ? "active" : null)" asp-controller="AdminReviews" asp-action="Index">Reviews</a>
-                <a class="@(IsActive("AdminRequests") ? "active" : null)" asp-controller="AdminRequests" asp-action="Index">Purchase Requests</a>
                 <a class="@(IsActive("AdminContactRequests") ? "active" : null)" asp-controller="AdminContactRequests" asp-action="Index">Contact Requests</a>
                 <a class="@(IsActive("AdminInquiries") ? "active" : null)" asp-controller="AdminInquiries" asp-action="Index">Questions</a>
                 <a class="@(IsActive("Account", "Messages") ? "active" : null)" asp-controller="Account" asp-action="Messages">Dealer Messages</a>
-                @if (User.IsInRole("SuperAdmin"))
+                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                 {
                     <a class="@(IsActive("Admin", "Users") ? "active" : null)" asp-controller="Admin" asp-action="Users">Users</a>
                 }

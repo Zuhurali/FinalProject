@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Controllers;
@@ -20,7 +21,7 @@ namespace FinalProject.Tests;
 public class PublicCmsContentTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_cms_controllers_require_Admin_or_SuperAdmin_and_antiforgery()
@@ -49,7 +50,7 @@ public class PublicCmsContentTests
         var env = new TestEnvironment();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
-        var about = new AboutPageContentService(db, cache, env);
+        var about = new AboutPageContentService(new ApplicationRepository(db), cache, env);
         await about.EnsureSeedAsync();
         // Shared SQL Server DB: restore seed so prior suite runs do not leave mutated singletons.
         Assert.True((await about.SaveAsync(ToAboutEditFromSeed(), new AboutPageImageUploads())).Ok);
@@ -57,39 +58,51 @@ public class PublicCmsContentTests
         Assert.Equal(AboutPageContentDefaults.Eyebrow, about.GetPublic().Eyebrow);
 
         var aboutEdit = ToAboutEdit(about.GetPublic());
-        aboutEdit.Eyebrow = $"About {Guid.NewGuid():N}";
-        var (aboutOk, aboutErr) = await about.SaveAsync(aboutEdit, new AboutPageImageUploads());
-        Assert.True(aboutOk, aboutErr);
-        cache.Remove(AboutPageContentService.CacheKey);
-        Assert.Equal(aboutEdit.Eyebrow, about.GetPublic().Eyebrow);
+        aboutEdit.Eyebrow = "About the showroom";
+        ContactPageContentService? contact = null;
+        try
+        {
+            var (aboutOk, aboutErr) = await about.SaveAsync(aboutEdit, new AboutPageImageUploads());
+            Assert.True(aboutOk, aboutErr);
+            cache.Remove(AboutPageContentService.CacheKey);
+            Assert.Equal(aboutEdit.Eyebrow, about.GetPublic().Eyebrow);
 
-        var contact = new ContactPageContentService(db, cache);
-        await contact.EnsureSeedAsync();
-        Assert.True((await contact.SaveAsync(ToContactEditFromSeed())).Ok);
-        cache.Remove(ContactPageContentService.CacheKey);
-        var contactPublic = contact.GetPublic();
-        var contactEdit = ToContactEdit(contactPublic);
-        contactEdit.FormTitle = $"Touch {Guid.NewGuid():N}";
-        Assert.True((await contact.SaveAsync(contactEdit)).Ok);
-        cache.Remove(ContactPageContentService.CacheKey);
-        Assert.Equal(contactEdit.FormTitle, contact.GetPublic().FormTitle);
+            contact = new ContactPageContentService(new ApplicationRepository(db), cache);
+            await contact.EnsureSeedAsync();
+            Assert.True((await contact.SaveAsync(ToContactEditFromSeed())).Ok);
+            cache.Remove(ContactPageContentService.CacheKey);
+            var contactPublic = contact.GetPublic();
+            var contactEdit = ToContactEdit(contactPublic);
+            contactEdit.FormTitle = $"Touch {Guid.NewGuid():N}";
+            Assert.True((await contact.SaveAsync(contactEdit)).Ok);
+            cache.Remove(ContactPageContentService.CacheKey);
+            Assert.Equal(contactEdit.FormTitle, contact.GetPublic().FormTitle);
 
-        var legal = new LegalPageContentService(db, cache);
-        await legal.EnsureSeedAsync();
-        Assert.Contains("privacy", legal.GetPublic().PrivacyBody, StringComparison.OrdinalIgnoreCase);
+            var legal = new LegalPageContentService(new ApplicationRepository(db), cache);
+            await legal.EnsureSeedAsync();
+            Assert.Contains("privacy", legal.GetPublic().PrivacyBody, StringComparison.OrdinalIgnoreCase);
 
-        var shop = new ShopMarketingContentService(db, cache, env);
-        await shop.EnsureSeedAsync();
-        Assert.True((await shop.SaveAsync(ToShopEditFromSeed(), new ShopMarketingImageUploads())).Ok);
-        cache.Remove(ShopMarketingContentService.CacheKey);
-        Assert.Equal(ShopMarketingContentDefaults.HeroTitle, shop.GetPublic().HeroTitle);
-        Assert.Equal(ShopMarketingContentDefaults.CatalogIntro, shop.GetPublic().CatalogIntro);
-        Assert.Equal(ShopMarketingContentDefaults.Why1Title, shop.GetPublic().Why1Title);
+            var shop = new ShopMarketingContentService(new ApplicationRepository(db), cache, env);
+            await shop.EnsureSeedAsync();
+            Assert.True((await shop.SaveAsync(ToShopEditFromSeed(), new ShopMarketingImageUploads())).Ok);
+            cache.Remove(ShopMarketingContentService.CacheKey);
+            Assert.Equal(ShopMarketingContentDefaults.HeroTitle, shop.GetPublic().HeroTitle);
+            Assert.Equal(ShopMarketingContentDefaults.CatalogIntro, shop.GetPublic().CatalogIntro);
+            Assert.Equal(ShopMarketingContentDefaults.Why1Title, shop.GetPublic().Why1Title);
+            Assert.Equal(ShopMarketingContentDefaults.Why1IconPath, shop.GetPublic().Why1IconPath);
+            Assert.Equal(ShopMarketingContentDefaults.Why4IconPath, shop.GetPublic().Why4IconPath);
+        }
+        finally
+        {
+            await about.SaveAsync(ToAboutEditFromSeed(), new AboutPageImageUploads());
+            cache.Remove(AboutPageContentService.CacheKey);
+            if (contact != null)
+            {
+                await contact.SaveAsync(ToContactEditFromSeed());
+                cache.Remove(ContactPageContentService.CacheKey);
+            }
+        }
 
-        Assert.True((await about.SaveAsync(ToAboutEditFromSeed(), new AboutPageImageUploads())).Ok);
-        cache.Remove(AboutPageContentService.CacheKey);
-        Assert.True((await contact.SaveAsync(ToContactEditFromSeed())).Ok);
-        cache.Remove(ContactPageContentService.CacheKey);
         Assert.Equal(AboutPageContentDefaults.Eyebrow, about.GetPublic().Eyebrow);
     }
 
@@ -219,6 +232,10 @@ public class PublicCmsContentTests
             Why3Description = seed.Why3Description,
             Why4Title = seed.Why4Title,
             Why4Description = seed.Why4Description,
+            Why1IconPath = seed.Why1IconPath,
+            Why2IconPath = seed.Why2IconPath,
+            Why3IconPath = seed.Why3IconPath,
+            Why4IconPath = seed.Why4IconPath,
             VisitEyebrow = seed.VisitEyebrow,
             VisitHeadingBefore = seed.VisitHeadingBefore,
             VisitHeadingHighlight = seed.VisitHeadingHighlight,
@@ -249,9 +266,9 @@ public class PublicCmsContentTests
     {
         await using var db = CreateDb();
         var env = new TestEnvironment();
-        var teams = new TeamMemberService(db, env);
-        var dealers = new DealerService(db, env);
-        var faqs = new FaqService(db);
+        var teams = new TeamMemberService(new ApplicationRepository(db), env);
+        var dealers = new DealerService(new ApplicationRepository(db), env);
+        var faqs = new FaqService(new ApplicationRepository(db));
 
         await teams.EnsureSeedAsync();
         await dealers.EnsureSeedAsync();

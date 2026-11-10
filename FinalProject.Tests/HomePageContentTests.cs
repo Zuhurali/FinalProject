@@ -4,6 +4,7 @@ using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Controllers;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +22,7 @@ namespace FinalProject.Tests;
 public class HomePageContentTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_home_requires_Admin_or_SuperAdmin_and_antiforgery()
@@ -58,7 +59,7 @@ public class HomePageContentTests
     {
         await using var db = CreateDb();
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new HomePageContentService(db, cache, new TestEnvironment());
+        var service = new HomePageContentService(new ApplicationRepository(db), cache, new TestEnvironment());
 
         await service.EnsureSeedAsync();
         var seeded = await db.HomePageContents.AsNoTracking()
@@ -129,11 +130,12 @@ public class HomePageContentTests
         Assert.Contains("@home.PortfolioTabNewLabel", view, StringComparison.Ordinal);
         Assert.Contains("@home.PortfolioTabUsedLabel", view, StringComparison.Ordinal);
         Assert.Contains("@home.PortfolioTabTrendingLabel", view, StringComparison.Ordinal);
-        Assert.Contains("@home.PortfolioTabStocksLabel", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("stocks-tab", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("@home.PortfolioTabStocksLabel", view, StringComparison.Ordinal);
         Assert.Contains("home.PortfolioEmptyNew", view, StringComparison.Ordinal);
         Assert.Contains("home.PortfolioEmptyUsed", view, StringComparison.Ordinal);
         Assert.Contains("home.PortfolioEmptyTrending", view, StringComparison.Ordinal);
-        Assert.Contains("home.PortfolioEmptyStocks", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("home.PortfolioEmptyStocks", view, StringComparison.Ordinal);
         Assert.DoesNotContain(">New Cars</button>", view, StringComparison.Ordinal);
         Assert.DoesNotContain("No new cars are currently listed.", view, StringComparison.Ordinal);
         Assert.Contains("asp-for=\"PortfolioTabNewLabel\"", admin, StringComparison.Ordinal);

@@ -14,7 +14,6 @@
     var newCars = HomeCarShowcase.NewCars(showcaseCars);
     var usedCars = HomeCarShowcase.HomeUsedCarousel(showcaseCars);
     var trendingCars = HomeCarShowcase.TrendingCars(showcaseCars);
-    var stockCars = HomeCarShowcase.InStockCars(showcaseCars);
     // Use the full Active home catalog (not catalog-path-only showcase) so IsFeatured cars appear.
     var featuredCars = HomeCarShowcase.PremiumCars(homeCars);
     BrandApiDto? MatchBrand(string name) =>
@@ -322,6 +321,33 @@
     }
     .rts-portfolio-area.home-cars-area {
         overflow: hidden;
+    }
+    .rts-portfolio-area.home-cars-area .tab-area .nav-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        width: fit-content;
+        max-width: 100%;
+        margin-right: auto;
+        margin-left: auto;
+        gap: 12px 16px;
+    }
+    .rts-portfolio-area.home-cars-area .tab-area .nav-tabs .nav-item {
+        flex: 0 0 auto;
+        width: auto;
+        margin: 0;
+    }
+    .rts-portfolio-area.home-cars-area .tab-area .nav-tabs .nav-link {
+        padding: 12px 22px;
+    }
+    @@media (max-width: 575.98px) {
+        .rts-portfolio-area.home-cars-area .tab-area .nav-tabs {
+            gap: 10px;
+        }
+        .rts-portfolio-area.home-cars-area .tab-area .nav-tabs .nav-link {
+            padding: 10px 16px;
+        }
     }
     .rts-portfolio-area.home-cars-area .section-inner {
         margin-left: auto;
@@ -639,9 +665,6 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="trending-tab" data-bs-toggle="tab" data-bs-target="#trending" type="button" role="tab" aria-controls="trending" aria-selected="false">@home.PortfolioTabTrendingLabel</button>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button" role="tab" aria-controls="stocks" aria-selected="false">@home.PortfolioTabStocksLabel</button>
-                            </li>
                         </ul>
                     </div>
                     <div class="section-inner mt--80 wow fadeInUp" data-wow-delay=".3s" data-wow-duration="1s">
@@ -651,8 +674,7 @@
                             {
                                 ("new-cars", newCars, home.PortfolioEmptyNew),
                                 ("used", usedCars, home.PortfolioEmptyUsed),
-                                ("trending", trendingCars, home.PortfolioEmptyTrending),
-                                ("stocks", stockCars, home.PortfolioEmptyStocks)
+                                ("trending", trendingCars, home.PortfolioEmptyTrending)
                             };
                         }
                         @foreach (var tab in portfolioTabs)

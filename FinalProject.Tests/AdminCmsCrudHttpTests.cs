@@ -19,11 +19,11 @@ namespace FinalProject.Tests;
 [Collection("CampaignSql")]
 public class AdminCmsCrudHttpTests
 {
-    private const string BaseUrl = "https://localhost:7245";
+    private const string BaseUrl = "https://localhost:7255";
     private const string Email = "campaigne2e@autovault.local";
     private const string Password = "CampaignE2E-2026!";
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task Account_Login_get_redirects_to_SignIn()
@@ -121,7 +121,6 @@ public class AdminCmsCrudHttpTests
                 ["Answer"] = faqAnswer,
                 ["SortOrder"] = "99990",
                 ["IsPublished"] = "true",
-                ["ShowOnFaqPage"] = "true",
                 ["ShowOnShop"] = "false"
             }));
             Assert.True(faqCreate.IsSuccessStatusCode, $"FAQ create {(int)faqCreate.StatusCode}");

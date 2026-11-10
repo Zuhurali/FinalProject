@@ -15,7 +15,7 @@ namespace FinalProject.Tests;
 [Collection("CampaignSql")]
 public class CampaignFormHttpTests
 {
-    private const string BaseUrl = "https://localhost:7245";
+    private const string BaseUrl = "https://localhost:7255";
     private const string Email = "campaigne2e@autovault.local";
     private const string Password = "CampaignE2E-2026!";
 
@@ -104,7 +104,7 @@ public class CampaignFormHttpTests
         Assert.Contains("Enter a discount percentage", invalidHtml);
 
         await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer("Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True")
+            .UseSqlServer("Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True")
             .Options);
         var inserted = await db.ProductCampaigns.SingleAsync(campaign => campaign.Name == "E2E HTTP Timing Belt");
         Assert.Equal(12, inserted.ProductId);
@@ -152,7 +152,7 @@ public class CampaignFormHttpTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer("Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True"));
+            options.UseSqlServer("Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True"));
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 options.Password.RequireDigit = true;

@@ -15,6 +15,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AutoVault.Domain\AutoVault.Domain.csproj" />
+    <ProjectReference Include="..\AutoVault.Repository\AutoVault.Repository.csproj" />
+    <ProjectReference Include="..\AutoVault.Service\AutoVault.Service.csproj" />
     <ProjectReference Include="..\FinalProject\FinalProject.csproj" />
     <ProjectReference Include="..\FinalProject.MVC\FinalProject.MVC.csproj" />
   </ItemGroup>

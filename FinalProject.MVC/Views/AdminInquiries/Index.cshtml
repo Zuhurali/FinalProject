@@ -59,7 +59,7 @@
                              class="mt-2 p-2 border-start border-3 border-success bg-light"
                              @(inquiry.HasReply ? "" : "hidden")>
                             <small class="text-muted d-block mb-1">
-                                Admin reply
+                                AutoVault Support
                                 @if (inquiry.AdminRepliedAt.HasValue)
                                 {
                                     <span>· @inquiry.AdminRepliedAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
@@ -70,6 +70,7 @@
 
                         @* Inline editor — hidden by default, opened by JS *@
                         <div id="inq-editor-@inquiry.Id" hidden class="mt-2">
+                            <input type="hidden" id="inq-reply-original-@inquiry.Id" value="@inquiry.AdminReply" />
                             <textarea id="inq-textarea-@inquiry.Id"
                                       class="form-control"
                                       rows="4"
@@ -88,7 +89,7 @@
                     </td>
                     <td>
                         <span id="inq-status-@inquiry.Id"
-                              class="badge @(inquiry.StatusLabel == "Answered" ? "bg-success" : inquiry.StatusLabel == "Closed" ? "bg-secondary" : "bg-warning text-dark")">
+                              class="badge @(inquiry.StatusLabel == ProductInquiry.LabelAnswered ? "bg-success" : inquiry.StatusLabel == ProductInquiry.LabelClosed ? "bg-secondary" : inquiry.StatusLabel == ProductInquiry.LabelAwaitingFollowUp ? "bg-info text-dark" : "bg-warning text-dark")">
                             @inquiry.StatusLabel
                         </span>
                         <p id="inq-flash-@inquiry.Id" class="small mt-2 mb-0" hidden></p>
@@ -105,8 +106,8 @@
                         <form asp-action="Handled" method="post" class="m-0">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@inquiry.Id" />
-                            <input type="hidden" name="handled" value="@(!inquiry.IsHandled ? "true" : "false")" />
-                            <button type="submit" class="btn btn-sm btn-outline-dark w-100">
+                            <input type="hidden" name="handled" class="inq-handled-value" data-id="@inquiry.Id" value="@(!inquiry.IsHandled ? "true" : "false")" />
+                            <button type="submit" class="btn btn-sm btn-outline-dark w-100 inq-handled-btn" data-id="@inquiry.Id">
                                 @(inquiry.IsHandled ? "Reopen" : "Mark Closed")
                             </button>
                         </form>
@@ -157,8 +158,8 @@
             const id = btn.dataset.id;
             document.getElementById('inq-editor-' + id).hidden = true;
             // Restore textarea to what is currently displayed (so unsaved changes are discarded)
-            const savedText = document.getElementById('inq-reply-text-' + id)?.textContent ?? '';
-            document.getElementById('inq-textarea-' + id).value = savedText.trim();
+            const original = document.getElementById('inq-reply-original-' + id);
+            document.getElementById('inq-textarea-' + id).value = original ? original.value : '';
             const errEl = document.getElementById('inq-editor-error-' + id);
             errEl.hidden = true;
             errEl.textContent = '';
@@ -214,6 +215,8 @@
                 const displayEl = document.getElementById('inq-reply-display-' + id);
                 const textEl = document.getElementById('inq-reply-text-' + id);
                 textEl.textContent = data.reply ?? reply;
+                const original = document.getElementById('inq-reply-original-' + id);
+                if (original) original.value = data.reply ?? reply;
                 displayEl.hidden = false;
 
                 // Update status badge
@@ -224,6 +227,10 @@
                 // Update reply button label
                 const replyBtn = document.querySelector('.inq-reply-btn[data-id="' + id + '"]');
                 if (replyBtn) replyBtn.textContent = 'Edit Reply';
+                const handledBtn = document.querySelector('.inq-handled-btn[data-id="' + id + '"]');
+                const handledValue = document.querySelector('.inq-handled-value[data-id="' + id + '"]');
+                if (handledBtn) handledBtn.textContent = 'Mark Closed';
+                if (handledValue) handledValue.value = 'true';
 
                 // Close editor
                 document.getElementById('inq-editor-' + id).hidden = true;

@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Controllers;
@@ -21,7 +22,7 @@ namespace FinalProject.Tests;
 public class PartnerAndPageChromePersistenceTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_partner_and_page_chrome_controllers_require_Admin_or_SuperAdmin()
@@ -48,7 +49,7 @@ public class PartnerAndPageChromePersistenceTests
         await using var db = CreateDb();
         var env = new TestEnvironment();
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var partners = new PartnerStripService(db, cache, env);
+        var partners = new PartnerStripService(new ApplicationRepository(db), cache, env);
         await partners.EnsureSeedAsync();
 
         var originalSettings = partners.GetSettings();
@@ -100,7 +101,7 @@ public class PartnerAndPageChromePersistenceTests
         var env = new TestEnvironment();
         var cache = new MemoryCache(new MemoryCacheOptions());
 
-        var faqPage = new FaqPageContentService(db, cache, env);
+        var faqPage = new FaqPageContentService(new ApplicationRepository(db), cache, env);
         await faqPage.EnsureSeedAsync();
         var faqSeed = FaqPageContentService.CreateSeed();
         Assert.True((await faqPage.SaveAsync(ToFaqEdit(faqSeed), banner: null)).Ok);
@@ -111,7 +112,7 @@ public class PartnerAndPageChromePersistenceTests
         Assert.Equal(faqEdit.Eyebrow, faqPage.GetPublic().Eyebrow);
         Assert.True((await faqPage.SaveAsync(ToFaqEdit(faqSeed), banner: null)).Ok);
 
-        var teamPage = new TeamPageContentService(db, cache);
+        var teamPage = new TeamPageContentService(new ApplicationRepository(db), cache);
         await teamPage.EnsureSeedAsync();
         var teamSeed = TeamPageContentService.CreateSeed();
         Assert.True((await teamPage.SaveAsync(ToTeamEdit(teamSeed))).Ok);
@@ -122,7 +123,7 @@ public class PartnerAndPageChromePersistenceTests
         Assert.Equal(teamEdit.Eyebrow, teamPage.GetPublic().Eyebrow);
         Assert.True((await teamPage.SaveAsync(ToTeamEdit(teamSeed))).Ok);
 
-        var dealerPage = new DealerPageContentService(db, cache);
+        var dealerPage = new DealerPageContentService(new ApplicationRepository(db), cache);
         await dealerPage.EnsureSeedAsync();
         var dealerSeed = DealerPageContentService.CreateSeed();
         Assert.True((await dealerPage.SaveAsync(ToDealerEdit(dealerSeed))).Ok);
@@ -133,7 +134,7 @@ public class PartnerAndPageChromePersistenceTests
         Assert.Equal(dealerEdit.PageTitle, dealerPage.GetPublic().PageTitle);
         Assert.True((await dealerPage.SaveAsync(ToDealerEdit(dealerSeed))).Ok);
 
-        var calcPage = new CalculatorPageContentService(db, cache);
+        var calcPage = new CalculatorPageContentService(new ApplicationRepository(db), cache);
         await calcPage.EnsureSeedAsync();
         var calcSeed = CalculatorPageContentService.CreateSeed();
         Assert.True((await calcPage.SaveAsync(ToCalcEdit(calcSeed))).Ok);
@@ -144,7 +145,7 @@ public class PartnerAndPageChromePersistenceTests
         Assert.Equal(calcEdit.PageTitle, calcPage.GetPublic().PageTitle);
         Assert.True((await calcPage.SaveAsync(ToCalcEdit(calcSeed))).Ok);
 
-        var legal = new LegalPageContentService(db, cache);
+        var legal = new LegalPageContentService(new ApplicationRepository(db), cache);
         await legal.EnsureSeedAsync();
         var legalSeed = LegalPageContentService.CreateSeedEntity();
         Assert.True((await legal.SaveAsync(ToLegalEdit(legalSeed))).Ok);

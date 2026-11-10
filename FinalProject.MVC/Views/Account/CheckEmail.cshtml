@@ -1,6 +1,8 @@
 @{
     ViewData["Title"] = "Check Your Email - AutoVault";
     var configured = ViewData["EmailConfigured"] as bool? == true;
+    var externalConfigured = ViewData["ExternalProviderConfigured"] as bool? == true;
+    var externalDelivered = ViewData["ExternalEmailDelivered"] as bool? == true;
     var email = ViewData["Email"] as string;
 }
 <div class="rts-breadcrumb-area service jarallax">
@@ -21,33 +23,55 @@
             <div class="col-lg-6">
                 <div class="contact-form">
                     <h3 class="text-center mb-4">Confirm your account</h3>
+
                     @if (TempData["Error"] != null)
                     {
                         <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
                     }
+
                     @if (TempData["Success"] != null)
                     {
                         <div class="alert alert-success" role="alert">@TempData["Success"]</div>
                     }
-                    @if (!string.IsNullOrWhiteSpace(email))
+
+                    @if (externalDelivered)
                     {
-                        <p>Check <strong>@email</strong> and confirm your AutoVault account. You can sign in after the email address is confirmed.</p>
+                        <div class="alert alert-success" role="alert">
+                            Confirmation email was sent to
+                            @if (!string.IsNullOrWhiteSpace(email))
+                            {
+                                <strong>@email</strong>
+                            }
+                            else
+                            {
+                                <span>your registered address</span>
+                            }
+                            .
+                            Open that inbox (and spam/junk).
+                        </div>
                     }
                     else
                     {
-                        <p>If an account with that email address is waiting for confirmation, check your inbox and confirm your AutoVault account before signing in.</p>
-                    }
-                    @if (!configured)
-                    {
-                        <div class="alert alert-warning">Email delivery is not configured. No confirmation email was sent.</div>
-                        @if (ViewData["DevelopmentConfirmationLink"] != null)
+                        @if (!string.IsNullOrWhiteSpace(email))
                         {
-                            <p>This development confirmation link is shown only for the account you just registered:</p>
-                            <p><a href="@ViewData["DevelopmentConfirmationLink"]">Confirm this account</a></p>
+                            <p>Confirmation is for <strong>@email</strong>. Confirm that inbox before signing in.</p>
+                        }
+
+                        @if (externalConfigured && TempData["Error"] == null && TempData["Success"] == null)
+                        {
+                            <div class="alert alert-warning" role="alert">
+                                External email delivery was not confirmed for this attempt. Try Resend confirmation.
+                            </div>
                         }
                     }
+
+                    @if (!configured && !externalDelivered)
+                    {
+                        <div class="alert alert-warning">Email delivery is not configured. No confirmation email was sent.</div>
+                    }
+
                     <p class="mt-3"><a asp-action="ResendConfirmation">Resend confirmation email</a></p>
-                    <p><a asp-action="SignIn">Back to sign in</a></p>
+                    <p><a asp-action="SignIn" asp-route-email="@email">Back to sign in</a></p>
                 </div>
             </div>
         </div>

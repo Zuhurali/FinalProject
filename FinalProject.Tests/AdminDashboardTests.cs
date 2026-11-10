@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.Data;
 using FinalProject.DTOs;
@@ -17,19 +18,21 @@ namespace FinalProject.Tests;
 public class AdminDashboardTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_dashboard_and_users_require_correct_roles()
     {
         Assert.Equal("Admin,SuperAdmin", typeof(AdminController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-        Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.Users))!
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", typeof(AdminController).GetMethod(nameof(AdminController.Users))!
+            .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", typeof(AdminController).GetMethod(nameof(AdminController.UserDetails))!
+            .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
+        Assert.Equal($"{AppRoles.Admin},{AppRoles.SuperAdmin}", typeof(AdminController).GetMethod(nameof(AdminController.DeleteUser))!
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.ChangeRole))!
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.ChangeRoles))!
-            .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-        Assert.Equal(AppRoles.SuperAdmin, typeof(AdminController).GetMethod(nameof(AdminController.UserDetails))!
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles);
     }
 
@@ -47,7 +50,7 @@ public class AdminDashboardTests
         var expectedRatings = await db.ProductRatings.CountAsync();
         var expectedReviews = await db.ProductReviews.CountAsync();
 
-        var summary = await new CatalogAdminService(db).GetSummaryAsync();
+        var summary = await new CatalogAdminService(new FinalProjectRepository(db)).GetSummaryAsync();
 
         Assert.Equal(expectedCars, summary.TotalCars);
         Assert.Equal(expectedActive, summary.ActiveListings);

@@ -30,7 +30,7 @@ public class CarsTwoSeatFilterTests
     }
 
     [Fact]
-    public void CarsTwo_sidebar_drops_clear_icons_and_offers_seat_checkboxes_last()
+    public void CarsTwo_sidebar_drops_clear_icons_and_scopes_seats_to_selected_brand()
     {
         var view = Read("FinalProject.MVC", "Views", "Cars", "CarsTwo.cshtml");
         Assert.DoesNotContain("fa-xmark", view, StringComparison.Ordinal);
@@ -42,12 +42,14 @@ public class CarsTwoSeatFilterTests
         var seats = view.IndexOf("<h2>Car Seats</h2>", StringComparison.Ordinal);
         Assert.True(fuel >= 0 && seats > fuel);
 
-        for (var seat = 1; seat <= 9; seat++)
-        {
-            Assert.Contains($"value=\"@seat\"", view, StringComparison.Ordinal);
-        }
-
-        Assert.Contains("class=\"seat-filter\"", view, StringComparison.Ordinal);
+        Assert.Contains("id=\"carSeatList\"", view, StringComparison.Ordinal);
+        Assert.Contains("id=\"carColorList\"", view, StringComparison.Ordinal);
+        Assert.Contains("refreshColorAndSeatFilters", view, StringComparison.Ordinal);
+        Assert.Contains("cardsForFacetScope", view, StringComparison.Ordinal);
+        Assert.Contains("No options for this model", view, StringComparison.Ordinal);
+        Assert.Contains("data-created=", view, StringComparison.Ordinal);
+        Assert.Contains("\"seat-filter\"", view, StringComparison.Ordinal);
+        Assert.Contains("\"color-filter\"", view, StringComparison.Ordinal);
         Assert.Contains("CarsTwoSeatCount.Resolve(car.Seats, car.Description)", view, StringComparison.Ordinal);
         Assert.Contains("seatValues.indexOf(card.getAttribute(\"data-seats\"))", view, StringComparison.Ordinal);
     }

@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.MVC.Controllers;
 using FinalProject.MVC.Data;
@@ -14,7 +15,7 @@ namespace FinalProject.Tests;
 public class ContactQuestionsMessagesTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_contact_and_inquiry_surfaces_require_Admin_or_SuperAdmin()
@@ -33,7 +34,7 @@ public class ContactQuestionsMessagesTests
     public async Task Contact_request_persists_and_status_filter_works()
     {
         await using var db = CreateMvcDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
         var email = $"contact-{Guid.NewGuid():N}@example.com";
 
         var (ok, id, _, error) = await service.SaveAsync(new ContactFormModel
@@ -74,7 +75,7 @@ public class ContactQuestionsMessagesTests
     public async Task Product_inquiry_persists_user_id_and_filters_by_status()
     {
         await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.AsNoTracking().FirstAsync(item => item.IsActive);
         var email = $"ask-{Guid.NewGuid():N}@example.com";
 
@@ -124,7 +125,7 @@ public class ContactQuestionsMessagesTests
     public async Task Inquiry_claim_by_email_and_inactive_product_rejected()
     {
         await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive);
         var email = $"orphan-ask-{Guid.NewGuid():N}@example.com";
 

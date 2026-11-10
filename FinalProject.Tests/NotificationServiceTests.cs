@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.Models.Entities;
@@ -15,7 +16,7 @@ public class NotificationServiceTests
     {
         await using var context = CreateContext();
         SeedConversation(context, out var conversationId, out var buyerId, out var sellerId, out var messageId);
-        var notifications = new NotificationService(context);
+        var notifications = new NotificationService(new FinalProjectRepository(context));
 
         var first = await notifications.CreateMessageNotificationAsync(
             sellerId,
@@ -45,7 +46,7 @@ public class NotificationServiceTests
     {
         await using var context = CreateContext();
         SeedConversation(context, out var conversationId, out var buyerId, out var sellerId, out var messageId);
-        var notifications = new NotificationService(context);
+        var notifications = new NotificationService(new FinalProjectRepository(context));
         var created = await notifications.CreateMessageNotificationAsync(
             sellerId,
             "Buyer",
@@ -64,7 +65,7 @@ public class NotificationServiceTests
         await using var context = CreateContext();
         SeedConversation(context, out var conversationId, out _, out var sellerId, out var messageId);
         SeedCarWithFavorites(context, out var carId, out _, out var fanA, out _);
-        var notifications = new NotificationService(context);
+        var notifications = new NotificationService(new FinalProjectRepository(context));
 
         await notifications.CreateMessageNotificationAsync(
             sellerId,
@@ -90,7 +91,7 @@ public class NotificationServiceTests
     {
         await using var context = CreateContext();
         SeedCarWithFavorites(context, out var carId, out var ownerId, out var fanA, out var fanB);
-        var notifications = new NotificationService(context);
+        var notifications = new NotificationService(new FinalProjectRepository(context));
 
         var increase = await notifications.CreatePriceDropNotificationsAsync(
             carId,
@@ -124,8 +125,8 @@ public class NotificationServiceTests
     {
         await using var context = CreateContext();
         SeedConversation(context, out var conversationId, out var buyerId, out var sellerId, out _);
-        var notifications = new NotificationService(context);
-        var marketplace = new MarketplaceService(context, EmptyConfig(), notifications);
+        var notifications = new NotificationService(new FinalProjectRepository(context));
+        var marketplace = new MarketplaceService(new FinalProjectRepository(context), new FinalProjectRepository(context), EmptyConfig(), notifications);
 
         var reply = await marketplace.ReplyAsync(conversationId, sellerId, "Still available?");
         Assert.NotNull(reply);
@@ -140,8 +141,8 @@ public class NotificationServiceTests
     {
         await using var context = CreateContext();
         SeedCarWithFavorites(context, out var carId, out _, out var fanA, out _);
-        var notifications = new NotificationService(context);
-        var cars = new CarService(context, notifications);
+        var notifications = new NotificationService(new FinalProjectRepository(context));
+        var cars = new CarService(new FinalProjectRepository(context), notifications);
 
         var samePrice = await cars.UpdateAsync(carId, SaveCar(42860m));
         Assert.NotNull(samePrice);

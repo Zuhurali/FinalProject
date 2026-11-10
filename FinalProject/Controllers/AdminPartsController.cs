@@ -19,6 +19,9 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(PartAdminListResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<PartAdminListResponseDto>> List(
         [FromQuery] string? search,
         [FromQuery] string? category,
@@ -31,6 +34,10 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(PartAdminItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PartAdminItemDto>> Get(int id, CancellationToken cancellationToken)
     {
         var part = await _parts.GetAsync(id, cancellationToken);
@@ -39,6 +46,10 @@ public sealed class AdminPartsController : ControllerBase
 
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost]
+    [ProducesResponseType(typeof(PartAdminItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<PartAdminItemDto>> Create(
         [FromBody] SavePartRequestDto request,
         CancellationToken cancellationToken)
@@ -48,6 +59,11 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(PartAdminItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PartAdminItemDto>> Update(
         int id,
         [FromBody] SavePartRequestDto request,
@@ -63,6 +79,10 @@ public sealed class AdminPartsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(typeof(PartDeleteResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PartDeleteResponseDto>> Delete(int id, CancellationToken cancellationToken)
     {
         var (found, outcome, message) = await _parts.DeleteAsync(id, cancellationToken);

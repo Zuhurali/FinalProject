@@ -24,7 +24,7 @@ public class CarsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(PagedResultDto<CarResponseDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PagedResultDto<CarResponseDto>>> GetAll([FromQuery] CarListQueryDto query, CancellationToken cancellationToken)
     {
         var validationError = query.Validate();
@@ -68,13 +68,13 @@ public class CarsController : ControllerBase
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(CarResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CarResponseDto>> GetById(int id, CancellationToken cancellationToken)
     {
         if (id <= 0)
         {
-            return BadRequest("Car id must be greater than zero.");
+            return BadRequest(new { message = "Car id must be greater than zero." });
         }
 
         var car = await _carService.GetByIdAsync(id, cancellationToken);
@@ -96,9 +96,9 @@ public class CarsController : ControllerBase
     [EnableRateLimiting(CarViewsRateLimit.PolicyName)]
     [HttpPost("{id:int}/views")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> RecordView(int id, CancellationToken cancellationToken)
     {
         if (id <= 0)
@@ -137,7 +137,7 @@ public class CarsController : ControllerBase
     [Authorize(Roles = "SuperAdmin")]
     [HttpGet("by-owner/{ownerId}")]
     [ProducesResponseType(typeof(IReadOnlyList<CarResponseDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<CarResponseDto>>> GetByOwner(
@@ -155,7 +155,7 @@ public class CarsController : ControllerBase
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost]
     [ProducesResponseType(typeof(CarResponseDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CarResponseDto>> Create(
@@ -188,7 +188,8 @@ public class CarsController : ControllerBase
     [Authorize(Roles = "Admin,SuperAdmin")]
     [HttpPost("catalog")]
     [ProducesResponseType(typeof(CarResponseDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CarResponseDto>> CreateCatalog(
         [FromBody] SaveCarRequestDto request,
@@ -214,8 +215,10 @@ public class CarsController : ControllerBase
     [Authorize]
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(CarResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CarResponseDto>> Update(
         int id,
         [FromBody] SaveCarRequestDto request,
@@ -252,8 +255,9 @@ public class CarsController : ControllerBase
     [Authorize]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var existing = await _carService.GetByIdAsync(id, cancellationToken);

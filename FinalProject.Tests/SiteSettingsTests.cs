@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Configuration;
@@ -23,7 +24,7 @@ namespace FinalProject.Tests;
 public class SiteSettingsTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_settings_require_Admin_or_SuperAdmin_and_antiforgery()
@@ -61,74 +62,101 @@ public class SiteSettingsTests
             AddressLine = DealershipContactDefaults.AddressLine,
             MapsQuery = DealershipContactDefaults.MapsQuery
         });
-        var service = new SiteSettingsService(db, cache, env, config);
+        var service = new SiteSettingsService(new ApplicationRepository(db), cache, env, config);
 
-        await service.EnsureSeedAsync();
-        var seeded = await db.SiteSettings.AsNoTracking()
-            .SingleAsync(settings => settings.Id == SiteSettings.SingletonId);
-        Assert.Equal(DealershipContactDefaults.Email, seeded.Email);
+        var beforeSeed = await db.SiteSettings.AsNoTracking()
+            .SingleOrDefaultAsync(settings => settings.Id == SiteSettings.SingletonId);
+        var emailBeforeSeed = beforeSeed?.Email;
+        SiteSettings? restoreFrom = null;
 
-        var marker = $"AutoVault CMS {Guid.NewGuid():N}";
-        var (ok, error) = await service.SaveAsync(new SiteSettingsEditViewModel
+        try
         {
-            SiteName = "AutoVault Test",
-            DisplayPhone = "+994 50 111 22 33",
-            E164Phone = "+994501112233",
-            WhatsAppDigits = "994501112233",
-            Email = "cms-settings@example.com",
-            AddressLine = "Test Address 1",
-            MapsQuery = "Test Address 1, Baku",
-            LogoPath = "~/assets/images/logo/logo.svg",
-            FooterLogoPath = "~/assets/images/logo/footer-logo.svg",
-            FaviconPath = "~/fav.svg",
-            FooterText = marker,
-            CopyrightText = "Copyright © {year} AutoVault Test",
-            FacebookUrl = "https://facebook.com/autovault",
-            InstagramUrl = null,
-            YoutubeUrl = null,
-            TwitterUrl = null,
-            DefaultSeoTitle = "AutoVault Test SEO",
-            DefaultMetaDescription = "CMS meta description for tests.",
-            CallCtaHeadline = "Please Call Us Now."
-        }, null, null, null);
+            await service.EnsureSeedAsync();
+            var seeded = await db.SiteSettings.AsNoTracking()
+                .SingleAsync(settings => settings.Id == SiteSettings.SingletonId);
+            restoreFrom = beforeSeed ?? seeded;
+            if (beforeSeed != null)
+            {
+                Assert.Equal(emailBeforeSeed, seeded.Email);
+            }
 
-        Assert.True(ok, error);
-        cache.Remove(SiteSettingsService.CacheKey);
+            var marker = $"AutoVault CMS {Guid.NewGuid():N}";
+            var (ok, error) = await service.SaveAsync(new SiteSettingsEditViewModel
+            {
+                SiteName = "AutoVault Test",
+                DisplayPhone = "+994 50 111 22 33",
+                E164Phone = "+994501112233",
+                WhatsAppDigits = "994501112233",
+                Email = "cms-settings@example.com",
+                AddressLine = "Test Address 1",
+                MapsQuery = "Test Address 1, Baku",
+                LogoPath = "~/assets/images/logo/logo.svg",
+                FooterLogoPath = "~/assets/images/logo/footer-logo.svg",
+                FaviconPath = "~/fav.svg",
+                FooterText = marker,
+                CopyrightText = "Copyright © {year} AutoVault Test",
+                FacebookUrl = "https://facebook.com/autovault",
+                InstagramUrl = null,
+                YoutubeUrl = null,
+                TwitterUrl = null,
+                DefaultSeoTitle = "AutoVault Test SEO",
+                DefaultMetaDescription = "CMS meta description for tests.",
+                CallCtaHeadline = "Please Call Us Now."
+            }, null, null, null);
 
-        var publicSettings = service.GetPublic();
-        Assert.Equal("AutoVault Test", publicSettings.SiteName);
-        Assert.Equal("cms-settings@example.com", publicSettings.Contact.Email);
-        Assert.Equal(marker, publicSettings.FooterText);
-        Assert.Equal("https://facebook.com/autovault", publicSettings.FacebookUrl);
-        Assert.Equal("Please Call Us Now.", publicSettings.CallCtaHeadline);
-        Assert.Equal("tel:+994501112233", publicSettings.Contact.TelHref);
-        Assert.Contains("2026", publicSettings.FormatCopyright(2026), StringComparison.Ordinal);
+            Assert.True(ok, error);
+            cache.Remove(SiteSettingsService.CacheKey);
 
-        var reloaded = await db.SiteSettings.AsNoTracking()
-            .SingleAsync(settings => settings.Id == SiteSettings.SingletonId);
-        Assert.Equal(marker, reloaded.FooterText);
-        Assert.Equal("cms-settings@example.com", reloaded.Email);
+            var publicSettings = service.GetPublic();
+            Assert.Equal("AutoVault Test", publicSettings.SiteName);
+            Assert.Equal("cms-settings@example.com", publicSettings.Contact.Email);
+            Assert.Equal(marker, publicSettings.FooterText);
+            Assert.Equal("https://facebook.com/autovault", publicSettings.FacebookUrl);
+            Assert.Equal("Please Call Us Now.", publicSettings.CallCtaHeadline);
+            Assert.Equal("tel:+994501112233", publicSettings.Contact.TelHref);
+            Assert.Contains("2026", publicSettings.FormatCopyright(2026), StringComparison.Ordinal);
 
-        // Restore production-like contact defaults so the shared DB stays usable.
-        await service.SaveAsync(new SiteSettingsEditViewModel
+            var reloaded = await db.SiteSettings.AsNoTracking()
+                .SingleAsync(settings => settings.Id == SiteSettings.SingletonId);
+            Assert.Equal(marker, reloaded.FooterText);
+            Assert.Equal("cms-settings@example.com", reloaded.Email);
+        }
+        finally
         {
-            SiteName = "AutoVault",
-            DisplayPhone = DealershipContactDefaults.DisplayPhone,
-            E164Phone = DealershipContactDefaults.E164Phone,
-            WhatsAppDigits = DealershipContactDefaults.WhatsAppDigits,
-            Email = DealershipContactDefaults.Email,
-            AddressLine = DealershipContactDefaults.AddressLine,
-            MapsQuery = DealershipContactDefaults.MapsQuery,
-            LogoPath = "~/assets/images/logo/logo.svg",
-            FooterLogoPath = "~/assets/images/logo/footer-logo.svg",
-            FaviconPath = "~/fav.svg",
-            FooterText = "Your trusted partner for quality vehicles and exceptional service. Find your perfect car with confidence at AutoVault.",
-            CopyrightText = "Copyright © {year} AutoVault. All rights reserved.",
-            DefaultSeoTitle = "AutoVault Car Dealer",
-            DefaultMetaDescription = "Your trusted source for expert automotive services and quality cars. Find your perfect vehicle with our extensive inventory and professional service.",
-            CallCtaHeadline = HomePageContentDefaults.CallCtaHeadline
-        }, null, null, null);
+            if (restoreFrom != null)
+            {
+                cache.Remove(SiteSettingsService.CacheKey);
+                var (restored, restoreError) = await service.SaveAsync(ToEdit(restoreFrom), null, null, null);
+                if (!restored)
+                {
+                    throw new InvalidOperationException(restoreError ?? "Could not restore the original SiteSettings row.");
+                }
+            }
+        }
     }
+
+    private static SiteSettingsEditViewModel ToEdit(SiteSettings settings) => new()
+    {
+        SiteName = settings.SiteName,
+        DisplayPhone = settings.DisplayPhone,
+        E164Phone = settings.E164Phone,
+        WhatsAppDigits = settings.WhatsAppDigits,
+        Email = settings.Email,
+        AddressLine = settings.AddressLine,
+        MapsQuery = settings.MapsQuery,
+        LogoPath = settings.LogoPath,
+        FooterLogoPath = settings.FooterLogoPath,
+        FaviconPath = settings.FaviconPath,
+        FooterText = settings.FooterText,
+        CopyrightText = settings.CopyrightText,
+        FacebookUrl = settings.FacebookUrl,
+        InstagramUrl = settings.InstagramUrl,
+        YoutubeUrl = settings.YoutubeUrl,
+        TwitterUrl = settings.TwitterUrl,
+        DefaultSeoTitle = settings.DefaultSeoTitle,
+        DefaultMetaDescription = settings.DefaultMetaDescription,
+        CallCtaHeadline = settings.CallCtaHeadline
+    };
 
     private static ApplicationDbContext CreateDb() =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>()

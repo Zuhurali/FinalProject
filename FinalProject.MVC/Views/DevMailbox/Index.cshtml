@@ -1,0 +1,53 @@
+@model IReadOnlyList<FinalProject.MVC.Services.Interfaces.DevelopmentMailMessage>
+@{
+    ViewData["Title"] = "Development Mailbox - AutoVault";
+    var filterEmail = ViewData["FilterEmail"] as string;
+}
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Development Mailbox</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a href="#" class="current">Development Mailbox</a>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="contact-form">
+                    <h3 class="mb-3">Local confirmation inbox</h3>
+                    <p class="mb-4">
+                        This inbox is limited to signed-in Admin and SuperAdmin accounts while the site is running in Development.
+                        Message text is shown as plain text. Copy a confirmation or reset link from that text if you need it for local testing.
+                    </p>
+                    @if (!string.IsNullOrWhiteSpace(filterEmail))
+                    {
+                        <p class="mb-3">Showing messages for <strong>@filterEmail</strong>.</p>
+                    }
+                    @if (Model.Count == 0)
+                    {
+                        <div class="alert alert-warning" role="alert">No messages yet. Register or resend a confirmation email, then refresh this page.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var message in Model)
+                            {
+                                <li class="mb-3 pb-3" style="border-bottom:1px solid #e5e5e5;">
+                                    <div><strong>@message.Subject</strong></div>
+                                    <div>To: @message.ToEmail</div>
+                                    <div class="text-muted">@message.ReceivedAt.ToLocalTime().ToString("g")</div>
+                                    <a asp-action="Message" asp-route-id="@message.Id">Open message</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

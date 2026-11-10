@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.Controllers;
 using FinalProject.Data;
@@ -15,7 +16,7 @@ namespace FinalProject.Tests;
 public class FavoritesReviewsRatingsTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Marketplace_favorite_endpoints_require_authorization()
@@ -41,7 +42,7 @@ public class FavoritesReviewsRatingsTests
         {
             ["Marketplace:StoreInboxEmail"] = "unused@example.com"
         }).Build();
-        var marketplace = new MarketplaceService(db, config, new NotificationService(db));
+        var marketplace = new MarketplaceService(new FinalProjectRepository(db), new FinalProjectRepository(db), config, new NotificationService(new FinalProjectRepository(db)));
 
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 0);
@@ -115,7 +116,7 @@ public class FavoritesReviewsRatingsTests
     {
         await using var db = CreateDb();
         var config = new ConfigurationBuilder().Build();
-        var marketplace = new MarketplaceService(db, config, new NotificationService(db));
+        var marketplace = new MarketplaceService(new FinalProjectRepository(db), new FinalProjectRepository(db), config, new NotificationService(new FinalProjectRepository(db)));
         var users = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).Take(2).ToListAsync();
         Assert.True(users.Count >= 2);
         var product = await db.ShopProducts.AsNoTracking().FirstAsync(item => item.IsActive);
@@ -143,8 +144,8 @@ public class FavoritesReviewsRatingsTests
     public async Task Rating_and_review_require_real_shop_product_row()
     {
         await using var db = CreateDb();
-        var ratings = new ProductRatingService(db);
-        var reviews = new ProductReviewService(db);
+        var ratings = new ProductRatingService(new FinalProjectRepository(db));
+        var reviews = new ProductReviewService(new FinalProjectRepository(db), new FinalProjectRepository(db));
         var missingId = int.MaxValue - 7;
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
 
@@ -159,7 +160,7 @@ public class FavoritesReviewsRatingsTests
     public async Task Rating_persists_rejects_duplicate_and_inactive_product()
     {
         await using var db = CreateDb();
-        var ratings = new ProductRatingService(db);
+        var ratings = new ProductRatingService(new FinalProjectRepository(db));
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive);
         var originalActive = product.IsActive;
@@ -221,7 +222,7 @@ public class FavoritesReviewsRatingsTests
     public async Task Review_create_rejected_for_inactive_product_but_existing_can_edit()
     {
         await using var db = CreateDb();
-        var reviews = new ProductReviewService(db);
+        var reviews = new ProductReviewService(new FinalProjectRepository(db), new FinalProjectRepository(db));
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
         var taken = await db.ProductReviews.AsNoTracking()
             .Where(review => review.UserId == userId)
@@ -286,7 +287,7 @@ public class FavoritesReviewsRatingsTests
     {
         await using var db = CreateDb();
         var config = new ConfigurationBuilder().Build();
-        var marketplace = new MarketplaceService(db, config, new NotificationService(db));
+        var marketplace = new MarketplaceService(new FinalProjectRepository(db), new FinalProjectRepository(db), config, new NotificationService(new FinalProjectRepository(db)));
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstAsync();
         var inactive = await db.Cars.AsNoTracking()
             .FirstOrDefaultAsync(car => car.Status.ToLower() != "active");

@@ -502,40 +502,6 @@
             });
         });
 
-        // Add to Inquiry List functionality
-        $(document).on('click', '.add-to-cart-btn', function(e) {
-            e.preventDefault();
-            window.location = '/Shop/Details/' + $(this).data('product-id') + '#ask-showroom';
-            return;
-            const productId = $(this).data('product-id');
-            const btn = $(this);
-            const originalText = btn.html();
-            
-            // Disable button and show loading
-            btn.prop('disabled', true).html('Adding...');
-            
-            $.ajax({
-                url: '@Url.Action("AddToCart", "Shop")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ productId: productId, quantity: 1 }),
-                success: function(response) {
-                    if (response.success) {
-                        btn.html('Added!').css('background-color', '#28a745');
-                        setTimeout(function() {
-                            btn.prop('disabled', false).html(originalText).css('background-color', '');
-                        }, 1500);
-                    } else {
-                        alert(response.message);
-                        btn.prop('disabled', false).html(originalText);
-                    }
-                },
-                error: function() {
-                    alert('Error adding product to cart');
-                    btn.prop('disabled', false).html(originalText);
-                }
-            });
-        });
     });
 </script>
 }

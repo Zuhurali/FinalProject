@@ -130,6 +130,155 @@ public class EmailConfirmationTests
     }
 
     [Fact]
+    public async Task Expired_confirmation_tokens_are_rejected()
+    {
+        await using var harness = await EmailHarness.CreateAsync(tokenLifespan: TimeSpan.FromMilliseconds(1));
+        var controller = harness.CreateController();
+        await controller.Register("driver@example.com", "driver1", Password, Password);
+        var (userId, token) = ReadLink(harness.Sender.Sent[0].Text);
+
+        await Task.Delay(50);
+
+        var expired = await controller.ConfirmEmail(userId, token);
+        Assert.Equal("ConfirmEmailFailed", Assert.IsType<ViewResult>(expired).ViewName);
+        Assert.False((await harness.Users.FindByIdAsync(userId))!.EmailConfirmed);
+
+        var blocked = await controller.SignIn("driver@example.com", Password, false);
+        Assert.Equal(nameof(AccountController.SignIn), Assert.IsType<RedirectToActionResult>(blocked).ActionName);
+        Assert.Equal("Please confirm your email address before signing in.", controller.TempData["Error"]);
+    }
+
+    [Fact]
+    public async Task Production_does_not_expose_development_confirmation_links()
+    {
+        await using var harness = await EmailHarness.CreateAsync();
+        var unconfigured = new UnconfiguredEmailSender();
+        var controller = harness.CreateController(
+            emailSender: unconfigured,
+            environment: new FixedEnvironment(Environments.Production));
+
+        var result = await controller.Register("driver@example.com", "driver1", Password, Password);
+        Assert.Equal(nameof(AccountController.CheckEmail), Assert.IsType<RedirectToActionResult>(result).ActionName);
+        Assert.Null(controller.TempData["DevelopmentConfirmationLink"]);
+        Assert.Empty(unconfigured.Sent);
+
+        var checkEmail = controller.CheckEmail("driver@example.com");
+        var view = Assert.IsType<ViewResult>(checkEmail);
+        Assert.Null(view.ViewData["DevelopmentConfirmationLink"]);
+        Assert.False(view.ViewData["EmailConfigured"] as bool?);
+        Assert.False(view.ViewData["DevelopmentMailboxEnabled"] as bool?);
+        Assert.False((await harness.Users.FindByEmailAsync("driver@example.com"))!.EmailConfirmed);
+    }
+
+    [Fact]
+    public async Task Development_mailbox_delivers_confirmation_mail_without_shortcut_links()
+    {
+        await using var harness = await EmailHarness.CreateAsync();
+        var store = new DevelopmentMailStore();
+        var mailboxSender = new DevelopmentMailboxEmailSender(
+            store,
+            NullLogger<DevelopmentMailboxEmailSender>.Instance);
+        var requestServices = new ServiceCollection()
+            .AddSingleton<IDevelopmentMailStore>(store)
+            .BuildServiceProvider();
+
+        var controller = harness.CreateController(
+            emailSender: mailboxSender,
+            environment: new FixedEnvironment(Environments.Development));
+        controller.ControllerContext.HttpContext.RequestServices = requestServices;
+
+        var result = await controller.Register("driver@example.com", "driver1", Password, Password);
+        Assert.Equal(nameof(AccountController.CheckEmail), Assert.IsType<RedirectToActionResult>(result).ActionName);
+        Assert.Null(controller.TempData["DevelopmentConfirmationLink"]);
+        Assert.Equal(false, controller.TempData["ExternalEmailDelivered"]);
+        Assert.Equal(true, controller.TempData["LocalMailboxStored"]);
+
+        var delivered = Assert.Single(store.List("driver@example.com"));
+        Assert.Equal(AccountEmailContent.ConfirmationSubject, delivered.Subject);
+        Assert.Contains("/Account/ConfirmEmail?", delivered.TextBody, StringComparison.Ordinal);
+
+        var checkEmail = controller.CheckEmail("driver@example.com");
+        var view = Assert.IsType<ViewResult>(checkEmail);
+        Assert.True(view.ViewData["DevelopmentMailboxEnabled"] as bool?);
+        Assert.True(view.ViewData["EmailConfigured"] as bool?);
+        Assert.False(view.ViewData["ExternalProviderConfigured"] as bool?);
+        Assert.False(view.ViewData["ExternalEmailDelivered"] as bool?);
+        Assert.Null(view.ViewData["DevelopmentConfirmationLink"]);
+
+        var (userId, token) = ReadLink(delivered.TextBody);
+        var confirmed = await controller.ConfirmEmail(userId, token);
+        Assert.Equal("ConfirmEmail", Assert.IsType<ViewResult>(confirmed).ViewName);
+        Assert.True((await harness.Users.FindByEmailAsync("driver@example.com"))!.EmailConfirmed);
+    }
+
+    [Fact]
+    public async Task External_provider_success_is_reported_separately_from_mailbox_copies()
+    {
+        await using var harness = await EmailHarness.CreateAsync();
+        var store = new DevelopmentMailStore();
+        var external = new RecordingEmailSender();
+        var composite = new CompositeEmailSender(
+            external,
+            new FixedEnvironment(Environments.Development),
+            Options.Create(new EmailSettings
+            {
+                Host = "smtp.resend.com",
+                Port = 465,
+                Username = "resend",
+                Password = "re_test_key_not_real",
+                FromEmail = "beth.t@example.com",
+                Provider = "Resend",
+                Encryption = "SslOnConnect"
+            }),
+            NullLogger<CompositeEmailSender>.Instance,
+            new[] { store });
+
+        var requestServices = new ServiceCollection()
+            .AddSingleton<IDevelopmentMailStore>(store)
+            .BuildServiceProvider();
+        var controller = harness.CreateController(
+            emailSender: composite,
+            environment: new FixedEnvironment(Environments.Development));
+        controller.ControllerContext.HttpContext.RequestServices = requestServices;
+
+        await controller.Register("member@temp-mail.org", "tempuser1", Password, Password);
+        Assert.Equal(true, controller.TempData["ExternalEmailDelivered"]);
+        Assert.Equal(true, controller.TempData["ExternalProviderConfigured"]);
+        Assert.Equal(true, controller.TempData["LocalMailboxStored"]);
+        Assert.Null(controller.TempData["Error"]);
+        Assert.Single(external.Sent);
+        Assert.Equal("member@temp-mail.org", external.Sent[0].To);
+        Assert.Single(store.List("member@temp-mail.org"));
+
+        var checkEmail = controller.CheckEmail("member@temp-mail.org");
+        var view = Assert.IsType<ViewResult>(checkEmail);
+        Assert.True(view.ViewData["ExternalEmailDelivered"] as bool?);
+        Assert.True(view.ViewData["DevelopmentMailboxEnabled"] as bool?);
+    }
+
+    [Fact]
+    public async Task External_provider_failure_is_not_reported_as_successful_delivery()
+    {
+        await using var harness = await EmailHarness.CreateAsync();
+        var store = new DevelopmentMailStore();
+        var requestServices = new ServiceCollection()
+            .AddSingleton<IDevelopmentMailStore>(store)
+            .BuildServiceProvider();
+        var controller = harness.CreateController(
+            emailSender: new FailingExternalEmailSender(),
+            environment: new FixedEnvironment(Environments.Development));
+        controller.ControllerContext.HttpContext.RequestServices = requestServices;
+
+        await controller.Register("driver@example.com", "driver1", Password, Password);
+        Assert.Equal(false, controller.TempData["ExternalEmailDelivered"]);
+        Assert.Equal(true, controller.TempData["ExternalProviderConfigured"]);
+        Assert.Equal(
+            "The email could not be delivered through the configured SMTP server.",
+            controller.TempData["Error"]);
+        Assert.False((await harness.Users.FindByEmailAsync("driver@example.com"))!.EmailConfirmed);
+    }
+
+    [Fact]
     public async Task Resend_sends_a_new_message_without_revealing_whether_the_email_exists()
     {
         await using var harness = await EmailHarness.CreateAsync();
@@ -138,21 +287,58 @@ public class EmailConfirmationTests
         Assert.Single(harness.Sender.Sent);
 
         var known = await controller.ResendConfirmation(new ResendConfirmationViewModel { Email = "driver@example.com" });
-        Assert.Equal(nameof(AccountController.CheckEmail), Assert.IsType<RedirectToActionResult>(known).ActionName);
-        var knownMessage = controller.TempData["Success"]?.ToString();
+        var knownRedirect = Assert.IsType<RedirectToActionResult>(known);
+        Assert.Equal(nameof(AccountController.CheckEmail), knownRedirect.ActionName);
+        Assert.Equal("driver@example.com", knownRedirect.RouteValues?["email"]);
+        Assert.Equal(true, controller.TempData["ExternalEmailDelivered"]);
+        Assert.Null(controller.TempData["Success"]);
         Assert.Equal(2, harness.Sender.Sent.Count);
 
-        var throttled = await controller.ResendConfirmation(new ResendConfirmationViewModel { Email = "driver@example.com" });
+        // Fresh controller: in-app TempData persists across calls in this harness.
+        var throttledController = harness.CreateController();
+        var throttled = await throttledController.ResendConfirmation(new ResendConfirmationViewModel { Email = "driver@example.com" });
         Assert.IsType<RedirectToActionResult>(throttled);
-        Assert.Equal(knownMessage, controller.TempData["Success"]?.ToString());
+        var throttledMessage = throttledController.TempData["Success"]?.ToString();
+        Assert.Equal("If driver@example.com is waiting for confirmation, check that inbox and spam folder.", throttledMessage);
         Assert.Equal(2, harness.Sender.Sent.Count);
 
-        var unknown = await controller.ResendConfirmation(new ResendConfirmationViewModel { Email = "missing@example.com" });
+        var unknownController = harness.CreateController();
+        var unknown = await unknownController.ResendConfirmation(new ResendConfirmationViewModel { Email = "missing@example.com" });
         Assert.IsType<RedirectToActionResult>(unknown);
-        Assert.Equal(knownMessage, controller.TempData["Success"]?.ToString());
+        var unknownMessage = unknownController.TempData["Success"]?.ToString();
+        Assert.Equal("If missing@example.com is waiting for confirmation, check that inbox and spam folder.", unknownMessage);
         Assert.Equal(2, harness.Sender.Sent.Count);
         Assert.Null(await harness.Users.FindByEmailAsync("missing@example.com"));
-        Assert.DoesNotContain("does not exist", knownMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("does not exist", unknownMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Resend_issues_a_new_token_that_confirms_and_retires_the_previous_link()
+    {
+        await using var harness = await EmailHarness.CreateAsync();
+        var controller = harness.CreateController();
+        await controller.Register("driver@example.com", "driver1", Password, Password);
+        var (userId, originalToken) = ReadLink(harness.Sender.Sent[0].Text);
+
+        await controller.ResendConfirmation(new ResendConfirmationViewModel { Email = "driver@example.com" });
+        var (resentUserId, freshToken) = ReadLink(harness.Sender.Sent[1].Text);
+        Assert.Equal(userId, resentUserId);
+        Assert.NotEqual(originalToken, freshToken);
+
+        var stale = await controller.ConfirmEmail(userId, originalToken);
+        Assert.Equal("ConfirmEmailFailed", Assert.IsType<ViewResult>(stale).ViewName);
+        Assert.False((await harness.Users.FindByIdAsync(userId))!.EmailConfirmed);
+
+        var blocked = await controller.SignIn("driver@example.com", Password, false);
+        Assert.Equal(nameof(AccountController.SignIn), Assert.IsType<RedirectToActionResult>(blocked).ActionName);
+        Assert.Equal("Please confirm your email address before signing in.", controller.TempData["Error"]);
+
+        var confirmed = await controller.ConfirmEmail(userId, freshToken);
+        Assert.Equal("ConfirmEmail", Assert.IsType<ViewResult>(confirmed).ViewName);
+        Assert.True((await harness.Users.FindByIdAsync(userId))!.EmailConfirmed);
+
+        var signedIn = await controller.SignIn("driver@example.com", Password, false);
+        Assert.Equal("Home", Assert.IsType<RedirectToActionResult>(signedIn).ControllerName);
     }
 
     [Fact]
@@ -205,6 +391,42 @@ public class EmailConfirmationTests
         Assert.Null(resend.GetCustomAttribute<AuthorizeAttribute>());
     }
 
+    [Fact]
+    public void Public_auth_pages_do_not_link_the_development_mailbox()
+    {
+        var root = FindRepositoryRoot();
+        var account = Path.Combine(root, "FinalProject.MVC", "Views", "Account");
+        foreach (var name in new[] { "CheckEmail.cshtml", "ConfirmEmail.cshtml", "ConfirmEmailFailed.cshtml", "ResendConfirmation.cshtml", "SignIn.cshtml", "Register.cshtml" })
+        {
+            var text = File.ReadAllText(Path.Combine(account, name));
+            Assert.DoesNotContain("DevMailbox", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Open Development Mailbox", text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Development Mailbox", text, StringComparison.Ordinal);
+        }
+
+        var signIn = File.ReadAllText(Path.Combine(account, "SignIn.cshtml"));
+        Assert.Contains("Resend confirmation email", signIn, StringComparison.Ordinal);
+        var resend = File.ReadAllText(Path.Combine(account, "ResendConfirmation.cshtml"));
+        Assert.Contains("Send confirmation email", resend, StringComparison.Ordinal);
+        var check = File.ReadAllText(Path.Combine(account, "CheckEmail.cshtml"));
+        Assert.Contains("Confirm your account", check, StringComparison.Ordinal);
+
+        var controller = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "AccountController.cs"));
+        Assert.DoesNotContain("open the Development Mailbox", controller, StringComparison.Ordinal);
+        Assert.Contains("class DevMailboxController", File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "DevMailboxController.cs")), StringComparison.Ordinal);
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "FinalProject.slnx")))
+        {
+            dir = dir.Parent;
+        }
+
+        return dir?.FullName ?? throw new DirectoryNotFoundException("Could not find FinalProject.slnx.");
+    }
+
     private static (string UserId, string Token) ReadLink(string text)
     {
         var url = text.Split("Confirm Email: ", StringSplitOptions.None)[1].Trim().Split('\n', '\r')[0].Trim();
@@ -231,7 +453,7 @@ public class EmailConfirmationTests
         public RoleManager<IdentityRole> Roles { get; }
         public IMemoryCache Cache { get; }
 
-        public static async Task<EmailHarness> CreateAsync()
+        public static async Task<EmailHarness> CreateAsync(TimeSpan? tokenLifespan = null)
         {
             var services = new ServiceCollection();
             services.AddLogging();
@@ -255,6 +477,10 @@ public class EmailConfirmationTests
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = tokenLifespan ?? TimeSpan.FromDays(1);
+            });
             services.AddSingleton<IAuthenticationService, NoOpAuthenticationService>();
             var provider = services.BuildServiceProvider();
             var harness = new EmailHarness(provider, new RecordingEmailSender());
@@ -281,7 +507,9 @@ public class EmailConfirmationTests
             return (await Users.FindByIdAsync(user.Id))!;
         }
 
-        public AccountController CreateController()
+        public AccountController CreateController(
+            IEmailSender? emailSender = null,
+            IWebHostEnvironment? environment = null)
         {
             var httpContext = new DefaultHttpContext { RequestServices = Provider };
             httpContext.Request.Scheme = "https";
@@ -295,8 +523,8 @@ public class EmailConfirmationTests
                 notificationApi: null!,
                 carApi: null!,
                 tokenService: null!,
-                emailSender: Sender,
-                environment: new DevelopmentEnvironment(),
+                emailSender: emailSender ?? Sender,
+                environment: environment ?? new FixedEnvironment(Environments.Development),
                 cache: Cache,
                 conversations: null!,
                 logger: NullLogger<AccountController>.Instance,
@@ -326,6 +554,8 @@ public class EmailConfirmationTests
 
         public bool IsConfigured => true;
 
+        public bool IsExternalConfigured => true;
+
         public Task SendAsync(
             string toEmail,
             string subject,
@@ -336,6 +566,38 @@ public class EmailConfirmationTests
             Sent.Add((toEmail, subject, htmlBody, textBody));
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class UnconfiguredEmailSender : IEmailSender
+    {
+        public List<(string To, string Subject, string Html, string Text)> Sent { get; } = new();
+
+        public bool IsConfigured => false;
+
+        public bool IsExternalConfigured => false;
+
+        public Task SendAsync(
+            string toEmail,
+            string subject,
+            string htmlBody,
+            string textBody,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Email delivery is not configured.");
+    }
+
+    private sealed class FailingExternalEmailSender : IEmailSender
+    {
+        public bool IsConfigured => true;
+
+        public bool IsExternalConfigured => true;
+
+        public Task SendAsync(
+            string toEmail,
+            string subject,
+            string htmlBody,
+            string textBody,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("The email could not be delivered through the configured SMTP server.");
     }
 
     private sealed class RecordingUrlHelper : IUrlHelper
@@ -375,12 +637,14 @@ public class EmailConfirmationTests
         }
     }
 
-    private sealed class DevelopmentEnvironment : IWebHostEnvironment
+    private sealed class FixedEnvironment : IWebHostEnvironment
     {
+        public FixedEnvironment(string environmentName) => EnvironmentName = environmentName;
+
         public string ApplicationName { get; set; } = "FinalProject.MVC";
         public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
         public string WebRootPath { get; set; } = string.Empty;
-        public string EnvironmentName { get; set; } = Environments.Development;
+        public string EnvironmentName { get; set; }
         public string ContentRootPath { get; set; } = string.Empty;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }

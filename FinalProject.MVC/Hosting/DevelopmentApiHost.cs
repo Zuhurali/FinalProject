@@ -182,7 +182,31 @@ internal static class DevelopmentApiHost
     {
         try
         {
-            return Process.GetProcessesByName("FinalProject").Length > 0;
+            foreach (var process in Process.GetProcessesByName("FinalProject"))
+            {
+                try
+                {
+                    if (process.HasExited)
+                    {
+                        continue;
+                    }
+
+                    // Leftover processes that cannot be inspected still match the
+                    // process name. They are not a starting API and must not make
+                    // MVC wait until the readiness timeout.
+                    _ = process.StartTime;
+                    return true;
+                }
+                catch (Exception exception) when (exception is InvalidOperationException or Win32Exception or UnauthorizedAccessException)
+                {
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+
+            return false;
         }
         catch (InvalidOperationException)
         {
@@ -429,7 +453,7 @@ internal static class DevelopmentApiHost
     {
         try
         {
-            using var response = await ProbeClient.GetAsync(new Uri(new Uri(apiBaseUrl), "api/cars/lookups"), cancellationToken);
+            using var response = await ProbeClient.GetAsync(new Uri(new Uri(apiBaseUrl), "health/ready"), cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or InvalidOperationException)

@@ -18,80 +18,21 @@ public sealed class AdminShowroomController : ControllerBase
         _showroom = showroom;
     }
 
-    [HttpGet("requests")]
-    public async Task<ActionResult<IReadOnlyList<ShowroomRequestItemDto>>> ListRequests(
-        [FromQuery] string? status,
-        CancellationToken cancellationToken)
-    {
-        return Ok(await _showroom.ListRequestsAsync(status, cancellationToken));
-    }
-
-    [HttpGet("requests/{id:int}")]
-    public async Task<ActionResult<ShowroomRequestItemDto>> GetRequest(int id, CancellationToken cancellationToken)
-    {
-        var item = await _showroom.GetRequestAsync(id, cancellationToken);
-        return item == null ? NotFound(new { message = "Request not found." }) : Ok(item);
-    }
-
-    [HttpPatch("requests/{id:int}/status")]
-    public async Task<ActionResult<ShowroomRequestItemDto>> SetRequestStatus(
-        int id,
-        [FromBody] UpdateShowroomRequestStatusRequestDto body,
-        CancellationToken cancellationToken)
-    {
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
-
-        var (item, error) = await _showroom.SetRequestStatusAsync(id, body.Status, cancellationToken);
-        if (item == null && error == "Request not found.")
-        {
-            return NotFound(new { message = error });
-        }
-
-        return item == null ? BadRequest(new { message = error }) : Ok(item);
-    }
-
-    [HttpDelete("requests/{id:int}")]
-    public async Task<IActionResult> DeleteRequest(int id, CancellationToken cancellationToken)
-    {
-        var (found, error) = await _showroom.DeleteRequestAsync(id, cancellationToken);
-        return found ? NoContent() : NotFound(new { message = error ?? "Request not found." });
-    }
-
-    [HttpPost("requests/{id:int}/complete-sale")]
-    public async Task<ActionResult<ShowroomSaleItemDto>> CompleteRequestSale(
-        int id,
-        [FromBody] CompleteShowroomRequestSaleRequestDto? body,
-        CancellationToken cancellationToken)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Unauthorized();
-        }
-
-        var (sale, error) = await _showroom.CompleteRequestWithSaleAsync(
-            id,
-            userId,
-            body?.Note,
-            cancellationToken);
-        if (sale == null && error == "Request not found.")
-        {
-            return NotFound(new { message = error });
-        }
-
-        return sale == null ? BadRequest(new { message = error }) : Ok(sale);
-    }
-
     [HttpGet("sales")]
+    [ProducesResponseType(typeof(IReadOnlyList<ShowroomSaleItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<ShowroomSaleItemDto>>> ListSales(CancellationToken cancellationToken)
     {
         return Ok(await _showroom.ListSalesAsync(cancellationToken));
     }
 
     [HttpPost("sales")]
+    [ProducesResponseType(typeof(ShowroomSaleItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ShowroomSaleItemDto>> RecordSale(
         [FromBody] RecordShowroomSaleRequestDto request,
         CancellationToken cancellationToken)
@@ -112,6 +53,10 @@ public sealed class AdminShowroomController : ControllerBase
     }
 
     [HttpPost("sales/{id:int}/void")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> VoidSale(int id, CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

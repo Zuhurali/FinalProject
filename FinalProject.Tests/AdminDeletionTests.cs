@@ -1,3 +1,5 @@
+using FinalProject.MVC.Repositories.Implementations;
+using FinalProject.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.Data;
 using FinalProject.MVC.Controllers;
@@ -19,7 +21,6 @@ public class AdminDeletionTests
     public void Admin_delete_actions_require_Admin_or_SuperAdmin_and_post_with_antiforgery()
     {
         AssertAuthorizedPostDelete(typeof(AdminReviewsController), nameof(AdminReviewsController.Delete));
-        AssertAuthorizedPostDelete(typeof(AdminRequestsController), nameof(AdminRequestsController.Delete));
         AssertAuthorizedPostDelete(typeof(AdminInquiriesController), nameof(AdminInquiriesController.Delete));
         AssertAuthorizedPostDelete(typeof(AdminContactRequestsController), nameof(AdminContactRequestsController.Delete));
 
@@ -32,39 +33,10 @@ public class AdminDeletionTests
     }
 
     [Fact]
-    public async Task DeletePurchaseRequestAsync_removes_request_only_and_keeps_product()
-    {
-        await using var db = CreateShopDb();
-        var catalog = new ShopCatalogService(db);
-        var product = await SeedProductAsync(db);
-
-        var created = await catalog.SavePurchaseRequestAsync(new ShowroomPurchaseRequest
-        {
-            ProductId = product.Id,
-            CustomerName = "Nigar Aliyeva",
-            Email = "nigar-delete@example.com",
-            Phone = "+994 50 123 45 67",
-            Quantity = 1,
-            SubmissionKey = Guid.NewGuid()
-        });
-        Assert.True(created.Ok, created.Error);
-        Assert.NotNull(created.RequestId);
-
-        var saleCountBefore = await db.InPersonSales.CountAsync();
-        Assert.True(await catalog.DeletePurchaseRequestAsync(created.RequestId!.Value));
-
-        Assert.Empty(await db.ShowroomPurchaseRequests.Where(item => item.Id == created.RequestId).ToListAsync());
-        Assert.NotNull(await db.ShopProducts.AsNoTracking().SingleOrDefaultAsync(item => item.Id == product.Id));
-        Assert.Equal(saleCountBefore, await db.InPersonSales.CountAsync());
-        Assert.False(await catalog.DeletePurchaseRequestAsync(created.RequestId.Value));
-        Assert.False(await catalog.DeletePurchaseRequestAsync(99999));
-    }
-
-    [Fact]
     public async Task DeleteInquiryAsync_removes_question_only_and_keeps_product()
     {
         await using var db = CreateShopDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await SeedProductAsync(db);
 
         var (saved, saveError) = await catalog.SaveInquiryAsync(new ProductInquiry
@@ -115,7 +87,7 @@ public class AdminDeletionTests
         });
         await db.SaveChangesAsync();
 
-        var reviews = new ProductReviewService(db);
+        var reviews = new ProductReviewService(new FinalProjectRepository(db), new FinalProjectRepository(db));
 
         var (created, createError) = await reviews.SaveReviewAsync(42, null, "member-user", "Original admin-delete review.");
         Assert.True(created != null, createError);

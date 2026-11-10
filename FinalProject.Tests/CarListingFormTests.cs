@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using System.ComponentModel.DataAnnotations;
 using FinalProject.Commerce;
 using FinalProject.Data;
@@ -112,7 +113,7 @@ public class CarListingFormTests
         db.IdentityUsers.Add(new IdentityUserReference { Id = "owner-1", Email = "owner@autovault.test" });
         await db.SaveChangesAsync();
 
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
         var created = await service.CreateAsync("owner-1", ValidRequest(brand.Id, category.Id));
 
         Assert.NotNull(created);

@@ -74,14 +74,7 @@
                     <span>$@Model.Price.ToString("0.00")</span>
                 }
             </p>
-            @if (Model.Quantity > 0)
-            {
-                <a class="av-card__cta" href="@(detailsUrl)#request-to-buy">Request to Buy</a>
-            }
-            else
-            {
-                <a class="av-card__cta av-card__cta--ghost" href="@detailsUrl">View details</a>
-            }
+            <a class="av-card__cta@(Model.Quantity > 0 ? "" : " av-card__cta--ghost")" href="@detailsUrl">View details</a>
         </div>
     </div>
 </article>

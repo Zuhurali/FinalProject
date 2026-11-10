@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Data;
 using FinalProject.Models.Entities;
 using FinalProject.MVC.Hubs;
@@ -114,7 +115,7 @@ public class ConversationAuthorizationTests
     }
 
     private static MarketplaceService CreateService(FinalProjectDbContext context) =>
-        new(context, EmptyConfig(), new NotificationService(context));
+        new(new FinalProjectRepository(context), new FinalProjectRepository(context), EmptyConfig(), new NotificationService(new FinalProjectRepository(context)));
 
     private static FinalProjectDbContext CreateContext()
     {

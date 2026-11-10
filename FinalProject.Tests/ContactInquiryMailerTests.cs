@@ -35,7 +35,7 @@ public class ContactInquiryMailerTests
 
         Assert.True(sent);
         Assert.Null(error);
-        Assert.Equal("zuhraliim@code.edu.az", sender.LastTo);
+        Assert.Equal("barisking333@gmail.com", sender.LastTo);
         Assert.Contains("Ada Lovelace", sender.LastText, StringComparison.Ordinal);
         Assert.Contains("ada@example.com", sender.LastText, StringComparison.Ordinal);
         Assert.Contains("Brake pads", sender.LastText, StringComparison.Ordinal);
@@ -102,6 +102,8 @@ public class ContactInquiryMailerTests
         public Exception? Throw { get; set; }
 
         public bool IsConfigured => Configured;
+
+        public bool IsExternalConfigured => Configured;
 
         public string? LastTo { get; private set; }
 

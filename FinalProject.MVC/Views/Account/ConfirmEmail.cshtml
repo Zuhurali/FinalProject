@@ -1,5 +1,7 @@
 @{
     ViewData["Title"] = "Email Confirmed - AutoVault";
+    var confirmedEmail = ViewData["ConfirmedEmail"] as string
+        ?? TempData["ConfirmedEmail"] as string;
 }
 <div class="rts-breadcrumb-area service jarallax">
     <div class="container">
@@ -18,8 +20,17 @@
             <div class="col-lg-6">
                 <div class="contact-form text-center">
                     <h3 class="mb-4">Your email address is confirmed</h3>
-                    <div class="alert alert-success" role="alert">Your AutoVault account is ready. You can now sign in.</div>
-                    <a class="submit__btn" asp-action="SignIn">Sign In</a>
+                    <div class="alert alert-success" role="alert">
+                        Your AutoVault account is ready. You can now sign in.
+                        @if (!string.IsNullOrWhiteSpace(confirmedEmail))
+                        {
+                            <br />
+                            <strong>@confirmedEmail</strong>
+                        }
+                    </div>
+                    <a class="submit__btn"
+                       asp-action="SignIn"
+                       asp-route-email="@confirmedEmail">Sign In</a>
                 </div>
             </div>
         </div>

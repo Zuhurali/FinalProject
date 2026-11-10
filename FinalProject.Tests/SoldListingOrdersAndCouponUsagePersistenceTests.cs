@@ -1,3 +1,5 @@
+using FinalProject.MVC.Repositories.Implementations;
+using FinalProject.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.Data;
 using FinalProject.DTOs;
@@ -22,7 +24,7 @@ namespace FinalProject.Tests;
 public class SoldListingOrdersAndCouponUsagePersistenceTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void SoldCar_and_ShopThree_sources_use_sql_catalog_not_hardcoded_ids()
@@ -42,15 +44,15 @@ public class SoldListingOrdersAndCouponUsagePersistenceTests
     }
 
     [Fact]
-    public void Admin_orders_surface_is_legacy_archive_for_Admin_or_SuperAdmin()
+    public void Admin_orders_surface_was_removed_and_redirects_for_Admin_or_SuperAdmin()
     {
         Assert.Equal("Admin,SuperAdmin", typeof(AdminOrdersController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.NotNull(typeof(AdminOrdersController).GetMethod(nameof(AdminOrdersController.Index)));
-        Assert.NotNull(typeof(AdminOrdersController).GetMethod(nameof(AdminOrdersController.Details)));
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-        var view = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminOrders", "Index.cshtml"));
-        Assert.Contains("Legacy order archive", view, StringComparison.Ordinal);
-        Assert.Contains("does <strong>not</strong> take online payment", view, StringComparison.Ordinal);
+        var layout = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_AdminLayout.cshtml"));
+        Assert.DoesNotContain("Legacy Orders", layout, StringComparison.Ordinal);
+        Assert.DoesNotContain("AdminCoupons", layout, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Coupons<", layout, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -61,7 +63,7 @@ public class SoldListingOrdersAndCouponUsagePersistenceTests
             .Where(car => car.Status == "Sold")
             .Select(car => car.Id)
             .ToListAsync();
-        var service = new CarService(db, new SilentNotifications());
+        var service = new CarService(new FinalProjectRepository(db), new SilentNotifications());
 
         var page = await service.QueryAsync(new CarListQueryDto
         {
@@ -82,8 +84,8 @@ public class SoldListingOrdersAndCouponUsagePersistenceTests
     public async Task Orders_and_coupon_usages_are_readable_from_sql_for_admin_surfaces()
     {
         await using var db = CreateMvcDb();
-        var orders = new OrderService(db, new CouponService(db));
-        var coupons = new CouponService(db);
+        var orders = new OrderService(new ApplicationRepository(db), new CouponService(new ApplicationRepository(db)));
+        var coupons = new CouponService(new ApplicationRepository(db));
 
         var recent = await orders.GetRecentOrdersAsync(take: 25);
         var sqlOrderCount = await db.Orders.AsNoTracking().CountAsync();
@@ -120,7 +122,7 @@ public class SoldListingOrdersAndCouponUsagePersistenceTests
         var userId = await db.IdentityUsers.AsNoTracking().Select(user => user.Id).FirstOrDefaultAsync();
         Assert.False(string.IsNullOrWhiteSpace(userId));
 
-        var notifications = new NotificationService(db);
+        var notifications = new NotificationService(new FinalProjectRepository(db));
         var marker = $"sql-notify-{Guid.NewGuid():N}";
         var created = await notifications.CreateMessageNotificationAsync(
             userId!,

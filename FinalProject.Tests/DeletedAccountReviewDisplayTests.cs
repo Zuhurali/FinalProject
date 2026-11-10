@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.Models.Entities;
@@ -13,7 +14,7 @@ public class DeletedAccountReviewDisplayTests
     public async Task Active_member_reviews_show_normal_author_name()
     {
         await using var db = await SeedAsync();
-        var reviews = new ProductReviewService(db);
+        var reviews = new ProductReviewService(new FinalProjectRepository(db), new FinalProjectRepository(db));
 
         var list = await reviews.GetReviewsAsync(1, currentUserId: null, includeHidden: false);
         var active = Assert.Single(list!, item => item.Content == "Great brake pads.");
@@ -27,8 +28,8 @@ public class DeletedAccountReviewDisplayTests
     public async Task Deleted_member_reviews_show_Deleted_Account_and_keep_content_stars_and_dates()
     {
         await using var db = await SeedAsync();
-        var reviews = new ProductReviewService(db);
-        var ratings = new ProductRatingService(db);
+        var reviews = new ProductReviewService(new FinalProjectRepository(db), new FinalProjectRepository(db));
+        var ratings = new ProductRatingService(new FinalProjectRepository(db));
 
         var stored = await db.ProductReviews.AsNoTracking()
             .SingleAsync(review => review.UserId == "deleted-user");
@@ -56,7 +57,7 @@ public class DeletedAccountReviewDisplayTests
     public async Task Public_review_output_does_not_expose_deleted_user_personal_information()
     {
         await using var db = await SeedAsync();
-        var reviews = new ProductReviewService(db);
+        var reviews = new ProductReviewService(new FinalProjectRepository(db), new FinalProjectRepository(db));
 
         var list = await reviews.GetReviewsAsync(1, currentUserId: null, includeHidden: false);
         var deleted = Assert.Single(list!, item => item.Content == "Solid value for money.");
@@ -79,7 +80,7 @@ public class DeletedAccountReviewDisplayTests
     public async Task Product_average_rating_still_includes_deleted_account_ratings()
     {
         await using var db = await SeedAsync();
-        var ratings = new ProductRatingService(db);
+        var ratings = new ProductRatingService(new FinalProjectRepository(db));
 
         var summary = await ratings.GetProductRatingsAsync(1);
         Assert.Equal(2, summary!.TotalCount);

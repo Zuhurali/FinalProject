@@ -16,8 +16,6 @@ public sealed class AdminDashboardViewModel
 
     public int OpenProductQuestions { get; set; }
 
-    public int OpenPurchaseRequests { get; set; }
-
     public int RecordedSales { get; set; }
 
     public int ActiveCampaigns { get; set; }
@@ -119,9 +117,6 @@ public sealed class AdminUserDetailsViewModel
     public bool ListingsUnavailable { get; set; }
 
     public IReadOnlyList<AdminUserRequestRow> ContactRequests { get; set; } =
-        Array.Empty<AdminUserRequestRow>();
-
-    public IReadOnlyList<AdminUserRequestRow> PurchaseRequests { get; set; } =
         Array.Empty<AdminUserRequestRow>();
 }
 

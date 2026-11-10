@@ -6,6 +6,7 @@
     'use strict';
 
     var PHONE_ERROR = 'Enter a valid phone number.';
+    var COUNTRY_PHONE_ERROR = 'Enter a valid phone number for the selected country. Extra digits are not allowed.';
     var GENERIC_ERROR = 'Something went wrong. Please try again or use the contact page.';
     var VALIDATION_SUMMARY = 'Please correct the highlighted fields.';
     var SUCCESS_FALLBACK = 'Thank you. Your message was sent.';
@@ -70,6 +71,31 @@
             return false;
         }
         return /^\+?(?:[\s\-()]*\d){7,15}[\s\-()]*$/.test(phone);
+    }
+
+    function selectedPhoneOption($form) {
+        var select = $form.find('[name="phoneCountry"]')[0];
+        if (!select || select.selectedIndex < 0) {
+            return null;
+        }
+        return select.options[select.selectedIndex] || null;
+    }
+
+    function phoneErrorFor($form) {
+        return selectedPhoneOption($form) ? COUNTRY_PHONE_ERROR : PHONE_ERROR;
+    }
+
+    function isValidContactPhone($form, value) {
+        var option = selectedPhoneOption($form);
+        if (!option) {
+            return isValidPhone(value);
+        }
+        if (option.value === 'OTHER') {
+            return isValidPhone(value);
+        }
+        var expected = Number(option.getAttribute('data-national') || option.getAttribute('data-max-digits') || '0');
+        var digits = String(value || '').replace(/\D/g, '');
+        return expected > 0 && digits.length === expected;
     }
 
     function clearFieldErrors($form) {
@@ -185,8 +211,8 @@
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             errors.email = 'Enter a valid email address.';
         }
-        if (!isValidPhone(phone)) {
-            errors.phone = PHONE_ERROR;
+        if (!isValidContactPhone($form, phone)) {
+            errors.phone = phoneErrorFor($form);
         }
         if (car.length < 2) {
             errors.car = 'Tell us which part or car you are interested in.';
@@ -292,9 +318,9 @@
                     $error.text('').attr('hidden', true);
                     return;
                 }
-                if (!isValidPhone(value)) {
+                if (!isValidContactPhone($form, value)) {
                     $phone.addClass('is-invalid');
-                    $error.text(PHONE_ERROR).removeAttr('hidden');
+                    $error.text(phoneErrorFor($form)).removeAttr('hidden');
                 } else {
                     $phone.removeClass('is-invalid');
                     $error.text('').attr('hidden', true);

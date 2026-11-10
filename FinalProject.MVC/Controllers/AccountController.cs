@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using FinalProject.MVC.Configuration;
 using FinalProject.MVC.Hubs;
@@ -144,15 +145,24 @@ namespace FinalProject.MVC.Controllers
         }
 
         [HttpGet]
-        public IActionResult SignIn(string? returnUrl = null)
+        public async Task<IActionResult> SignIn(string? returnUrl = null)
         {
-            if (User.Identity?.IsAuthenticated == true)
+            if (await SignedInUserMayEnterAsync())
             {
                 return RedirectToAction(nameof(Index));
             }
 
             ViewData["Title"] = "Sign In - AutoVault";
             ViewData["ReturnUrl"] = returnUrl;
+            // Keep the confirmed email visible (?email=... or TempData). Do not add a second
+            // string parameter here — it collides with POST SignIn(identifier, password).
+            var rememberedEmail = Request.Query["email"].FirstOrDefault()
+                ?? TempData["ConfirmedEmail"] as string;
+            if (!string.IsNullOrWhiteSpace(rememberedEmail))
+            {
+                ViewData["Identifier"] = rememberedEmail.Trim();
+            }
+
             return View();
         }
 
@@ -181,20 +191,13 @@ namespace FinalProject.MVC.Controllers
         {
             ViewData["Title"] = "Sign In - AutoVault";
 
-            if (User.Identity?.IsAuthenticated == true)
+            if (await SignedInUserMayEnterAsync())
             {
                 return RedirectToAction(nameof(Index));
             }
 
-            IActionResult InvalidLogin()
-            {
-                if (fromAccount)
-                {
-                    return RedirectToAction(nameof(Index));
-                }
-
-                return RedirectToAction(nameof(SignIn), new { returnUrl });
-            }
+            IActionResult InvalidLogin() =>
+                RedirectToAction(nameof(SignIn), new { returnUrl });
 
             ViewData["ReturnUrl"] = returnUrl;
             identifier = string.IsNullOrWhiteSpace(identifier) ? email : identifier;
@@ -248,10 +251,27 @@ namespace FinalProject.MVC.Controllers
 
             var result = await _signInManager.PasswordSignInAsync(user, password, rememberMe, lockoutOnFailure: true);
 
+            if (result.IsNotAllowed || !user.EmailConfirmed)
+            {
+                await _signInManager.SignOutAsync();
+                TempData["Error"] = "Please confirm your email address before signing in.";
+                TempData["UnconfirmedEmail"] = user.Email;
+                return InvalidLogin();
+            }
+
             if (result.Succeeded)
             {
-                user.LastLoginAt = DateTime.UtcNow;
-                await _userManager.UpdateAsync(user);
+                var fresh = await _userManager.FindByIdAsync(user.Id);
+                if (fresh == null || !fresh.EmailConfirmed)
+                {
+                    await _signInManager.SignOutAsync();
+                    TempData["Error"] = "Please confirm your email address before signing in.";
+                    TempData["UnconfirmedEmail"] = user.Email;
+                    return InvalidLogin();
+                }
+
+                fresh.LastLoginAt = DateTime.UtcNow;
+                await _userManager.UpdateAsync(fresh);
 
                 if (IsSafeReturnUrl(returnUrl))
                 {
@@ -269,6 +289,27 @@ namespace FinalProject.MVC.Controllers
 
             TempData["Error"] = "The email, username, or password is incorrect.";
             return InvalidLogin();
+        }
+
+        /// <summary>
+        /// Confirmed, active accounts may continue. Anyone else is signed out first
+        /// so an old cookie cannot skip the email-confirmation check.
+        /// </summary>
+        private async Task<bool> SignedInUserMayEnterAsync()
+        {
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                return false;
+            }
+
+            var current = await _userManager.GetUserAsync(User);
+            if (current is { EmailConfirmed: true, IsDeleted: false })
+            {
+                return true;
+            }
+
+            await _signInManager.SignOutAsync();
+            return false;
         }
 
         [HttpGet]
@@ -323,10 +364,56 @@ namespace FinalProject.MVC.Controllers
                 return InvalidRegistration();
             }
 
+            email = email.Trim();
+            username = username.Trim();
+
+            // Soft-deleted accounts still occupy AspNetUsers rows for history. Reclaim the
+            // same email instead of blocking registration with "already registered".
+            var existingByEmail = await _userManager.FindByEmailAsync(email);
+            if (existingByEmail != null)
+            {
+                if (existingByEmail.IsDeleted)
+                {
+                    return await CompleteRegistrationForExistingSoftDeletedAsync(
+                        existingByEmail,
+                        email,
+                        username,
+                        password,
+                        firstName,
+                        lastName,
+                        InvalidRegistration);
+                }
+
+                if (!existingByEmail.EmailConfirmed)
+                {
+                    TempData["Success"] =
+                        "That email is already registered but not confirmed yet. Open the confirmation email, or resend it below.";
+                    var pending = await SendConfirmationAsync(existingByEmail);
+                    ApplyConfirmationTempData(pending);
+                    return RedirectToAction(nameof(CheckEmail), new { email });
+                }
+
+                TempData["Error"] = "That email address is already registered.";
+                return InvalidRegistration();
+            }
+
+            var existingByUsername = await _userManager.FindByNameAsync(username);
+            if (existingByUsername != null)
+            {
+                if (!existingByUsername.IsDeleted)
+                {
+                    TempData["Error"] = "That username is already taken.";
+                    return InvalidRegistration();
+                }
+
+                SoftDeletedAccountIdentity.ReleaseLoginIdentifiers(existingByUsername);
+                await _userManager.UpdateAsync(existingByUsername);
+            }
+
             var user = new ApplicationUser
             {
-                UserName = username.Trim(),
-                Email = email.Trim(),
+                UserName = username,
+                Email = email,
                 FirstName = firstName,
                 LastName = lastName,
                 CreatedAt = DateTime.UtcNow
@@ -351,17 +438,93 @@ namespace FinalProject.MVC.Controllers
                     return InvalidRegistration();
                 }
 
-                var developmentLink = await SendConfirmationAsync(user);
-                if (!string.IsNullOrWhiteSpace(developmentLink))
-                {
-                    TempData["DevelopmentConfirmationLink"] = developmentLink;
-                }
-
+                var confirmation = await SendConfirmationAsync(user);
+                ApplyConfirmationTempData(confirmation);
                 return RedirectToAction(nameof(CheckEmail), new { email = user.Email });
             }
 
             TempData["Error"] = string.Join(" ", result.Errors.Select(RegistrationMessage));
             return InvalidRegistration();
+        }
+
+        private async Task<IActionResult> CompleteRegistrationForExistingSoftDeletedAsync(
+            ApplicationUser user,
+            string email,
+            string username,
+            string password,
+            string? firstName,
+            string? lastName,
+            Func<IActionResult> invalidRegistration)
+        {
+            var usernameOwner = await _userManager.FindByNameAsync(username);
+            if (usernameOwner != null
+                && !string.Equals(usernameOwner.Id, user.Id, StringComparison.Ordinal)
+                && !usernameOwner.IsDeleted)
+            {
+                TempData["Error"] = "That username is already taken.";
+                return invalidRegistration();
+            }
+
+            if (usernameOwner != null
+                && !string.Equals(usernameOwner.Id, user.Id, StringComparison.Ordinal)
+                && usernameOwner.IsDeleted)
+            {
+                SoftDeletedAccountIdentity.ReleaseLoginIdentifiers(usernameOwner);
+                await _userManager.UpdateAsync(usernameOwner);
+            }
+
+            user.IsDeleted = false;
+            user.DeletedAt = null;
+            user.LockoutEnd = null;
+            user.LockoutEnabled = true;
+            user.AccessFailedCount = 0;
+            user.Email = email;
+            user.UserName = username;
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            user.EmailConfirmed = false;
+            user.NormalizedEmail = _userManager.NormalizeEmail(email);
+            user.NormalizedUserName = _userManager.NormalizeName(username);
+
+            if (await _userManager.HasPasswordAsync(user))
+            {
+                await _userManager.RemovePasswordAsync(user);
+            }
+
+            var passwordResult = await _userManager.AddPasswordAsync(user, password);
+            if (!passwordResult.Succeeded)
+            {
+                TempData["Error"] = string.Join(" ", passwordResult.Errors.Select(RegistrationMessage));
+                return invalidRegistration();
+            }
+
+            var update = await _userManager.UpdateAsync(user);
+            if (!update.Succeeded)
+            {
+                TempData["Error"] = string.Join(" ", update.Errors.Select(RegistrationMessage));
+                return invalidRegistration();
+            }
+
+            if (!await _roleManager.RoleExistsAsync(AppRoles.Member))
+            {
+                TempData["Error"] = "The member role is not available. Please try again.";
+                return invalidRegistration();
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, AppRoles.Member))
+            {
+                var roleResult = await _userManager.AddToRoleAsync(user, AppRoles.Member);
+                if (!roleResult.Succeeded)
+                {
+                    TempData["Error"] = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                    return invalidRegistration();
+                }
+            }
+
+            await _userManager.UpdateSecurityStampAsync(user);
+            var confirmation = await SendConfirmationAsync(user);
+            ApplyConfirmationTempData(confirmation);
+            return RedirectToAction(nameof(CheckEmail), new { email = user.Email });
         }
 
         [HttpGet]
@@ -374,10 +537,13 @@ namespace FinalProject.MVC.Controllers
 
             ViewData["Title"] = "Check Your Email - AutoVault";
             ViewData["Email"] = email;
-            if (TempData["DevelopmentConfirmationLink"] is string link && !string.IsNullOrWhiteSpace(link))
-            {
-                ViewData["DevelopmentConfirmationLink"] = link;
-            }
+            var developmentMailbox = HttpContext.RequestServices.GetService<IDevelopmentMailStore>();
+            ViewData["DevelopmentMailboxEnabled"] = developmentMailbox != null && _environment.IsDevelopment();
+            ViewData["ExternalProviderConfigured"] = _emailSender.IsExternalConfigured;
+            ViewData["ExternalEmailDelivered"] = TempData["ExternalEmailDelivered"] as bool? == true;
+            ViewData["LocalMailboxStored"] = TempData["LocalMailboxStored"] as bool? == true;
+            // Discard any leftover shortcut confirmation link — confirm only via the email.
+            _ = TempData["DevelopmentConfirmationLink"];
 
             ViewData["EmailConfigured"] = _emailSender.IsConfigured;
             return View();
@@ -404,6 +570,21 @@ namespace FinalProject.MVC.Controllers
             }
 
             await _userManager.UpdateSecurityStampAsync(user);
+
+            // If the member skipped optional names, keep a readable name from the confirmed email.
+            if (string.IsNullOrWhiteSpace(user.FirstName) && string.IsNullOrWhiteSpace(user.LastName)
+                && !string.IsNullOrWhiteSpace(user.Email))
+            {
+                var localPart = user.Email.Split('@')[0].Trim();
+                if (!string.IsNullOrWhiteSpace(localPart))
+                {
+                    user.FirstName = localPart;
+                    await _userManager.UpdateAsync(user);
+                }
+            }
+
+            TempData["ConfirmedEmail"] = user.Email;
+            ViewData["ConfirmedEmail"] = user.Email;
             return View("ConfirmEmail");
         }
 
@@ -442,12 +623,20 @@ namespace FinalProject.MVC.Controllers
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user != null && !user.EmailConfirmed && !user.IsDeleted)
                 {
-                    await SendConfirmationAsync(user);
+                    var confirmation = await SendConfirmationAsync(user);
+                    ApplyConfirmationTempData(confirmation);
                 }
             }
 
-            TempData["Success"] = "If an account with that email address is waiting for confirmation, a new confirmation email has been sent.";
-            return RedirectToAction(nameof(CheckEmail));
+            // Do not claim the message was sent when the external provider did not deliver it.
+            if (TempData["Error"] == null
+                && TempData["ExternalEmailDelivered"] as bool? != true
+                && _emailSender.IsExternalConfigured)
+            {
+                TempData["Success"] = $"If {email} is waiting for confirmation, check that inbox and spam folder.";
+            }
+
+            return RedirectToAction(nameof(CheckEmail), new { email });
         }
 
         [HttpPost]
@@ -1283,31 +1472,6 @@ namespace FinalProject.MVC.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> PurchaseRequests(CancellationToken cancellationToken)
-        {
-            ViewData["Title"] = "My Purchase Requests - AutoVault";
-            ViewData["BodyClass"] = "account-page-body";
-
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return Challenge();
-            }
-
-            if (!string.IsNullOrWhiteSpace(user.Email))
-            {
-                await _shopCatalog.ClaimOrphanedPurchaseRequestsByEmailAsync(
-                    user.Id,
-                    user.Email,
-                    cancellationToken);
-            }
-
-            var requests = await _shopCatalog.GetPurchaseRequestsForUserAsync(user.Id, cancellationToken);
-            return View(requests);
-        }
-
-        [Authorize]
-        [HttpGet]
         public async Task<IActionResult> ProductQuestions(CancellationToken cancellationToken)
         {
             ViewData["Title"] = "My Product Questions - AutoVault";
@@ -1447,11 +1611,13 @@ namespace FinalProject.MVC.Controllers
                 return View(nameof(Profile), await BuildProfileViewModelAsync(user));
             }
 
-            // Soft-delete only: keep AspNetUsers row and all historical associations.
+            // Soft-delete only: keep AspNetUsers row and all historical associations,
+            // but release email/username so a new member can register with them.
             user.IsDeleted = true;
             user.DeletedAt = DateTime.UtcNow;
             user.LockoutEnabled = true;
             user.LockoutEnd = DateTimeOffset.MaxValue;
+            SoftDeletedAccountIdentity.ReleaseLoginIdentifiers(user);
             var update = await _userManager.UpdateAsync(user);
             if (!update.Succeeded)
             {
@@ -1528,47 +1694,153 @@ namespace FinalProject.MVC.Controllers
             };
         }
 
-        private async Task<string?> SendConfirmationAsync(ApplicationUser user)
+        private const string ConfirmationDeliveryFailedMessage =
+            "The confirmation email could not be delivered by the email provider. Please try Resend confirmation in a few minutes, and check spam if a later attempt succeeds.";
+
+        private void ApplyConfirmationTempData(ConfirmationSendResult confirmation)
+        {
+            TempData["ExternalEmailDelivered"] = confirmation.ExternalDelivered;
+            TempData["LocalMailboxStored"] = confirmation.LocalMailboxStored;
+            TempData["ExternalProviderConfigured"] = confirmation.ExternalProviderConfigured;
+
+            if (confirmation.ExternalProviderConfigured && !confirmation.ExternalDelivered)
+            {
+                TempData["Error"] = string.IsNullOrWhiteSpace(confirmation.ProviderError)
+                    ? ConfirmationDeliveryFailedMessage
+                    : confirmation.ProviderError;
+            }
+            else if (!confirmation.ExternalProviderConfigured && !confirmation.LocalMailboxStored)
+            {
+                TempData["Error"] = "Email delivery is not configured. No confirmation email was sent.";
+            }
+        }
+
+        private async Task<ConfirmationSendResult> SendConfirmationAsync(ApplicationUser user)
         {
             if (string.IsNullOrWhiteSpace(user.Email))
             {
-                return null;
+                return ConfirmationSendResult.Failed(externalConfigured: false);
             }
 
+            // Rotate the stamp so only the link from this send can confirm the account.
+            await _userManager.UpdateSecurityStampAsync(user);
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var link = BuildPublicLink(nameof(ConfirmEmail), new { userId = user.Id, token = IdentityTokenCodec.Encode(token) });
             if (string.IsNullOrWhiteSpace(link))
             {
-                return null;
+                return ConfirmationSendResult.Failed(_emailSender.IsExternalConfigured);
             }
 
+            var externalConfigured = _emailSender.IsExternalConfigured;
             if (!_emailSender.IsConfigured)
             {
-                return _environment.IsDevelopment() ? link : null;
+                return ConfirmationSendResult.NotConfigured();
             }
 
             try
             {
                 var (html, text) = AccountEmailContent.Confirmation(link);
                 await _emailSender.SendAsync(user.Email, AccountEmailContent.ConfirmationSubject, html, text);
+
+                var localStored = _environment.IsDevelopment()
+                    && HttpContext.RequestServices.GetService<IDevelopmentMailStore>() != null;
+                if (externalConfigured)
+                {
+                    return ConfirmationSendResult.ExternalSent(localStored);
+                }
+
+                return ConfirmationSendResult.LocalMailboxOnly();
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Confirmation email could not be sent to {Recipient}.", user.Email);
+                var localStored = _environment.IsDevelopment()
+                    && HttpContext.RequestServices.GetService<IDevelopmentMailStore>() is IDevelopmentMailStore store
+                    && store.List(user.Email).Count > 0;
+                return ConfirmationSendResult.Failed(
+                    externalConfigured,
+                    localStored,
+                    SanitizeProviderError(ex));
+            }
+        }
+
+        private static string SanitizeProviderError(Exception exception)
+        {
+            var message = exception.Message?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return ConfirmationDeliveryFailedMessage;
             }
 
-            return null;
+            // Never echo values that look like secrets.
+            if (message.Contains("re_", StringComparison.OrdinalIgnoreCase)
+                || (message.Contains("Password", StringComparison.OrdinalIgnoreCase) && message.Contains('=')))
+            {
+                return ConfirmationDeliveryFailedMessage + " See server logs for the provider response.";
+            }
+
+            return message.Length <= 400
+                ? message
+                : message[..400] + "…";
+        }
+
+        private readonly record struct ConfirmationSendResult(
+            bool ExternalDelivered,
+            bool LocalMailboxStored,
+            bool ExternalProviderConfigured,
+            string? ProviderError = null)
+        {
+            public static ConfirmationSendResult ExternalSent(bool localMailboxStored) =>
+                new(true, localMailboxStored, true);
+
+            public static ConfirmationSendResult LocalMailboxOnly() =>
+                new(false, true, false);
+
+            public static ConfirmationSendResult NotConfigured() =>
+                new(false, false, false);
+
+            public static ConfirmationSendResult Failed(
+                bool externalConfigured,
+                bool localMailboxStored = false,
+                string? providerError = null) =>
+                new(false, localMailboxStored, externalConfigured, providerError);
         }
 
         private async Task<bool> TryConfirmEmailAsync(ApplicationUser user, string token)
         {
-            if (IdentityTokenCodec.TryDecode(token, out var decoded)
-                && (await _userManager.ConfirmEmailAsync(user, decoded)).Succeeded)
+            if (user.EmailConfirmed)
+            {
+                return false;
+            }
+
+            var candidate = token.Trim();
+            var confirmed = false;
+            if (IdentityTokenCodec.TryDecode(candidate, out var decoded)
+                && !string.Equals(decoded, candidate, StringComparison.Ordinal))
+            {
+                confirmed = (await _userManager.ConfirmEmailAsync(user, decoded)).Succeeded;
+            }
+
+            if (!confirmed && !user.EmailConfirmed)
+            {
+                confirmed = (await _userManager.ConfirmEmailAsync(user, candidate)).Succeeded;
+            }
+
+            if (confirmed)
             {
                 return true;
             }
 
-            return (await _userManager.ConfirmEmailAsync(user, token)).Succeeded;
+            // A rejected token must not leave the account confirmed.
+            var fresh = await _userManager.FindByIdAsync(user.Id);
+            if (fresh is { EmailConfirmed: true })
+            {
+                fresh.EmailConfirmed = false;
+                await _userManager.UpdateAsync(fresh);
+                user.EmailConfirmed = false;
+            }
+
+            return false;
         }
 
         private string? BuildPublicLink(string action, object values)

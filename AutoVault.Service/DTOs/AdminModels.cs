@@ -1,0 +1,15 @@
+namespace FinalProject.DTOs;
+
+public sealed record AdminSummaryResponseDto(
+    int TotalCars,
+    int ActiveListings,
+    int TotalConversations,
+    int UnreadMessages,
+    int TotalRatings,
+    int TotalReviews,
+    IReadOnlyList<string> RecentActivity);
+
+public sealed class SaveLookupRequestDto
+{
+    public string Name { get; set; } = string.Empty;
+}

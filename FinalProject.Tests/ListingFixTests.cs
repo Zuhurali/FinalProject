@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Controllers;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
@@ -57,7 +58,7 @@ public class ListingFixTests
     public async Task Team_member_is_saved_and_a_missing_photo_does_not_insert_a_row()
     {
         await using var db = CreateDb();
-        var service = new TeamMemberService(db, new TestEnvironment());
+        var service = new TeamMemberService(new ApplicationRepository(db), new TestEnvironment());
         var missingPhoto = Member();
         missingPhoto.ImagePath = "";
 
@@ -88,7 +89,7 @@ public class ListingFixTests
     public async Task Team_create_does_not_throw_when_the_image_path_is_null()
     {
         await using var db = CreateDb();
-        var service = new TeamMemberService(db, new TestEnvironment());
+        var service = new TeamMemberService(new ApplicationRepository(db), new TestEnvironment());
         var missing = Member();
         missing.ImagePath = null!;
 
@@ -144,6 +145,11 @@ public class ListingFixTests
         Assert.Contains("Select a brand first", carsTwo, StringComparison.Ordinal);
         Assert.Contains("data-brand-id", carsTwo, StringComparison.Ordinal);
         Assert.Contains("BrandModels", carsTwo, StringComparison.Ordinal);
+        Assert.Contains("refreshColorAndSeatFilters", carsTwo, StringComparison.Ordinal);
+        Assert.Contains("cardsForFacetScope", carsTwo, StringComparison.Ordinal);
+        Assert.Contains("OrderByDescending(car => car.CreatedAt)", controller, StringComparison.Ordinal);
+        Assert.Contains("id=\"carColorList\"", carsTwo, StringComparison.Ordinal);
+        Assert.Contains("id=\"carSeatList\"", carsTwo, StringComparison.Ordinal);
         Assert.Contains("public async Task<IActionResult> BrandModels(int brandId)", controller, StringComparison.Ordinal);
         Assert.DoesNotContain("BrandModels", carsOne, StringComparison.Ordinal);
         Assert.DoesNotContain("data-brand-id", carsOne, StringComparison.Ordinal);
@@ -154,7 +160,7 @@ public class ListingFixTests
     {
         var css = Read("FinalProject.MVC", "wwwroot", "assets", "css", "style.css");
         var explore = Read("FinalProject.MVC", "Views", "Cars", "Explore.cshtml");
-        var mapper = Read("FinalProject.MVC", "Mappings", "CarApiMapper.cs");
+        var mapper = Read("AutoVault.Service", "MVC", "Mappings", "CarApiMapper.cs");
 
         Assert.Contains(".project-wrapper2 .image-area form.wishlist button", css, StringComparison.Ordinal);
         Assert.Contains("border: 0;", explore, StringComparison.Ordinal);

@@ -1,3 +1,5 @@
+using FinalProject.MVC.Repositories.Implementations;
+using FinalProject.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.Controllers;
 using FinalProject.Data;
@@ -19,7 +21,7 @@ namespace FinalProject.Tests;
 public class ShowroomSalesAndRequestsTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Theory]
     [InlineData(ShowroomRequestStatus.New, ShowroomRequestStatus.Contacted, true)]
@@ -36,15 +38,23 @@ public class ShowroomSalesAndRequestsTests
     }
 
     [Fact]
+    public void AllowedNextStatuses_hides_terminal_dropdowns_and_limits_new_options()
+    {
+        Assert.Equal(
+            new[] { ShowroomRequestStatus.New, ShowroomRequestStatus.Cancelled },
+            ShowroomRequestRules.AllowedNextStatuses(ShowroomRequestStatus.New));
+        Assert.Empty(ShowroomRequestRules.AllowedNextStatuses(ShowroomRequestStatus.Completed));
+        Assert.Empty(ShowroomRequestRules.AllowedNextStatuses(ShowroomRequestStatus.Cancelled));
+        Assert.DoesNotContain(
+            ShowroomRequestStatus.Completed,
+            ShowroomRequestRules.AllowedNextStatuses(ShowroomRequestStatus.New));
+    }
+
+    [Fact]
     public void Admin_showroom_surfaces_require_Admin_or_SuperAdmin()
     {
-        Assert.Equal("Admin,SuperAdmin", typeof(AdminRequestsController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminSalesController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
         Assert.Equal("Admin,SuperAdmin", typeof(AdminShowroomController).GetCustomAttribute<AuthorizeAttribute>()!.Roles);
-
-        var complete = typeof(AdminRequestsController).GetMethod(nameof(AdminRequestsController.CompleteSale))!;
-        Assert.NotNull(complete.GetCustomAttribute<HttpPostAttribute>());
-        Assert.NotNull(complete.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
 
         var voidSale = typeof(AdminSalesController).GetMethod(nameof(AdminSalesController.Void))!;
         Assert.NotNull(voidSale.GetCustomAttribute<HttpPostAttribute>());
@@ -57,127 +67,10 @@ public class ShowroomSalesAndRequestsTests
     }
 
     [Fact]
-    public async Task Purchase_request_persists_user_id_status_and_rejects_illegal_transition()
-    {
-        await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
-        var product = await db.ShopProducts.AsNoTracking().FirstAsync(item => item.IsActive && item.Quantity > 0);
-        var email = $"req-{Guid.NewGuid():N}@example.com";
-        var key = Guid.NewGuid();
-
-        var created = await catalog.SavePurchaseRequestAsync(new ShowroomPurchaseRequest
-        {
-            ProductId = product.Id,
-            CustomerName = "Showroom Tester",
-            Email = email,
-            Phone = "+994 50 111 22 33",
-            Quantity = 1,
-            SubmissionKey = key,
-            UserId = "user-showroom-test"
-        });
-        Assert.True(created.Ok, created.Error);
-        Assert.NotNull(created.RequestId);
-
-        try
-        {
-            var saved = await catalog.GetPurchaseRequestAsync(created.RequestId!.Value);
-            Assert.NotNull(saved);
-            Assert.Equal(ShowroomRequestStatus.New, saved!.Status);
-            Assert.Equal("user-showroom-test", saved.UserId);
-            Assert.Equal(email, saved.Email);
-
-            var (contacted, contactError) = await catalog.SetPurchaseRequestStatusAsync(
-                saved.Id,
-                ShowroomRequestStatus.Contacted);
-            Assert.True(contacted, contactError);
-
-            var (illegal, illegalError) = await catalog.SetPurchaseRequestStatusAsync(
-                saved.Id,
-                ShowroomRequestStatus.New);
-            Assert.False(illegal);
-            Assert.Contains("Cannot change status", illegalError);
-
-            var forUser = await catalog.GetPurchaseRequestsForUserAsync("user-showroom-test");
-            Assert.Contains(forUser, item => item.Id == saved.Id);
-        }
-        finally
-        {
-            await db.Database.ExecuteSqlInterpolatedAsync($"""
-                DELETE FROM ShowroomPurchaseRequests WHERE Id = {created.RequestId};
-                """);
-        }
-    }
-
-    [Fact]
-    public async Task Claim_orphaned_purchase_requests_by_account_email()
-    {
-        await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
-        var product = await db.ShopProducts.AsNoTracking().FirstAsync(item => item.IsActive && item.Quantity > 0);
-        var email = $"orphan-{Guid.NewGuid():N}@example.com";
-
-        var created = await catalog.SavePurchaseRequestAsync(new ShowroomPurchaseRequest
-        {
-            ProductId = product.Id,
-            CustomerName = "Orphan Claim",
-            Email = email,
-            Phone = "+994 50 222 33 44",
-            Quantity = 1,
-            SubmissionKey = Guid.NewGuid()
-        });
-        Assert.True(created.Ok, created.Error);
-
-        try
-        {
-            var claimed = await catalog.ClaimOrphanedPurchaseRequestsByEmailAsync("claim-user", email);
-            Assert.Equal(1, claimed);
-            var forUser = await catalog.GetPurchaseRequestsForUserAsync("claim-user");
-            Assert.Contains(forUser, item => item.Id == created.RequestId);
-        }
-        finally
-        {
-            await db.Database.ExecuteSqlInterpolatedAsync($"""
-                DELETE FROM ShowroomPurchaseRequests WHERE Id = {created.RequestId};
-                """);
-        }
-    }
-
-    [Fact]
-    public async Task Inactive_product_cannot_receive_purchase_request()
-    {
-        await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
-        var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity > 0);
-        product.IsActive = false;
-        await db.SaveChangesAsync();
-
-        try
-        {
-            var result = await catalog.SavePurchaseRequestAsync(new ShowroomPurchaseRequest
-            {
-                ProductId = product.Id,
-                CustomerName = "Inactive Check",
-                Email = $"inactive-{Guid.NewGuid():N}@example.com",
-                Phone = "+994 50 333 44 55",
-                Quantity = 1,
-                SubmissionKey = Guid.NewGuid()
-            });
-            Assert.False(result.Ok);
-            Assert.Equal("Product not found.", result.Error);
-        }
-        finally
-        {
-            await db.Database.ExecuteSqlInterpolatedAsync($"""
-                UPDATE ShopProducts SET IsActive = CAST(1 AS bit) WHERE Id = {product.Id};
-                """);
-        }
-    }
-
-    [Fact]
     public async Task Record_sale_idempotency_key_prevents_duplicate_stock_decrement()
     {
         await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 2);
         var originalQty = product.Quantity;
         var key = Guid.NewGuid();
@@ -210,7 +103,7 @@ public class ShowroomSalesAndRequestsTests
     public async Task Void_sale_restores_stock_atomically_and_excludes_from_list()
     {
         await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 2);
         var originalQty = product.Quantity;
         var note = "void-sale-" + Guid.NewGuid().ToString("N");
@@ -249,139 +142,10 @@ public class ShowroomSalesAndRequestsTests
     }
 
     [Fact]
-    public async Task Complete_purchase_request_with_sale_updates_status_and_stock()
-    {
-        await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
-        var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 3);
-        var originalQty = product.Quantity;
-        var email = $"complete-{Guid.NewGuid():N}@example.com";
-
-        var created = await catalog.SavePurchaseRequestAsync(new ShowroomPurchaseRequest
-        {
-            ProductId = product.Id,
-            CustomerName = "Complete Sale",
-            Email = email,
-            Phone = "+994 50 444 55 66",
-            Quantity = 2,
-            SubmissionKey = Guid.NewGuid()
-        });
-        Assert.True(created.Ok, created.Error);
-        var requestId = created.RequestId!.Value;
-        int? saleId = null;
-
-        try
-        {
-            var (ok, error) = await catalog.CompletePurchaseRequestWithSaleAsync(
-                requestId,
-                "complete-admin",
-                "e2e complete");
-            Assert.True(ok, error);
-
-            var request = await catalog.GetPurchaseRequestAsync(requestId);
-            Assert.Equal(ShowroomRequestStatus.Completed, request!.Status);
-
-            var after = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
-            Assert.Equal(originalQty - 2, after.Quantity);
-
-            var sale = await db.InPersonSales.AsNoTracking()
-                .SingleAsync(item => item.Note == "e2e complete" && item.ProductId == product.Id);
-            saleId = sale.Id;
-            Assert.Equal(2, sale.Quantity);
-            Assert.Equal(requestId, sale.PurchaseRequestId);
-            Assert.Null(sale.VoidedAt);
-
-            var (statusOnly, statusError) = await catalog.SetPurchaseRequestStatusAsync(
-                requestId,
-                ShowroomRequestStatus.Completed);
-            Assert.False(statusOnly);
-            Assert.Contains("Cannot change status", statusError);
-
-            var (again, againError) = await catalog.CompletePurchaseRequestWithSaleAsync(
-                requestId,
-                "complete-admin",
-                null);
-            Assert.True(again, againError);
-            Assert.Equal(1, await db.InPersonSales.CountAsync(item => item.PurchaseRequestId == requestId));
-            var afterRetry = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
-            Assert.Equal(originalQty - 2, afterRetry.Quantity);
-
-            var (voided, voidError) = await catalog.VoidSaleAsync(sale.Id, "complete-admin");
-            Assert.True(voided, voidError);
-            var reopened = await catalog.GetPurchaseRequestAsync(requestId);
-            Assert.Equal(ShowroomRequestStatus.Contacted, reopened!.Status);
-            var restored = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
-            Assert.Equal(originalQty, restored.Quantity);
-        }
-        finally
-        {
-            if (saleId.HasValue)
-            {
-                await db.Database.ExecuteSqlInterpolatedAsync($"""
-                    DELETE FROM InPersonSales WHERE Id = {saleId.Value};
-                    """);
-            }
-
-            await db.Database.ExecuteSqlInterpolatedAsync($"""
-                DELETE FROM ShowroomPurchaseRequests WHERE Id = {requestId};
-                UPDATE ShopProducts
-                SET Quantity = {originalQty},
-                    InStock = CASE WHEN {originalQty} > 0 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
-                WHERE Id = {product.Id};
-                """);
-        }
-    }
-
-    [Fact]
-    public async Task Walk_in_sale_rejects_when_open_requests_reserve_remaining_stock()
-    {
-        await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
-        var product = await db.ShopProducts.FirstAsync(item =>
-            item.IsActive && item.Quantity >= 2 && item.Quantity <= ShowroomRequestRules.MaxQuantityPerRequest);
-        var originalQty = product.Quantity;
-        var email = $"reserve-{Guid.NewGuid():N}@example.com";
-        var note = "reserve-walkin-" + Guid.NewGuid().ToString("N");
-
-        var created = await catalog.SavePurchaseRequestAsync(new ShowroomPurchaseRequest
-        {
-            ProductId = product.Id,
-            CustomerName = "Reserve Guard",
-            Email = email,
-            Phone = "+994 50 555 66 77",
-            Quantity = originalQty,
-            SubmissionKey = Guid.NewGuid()
-        });
-        Assert.True(created.Ok, created.Error);
-
-        try
-        {
-            var (ok, error) = await catalog.RecordSaleAsync(product.Id, 1, "reserve-admin", note);
-            Assert.False(ok);
-            Assert.Contains("reserved", error, StringComparison.OrdinalIgnoreCase);
-
-            var after = await db.ShopProducts.AsNoTracking().SingleAsync(item => item.Id == product.Id);
-            Assert.Equal(originalQty, after.Quantity);
-            Assert.Equal(0, await db.InPersonSales.CountAsync(item => item.Note == note));
-        }
-        finally
-        {
-            await db.Database.ExecuteSqlInterpolatedAsync($"""
-                DELETE FROM InPersonSales WHERE Note = {note};
-                DELETE FROM ShowroomPurchaseRequests WHERE Id = {created.RequestId};
-                UPDATE ShopProducts
-                SET Quantity = {originalQty},
-                    InStock = CASE WHEN {originalQty} > 0 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
-                WHERE Id = {product.Id};
-                """);
-        }
-    }
-
-    [Fact]
     public async Task Api_showroom_service_records_and_voids_sale_against_sql_server()
     {
         await using var db = CreateApiDb();
-        var service = new ShowroomAdminService(db);
+        var service = new ShowroomAdminService(new FinalProjectRepository(db));
         var product = await db.ShopProducts.AsNoTracking()
             .FirstAsync(item => item.IsActive && item.Quantity >= 2);
         var originalQty = product.Quantity;

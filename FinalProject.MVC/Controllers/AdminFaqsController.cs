@@ -99,11 +99,17 @@ public sealed class AdminFaqsController : Controller
 
     [HttpPost("Publish/{id:int}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Publish(int id, bool publish, CancellationToken cancellationToken)
+    public async Task<IActionResult> Publish(int id, [FromForm] string? publish, CancellationToken cancellationToken)
     {
-        var updated = await _faqs.SetPublishedAsync(id, publish, cancellationToken);
+        if (!bool.TryParse(publish, out var isPublished))
+        {
+            TempData["Error"] = "Invalid publish request.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var updated = await _faqs.SetPublishedAsync(id, isPublished, cancellationToken);
         TempData[updated ? "Success" : "Error"] = updated
-            ? (publish ? $"FAQ #{id} is now published." : $"FAQ #{id} is now unpublished.")
+            ? (isPublished ? $"FAQ #{id} is now published." : $"FAQ #{id} is now unpublished.")
             : "FAQ item not found.";
         return RedirectToAction(nameof(Index));
     }
@@ -132,7 +138,6 @@ public sealed class AdminFaqsController : Controller
         Answer = item.Answer,
         SortOrder = item.SortOrder,
         IsPublished = item.IsPublished,
-        ShowOnFaqPage = item.ShowOnFaqPage,
         ShowOnShop = item.ShowOnShop
     };
 }

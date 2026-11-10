@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FinalProject.MVC.Models;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,13 @@ public sealed class AdminInquiriesController : Controller
     {
         ViewData["Title"] = "Product questions - AutoVault";
         ViewBag.StatusFilter = status;
-        ViewBag.Statuses = new[] { "New", "Answered", "Closed" };
+        ViewBag.Statuses = new[]
+        {
+            ProductInquiry.LabelAwaitingReply,
+            ProductInquiry.LabelAnswered,
+            ProductInquiry.LabelAwaitingFollowUp,
+            ProductInquiry.LabelClosed
+        };
         return View(await _catalog.GetInquiriesAsync(status, cancellationToken));
     }
 

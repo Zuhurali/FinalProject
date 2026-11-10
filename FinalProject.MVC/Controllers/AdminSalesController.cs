@@ -50,8 +50,6 @@ public sealed class AdminSalesController : Controller
         int quantity,
         string? note,
         Guid submissionKey,
-        string? couponCode,
-        string? customerEmail,
         CancellationToken cancellationToken)
     {
         var user = await _userManager.GetUserAsync(User);
@@ -66,44 +64,18 @@ public sealed class AdminSalesController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        string? customerUserId = null;
-        if (!string.IsNullOrWhiteSpace(couponCode) || !string.IsNullOrWhiteSpace(customerEmail))
-        {
-            if (string.IsNullOrWhiteSpace(customerEmail))
-            {
-                TempData["Error"] = "Enter the customer's account email to redeem a coupon in store.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            var customer = await _userManager.FindByEmailAsync(customerEmail.Trim());
-            if (customer == null)
-            {
-                TempData["Error"] = "No customer account matches that email.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            customerUserId = customer.Id;
-        }
-
         var (ok, error) = await _catalog.RecordSaleAsync(
             productId,
             quantity,
             user.Id,
             note,
             submissionKey,
-            couponCode,
-            customerUserId,
+            couponCode: null,
+            customerUserId: null,
             cancellationToken);
-        if (ok)
-        {
-            TempData["Success"] = string.IsNullOrWhiteSpace(couponCode)
-                ? "The in-person sale was recorded and stock was reduced."
-                : "The in-person sale was recorded, stock was reduced, and the coupon was redeemed in SQL.";
-        }
-        else
-        {
-            TempData["Error"] = error;
-        }
+        TempData[ok ? "Success" : "Error"] = ok
+            ? "The in-person sale was recorded and stock was reduced."
+            : error;
 
         return RedirectToAction(nameof(Index));
     }

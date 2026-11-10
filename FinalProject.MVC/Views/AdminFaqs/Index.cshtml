@@ -5,7 +5,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
         <h1 class="h3 mb-1">FAQ Management</h1>
-        <p class="text-muted mb-0">Published items appear on the public FAQ page in sort order.</p>
+        <p class="text-muted mb-0">Published items appear on the public FAQ page. Shop visibility is set separately when you edit the item.</p>
     </div>
     <a class="btn btn-dark" asp-controller="AdminFaqs" asp-action="Create">Add FAQ</a>
 </div>
@@ -61,14 +61,23 @@ else
                             <div class="fw-semibold">@item.Question</div>
                             <div class="text-muted small text-truncate" style="max-width:28rem;">@item.Answer</div>
                         </td>
-                        <td>@(item.IsPublished ? "Published" : "Unpublished")</td>
+                        <td>
+                            @if (item.IsPublished)
+                            {
+                                <span class="badge bg-success">Published</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Unpublished</span>
+                            }
+                        </td>
                         <td>@((item.UpdatedAt ?? item.CreatedAt).ToLocalTime().ToString("g"))</td>
                         <td class="text-end text-nowrap">
                             <a class="btn btn-sm btn-outline-dark" asp-controller="AdminFaqs" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                             <form asp-controller="AdminFaqs" asp-action="Publish" asp-route-id="@item.Id" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="publish" value="@(!item.IsPublished)" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <input type="hidden" name="publish" value="@(item.IsPublished ? "false" : "true")" />
+                                <button type="submit" class="btn btn-sm @(item.IsPublished ? "btn-outline-danger" : "btn-outline-success")">
                                     @(item.IsPublished ? "Unpublish" : "Publish")
                                 </button>
                             </form>

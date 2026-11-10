@@ -19,6 +19,8 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(NotificationListResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<NotificationListResponseDto>> Get(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
@@ -30,6 +32,8 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpGet("unread-count")]
+    [ProducesResponseType(typeof(NotificationUnreadCountsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<NotificationUnreadCountsResponseDto>> GetUnreadCount(
         CancellationToken cancellationToken)
     {
@@ -43,6 +47,9 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("{id:int}/read")]
+    [ProducesResponseType(typeof(NotificationUnreadCountsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<NotificationUnreadCountsResponseDto>> MarkRead(
         int id,
         CancellationToken cancellationToken)
@@ -63,6 +70,8 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("read-all")]
+    [ProducesResponseType(typeof(NotificationUnreadCountsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<NotificationUnreadCountsResponseDto>> MarkAllRead(
         CancellationToken cancellationToken)
     {

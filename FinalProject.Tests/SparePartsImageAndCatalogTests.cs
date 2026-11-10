@@ -1,3 +1,5 @@
+using FinalProject.MVC.Repositories.Implementations;
+using FinalProject.Repositories.Implementations;
 using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.DTOs;
@@ -17,7 +19,7 @@ namespace FinalProject.Tests;
 public class SparePartsImageAndCatalogTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Theory]
     [InlineData("~/assets/images/portfolio/11.webp", true)]
@@ -39,7 +41,7 @@ public class SparePartsImageAndCatalogTests
     public async Task Parts_admin_rejects_unsafe_image_paths_and_negative_stock()
     {
         await using var db = CreateApiDb();
-        var service = new PartsAdminService(db);
+        var service = new PartsAdminService(new FinalProjectRepository(db));
         var unsafeImage = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "Unsafe Path Part",
@@ -69,7 +71,7 @@ public class SparePartsImageAndCatalogTests
     public async Task Parts_admin_create_persists_sku_fitment_and_safe_image()
     {
         await using var db = CreateApiDb();
-        var service = new PartsAdminService(db);
+        var service = new PartsAdminService(new FinalProjectRepository(db));
         var (part, error) = await service.CreateAsync(new SavePartRequestDto
         {
             Name = "E2E Cabin Filter",
@@ -102,7 +104,7 @@ public class SparePartsImageAndCatalogTests
     {
         await using var db = CreateMvcDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.AsNoTracking().FirstAsync(item => item.IsActive && item.Quantity > 0);
         product = await db.ShopProducts.FirstAsync(item => item.Id == product.Id);
         product.IsActive = false;
@@ -130,7 +132,7 @@ public class SparePartsImageAndCatalogTests
     {
         // RecordSaleAsync opens its own SQL transaction; do not nest an outer test transaction.
         await using var db = CreateMvcDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive && item.Quantity >= 1);
         var originalQuantity = product.Quantity;
         product.Quantity = 1;

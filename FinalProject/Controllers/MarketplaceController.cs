@@ -18,6 +18,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/account/summary")]
+    [ProducesResponseType(typeof(AccountSummaryResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AccountSummaryResponseDto>> GetAccountSummary(
         CancellationToken cancellationToken)
     {
@@ -28,6 +30,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/favorites")]
+    [ProducesResponseType(typeof(IReadOnlyList<FavoriteResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IReadOnlyList<FavoriteResponseDto>>> GetFavorites(
         CancellationToken cancellationToken)
     {
@@ -38,6 +42,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/favorites/ids")]
+    [ProducesResponseType(typeof(IReadOnlyList<int>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IReadOnlyList<int>>> GetFavoriteIds(
         CancellationToken cancellationToken)
     {
@@ -48,6 +54,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/cars/{carId:int}/favorite")]
+    [ProducesResponseType(typeof(FavoriteResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<FavoriteResponseDto>> AddFavorite(
         int carId,
         CancellationToken cancellationToken)
@@ -65,6 +74,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpDelete("api/cars/{carId:int}/favorite")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RemoveFavorite(
         int carId,
         CancellationToken cancellationToken)
@@ -80,6 +91,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/product-favorites")]
+    [ProducesResponseType(typeof(IReadOnlyList<ProductFavoriteResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IReadOnlyList<ProductFavoriteResponseDto>>> GetProductFavorites(
         CancellationToken cancellationToken)
     {
@@ -90,6 +103,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/product-favorites/ids")]
+    [ProducesResponseType(typeof(IReadOnlyList<int>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IReadOnlyList<int>>> GetProductFavoriteIds(
         CancellationToken cancellationToken)
     {
@@ -100,6 +115,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/products/{productId:int}/favorite")]
+    [ProducesResponseType(typeof(ProductFavoriteResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProductFavoriteResponseDto>> AddProductFavorite(
         int productId,
         CancellationToken cancellationToken)
@@ -117,6 +135,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpDelete("api/products/{productId:int}/favorite")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RemoveProductFavorite(
         int productId,
         CancellationToken cancellationToken)
@@ -132,6 +152,8 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/conversations")]
+    [ProducesResponseType(typeof(IReadOnlyList<ConversationSummaryResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IReadOnlyList<ConversationSummaryResponseDto>>> GetConversations(
         CancellationToken cancellationToken)
     {
@@ -142,6 +164,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpGet("api/conversations/{id:int}")]
+    [ProducesResponseType(typeof(ConversationDetailsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ConversationDetailsResponseDto>> GetConversation(
         int id,
         CancellationToken cancellationToken)
@@ -161,6 +186,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/cars/{carId:int}/conversations")]
+    [ProducesResponseType(typeof(ConversationDetailsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ConversationDetailsResponseDto>> StartConversation(
         int carId,
         [FromBody] StartConversationRequestDto request,
@@ -186,6 +214,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/conversations/{id:int}/messages")]
+    [ProducesResponseType(typeof(MessageResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MessageResponseDto>> Reply(
         int id,
         [FromBody] ReplyMessageRequestDto request,
@@ -206,6 +237,9 @@ public sealed class MarketplaceController : ControllerBase
     }
 
     [HttpPost("api/conversations/{id:int}/hide")]
+    [ProducesResponseType(typeof(ConversationHiddenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiMessageResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> HideConversation(
         int id,
         CancellationToken cancellationToken)

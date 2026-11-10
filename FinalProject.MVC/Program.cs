@@ -3,6 +3,8 @@ using FinalProject.MVC.Data;
 using FinalProject.MVC.Hosting;
 using FinalProject.MVC.Hubs;
 using FinalProject.MVC.Models;
+using FinalProject.MVC.Repositories;
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Security;
 using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
@@ -25,7 +27,14 @@ builder.Services.AddSignalR();
 
 // Add DbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql =>
+        {
+            // ApplicationDbContext owns Identity, shop, sales, and CMS tables.
+            // Its history table stays __EFMigrationsHistory. Do not apply API migrations here.
+            sql.MigrationsAssembly(typeof(Program).Assembly.GetName().Name);
+        }));
 
 // Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -51,6 +60,12 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
+
+// Email confirmation and password-reset tokens expire after one day.
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromDays(1);
+});
 
 // Configure application cookie
 builder.Services.ConfigureApplicationCookie(options =>
@@ -144,19 +159,48 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CatalogCreate", policy => policy.RequireRole(AppRoles.Admin, AppRoles.SuperAdmin));
     options.AddPolicy("ManageUsers", policy => policy.RequireRole(AppRoles.SuperAdmin));
 });
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
+builder.Services.PostConfigure<EmailSettings>(settings => settings.ApplyKnownProviderDefaults());
 builder.Services.Configure<ApplicationSettings>(builder.Configuration.GetSection(ApplicationSettings.SectionName));
 builder.Services.Configure<DealershipContactSettings>(
     builder.Configuration.GetSection(DealershipContactSettings.SectionName));
-builder.Services.AddSingleton<IEmailSender, EmailSender>();
+
+// MailKit SMTP (Gmail/Resend/Brevo/etc.) plus, in Development, an in-app mailbox copy.
+// External delivery is attempted only when EmailSettings is configured; the mailbox
+// never pretends to be an external provider response.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<IDevelopmentMailStore, DevelopmentMailStore>();
+}
+
+builder.Services.AddSingleton<EmailSender>();
+builder.Services.AddSingleton<IEmailSender>(sp =>
+{
+    var smtp = sp.GetRequiredService<EmailSender>();
+    return new CompositeEmailSender(
+        smtp,
+        sp.GetRequiredService<IWebHostEnvironment>(),
+        sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailSettings>>(),
+        sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CompositeEmailSender>>(),
+        sp.GetServices<IDevelopmentMailStore>());
+});
+
 builder.Services.AddScoped<IContactInquiryMailer, ContactInquiryMailer>();
 builder.Services.AddScoped<ICarImageUploadService, CarImageUploadService>();
 builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ApplicationRepository>();
+builder.Services.AddScoped<IApplicationRepository>(sp => sp.GetRequiredService<ApplicationRepository>());
+builder.Services.AddScoped<IShopCatalogRepository>(sp => sp.GetRequiredService<ApplicationRepository>());
+builder.Services.AddScoped<IOrderRepository>(sp => sp.GetRequiredService<ApplicationRepository>());
+builder.Services.AddScoped<ICouponRepository>(sp => sp.GetRequiredService<ApplicationRepository>());
+builder.Services.AddScoped<IContactRequestRepository>(sp => sp.GetRequiredService<ApplicationRepository>());
+
 builder.Services.AddScoped<IShopCatalogService, ShopCatalogService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IContactRequestService, ContactRequestService>();
 builder.Services.AddScoped<IProductPopularityService, ProductPopularityService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<ISiteSettingsService, SiteSettingsService>();
 builder.Services.AddScoped<ICurrentSiteSettings, CurrentSiteSettings>();
 builder.Services.AddScoped<IHomePageContentService, HomePageContentService>();
@@ -194,6 +238,10 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
+EmailDeliveryStartupDiagnostics.Log(
+    app.Services,
+    app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AutoVault.Email"));
+
 if (app.Environment.IsDevelopment())
 {
     var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DevelopmentApiHost));
@@ -217,7 +265,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
+app.UseMiddleware<UnconfirmedAccountMiddleware>();
 app.UseAuthorization();
 
 app.UseSession(); 

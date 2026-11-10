@@ -45,7 +45,6 @@
             </li>
             <li><a asp-controller="Account" asp-action="ContactRequests"><i class="fa-regular fa-inbox"></i> My Contact Requests</a></li>
             <li><a asp-controller="Account" asp-action="ProductQuestions"><i class="fa-regular fa-circle-question"></i> My Product Questions</a></li>
-            <li><a asp-controller="Account" asp-action="PurchaseRequests"><i class="fa-solid fa-cart-shopping"></i> My Purchase Requests</a></li>
             <li><a asp-controller="Account" asp-action="Profile"><i class="fa-regular fa-user"></i> Profile Settings</a></li>
             <li><a asp-controller="Account" asp-action="ChangePassword"><i class="fa-solid fa-key"></i> Change Password</a></li>
             @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))

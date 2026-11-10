@@ -15,7 +15,7 @@ namespace FinalProject.Tests;
 [Collection("CampaignSql")]
 public class AdminDashboardHttpTests
 {
-    private const string BaseUrl = "https://localhost:7245";
+    private const string BaseUrl = "https://localhost:7255";
     private const string Email = "campaigne2e@autovault.local";
     private const string Password = "CampaignE2E-2026!";
 
@@ -50,7 +50,7 @@ public class AdminDashboardHttpTests
 
         await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlServer(
-                "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True")
+                "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True")
             .Options);
         var expectedContacts = await db.ContactRequests.CountAsync(request => request.Status == ContactRequestStatus.New);
         var expectedParts = await db.ShopProducts.CountAsync();
@@ -124,7 +124,7 @@ public class AdminDashboardHttpTests
         services.AddLogging(builder => builder.AddDebug());
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(
-                "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True"));
+                "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True"));
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();

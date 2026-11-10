@@ -33,6 +33,10 @@ public sealed class AdminShopMarketingController : Controller
         IFormFile? usedCarsPromoImage,
         IFormFile? visitTip1Image,
         IFormFile? visitTip2Image,
+        IFormFile? why1Icon,
+        IFormFile? why2Icon,
+        IFormFile? why3Icon,
+        IFormFile? why4Icon,
         CancellationToken cancellationToken)
     {
         ViewData["Title"] = "Shop Marketing - AutoVault";
@@ -46,7 +50,11 @@ public sealed class AdminShopMarketingController : Controller
             HeroImage = heroImage,
             UsedCarsPromoImage = usedCarsPromoImage,
             VisitTip1Image = visitTip1Image,
-            VisitTip2Image = visitTip2Image
+            VisitTip2Image = visitTip2Image,
+            Why1Icon = why1Icon,
+            Why2Icon = why2Icon,
+            Why3Icon = why3Icon,
+            Why4Icon = why4Icon
         };
         var (ok, error) = await _shopMarketing.SaveAsync(model, uploads, cancellationToken);
         if (!ok)
@@ -86,6 +94,10 @@ public sealed class AdminShopMarketingController : Controller
         Why3Description = current.Why3Description,
         Why4Title = current.Why4Title,
         Why4Description = current.Why4Description,
+        Why1IconPath = current.Why1IconPath,
+        Why2IconPath = current.Why2IconPath,
+        Why3IconPath = current.Why3IconPath,
+        Why4IconPath = current.Why4IconPath,
         VisitEyebrow = current.VisitEyebrow,
         VisitHeadingBefore = current.VisitHeadingBefore,
         VisitHeadingHighlight = current.VisitHeadingHighlight,

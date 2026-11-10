@@ -1903,6 +1903,11 @@ namespace FinalProject.MVC.Migrations
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
 
+                    b.Property<string>("Why1IconPath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Why1Title")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -1912,6 +1917,11 @@ namespace FinalProject.MVC.Migrations
                         .IsRequired()
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Why2IconPath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Why2Title")
                         .IsRequired()
@@ -1923,6 +1933,11 @@ namespace FinalProject.MVC.Migrations
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
 
+                    b.Property<string>("Why3IconPath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Why3Title")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -1932,6 +1947,11 @@ namespace FinalProject.MVC.Migrations
                         .IsRequired()
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Why4IconPath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Why4Title")
                         .IsRequired()

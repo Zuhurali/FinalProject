@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.Models.Entities;
@@ -37,7 +38,7 @@ public class CarDiscoveryTests
     {
         await using var db = CreateDb();
         var car = await SeedCarAsync(db, "A", new DateTime(2026, 10, 1));
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var when = ToUtc(new DateTime(2026, 10, 25, 12, 0, 0));
 
         Assert.True(await discovery.RecordViewAsync(car.Id, when));
@@ -57,7 +58,7 @@ public class CarDiscoveryTests
         var popular = await SeedCarAsync(db, "Popular", new DateTime(2026, 10, 1));
         var recent = await SeedCarAsync(db, "Recent", new DateTime(2026, 10, 20));
         var old = await SeedCarAsync(db, "Old", new DateTime(2026, 9, 1));
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var now = ToUtc(new DateTime(2026, 10, 25, 15, 0, 0));
 
         await discovery.RecordViewAsync(popular.Id, ToUtc(new DateTime(2026, 10, 25, 9, 0, 0)));
@@ -93,14 +94,14 @@ public class CarDiscoveryTests
             new IdentityUserReference { Id = "user-2", UserName = "two" });
         await db.SaveChangesAsync();
 
-        var marketplace = new MarketplaceService(db, new ConfigurationBuilder().Build(), null!);
+        var marketplace = new MarketplaceService(new FinalProjectRepository(db), new FinalProjectRepository(db), new ConfigurationBuilder().Build(), null!);
         Assert.NotNull(await marketplace.AddFavoriteAsync("user-1", first.Id));
         Assert.NotNull(await marketplace.AddFavoriteAsync("user-1", first.Id));
         Assert.NotNull(await marketplace.AddFavoriteAsync("user-2", first.Id));
         Assert.NotNull(await marketplace.AddFavoriteAsync("user-2", second.Id));
         Assert.Equal(1, await db.Favorites.CountAsync(favorite => favorite.UserId == "user-1" && favorite.CarId == first.Id));
 
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var ranked = await discovery.GetMostFavoritedAsync();
         Assert.Equal(new[] { first.Id, second.Id }, ranked.Items.Select(item => item.Car.Id).ToArray());
         Assert.Equal(2, ranked.Items[0].Count);
@@ -119,7 +120,7 @@ public class CarDiscoveryTests
         var newer = await SeedCarAsync(db, "Newer", new DateTime(2026, 10, 20, 8, 0, 0));
         var middle = await SeedCarAsync(db, "Middle", new DateTime(2026, 5, 1, 8, 0, 0));
 
-        var arrivals = await new CarDiscoveryService(db).GetLatestArrivalsAsync();
+        var arrivals = await new CarDiscoveryService(new FinalProjectRepository(db)).GetLatestArrivalsAsync();
 
         Assert.Equal(new[] { newer.Id, middle.Id, older.Id }, arrivals.Items.Select(car => car.Id).ToArray());
     }
@@ -128,7 +129,7 @@ public class CarDiscoveryTests
     public async Task Explore_pages_return_nine_cars_per_page_with_correct_slice()
     {
         await using var db = CreateDb();
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var cars = new List<Car>();
         for (var i = 1; i <= 23; i++)
         {
@@ -175,7 +176,7 @@ public class CarDiscoveryTests
     {
         await using var db = CreateDb();
         var car = await SeedCarAsync(db, "Trend", new DateTime(2026, 10, 1));
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var now = ToUtc(new DateTime(2026, 10, 25, 15, 0, 0));
         await discovery.RecordViewAsync(car.Id, ToUtc(new DateTime(2026, 10, 25, 9, 0, 0)));
         await discovery.RecordViewAsync(car.Id, ToUtc(new DateTime(2026, 10, 24, 9, 0, 0)));
@@ -207,7 +208,7 @@ public class CarDiscoveryTests
         draftUsed.Status = "Draft";
         await db.SaveChangesAsync();
 
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         await discovery.RecordViewAsync(viewedUsed.Id, new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc));
         await discovery.RecordViewAsync(viewedUsed.Id, new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc));
         await discovery.RecordViewAsync(newCar.Id, new DateTime(2026, 10, 3, 0, 0, 0, DateTimeKind.Utc));
@@ -228,7 +229,7 @@ public class CarDiscoveryTests
     public async Task Used_browse_pages_nine_active_used_cars_and_keeps_later_pages()
     {
         await using var db = CreateDb();
-        var discovery = new CarDiscoveryService(db);
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var usedIds = new List<int>();
         for (var index = 0; index < 10; index++)
         {

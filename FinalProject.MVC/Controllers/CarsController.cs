@@ -161,7 +161,10 @@ namespace FinalProject.MVC.Controllers
             ViewData["Title"] = "Cars Two - AutoVault";
             ViewData["BodyClass"] = "with-sidebar";
             ViewData["HeaderStyle"] = "three";
-            var cars = await LoadCarsAsync();
+            var cars = (await LoadCarsAsync())
+                .OrderByDescending(car => car.CreatedAt)
+                .ThenByDescending(car => car.Id)
+                .ToList();
             await MarkFavoritesAsync(cars);
             ViewData["BrandIds"] = await LoadBrandIdsAsync();
             return View(cars);
@@ -368,7 +371,9 @@ namespace FinalProject.MVC.Controllers
                         {
                             Car = CarApiMapper.ToCar(item.Car),
                             Count = item.Count,
-                            Detail = $"{item.Count} favorite{(item.Count == 1 ? "" : "s")}"
+                            Detail = item.Count == 1
+                                ? "Saved by 1 member"
+                                : $"Saved by {item.Count} members"
                         }).ToList(),
                         result.CurrentPage,
                         result.TotalPages,

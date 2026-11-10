@@ -828,6 +828,117 @@
     padding: 10px 12px;
 }
 
+.av-form-grid .av-phone-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    min-width: 0;
+    grid-column: 1 / -1;
+}
+
+.av-phone-field__label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.av-phone-field__row {
+    display: grid;
+    grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
+    gap: 10px;
+    align-items: stretch;
+}
+
+.av-phone-field__country.av-native-select,
+.av-phone-field__country {
+    position: relative;
+    z-index: 5;
+    display: block;
+    width: 100%;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    pointer-events: auto;
+    float: none;
+    appearance: auto;
+    -webkit-appearance: menulist;
+}
+
+/* If theme already wrapped this select, hide the fake dropdown. */
+.av-phone-field__row > .nice-select {
+    display: none !important;
+}
+
+.av-phone-field__row > select.av-native-select {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 48px !important;
+}
+
+.av-phone-field__country option {
+    font-size: 15px;
+    font-weight: 500;
+    padding: 8px;
+}
+
+.av-phone-field__number-wrap {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    min-height: 48px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.av-phone-field__prefix {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: 0 12px;
+    background: #f3f4f6;
+    border-right: 1px solid #e5e7eb;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.av-phone-field__number-wrap .av-phone-field__number.form-control {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    min-width: 0;
+    height: 48px;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.av-phone-field__hint {
+    display: block;
+    margin-top: 2px;
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+@media (max-width: 575.98px) {
+    .av-phone-field__row {
+        grid-template-columns: 1fr;
+    }
+}
+
 .av-btn {
     display: inline-flex;
     align-items: center;

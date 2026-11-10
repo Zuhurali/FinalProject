@@ -2,7 +2,16 @@
 @{
     Layout = "_AdminLayout";
     var currentUserId = ViewBag.CurrentUserId as string;
+    var canChangeRoles = ViewBag.CanChangeRoles as bool? == true;
     var editableIndex = 0;
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" role="alert">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
 }
 <h1 class="h3 mb-4">@(Model.ShowDeleted ? "Deleted Accounts" : "Users")</h1>
 
@@ -30,7 +39,7 @@
         @if (Model.ShowDeleted)
         {
             <a asp-action="Users" asp-route-search="@Model.Search" class="btn btn-outline-secondary btn-sm">Back to active users</a>
-            <span class="text-muted small">Soft-deleted Member accounts. Historical records are preserved.</span>
+            <span class="text-muted small">Soft-deleted accounts. Historical records are preserved; they cannot sign in.</span>
         }
         else
         {
@@ -45,91 +54,122 @@
     }
 </form>
 
-<form asp-action="ChangeRoles" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="showDeleted" value="@(Model.ShowDeleted ? "true" : "false")" />
-    <div class="admin-card">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Email status</th>
-                        <th>Registered</th>
-                        <th>Lockout</th>
-                        <th>Failed logins</th>
-                        <th>Role</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @if (Model.Users.Count == 0)
-                {
-                    <tr>
-                        <td colspan="7" class="text-muted">
-                            @(Model.ShowDeleted ? "No deleted accounts matched this search." : "No users matched this search.")
-                        </td>
-                    </tr>
-                }
-                @foreach (var user in Model.Users)
-                {
-                    var label = string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName;
-                    <tr>
-                        <td>
-                            <a asp-action="UserDetails" asp-route-id="@user.Id">@label</a>
-                        </td>
-                        <td class="text-break">
-                            <a asp-action="UserDetails" asp-route-id="@user.Id">@user.Email</a>
-                        </td>
-                        <td>@(user.EmailConfirmed ? "Confirmed" : "Unconfirmed")</td>
-                        <td class="text-nowrap">@user.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>
-                            @user.AccountStatus
-                            @if (user.IsDeleted && user.DeletedAt.HasValue)
-                            {
-                                <div class="text-muted small">@user.DeletedAt.Value.ToLocalTime().ToString("yyyy-MM-dd")</div>
-                            }
-                        </td>
-                        <td>@user.AccessFailedCount</td>
-                        <td>
-                            @if (user.IsDeleted)
-                            {
-                                <span>@user.Role</span>
-                                <div class="text-muted small">Role changes disabled</div>
-                            }
-                            else if (user.Id == currentUserId && user.IsSuperAdmin)
-                            {
-                                <span>SuperAdmin (you)</span>
-                            }
-                            else
-                            {
-                                <input type="hidden" name="items[@editableIndex].UserId" value="@user.Id" />
-                                <select name="items[@editableIndex].Role" class="form-select form-select-sm" style="min-width:140px;max-width:160px">
-                                    @foreach (var roleName in new[] { "Member", "Admin", "SuperAdmin" })
+@if (canChangeRoles)
+{
+    <form id="admin-roles-form" asp-action="ChangeRoles" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="showDeleted" value="@(Model.ShowDeleted ? "true" : "false")" />
+    </form>
+}
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Email status</th>
+                    <th>Registered</th>
+                    <th>Lockout</th>
+                    <th>Failed logins</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Users.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="text-muted">
+                        @(Model.ShowDeleted ? "No deleted accounts matched this search." : "No users matched this search.")
+                    </td>
+                </tr>
+            }
+            @foreach (var user in Model.Users)
+            {
+                var label = string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email : user.DisplayName;
+                var canDelete = !user.IsDeleted && user.Id != currentUserId;
+                <tr>
+                    <td>
+                        <a asp-action="UserDetails" asp-route-id="@user.Id">@label</a>
+                    </td>
+                    <td class="text-break">
+                        <a asp-action="UserDetails" asp-route-id="@user.Id">@user.Email</a>
+                    </td>
+                    <td>@(user.EmailConfirmed ? "Confirmed" : "Unconfirmed")</td>
+                    <td class="text-nowrap">@user.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        @user.AccountStatus
+                        @if (user.IsDeleted && user.DeletedAt.HasValue)
+                        {
+                            <div class="text-muted small">@user.DeletedAt.Value.ToLocalTime().ToString("yyyy-MM-dd")</div>
+                        }
+                    </td>
+                    <td>@user.AccessFailedCount</td>
+                    <td>
+                        @if (user.IsDeleted)
+                        {
+                            <span>@user.Role</span>
+                            <div class="text-muted small">Role changes disabled</div>
+                        }
+                        else if (user.Id == currentUserId && user.IsSuperAdmin)
+                        {
+                            <span>SuperAdmin (you)</span>
+                        }
+                        else if (canChangeRoles)
+                        {
+                            <input type="hidden" form="admin-roles-form" name="items[@editableIndex].UserId" value="@user.Id" />
+                            <select form="admin-roles-form" name="items[@editableIndex].Role" class="form-select form-select-sm" style="min-width:140px;max-width:160px">
+                                @foreach (var roleName in new[] { "Member", "Admin", "SuperAdmin" })
+                                {
+                                    if (user.Role == roleName)
                                     {
-                                        if (user.Role == roleName)
-                                        {
-                                            <option value="@roleName" selected>@roleName</option>
-                                        }
-                                        else
-                                        {
-                                            <option value="@roleName">@roleName</option>
-                                        }
+                                        <option value="@roleName" selected>@roleName</option>
                                     }
-                                </select>
-                                editableIndex++;
-                            }
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
-        @if (editableIndex > 0)
-        {
-            <div class="d-flex justify-content-end mt-3">
-                <button class="btn btn-primary" type="submit">Save All Changes</button>
-            </div>
-        }
+                                    else
+                                    {
+                                        <option value="@roleName">@roleName</option>
+                                    }
+                                }
+                            </select>
+                            editableIndex++;
+                        }
+                        else
+                        {
+                            <span>@user.Role</span>
+                        }
+                    </td>
+                    <td class="text-nowrap">
+                        @if (canDelete)
+                        {
+                            <form asp-action="DeleteUser" method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete this account? They will no longer be able to sign in.');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <input type="hidden" name="showDeleted" value="@(Model.ShowDeleted ? "true" : "false")" />
+                                <input type="hidden" name="search" value="@Model.Search" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                            </form>
+                        }
+                        else if (user.IsDeleted)
+                        {
+                            <span class="text-muted small">Deleted</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
     </div>
-</form>
+    @if (canChangeRoles && editableIndex > 0)
+    {
+        <div class="d-flex justify-content-end mt-3">
+            <button class="btn btn-primary" type="submit" form="admin-roles-form">Save All Changes</button>
+        </div>
+    }
+</div>

@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using FinalProject.Commerce;
 using FinalProject.Data;
 using FinalProject.DTOs;
@@ -17,7 +18,7 @@ namespace FinalProject.Tests;
 public class MessagingAndNotificationSqlPersistenceTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task StartConversation_and_Reply_persist_messages_and_notifications_in_sql()
@@ -169,7 +170,7 @@ public class MessagingAndNotificationSqlPersistenceTests
         {
             carId = await CreateDisposableActiveCarAsync(db, sellerId, marker);
             var marketplace = CreateMarketplace(db);
-            var notifications = new NotificationService(db);
+            var notifications = new NotificationService(new FinalProjectRepository(db));
 
             var started = await marketplace.StartConversationAsync(
                 carId,
@@ -230,7 +231,7 @@ public class MessagingAndNotificationSqlPersistenceTests
             });
             await db.SaveChangesAsync();
 
-            var notifications = new NotificationService(db);
+            var notifications = new NotificationService(new FinalProjectRepository(db));
             var created = await notifications.CreatePriceDropNotificationsAsync(
                 carId,
                 marker,
@@ -262,13 +263,14 @@ public class MessagingAndNotificationSqlPersistenceTests
 
     private static MarketplaceService CreateMarketplace(FinalProjectDbContext db) =>
         new(
-            db,
+            new FinalProjectRepository(db),
+            new FinalProjectRepository(db),
             new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
                 // Force private-listing seller = car.OwnerId (do not route to store inbox).
                 ["Marketplace:StoreInboxEmail"] = "unused-sql-messaging@example.com"
             }).Build(),
-            new NotificationService(db));
+            new NotificationService(new FinalProjectRepository(db)));
 
     private static async Task<IReadOnlyList<string>> RequireUsersAsync(
         FinalProjectDbContext db,

@@ -1,4 +1,3 @@
-using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Exceptions;
 using FinalProject.MVC.Security;
@@ -16,22 +15,19 @@ public sealed class AdminController : AdminControllerBase
 {
     private readonly IAdminApiService _adminApi;
     private readonly ICarApiService _cars;
-    private readonly ApplicationDbContext _db;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IAdminDashboardService _dashboard;
 
     public AdminController(
         UserManager<ApplicationUser> userManager,
         IApiAccessTokenService tokenService,
         IAdminApiService adminApi,
         ICarApiService cars,
-        ApplicationDbContext db,
-        RoleManager<IdentityRole> roleManager)
+        IAdminDashboardService dashboard)
         : base(userManager, tokenService)
     {
         _adminApi = adminApi;
         _cars = cars;
-        _db = db;
-        _roleManager = roleManager;
+        _dashboard = dashboard;
     }
 
     [HttpGet("")]
@@ -45,27 +41,16 @@ public sealed class AdminController : AdminControllerBase
             return Challenge();
         }
 
+        var counts = await _dashboard.GetDashboardCountsAsync(cancellationToken);
         var model = new AdminDashboardViewModel
         {
-            TotalMembers = await CountMembersAsync(cancellationToken),
-            TotalSpareParts = await _db.ShopProducts.CountAsync(cancellationToken),
-            ActiveSpareParts = await _db.ShopProducts.CountAsync(product => product.IsActive, cancellationToken),
-            NewContactRequests = await _db.ContactRequests.CountAsync(
-                request => request.Status == ContactRequestStatus.New,
-                cancellationToken),
-            OpenProductQuestions = await _db.ProductInquiries.CountAsync(
-                inquiry => !inquiry.IsHandled && inquiry.AdminReply == null,
-                cancellationToken),
-            OpenPurchaseRequests = await _db.ShowroomPurchaseRequests.CountAsync(
-                request => request.Status == ShowroomRequestStatus.New
-                    || request.Status == ShowroomRequestStatus.Contacted,
-                cancellationToken),
-            RecordedSales = await _db.InPersonSales.CountAsync(
-                sale => !sale.IsDemo && sale.VoidedAt == null,
-                cancellationToken),
-            ActiveCampaigns = await _db.ProductCampaigns.CountAsync(
-                campaign => campaign.IsActive,
-                cancellationToken)
+            TotalMembers = await _dashboard.CountMembersInRoleAsync(AppRoles.Member, cancellationToken),
+            TotalSpareParts = counts.TotalSpareParts,
+            ActiveSpareParts = counts.ActiveSpareParts,
+            NewContactRequests = counts.NewContactRequests,
+            OpenProductQuestions = counts.OpenProductQuestions,
+            RecordedSales = counts.RecordedSales,
+            ActiveCampaigns = counts.ActiveCampaigns
         };
 
         try
@@ -82,18 +67,7 @@ public sealed class AdminController : AdminControllerBase
         return View(model);
     }
 
-    private async Task<int> CountMembersAsync(CancellationToken cancellationToken)
-    {
-        var role = await _roleManager.FindByNameAsync(AppRoles.Member);
-        if (role == null)
-        {
-            return 0;
-        }
-
-        return await _db.UserRoles.CountAsync(userRole => userRole.RoleId == role.Id, cancellationToken);
-    }
-
-    [Authorize(Roles = AppRoles.SuperAdmin)]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.SuperAdmin}")]
     [HttpGet("Users")]
     public async Task<IActionResult> Users(string? search, bool showDeleted = false, CancellationToken cancellationToken = default)
     {
@@ -142,6 +116,7 @@ public sealed class AdminController : AdminControllerBase
         }
 
         ViewBag.CurrentUserId = UserManager.GetUserId(User);
+        ViewBag.CanChangeRoles = User.IsInRole(AppRoles.SuperAdmin);
         return View(new AdminUsersPageViewModel
         {
             Search = search?.Trim(),
@@ -150,7 +125,7 @@ public sealed class AdminController : AdminControllerBase
         });
     }
 
-    [Authorize(Roles = AppRoles.SuperAdmin)]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.SuperAdmin}")]
     [HttpGet("UserDetails/{id}")]
     public async Task<IActionResult> UserDetails(string id, CancellationToken cancellationToken)
     {
@@ -218,35 +193,33 @@ public sealed class AdminController : AdminControllerBase
             model.ListingsUnavailable = true;
         }
 
-        model.ContactRequests = await _db.ContactRequests
-            .AsNoTracking()
-            .Where(request => request.UserId == user.Id)
-            .OrderByDescending(request => request.CreatedAt)
+        model.ContactRequests = (await _dashboard.GetContactRequestsForUserAsync(user.Id, cancellationToken))
             .Select(request => new AdminUserRequestRow
             {
                 Id = request.Id,
-                Summary = request.Interest,
+                Summary = request.Summary,
                 Status = request.Status,
                 CreatedAt = request.CreatedAt
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        model.PurchaseRequests = await _db.ShowroomPurchaseRequests
-            .AsNoTracking()
-            .Where(request => request.UserId == user.Id)
-            .OrderByDescending(request => request.CreatedAt)
-            .Select(request => new AdminUserRequestRow
-            {
-                Id = request.Id,
-                Summary = request.Product != null
-                    ? request.Product.Name
-                    : $"Product #{request.ProductId}",
-                Status = request.Status,
-                CreatedAt = request.CreatedAt
-            })
-            .ToListAsync(cancellationToken);
-
+        ViewBag.CanDeleteUsers = true;
+        ViewBag.CurrentUserId = UserManager.GetUserId(User);
         return View(model);
+    }
+
+    /// <summary>
+    /// Soft-deletes an account so it can no longer sign in. Historical rows are kept.
+    /// Admin may delete Members only; SuperAdmin may delete Members/Admins (not the last SuperAdmin / self).
+    /// </summary>
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.SuperAdmin}")]
+    [HttpPost("Users/Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteUser(string userId, bool showDeleted = false, string? search = null)
+    {
+        var (ok, message) = await SoftDeleteUserAsync(userId);
+        TempData[ok ? "Success" : "Error"] = message;
+        return RedirectToAction(nameof(Users), new { showDeleted, search });
     }
 
     [Authorize(Roles = AppRoles.SuperAdmin)]
@@ -314,6 +287,67 @@ public sealed class AdminController : AdminControllerBase
         }
 
         return RedirectToAction(nameof(Users), new { showDeleted });
+    }
+
+    private async Task<(bool Ok, string Message)> SoftDeleteUserAsync(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return (false, "User not found.");
+        }
+
+        var user = await UserManager.FindByIdAsync(userId.Trim());
+        if (user == null)
+        {
+            return (false, "User not found.");
+        }
+
+        if (user.IsDeleted)
+        {
+            return (false, "That account is already deleted.");
+        }
+
+        var currentUserId = UserManager.GetUserId(User);
+        if (string.Equals(user.Id, currentUserId, StringComparison.Ordinal))
+        {
+            return (false, "You cannot delete your own account from the admin panel.");
+        }
+
+        var roles = await UserManager.GetRolesAsync(user);
+        var targetIsSuperAdmin = roles.Contains(AppRoles.SuperAdmin);
+        var targetIsAdmin = roles.Contains(AppRoles.Admin);
+        var actorIsSuperAdmin = User.IsInRole(AppRoles.SuperAdmin);
+
+        if (!actorIsSuperAdmin && (targetIsSuperAdmin || targetIsAdmin))
+        {
+            return (false, "Admins can only delete Member accounts.");
+        }
+
+        if (targetIsSuperAdmin)
+        {
+            var superAdmins = await UserManager.GetUsersInRoleAsync(AppRoles.SuperAdmin);
+            var activeSuperAdmins = superAdmins.Count(candidate => !candidate.IsDeleted);
+            if (activeSuperAdmins <= 1)
+            {
+                return (false, "At least one SuperAdmin account must remain.");
+            }
+        }
+
+        var label = string.IsNullOrWhiteSpace(user.Email) ? user.UserName : user.Email;
+        user.IsDeleted = true;
+        user.DeletedAt = DateTime.UtcNow;
+        user.LockoutEnabled = true;
+        user.LockoutEnd = DateTimeOffset.MaxValue;
+        // Free email/username so the same address can register again.
+        SoftDeletedAccountIdentity.ReleaseLoginIdentifiers(user);
+        var update = await UserManager.UpdateAsync(user);
+        if (!update.Succeeded)
+        {
+            return (false, string.Join(", ", update.Errors.Select(error => error.Description)));
+        }
+
+        await UserManager.UpdateSecurityStampAsync(user);
+        return (true, $"{label} was deleted and can no longer sign in. That email can be used to register again.");
     }
 
     private async Task<(bool Ok, string Message)> ApplyRoleChangeAsync(string userId, string role)

@@ -1,3 +1,4 @@
+using FinalProject.Repositories.Implementations;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using FinalProject.Commerce;
@@ -83,8 +84,8 @@ public class CarPublicVisibilityTests
         await db.SaveChangesAsync();
         var draft = await SeedCarAsync(db, "DraftFav", "Draft");
         var active = await SeedCarAsync(db, "ActiveFav", "Active");
-        var discovery = new CarDiscoveryService(db);
-        var market = new MarketplaceService(db, new ConfigurationBuilder().Build(), new SilentNotifications());
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
+        var market = new MarketplaceService(new FinalProjectRepository(db), new FinalProjectRepository(db), new ConfigurationBuilder().Build(), new SilentNotifications());
 
         Assert.False(await discovery.RecordViewAsync(draft.Id));
         Assert.True(await discovery.RecordViewAsync(active.Id));
@@ -137,8 +138,8 @@ public class CarPublicVisibilityTests
 
     private static CarsController CreateCarsController(FinalProjectDbContext db, ClaimsPrincipal? principal)
     {
-        var cars = new CarService(db, new SilentNotifications());
-        var discovery = new CarDiscoveryService(db);
+        var cars = new CarService(new FinalProjectRepository(db), new SilentNotifications());
+        var discovery = new CarDiscoveryService(new FinalProjectRepository(db));
         var controller = new CarsController(cars, discovery)
         {
             ControllerContext = new ControllerContext

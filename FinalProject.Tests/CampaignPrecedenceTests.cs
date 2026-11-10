@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.Services;
@@ -10,14 +11,14 @@ namespace FinalProject.Tests;
 public class CampaignPrecedenceTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public async Task Specific_and_all_parts_campaigns_can_both_be_active_with_product_precedence()
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         await SilenceActiveCampaignsAsync(db);
         await ClearNamedAsync(db, "E2E Precedence ");
 
@@ -100,7 +101,7 @@ public class CampaignPrecedenceTests
     {
         await using var db = CreateDb();
         await using var transaction = await db.Database.BeginTransactionAsync();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         await SilenceActiveCampaignsAsync(db);
         await ClearNamedAsync(db, "E2E Precedence ");
 

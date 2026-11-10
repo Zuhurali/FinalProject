@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Reflection;
 using System.Security.Claims;
 using FinalProject.MVC.Controllers;
@@ -5,6 +6,7 @@ using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
 using FinalProject.MVC.DTOs;
 using FinalProject.MVC.Security;
+using FinalProject.MVC.Services;
 using FinalProject.MVC.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -26,7 +28,7 @@ public class AdminUserDetailsTests
             .GetCustomAttribute<AuthorizeAttribute>()!.Roles!
             .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         Assert.Contains(AppRoles.SuperAdmin, userDetailsRoles);
-        Assert.DoesNotContain(AppRoles.Admin, userDetailsRoles);
+        Assert.Contains(AppRoles.Admin, userDetailsRoles);
         Assert.DoesNotContain(AppRoles.Member, userDetailsRoles);
 
         Assert.Equal(
@@ -167,18 +169,6 @@ public class AdminUserDetailsTests
             UserId = "someone-else",
             CreatedAt = DateTime.UtcNow
         });
-        storeDb.ShowroomPurchaseRequests.Add(new ShowroomPurchaseRequest
-        {
-            ProductId = 1,
-            CustomerName = "Mem Ber",
-            Email = member.Email!,
-            Phone = "555-0100",
-            Quantity = 1,
-            SubmissionKey = Guid.NewGuid(),
-            Status = ShowroomRequestStatus.New,
-            UserId = member.Id,
-            CreatedAt = DateTime.UtcNow.AddHours(-5)
-        });
         await storeDb.SaveChangesAsync();
 
         var controller = new AdminController(
@@ -198,8 +188,7 @@ public class AdminUserDetailsTests
                     OwnerId = member.Id
                 }
             ]),
-            storeDb,
-            roleManager)
+            new AdminDashboardService(new ApplicationRepository(storeDb), roleManager))
         {
             ControllerContext = new ControllerContext
             {
@@ -231,8 +220,6 @@ public class AdminUserDetailsTests
         Assert.Equal("Active", model.Listings[0].Status);
         Assert.Single(model.ContactRequests);
         Assert.Equal("Showroom visit", model.ContactRequests[0].Summary);
-        Assert.Single(model.PurchaseRequests);
-        Assert.Equal("Oil Filter", model.PurchaseRequests[0].Summary);
     }
 
     private sealed class StubTokenService : IApiAccessTokenService

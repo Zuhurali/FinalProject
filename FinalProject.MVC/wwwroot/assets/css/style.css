@@ -26826,4 +26826,88 @@ body.vehicle-lightbox-open {
   }
 }
 
+/* Admin shell: full-height navy sidebar (overrides legacy sticky/flex-start gap). */
+html:has(body.admin-shell) {
+  height: 100%;
+  overflow: hidden;
+}
+body.admin-shell {
+  background: #f4f6f8;
+  margin: 0;
+  min-height: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+body.admin-shell::before {
+  display: none !important;
+  content: none !important;
+}
+body.admin-shell .admin-main {
+  background: #f4f6f8;
+  min-width: 0;
+}
+@media (min-width: 992px) {
+  body.admin-shell,
+  body.admin-shell.with-sidebar {
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  body.admin-shell > .container-fluid {
+    height: 100% !important;
+    max-width: none;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: hidden !important;
+  }
+  body.admin-shell > .container-fluid > .row {
+    height: 100% !important;
+    min-height: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+  }
+  body.admin-shell .admin-sidebar {
+    position: relative !important;
+    top: auto !important;
+    align-self: stretch !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    background: #111827;
+  }
+  body.admin-shell .admin-main {
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+}
+@media (max-width: 991.98px) {
+  html:has(body.admin-shell) {
+    overflow: auto;
+  }
+  body.admin-shell {
+    height: auto !important;
+    overflow: auto !important;
+  }
+  body.admin-shell .admin-sidebar {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body.admin-shell .admin-main {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
 /*# sourceMappingURL=../maps/style.css.map */

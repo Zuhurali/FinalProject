@@ -1,0 +1,40 @@
+@model FinalProject.MVC.Services.Interfaces.DevelopmentMailMessage
+@{
+    ViewData["Title"] = Model.Subject + " - Development Mailbox";
+}
+<div class="rts-breadcrumb-area service jarallax">
+    <div class="container">
+        <div class="breadcrumb-area-wrapper">
+            <h1 class="title">Email Message</h1>
+            <div class="nav-bread-crumb">
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-action="Index" asp-route-email="@Model.ToEmail">Development Mailbox</a>
+                <a href="#" class="current">Message</a>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="rts-section-gap">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="contact-form">
+                    <p class="mb-1"><strong>To:</strong> @Model.ToEmail</p>
+                    <p class="mb-1"><strong>Subject:</strong> @Model.Subject</p>
+                    <p class="mb-4 text-muted">@Model.ReceivedAt.ToLocalTime().ToString("g")</p>
+                    <pre class="mb-4" style="border:1px solid #e5e5e5;padding:16px;background:#fff;white-space:pre-wrap;font-family:inherit;">@(ViewData["DisplayBody"] as string ?? string.Empty)</pre>
+                    @for (var linkIndex = 0; linkIndex < (ViewData["SecureLinkCount"] as int? ?? 0); linkIndex++)
+                    {
+                        <form asp-action="OpenLink" method="post" class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="index" value="@linkIndex" />
+                            <button type="submit" class="rts-btn btn-primary radius-small">Open secure link @(linkIndex + 1)</button>
+                        </form>
+                    }
+                    <p class="mb-0"><a asp-action="Index" asp-route-email="@Model.ToEmail">Back to mailbox</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

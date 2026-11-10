@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using FinalProject.MVC.Commerce;
@@ -16,7 +17,7 @@ namespace FinalProject.Tests;
 public class FaqManagementTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_faq_surfaces_require_Admin_or_SuperAdmin_and_antiforgery()
@@ -62,7 +63,7 @@ public class FaqManagementTests
     {
         await using var db = CreateDb();
         var before = await db.FaqItems.CountAsync();
-        var service = new FaqService(db);
+        var service = new FaqService(new ApplicationRepository(db));
 
         var (ok, error, id) = await service.CreateAsync(new FaqItemEditViewModel
         {
@@ -82,7 +83,7 @@ public class FaqManagementTests
     public async Task Create_rejects_blank_question_and_answer()
     {
         await using var db = CreateDb();
-        var service = new FaqService(db);
+        var service = new FaqService(new ApplicationRepository(db));
         var (ok, error, _) = await service.CreateAsync(new FaqItemEditViewModel
         {
             Question = " ",
@@ -98,7 +99,7 @@ public class FaqManagementTests
     public async Task Faq_crud_publish_order_and_public_filter_persist_on_sql_server()
     {
         await using var db = CreateDb();
-        var service = new FaqService(db);
+        var service = new FaqService(new ApplicationRepository(db));
         var marker = $"FAQ-{Guid.NewGuid():N}";
 
         var (created, createError, id) = await service.CreateAsync(new FaqItemEditViewModel
@@ -152,7 +153,7 @@ public class FaqManagementTests
     public async Task Valid_faq_round_trip_lists_publishes_and_appears_on_public_query()
     {
         await using var db = CreateDb();
-        var service = new FaqService(db);
+        var service = new FaqService(new ApplicationRepository(db));
         var marker = $"VALID-{Guid.NewGuid():N}";
 
         var (ok, error, id) = await service.CreateAsync(new FaqItemEditViewModel
@@ -181,7 +182,7 @@ public class FaqManagementTests
     public async Task Move_up_and_down_persist_and_update_public_order()
     {
         await using var db = CreateDb();
-        var service = new FaqService(db);
+        var service = new FaqService(new ApplicationRepository(db));
         var marker = $"MOVE-{Guid.NewGuid():N}";
 
         var first = await service.CreateAsync(new FaqItemEditViewModel
@@ -253,7 +254,7 @@ public class FaqManagementTests
     public async Task Move_at_boundaries_is_rejected_and_duplicate_orders_still_reorder()
     {
         await using var db = CreateDb();
-        var service = new FaqService(db);
+        var service = new FaqService(new ApplicationRepository(db));
         var marker = $"BOUND-{Guid.NewGuid():N}";
 
         var a = await service.CreateAsync(new FaqItemEditViewModel
@@ -306,6 +307,196 @@ public class FaqManagementTests
 
         Assert.True(await service.DeleteAsync(a.Id!.Value));
         Assert.True(await service.DeleteAsync(b.Id!.Value));
+    }
+
+    [Fact]
+    public async Task Publishing_uses_IsPublished_as_the_only_public_faq_visibility_rule()
+    {
+        await using var db = CreateDb();
+        var service = new FaqService(new ApplicationRepository(db));
+        var marker = $"PUB-{Guid.NewGuid():N}";
+
+        var (ok, error, id) = await service.CreateAsync(new FaqItemEditViewModel
+        {
+            Question = $"{marker} Can I collect this part?",
+            Answer = "Yes. Visit the Baku store.",
+            SortOrder = 40,
+            IsPublished = false,
+            ShowOnShop = true
+        });
+        Assert.True(ok, error);
+
+        // Legacy column may be false; public /Faq must still follow IsPublished only.
+        var entity = await db.FaqItems.FirstAsync(item => item.Id == id);
+        entity.ShowOnFaqPage = false;
+        await db.SaveChangesAsync();
+
+        Assert.DoesNotContain(await service.GetPublishedAsync(), item => item.Id == id);
+        Assert.DoesNotContain(await service.GetShopPublishedAsync(), item => item.Id == id);
+
+        Assert.True(await service.SetPublishedAsync(id!.Value, true));
+        var published = await service.GetByIdAsync(id.Value);
+        Assert.NotNull(published);
+        Assert.True(published!.IsPublished);
+        Assert.True(published.ShowOnShop);
+        Assert.False(published.ShowOnFaqPage);
+        Assert.Contains(await service.GetPublishedAsync(), item => item.Id == id);
+        Assert.Contains(await service.GetShopPublishedAsync(), item => item.Id == id);
+
+        Assert.True(await service.SetPublishedAsync(id.Value, false));
+        var unpublished = await service.GetByIdAsync(id.Value);
+        Assert.NotNull(unpublished);
+        Assert.False(unpublished!.IsPublished);
+        Assert.True(unpublished.ShowOnShop);
+        Assert.False(unpublished.ShowOnFaqPage);
+        Assert.DoesNotContain(await service.GetPublishedAsync(), item => item.Id == id);
+        Assert.DoesNotContain(await service.GetShopPublishedAsync(), item => item.Id == id);
+
+        Assert.True(await service.DeleteAsync(id.Value));
+    }
+
+    [Fact]
+    public async Task Repeated_publish_and_unpublish_keeps_public_faq_in_sync()
+    {
+        await using var db = CreateDb();
+        var service = new FaqService(new ApplicationRepository(db));
+        var marker = $"RPT-{Guid.NewGuid():N}";
+        var (ok, error, id) = await service.CreateAsync(new FaqItemEditViewModel
+        {
+            Question = $"{marker} How do I book a visit?",
+            Answer = "Call the Baku showroom to schedule a time.",
+            SortOrder = 45,
+            IsPublished = false,
+            ShowOnShop = false
+        });
+        Assert.True(ok, error);
+
+        for (var round = 0; round < 3; round++)
+        {
+            Assert.True(await service.SetPublishedAsync(id!.Value, true));
+            Assert.Contains(await service.GetPublishedAsync(), item => item.Id == id);
+
+            Assert.True(await service.SetPublishedAsync(id.Value, false));
+            Assert.DoesNotContain(await service.GetPublishedAsync(), item => item.Id == id);
+        }
+
+        var stored = await service.GetByIdAsync(id!.Value);
+        Assert.NotNull(stored);
+        Assert.False(stored!.IsPublished);
+        Assert.False(stored.ShowOnShop);
+
+        Assert.True(await service.DeleteAsync(id.Value));
+    }
+
+    [Fact]
+    public async Task Edit_keeps_shop_visibility_independent_of_public_faq_publish_state()
+    {
+        await using var db = CreateDb();
+        var service = new FaqService(new ApplicationRepository(db));
+        var marker = $"EDIT-{Guid.NewGuid():N}";
+        var (ok, error, id) = await service.CreateAsync(new FaqItemEditViewModel
+        {
+            Question = $"{marker} Where is the store?",
+            Answer = "Babek Prospekti, Baku.",
+            SortOrder = 50,
+            IsPublished = true,
+            ShowOnShop = true
+        });
+        Assert.True(ok, error);
+
+        var saved = await service.UpdateAsync(new FaqItemEditViewModel
+        {
+            Id = id!.Value,
+            Question = $"{marker} Where is the store?",
+            Answer = "Babek Prospekti, Baku.",
+            SortOrder = 50,
+            IsPublished = true,
+            ShowOnShop = false
+        });
+        Assert.True(saved.Ok, saved.Error);
+
+        var stored = await service.GetByIdAsync(id.Value);
+        Assert.NotNull(stored);
+        Assert.True(stored!.IsPublished);
+        Assert.False(stored.ShowOnShop);
+        Assert.Contains(await service.GetPublishedAsync(), item => item.Id == id);
+        Assert.DoesNotContain(await service.GetShopPublishedAsync(), item => item.Id == id);
+
+        Assert.True(await service.DeleteAsync(id.Value));
+    }
+
+    [Fact]
+    public void Admin_faq_form_has_no_separate_faq_visibility_checkbox()
+    {
+        var root = FindRepoRoot();
+        var layout = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "Shared", "_AdminLayout.cshtml"));
+        var form = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminFaqs", "_FaqForm.cshtml"));
+        var index = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminFaqs", "Index.cshtml"));
+        var controller = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "AdminFaqsController.cs"));
+
+        Assert.Contains("input.form-check-input ~ label::before", layout, StringComparison.Ordinal);
+        Assert.Contains("content: none !important;", layout, StringComparison.Ordinal);
+        Assert.Equal(1, Count(form, "<input asp-for=\"IsPublished\""));
+        Assert.Equal(1, Count(form, "<input asp-for=\"ShowOnShop\""));
+        Assert.DoesNotContain("ShowOnFaqPage", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShowOnFaqPage", typeof(FaqItemEditViewModel).GetProperties().Select(p => p.Name));
+        Assert.Contains("bool.TryParse(publish", controller, StringComparison.Ordinal);
+        Assert.Contains("value=\"@(item.IsPublished ? \"false\" : \"true\")\"", index, StringComparison.Ordinal);
+        Assert.Contains("badge bg-success\">Published", index, StringComparison.Ordinal);
+        Assert.Contains("badge bg-danger\">Unpublished", index, StringComparison.Ordinal);
+        Assert.Contains("item.IsPublished", index, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShowOnFaqPage", index, StringComparison.Ordinal);
+        Assert.Contains("Unpublish", index, StringComparison.Ordinal);
+        Assert.Contains("Publish", index, StringComparison.Ordinal);
+        Assert.Contains("<th>Status</th>", index, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(true, "badge bg-success\">Published", "Unpublish")]
+    [InlineData(false, "badge bg-danger\">Unpublished", "Publish")]
+    public void Faq_index_status_badge_matches_IsPublished(bool isPublished, string badgeMarkup, string actionLabel)
+    {
+        var root = FindRepoRoot();
+        var index = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Views", "AdminFaqs", "Index.cshtml"));
+        Assert.Contains("@if (item.IsPublished)", index, StringComparison.Ordinal);
+        Assert.Contains(badgeMarkup, index, StringComparison.Ordinal);
+        Assert.Contains(actionLabel, index, StringComparison.Ordinal);
+        Assert.Contains(
+            isPublished
+                ? "btn-outline-danger"
+                : "btn-outline-success",
+            index,
+            StringComparison.Ordinal);
+    }
+
+    private static int Count(string text, string value)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = text.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+
+        return count;
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "FinalProject.slnx"))
+                || File.Exists(Path.Combine(dir.FullName, "FinalProject.sln")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the repository root.");
     }
 
     private static ApplicationDbContext CreateDb() =>

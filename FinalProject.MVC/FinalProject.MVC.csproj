@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AutoVault.Domain\AutoVault.Domain.csproj" />
+    <ProjectReference Include="..\AutoVault.Repository\AutoVault.Repository.csproj" />
+    <ProjectReference Include="..\AutoVault.Service\AutoVault.Service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.30" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.30">
       <PrivateAssets>all</PrivateAssets>
@@ -18,8 +24,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
-    <PackageReference Include="MailKit" Version="4.18.1" />
   </ItemGroup>
 
   <ItemGroup>

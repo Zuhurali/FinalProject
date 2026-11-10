@@ -48,7 +48,7 @@
                         <h3 class="title mb-2">Delete Account</h3>
                         <p class="mb-3">
                             Deactivating your account permanently disables sign-in for this Member profile.
-                            Your listings, conversations, messages, contact requests, purchase requests, favorites,
+                            Your listings, conversations, messages, contact requests, favorites,
                             and other historical records are kept and are not deleted.
                         </p>
                         @if (deleteAttempted && deleteErrors.Count > 0)
@@ -78,7 +78,7 @@
                                        required
                                        style="height:50px;" />
                                 <span class="text-danger field-validation-error">@Html.ValidationMessage("CurrentPassword", "", new { @class = "text-danger" })</span>
-                                <div class="mt-3 mb-3" style="display:flex;align-items:flex-start;gap:10px;">
+                                <label class="mt-3 mb-3" style="display:flex;align-items:flex-start;gap:10px;margin:0;line-height:1.4;cursor:pointer;">
                                     <input id="ConfirmDeactivation"
                                            name="ConfirmDeactivation"
                                            type="checkbox"
@@ -86,10 +86,8 @@
                                            required
                                            style="width:18px;height:18px;margin-top:4px;flex:0 0 18px;"
                                            @(deleteModel.ConfirmDeactivation ? "checked" : null) />
-                                    <label for="ConfirmDeactivation" style="margin:0;line-height:1.4;">
-                                        I understand my account will be deactivated and I will no longer be able to sign in.
-                                    </label>
-                                </div>
+                                    <span>I understand my account will be deactivated and I will no longer be able to sign in.</span>
+                                </label>
                                 <span class="text-danger field-validation-error">@Html.ValidationMessage("ConfirmDeactivation", "", new { @class = "text-danger" })</span>
                                 <button type="submit" class="rts-btn btn-primary radius-small mt-2" style="background:#b91c1c;border-color:#b91c1c;">
                                     Confirm account deactivation

@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Controllers;
@@ -15,7 +16,7 @@ namespace FinalProject.Tests;
 public class CampaignsAndCouponsTests
 {
     private const string ConnectionString =
-        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True";
+        "Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True";
 
     [Fact]
     public void Admin_campaigns_and_coupons_require_Admin_or_SuperAdmin()
@@ -97,7 +98,7 @@ public class CampaignsAndCouponsTests
     public async Task Preview_apply_does_not_write_coupon_usage()
     {
         await using var db = CreateDb();
-        var coupons = new CouponService(db);
+        var coupons = new CouponService(new ApplicationRepository(db));
         await coupons.EnsureSeedAsync();
 
         var userId = await db.Users.AsNoTracking().Select(user => user.Id).FirstAsync();
@@ -128,7 +129,7 @@ public class CampaignsAndCouponsTests
     public async Task Redeem_persists_usage_and_blocks_duplicate()
     {
         await using var db = CreateDb();
-        var coupons = new CouponService(db);
+        var coupons = new CouponService(new ApplicationRepository(db));
         await coupons.EnsureSeedAsync();
         var userId = await db.Users.AsNoTracking().Select(user => user.Id).FirstAsync();
         var marker = "REDEEM-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
@@ -168,7 +169,7 @@ public class CampaignsAndCouponsTests
     public async Task Expired_and_inactive_coupons_fail_preview_without_mutating_usages()
     {
         await using var db = CreateDb();
-        var coupons = new CouponService(db);
+        var coupons = new CouponService(new ApplicationRepository(db));
         var userId = await db.Users.AsNoTracking().Select(user => user.Id).FirstAsync();
         var product = await db.ShopProducts.AsNoTracking().FirstAsync(item => item.IsActive);
         var code = "EXP-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
@@ -223,7 +224,7 @@ public class CampaignsAndCouponsTests
     public async Task Campaign_save_rejects_inactive_product()
     {
         await using var db = CreateDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var product = await db.ShopProducts.FirstAsync(item => item.IsActive);
         product.IsActive = false;
         await db.SaveChangesAsync();
@@ -255,7 +256,7 @@ public class CampaignsAndCouponsTests
     public async Task Live_campaigns_load_from_database_for_shop_pricing()
     {
         await using var db = CreateDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
         var live = await catalog.GetLiveCampaignsAsync();
         Assert.All(live, campaign =>
         {

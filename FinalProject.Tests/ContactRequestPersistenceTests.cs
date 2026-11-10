@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using System.Reflection;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Controllers;
@@ -17,7 +18,7 @@ public class ContactRequestPersistenceTests
     public async Task SaveAsync_persists_valid_request_as_New()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
         var model = ValidModel();
 
         var (ok, id, errors, error) = await service.SaveAsync(model);
@@ -28,7 +29,10 @@ public class ContactRequestPersistenceTests
         var stored = await db.ContactRequests.AsNoTracking().SingleAsync(item => item.Id == id);
         Assert.Equal("Ada Lovelace", stored.CustomerName);
         Assert.Equal("ada@example.com", stored.Email);
-        Assert.Equal("+994 50 354 67 67", stored.Phone);
+        Assert.Equal("+994503546767", stored.Phone);
+        Assert.Contains("@request.Phone", File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "FinalProject.MVC", "Views", "AdminContactRequests", "Index.cshtml")), StringComparison.Ordinal);
         Assert.Equal("Brake pads", stored.Interest);
         Assert.Equal("Please call me about availability this week.", stored.Message);
         Assert.Equal(ContactRequestStatus.New, stored.Status);
@@ -36,11 +40,32 @@ public class ContactRequestPersistenceTests
         Assert.True(stored.CreatedAt <= DateTime.UtcNow.AddMinutes(1));
     }
 
+    [Theory]
+    [InlineData("AZ", "501234567", "+994501234567")]
+    [InlineData("TR", "5321234567", "+905321234567")]
+    [InlineData("US", "5551234567", "+15551234567")]
+    [InlineData("DE", "15123456789", "+4915123456789")]
+    public async Task SaveAsync_persists_the_complete_international_number(string country, string national, string expected)
+    {
+        await using var db = CreateDb();
+        var service = new ContactRequestService(new ApplicationRepository(db));
+        var model = ValidModel($"{country.ToLowerInvariant()}@example.com", "Please call me about this international number.");
+        model.PhoneCountry = country;
+        model.Phone = national;
+
+        var (ok, id, errors, error) = await service.SaveAsync(model);
+
+        Assert.True(ok, error);
+        Assert.Empty(errors);
+        var stored = await db.ContactRequests.AsNoTracking().SingleAsync(item => item.Id == id);
+        Assert.Equal(expected, stored.Phone);
+    }
+
     [Fact]
     public async Task SaveAsync_stores_authenticated_user_id()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
 
         var (ok, id, _, error) = await service.SaveAsync(ValidModel(), "member-user-42");
 
@@ -53,7 +78,7 @@ public class ContactRequestPersistenceTests
     public async Task GetForUserAsync_returns_only_that_members_requests()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
 
         await service.SaveAsync(ValidModel(), "user-a");
         await service.SaveAsync(ValidModel("other@example.com", "Second request message here."), "user-a");
@@ -70,7 +95,7 @@ public class ContactRequestPersistenceTests
     public async Task SaveAsync_rejects_invalid_phone_without_persisting()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
         var model = ValidModel();
         model.Phone = "123abc";
 
@@ -78,7 +103,7 @@ public class ContactRequestPersistenceTests
 
         Assert.False(ok);
         Assert.Null(id);
-        Assert.Equal(PhoneNumberValidation.ErrorMessage, errors["phone"]);
+        Assert.Equal(InternationalPhoneNumber.ErrorMessage, errors["phone"]);
         Assert.Equal("Please correct the highlighted fields.", error);
         Assert.Equal(0, await db.ContactRequests.CountAsync());
     }
@@ -87,7 +112,7 @@ public class ContactRequestPersistenceTests
     public async Task SetStatusAsync_updates_allowed_statuses_only()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
         var (ok, id, _, error) = await service.SaveAsync(ValidModel());
         Assert.True(ok, error);
 
@@ -154,7 +179,7 @@ public class ContactRequestPersistenceTests
     public async Task ClaimOrphanedByVerifiedEmailAsync_links_only_matching_email()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
 
         await service.SaveAsync(ValidModel("member@gmail.com", "Orphan matching member email."));
         await service.SaveAsync(ValidModel("asdad@gmail.com", "Orphan with unrelated guest email."));
@@ -180,7 +205,7 @@ public class ContactRequestPersistenceTests
     public async Task ClaimOrphanedByVerifiedEmailAsync_does_not_attach_unrelated_emails()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
         await service.SaveAsync(ValidModel("asdad@gmail.com", "Guest submission not owned by anyone."));
 
         var claimed = await service.ClaimOrphanedByVerifiedEmailAsync(
@@ -205,7 +230,7 @@ public class ContactRequestPersistenceTests
     public async Task DeleteAsync_removes_request_from_admin_and_member_lists()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
 
         var (ok, id, _, error) = await service.SaveAsync(ValidModel("owner@example.com", "Member owned request to remove."), "owner-1");
         Assert.True(ok, error);
@@ -223,7 +248,7 @@ public class ContactRequestPersistenceTests
     public async Task DeleteAsync_returns_false_for_missing_or_already_deleted_id()
     {
         await using var db = CreateDb();
-        var service = new ContactRequestService(db);
+        var service = new ContactRequestService(new ApplicationRepository(db));
         var (ok, id, _, error) = await service.SaveAsync(ValidModel());
         Assert.True(ok, error);
 
@@ -231,6 +256,23 @@ public class ContactRequestPersistenceTests
         Assert.False(await service.DeleteAsync(id.Value));
         Assert.False(await service.DeleteAsync(99999));
         Assert.Equal(0, await db.ContactRequests.CountAsync());
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "FinalProject.slnx"))
+                || File.Exists(Path.Combine(dir.FullName, "FinalProject.sln")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the repository root.");
     }
 
     private static ApplicationDbContext CreateDb()

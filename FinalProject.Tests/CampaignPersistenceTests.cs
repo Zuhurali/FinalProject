@@ -1,3 +1,4 @@
+using FinalProject.MVC.Repositories.Implementations;
 using FinalProject.MVC.Commerce;
 using FinalProject.MVC.Data;
 using FinalProject.MVC.Models;
@@ -18,7 +19,7 @@ public class CampaignPersistenceTests
     private static ApplicationDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer("Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb;Trusted_Connection=True;TrustServerCertificate=True")
+            .UseSqlServer("Server=VICTUS\\SQLEXPRESS;Database=FinalProjectDb_Test;Trusted_Connection=True;TrustServerCertificate=True")
             .Options;
         return new ApplicationDbContext(options);
     }
@@ -27,7 +28,7 @@ public class CampaignPersistenceTests
     public async Task Campaigns_save_to_sql_and_only_live_spare_part_offers_change_shop_prices()
     {
         await using var db = CreateDb();
-        var catalog = new ShopCatalogService(db);
+        var catalog = new ShopCatalogService(new ApplicationRepository(db));
 
         var turbo = await db.ShopProducts.AsNoTracking().SingleAsync(product => product.Name == "Turbocharger Assembly");
         var originalPrice = turbo.Price;
