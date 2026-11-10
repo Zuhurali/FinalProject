@@ -1,7 +1,5 @@
 /* style.css sets html { font-size: 10px }, so sizes here are in px rather than rem. */
 
-/* ---------- Product cards (Shop, Shop Demo, related parts) ---------- */
-
 .av-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -285,8 +283,6 @@
     }
 }
 
-/* ---------- /Shop filter row ---------- */
-
 .showroom-filters {
     display: flex;
     flex-direction: column;
@@ -355,8 +351,6 @@
     align-items: center;
 }
 
-/* ---------- /Shop hero ---------- */
-
 .showroom-demo-hero {
     padding: 30px 0 10px;
 }
@@ -380,7 +374,6 @@
     background: linear-gradient(160deg, #0b1220 0%, #141d33 100%);
 }
 
-/* Source photo is 2048x1364 (3:2). The right column shows it smaller than that, so it stays sharp. */
 .showroom-hero__photo {
     grid-column: 2;
     grid-row: 1;
@@ -525,8 +518,6 @@
     justify-content: center;
     margin: 0;
 }
-
-/* ---------- Product details ---------- */
 
 .av-detail {
     display: grid;
@@ -1170,8 +1161,6 @@
     }
 }
 
-/* ---------- Responsive ---------- */
-
 @media (max-width: 1199px) {
     .showroom-filters .select-area {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1265,4 +1254,15 @@
         padding: 14px;
         border-radius: 16px;
     }
+}
+
+.cars-two-filters-scroll > .search-area,
+.cars-two-filters-scroll > .side-box,
+.cars-two-filters-scroll > .price-box,
+.cars-two-filters-scroll > .tag-area {
+    order: 0 !important;
+}
+
+.cars-two-filters-scroll > .side-box:has(#carSeatList) {
+    order: 1 !important;
 }

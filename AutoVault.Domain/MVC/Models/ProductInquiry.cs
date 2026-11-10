@@ -26,7 +26,6 @@ public class ProductInquiry : BaseEntity
     [MaxLength(450)]
     public string? UserId { get; set; }
 
-    // ── Admin reply ──────────────────────────────────────────────────────────
     /// <summary>The admin's written reply. Null means no reply has been sent yet.</summary>
     [MaxLength(2000)]
     public string? AdminReply { get; set; }
@@ -48,7 +47,6 @@ public class ProductInquiry : BaseEntity
     public const string LabelClosed = "Closed";
     public const string LabelAwaitingFollowUp = "Awaiting follow-up";
 
-    // Computed helpers (not mapped)
     public bool HasReply => !string.IsNullOrWhiteSpace(AdminReply);
 
     /// <summary>

@@ -19,7 +19,6 @@ namespace FinalProject.MVC.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal DiscountAmount { get; set; }
 
-        // Navigation property
         [ForeignKey(nameof(UserId))]
         public virtual ApplicationUser User { get; set; } = null!;
     }

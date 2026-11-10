@@ -38,9 +38,34 @@ namespace FinalProject.MVC.Controllers
             _conversations = conversations;
         }
 
-        public async Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, string? condition, int page = 1)
+        public Task<IActionResult> Index(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, string? condition, int page = 1)
         {
-            ViewData["Title"] = "Cars - AutoVault";
+            _ = condition;
+            return ListByConditionAsync(isNew: false, category, make, model, priceRange, fuel, transmission, search, page);
+        }
+
+        [HttpGet("/Cars/New")]
+        public Task<IActionResult> New(string? category, string? make, string? model, string? priceRange, string? fuel, string? transmission, string? search, string? condition, int page = 1)
+        {
+            _ = condition;
+            return ListByConditionAsync(isNew: true, category, make, model, priceRange, fuel, transmission, search, page);
+        }
+
+        private async Task<IActionResult> ListByConditionAsync(
+            bool isNew,
+            string? category,
+            string? make,
+            string? model,
+            string? priceRange,
+            string? fuel,
+            string? transmission,
+            string? search,
+            int page)
+        {
+            var listingName = isNew ? "New Cars" : "Used Cars";
+            ViewData["Title"] = $"{listingName} - AutoVault";
+            ViewData["ListingTitle"] = listingName;
+            ViewData["ListingAction"] = isNew ? nameof(New) : nameof(Index);
 
             var query = new CarListingQuery
             {
@@ -51,23 +76,24 @@ namespace FinalProject.MVC.Controllers
                 Fuel = fuel,
                 Transmission = transmission,
                 Search = search,
-                Condition = condition,
+                Condition = isNew ? "new" : "used",
                 Page = page
             };
 
             try
             {
                 var catalog = await _carApi.GetAllCarsAsync(CarPublicListing.CreateActiveQuery(), HttpContext.RequestAborted);
-                var listing = await BuildListingAsync(query, catalog);
+                var scopedCatalog = catalog.Where(car => car.IsNew == isNew).ToList();
+                var listing = await BuildListingAsync(query, scopedCatalog);
                 await MarkFavoritesAsync(listing.Cars);
-                return View(listing);
+                return View("Index", listing);
             }
             catch (CarApiException exception)
             {
-                _logger.LogError(exception, "Car listing could not be loaded.");
+                _logger.LogError(exception, "{ListingName} could not be loaded.", listingName);
                 var listing = CarListingFilter.Page(Array.Empty<Car>(), query, Array.Empty<Car>());
                 listing.ApiUnavailable = true;
-                return View(listing);
+                return View("Index", listing);
             }
         }
 
@@ -156,7 +182,7 @@ namespace FinalProject.MVC.Controllers
             }
         }
 
-        public async Task<IActionResult> CarsTwo()
+        public async Task<IActionResult> CarsTwo(int[]? seats)
         {
             ViewData["Title"] = "Cars Two - AutoVault";
             ViewData["BodyClass"] = "with-sidebar";
@@ -165,9 +191,20 @@ namespace FinalProject.MVC.Controllers
                 .OrderByDescending(car => car.CreatedAt)
                 .ThenByDescending(car => car.Id)
                 .ToList();
-            await MarkFavoritesAsync(cars);
+            ViewData["CarsTwoGrid"] = await ApplyCarsTwoSeatFilterAsync(cars, seats);
             ViewData["BrandIds"] = await LoadBrandIdsAsync();
             return View(cars);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CarsTwoResults(int[]? seats)
+        {
+            var cars = (await LoadCarsAsync())
+                .OrderByDescending(car => car.CreatedAt)
+                .ThenByDescending(car => car.Id)
+                .ToList();
+            var visible = await ApplyCarsTwoSeatFilterAsync(cars, seats);
+            return PartialView("_CarsTwoCards", visible);
         }
 
         [HttpGet]
@@ -585,6 +622,30 @@ namespace FinalProject.MVC.Controllers
         {
             var catalog = await LoadCatalogAsync();
             return catalog;
+        }
+
+        private async Task<List<Car>> ApplyCarsTwoSeatFilterAsync(List<Car> cars, int[]? seats)
+        {
+            var selectedSeats = (seats ?? Array.Empty<int>())
+                .Where(seat => seat is >= 1 and <= 12)
+                .Distinct()
+                .OrderBy(seat => seat)
+                .ToArray();
+            ViewData["SeatOptions"] = cars
+                .Select(car => CarsTwoSeatCount.Resolve(car.Seats, car.Description))
+                .Where(seat => seat.HasValue)
+                .GroupBy(seat => seat!.Value)
+                .OrderBy(group => group.Key)
+                .Select(group => new CarsTwoSeatOption(group.Key, group.Count()))
+                .ToList();
+            ViewData["SelectedSeats"] = selectedSeats;
+            var visible = selectedSeats.Length == 0
+                ? cars
+                : cars
+                    .Where(car => CarsTwoSeatCount.Matches(car.Seats, car.Description, selectedSeats))
+                    .ToList();
+            await MarkFavoritesAsync(visible);
+            return visible;
         }
 
         private static CarsThreeFilterQuery NormalizeCarsThreeFilters(
@@ -1060,4 +1121,6 @@ namespace FinalProject.MVC.Controllers
                 : RedirectToAction(nameof(Details), new { id = carId });
         }
     }
+
+    public sealed record CarsTwoSeatOption(int Seats, int Count);
 }

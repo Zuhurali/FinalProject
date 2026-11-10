@@ -35,8 +35,8 @@ public sealed class AdminSalesController : Controller
         await _popularity.ApplyAsync(ranked, cancellationToken);
         ViewBag.Ranking = PopularityRanking.ByPopularity(
             ranked,
-            product => product.PopularityScore,
             product => product.RealSalesCount,
+            product => product.FavoriteCount,
             product => product.Id).ToList();
         ViewBag.Formula = PopularityRanking.Explanation;
         ViewBag.SubmissionKey = Guid.NewGuid();

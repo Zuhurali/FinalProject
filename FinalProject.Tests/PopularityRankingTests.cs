@@ -62,8 +62,8 @@ public class PopularityRankingTests
 
         var ordered = PopularityRanking.ByPopularity(
             products,
-            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, item.Sales),
             item => item.Sales,
+            item => item.Favorites,
             item => item.Id).Select(item => item.Id).ToArray();
 
         Assert.Equal(new[] { 3, 1, 2 }, ordered);
@@ -83,8 +83,8 @@ public class PopularityRankingTests
             .First();
         var popular = PopularityRanking.ByPopularity(
             products,
-            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, item.Sales),
             item => item.Sales,
+            item => item.Favorites,
             item => item.Id).Select(item => item.Id).First();
 
         Assert.Equal(21, latest);
@@ -107,19 +107,20 @@ public class PopularityRankingTests
                 0,
                 0,
                 recordedSalesById[id],
+                0,
                 new DateTime(2026, 8, 1).AddDays(id)))
             .ToArray();
 
         var popular = PopularityRanking.ByPopularity(
             products,
-            item => PopularityRanking.Score(item.Average, item.Reviews, item.Reviews, item.Sales),
             item => item.Sales,
-            item => item.Id).First();
-        var latest = PopularityRanking.ByLatest(products, item => item.CreatedAt, item => item.Id).First();
+            item => item.Favorites,
+            item => item.Id).Select(item => item.Id).First();
+        var latest = PopularityRanking.ByLatest(products, item => item.CreatedAt, item => item.Id).Select(item => item.Id).First();
 
-        Assert.Equal(16, popular.Id);
-        Assert.Equal(21, latest.Id);
-        Assert.NotEqual(popular.Id, latest.Id);
+        Assert.Equal(16, popular);
+        Assert.Equal(21, latest);
+        Assert.NotEqual(popular, latest);
     }
 
     [Fact]
@@ -137,8 +138,56 @@ public class PopularityRankingTests
         Assert.Equal(PopularityRanking.PriorMean, PopularityRanking.RatingScore(0, 0, 0));
     }
 
-    private static PlannedPart Item(int id, double average, int sales, DateTime createdAt) =>
-        new(id, average, 4, sales, createdAt);
+    [Fact]
+    public void Popular_order_uses_sales_then_favorites_then_product_id()
+    {
+        var products = new[]
+        {
+            new PlannedPart(4, 0, 0, 5, 1, new DateTime(2026, 1, 4)),
+            new PlannedPart(2, 0, 0, 5, 3, new DateTime(2026, 1, 2)),
+            new PlannedPart(9, 0, 0, 8, 0, new DateTime(2026, 1, 9)),
+            new PlannedPart(1, 0, 0, 5, 3, new DateTime(2026, 1, 1))
+        };
 
-    private sealed record PlannedPart(int Id, double Average, int Reviews, int Sales, DateTime CreatedAt);
+        var ordered = PopularityRanking.ByPopularity(
+            products,
+            item => item.Sales,
+            item => item.Favorites,
+            item => item.Id).Select(item => item.Id).ToArray();
+
+        Assert.Equal(new[] { 9, 1, 2, 4 }, ordered);
+    }
+
+    [Fact]
+    public void Latest_order_ignores_sales_and_favorites()
+    {
+        var products = new[]
+        {
+            new PlannedPart(3, 0, 0, 40, 20, new DateTime(2026, 3, 1)),
+            new PlannedPart(8, 0, 0, 1, 0, new DateTime(2026, 6, 1))
+        };
+
+        var latest = PopularityRanking.ByLatest(products, item => item.CreatedAt, item => item.Id)
+            .Select(item => item.Id)
+            .ToArray();
+
+        Assert.Equal(new[] { 8, 3 }, latest);
+    }
+
+    [Fact]
+    public void Recorded_sales_query_excludes_voided_and_demo_sales_and_ignores_purchase_requests()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var sql = File.ReadAllText(Path.Combine(root, "AutoVault.Repository", "Implementations", "ApplicationRepository.Popularity.cs"));
+
+        Assert.Contains("FROM InPersonSales", sql, StringComparison.Ordinal);
+        Assert.Contains("IsDemo = 0 AND VoidedAt IS NULL", sql, StringComparison.Ordinal);
+        Assert.Contains("FROM ProductFavorites", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShowroomPurchaseRequests", sql, StringComparison.Ordinal);
+    }
+
+    private static PlannedPart Item(int id, double average, int sales, DateTime createdAt) =>
+        new(id, average, 4, sales, 0, createdAt);
+
+    private sealed record PlannedPart(int Id, double Average, int Reviews, int Sales, int Favorites, DateTime CreatedAt);
 }

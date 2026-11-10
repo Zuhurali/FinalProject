@@ -111,7 +111,6 @@
                             <span class="cross"><i class="fa-light fa-xmark"></i></span>
                         </div>
                         
-                        <!-- Categories from SQL ShopProducts -->
                         <div class="tag-area side-box">
                             <h2>Categories</h2>
                             <ul>
@@ -196,7 +195,6 @@
         let searchText = '';
         let priceRange = { min: 0, max: 3000 };
         
-        // Initialize price slider (using noUiSlider if available, or simple tracking)
         let priceSlider = document.getElementById('price-slider');
         if (typeof noUiSlider !== 'undefined' && priceSlider) {
             noUiSlider.create(priceSlider, {
@@ -218,7 +216,6 @@
             });
         }
         
-        // Function to apply REAL combined filters
         function applyFilters() {
             const filterData = {
                 searchText: searchText,
@@ -240,7 +237,6 @@
                     updateProductsContainer(response, false);
                     currentPage = response.currentPage;
                     
-                    // Update results text
                     if (response.resultsText) {
                         console.log(response.resultsText);
                     }
@@ -251,7 +247,6 @@
             });
         }
 
-        // Function to update products container
         function updateProductsContainer(response, append = false) {
             let html = '';
             
@@ -272,7 +267,6 @@
                 $('#products-container-shop2').html(html);
             }
             
-            // Update Load More button
             if (response.hasMorePages) {
                 $('.load-more-container').show();
             } else {
@@ -280,7 +274,6 @@
             }
         }
 
-        // Function to generate product HTML
         function generateProductHtml(product) {
             let starsHtml = '';
             for (let i = 1; i <= 5; i++) {
@@ -296,7 +289,6 @@
                 ? 'No ratings'
                 : Number(product.rating).toFixed(1) + ' (' + product.ratingCount + ')';
 
-            // Convert ~ path to relative path
             let imagePath = product.imagePath;
             if (imagePath.startsWith('~/')) {
                 imagePath = imagePath.substring(1);
@@ -330,7 +322,6 @@
             `;
         }
 
-        // Search input handler
         $('.search-area input[type="text"]').on('input', function() {
             searchText = $(this).val().trim();
         });
@@ -340,14 +331,12 @@
             applyFilters();
         });
         
-        // Clear search
         $('.search-area .cross').on('click', function() {
             searchText = '';
             $('.search-area input[type="text"]').val('');
             applyFilters();
         });
 
-        // Car Make checkboxes - MULTI-SELECT
         $('input[data-filter="make"]').on('change', function() {
             const value = $(this).data('value');
             if (this.checked) {
@@ -360,7 +349,6 @@
             applyFilters();
         });
 
-        // Car Model checkboxes - MULTI-SELECT
         $('input[data-filter="model"]').on('change', function() {
             const value = $(this).data('value');
             if (this.checked) {
@@ -373,12 +361,10 @@
             applyFilters();
         });
 
-        // Category filter
         $('.tag-area a').on('click', function(e) {
             e.preventDefault();
             const category = $(this).data('category');
             
-            // Toggle category
             if (selectedCategory === category) {
                 selectedCategory = '';
                 $(this).removeClass('active');
@@ -391,7 +377,6 @@
             applyFilters();
         });
 
-        // Load More with current filters
         $(document).on('click', '#load-more-btn-shop2', function(e) {
             e.preventDefault();
             

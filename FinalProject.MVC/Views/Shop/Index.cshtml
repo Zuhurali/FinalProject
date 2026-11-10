@@ -587,7 +587,6 @@
             }
         }
 
-        // Function to update products container
         function updateProductsContainer(response, append = false) {
             let html = '';
             response.products.forEach(function(product) {
@@ -606,8 +605,6 @@
             return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
         }
 
-        // Function to generate product HTML
-        // Mirrors Views/Shared/_ProductCard.cshtml.
         function generateProductHtml(product) {
             const rating = Number(product.rating) || 0;
             let starsHtml = '';
@@ -671,17 +668,14 @@
             `;
         }
 
-        // Function to update results text
         function updateResultsText(text) {
             $('#results-text').text(text);
         }
 
-        // Function to update load more button
         function updateLoadMoreButton(hasMorePages) {
             $('.load-more-container').prop('hidden', !hasMorePages);
         }
 
-        // Event handlers for filters
         $('#category, #brand, #priceRange, #sortBy').on('change', function() {
             markListingTab($('#sortBy').val());
             applyFilters();
@@ -713,7 +707,6 @@
             }
         });
 
-        // Event handler for Load More button
         $(document).on('click', '#load-more-btn', function(e) {
             e.preventDefault();
             loadMoreProducts();

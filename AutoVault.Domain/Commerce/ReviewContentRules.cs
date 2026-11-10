@@ -45,12 +45,10 @@ public static class ReviewContentRules
     /// </summary>
     public static string? CheckForRepeatedTokenSpam(string text)
     {
-        // Split on any whitespace; skip empty entries from multiple spaces.
         var tokens = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 
         if (tokens.Length < MaxConsecutiveRepeats)
         {
-            // Cannot possibly reach the threshold.
             return null;
         }
 

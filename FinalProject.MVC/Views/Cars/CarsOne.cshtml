@@ -142,12 +142,10 @@
 @section Scripts {
 <script>
     $(document).ready(function() {
-        // Search button click
         $('#searchBtn').on('click', function() {
             filterCars();
         });
 
-        // Reset filters
         $('#resetFilters, #resetFiltersTop').on('click', function() {
             $('#carMakeSelect').val('').trigger('change');
             $('#carModelSelect').val('').trigger('change');
@@ -155,13 +153,11 @@
             filterCars();
         });
 
-        // Filter cars via AJAX
         function filterCars() {
             const make = $('#carMakeSelect').val();
             const model = $('#carModelSelect').val();
             const priceRange = $('#priceRangeSelect').val();
 
-            // Show loading indicator
             $('#loadingIndicator').show();
             $('#carsContainer').css('opacity', '0.5');
 
@@ -187,7 +183,6 @@
             });
         }
 
-        // Update cars list dynamically
         function updateCarsList(cars) {
             const container = $('#carsContainer');
             container.empty();

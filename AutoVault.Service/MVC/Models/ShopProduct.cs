@@ -31,6 +31,9 @@ namespace FinalProject.MVC.Models
         /// <summary>Sum of quantities from recorded in-store sales (IsDemo = false).</summary>
         public int RealSalesCount { get; set; }
 
+        /// <summary>Saved ProductFavorites rows for this spare part.</summary>
+        public int FavoriteCount { get; set; }
+
         /// <summary>Deprecated: demo sales no longer affect ranking or display. Kept at 0.</summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public int DemoSalesCount { get; set; }

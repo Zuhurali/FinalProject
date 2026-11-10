@@ -292,7 +292,6 @@
             </div>
         </div>
 
-        <!-- Tabs Section -->
         <div class="av-detail-tabs tab-area">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -372,12 +371,10 @@
                                 {
                                     <p><em>Hidden from the shop.</em></p>
                                 }
-                                @* Static content � JS replaces this on inline edit *@
                                 <p id="review-content-@review.Id">@review.Content</p>
 
                                 @if (review.CanEdit && User.Identity?.IsAuthenticated == true)
                                 {
-                                    @* Inline edit section � hidden until user clicks Edit *@
                                     <div id="review-view-actions-@review.Id">
                                         <button type="button"
                                                 class="btn btn-link p-0 review-edit-open"
@@ -426,7 +423,6 @@
                             <h2 class="mb--30">Write a review</h2>
                             @if (User.Identity?.IsAuthenticated == true)
                             {
-                                @* New-review form � unchanged full-page POST *@
                                 <form asp-controller="Shop" asp-action="SaveReview" method="post">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="productId" value="@Model.Id" />
@@ -541,7 +537,6 @@
                     paintUserRating(response.userRating);
                     paintAverageRating(response.averageRating, response.totalCount);
                     message.text(response.message).css('color', '#28a745');
-                    // Show delete button, hide submit button
                     $('#submitRatingBtn').hide();
                     $('#userRatingId').val(response.ratingId || 0);
                     if (!$('#deleteRatingBtn').length) {
@@ -566,7 +561,6 @@
             });
         });
 
-        // Delete my rating
         $(document).on('click', '#deleteRatingBtn', function() {
             const ratingId = Number($('#userRatingId').val());
             const button = $(this);
@@ -592,7 +586,6 @@
                     message.text(response.message).css('color', '#28a745');
                     $('#userRatingId').val(0);
                     button.hide();
-                    // Show submit button again
                     if (!$('#submitRatingBtn').length) {
                         $('<button type="submit" class="av-btn av-btn--ghost av-btn--small" id="submitRatingBtn">Submit Rating</button>')
                             .insertBefore(message);
@@ -607,14 +600,11 @@
             });
         });
 
-        // -- Inline review editor ---------------------------------------------
-        // Reads the antiforgery token from any rendered form on the page.
         function getReviewAFToken() {
             const field = document.querySelector('input[name="__RequestVerificationToken"]');
             return field ? field.value : '';
         }
 
-        // Open editor in place � preserve scroll position
         $(document).on('click', '.review-edit-open', function () {
             const reviewId = $(this).data('review-id');
             $('#review-view-actions-' + reviewId).hide();
@@ -625,18 +615,15 @@
             ta.setSelectionRange(ta.value.length, ta.value.length);
         });
 
-        // Cancel � close editor, restore original text, stay at same scroll position
         $(document).on('click', '.review-edit-cancel', function () {
             const reviewId = $(this).data('review-id');
             $('#review-editor-' + reviewId).hide();
             $('#review-view-actions-' + reviewId).show();
-            // Restore textarea to the last known saved value shown in the DOM
             const saved = $('#review-content-' + reviewId).text();
             $('#review-textarea-' + reviewId).val(saved);
             $('#review-editor-error-' + reviewId).hide().text('');
         });
 
-        // Save review via fetch � update DOM in place, no page reload
         $(document).on('click', '.review-edit-save', async function () {
             const reviewId = $(this).data('review-id');
             const productId = $(this).data('product-id');
@@ -644,7 +631,6 @@
             const errEl = $('#review-editor-error-' + reviewId);
             const content = $('#review-textarea-' + reviewId).val().trim();
 
-            // Client-side validation
             if (content.length < 1) {
                 errEl.text('Write at least 1 character.').show();
                 return;

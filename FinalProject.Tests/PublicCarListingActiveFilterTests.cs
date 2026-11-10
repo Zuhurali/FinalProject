@@ -49,6 +49,31 @@ public class PublicCarListingActiveFilterTests
     }
 
     [Fact]
+    public void Cars_Index_lists_used_cars_only_without_changing_other_car_pages()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var controller = File.ReadAllText(Path.Combine(root, "FinalProject.MVC", "Controllers", "CarsController.cs"));
+
+        var indexStart = controller.IndexOf("public Task<IActionResult> Index(", StringComparison.Ordinal);
+        Assert.True(indexStart >= 0);
+        var nextAction = controller.IndexOf("public async Task<IActionResult> Suggestions(", indexStart, StringComparison.Ordinal);
+        Assert.True(nextAction > indexStart);
+        var indexBody = controller[indexStart..nextAction];
+
+        Assert.Contains("ListByConditionAsync(isNew: false", indexBody, StringComparison.Ordinal);
+        Assert.Contains("private async Task<IActionResult> ListByConditionAsync(", controller, StringComparison.Ordinal);
+        Assert.Contains("catalog.Where(car => car.IsNew == isNew)", controller, StringComparison.Ordinal);
+        Assert.Contains("Condition = isNew ? \"new\" : \"used\"", controller, StringComparison.Ordinal);
+        Assert.Contains("[HttpGet(\"/Cars/New\")]", controller, StringComparison.Ordinal);
+        Assert.Contains("ListByConditionAsync(isNew: true", controller, StringComparison.Ordinal);
+        Assert.DoesNotContain("Condition = condition", indexBody, StringComparison.Ordinal);
+
+        Assert.Contains("public async Task<IActionResult> CarsThree(", controller, StringComparison.Ordinal);
+        Assert.Contains("public async Task<IActionResult> CarsTwo(", controller, StringComparison.Ordinal);
+        Assert.Contains("public async Task<IActionResult> MostViewed(", controller, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task QueryAsync_with_Active_status_excludes_Draft_and_Sold()
     {
         await using var db = CreateDb();

@@ -37,6 +37,18 @@ public sealed partial class ApplicationRepository
             """).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProductFavoriteCountRow>> GetProductFavoriteCountsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _db.Database.SqlQueryRaw<ProductFavoriteCountRow>("""
+            SELECT
+                ProductId,
+                CAST(COUNT(*) AS int) AS FavoriteCount
+            FROM ProductFavorites
+            GROUP BY ProductId
+            """).ToListAsync(cancellationToken);
+    }
+
     public Task<int> DeleteDemoPopularitySalesAsync(
         string demoNote,
         string demoRecorderPrefix,

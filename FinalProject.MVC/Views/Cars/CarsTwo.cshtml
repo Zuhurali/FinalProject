@@ -6,7 +6,9 @@
     var fuels = Model.GroupBy(car => car.Fuel).OrderBy(group => group.Key).Select(group => group.Key).ToList();
     var minPrice = Model.Count == 0 ? 0 : Model.Min(car => car.Price);
     var maxPrice = Model.Count == 0 ? 0 : Model.Max(car => car.Price);
-    // portfolio-2.html shows nine grid cards before Load More
+    var seatOptions = ViewData["SeatOptions"] as IReadOnlyList<FinalProject.MVC.Controllers.CarsTwoSeatOption> ?? Array.Empty<FinalProject.MVC.Controllers.CarsTwoSeatOption>();
+    var selectedSeats = ViewData["SelectedSeats"] as IReadOnlyList<int> ?? Array.Empty<int>();
+    var gridCars = ViewData["CarsTwoGrid"] as IReadOnlyList<FinalProject.MVC.Models.Car> ?? Model;
     const int pageSize = 9;
 }
 
@@ -41,6 +43,15 @@
 
     #carLoadMore[hidden] {
         display: none !important;
+    }
+
+    .cars-two-seat-badge {
+        pointer-events: none;
+        white-space: nowrap;
+        min-width: auto;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: 600;
     }
 </style>
 
@@ -153,7 +164,16 @@
                         <div class="car-make side-box">
                             <h2>Car Seats</h2>
                             <ul class="checkbox-list" id="carSeatList">
-                                <li class="cars-two-model-hint">Select a brand first</li>
+                                @foreach (var option in seatOptions)
+                                {
+                                    <li class="checkbox-item">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="seat-filter" value="@option.Seats" @(selectedSeats.Contains(option.Seats) ? "checked" : null) />
+                                            <span>@option.Seats seats</span>
+                                        </label>
+                                        <span>(@option.Count)</span>
+                                    </li>
+                                }
                             </ul>
                         </div>
                     </div>
@@ -162,63 +182,7 @@
             <div class="col-lg-8">
                 <div class="right">
                     <div class="row g-5" id="carGrid">
-                        @if (ViewData["CarApiError"] is string carApiError)
-                        {
-                            <div class="col-12">
-                                <h3 class="title text-center">@carApiError</h3>
-                            </div>
-                        }
-                        @{
-                            var index = 0;
-                        }
-                        @foreach (var car in Model)
-                        {
-                            <div class="col-lg-6 car-card @(index >= pageSize ? "d-none" : null)"
-                                 data-id="@car.Id"
-                                 data-created="@car.CreatedAt.Ticks"
-                                 data-search="@($"{car.Name} {car.Make} {car.Model}")"
-                                 data-make="@car.Make"
-                                 data-model="@car.Model"
-                                 data-price="@car.Price"
-                                 data-seats="@(CarsTwoSeatCount.Resolve(car.Seats, car.Description)?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
-                                 data-color="@car.Color"
-                                 data-fuel="@car.Fuel">
-                                <div class="project-wrapper2">
-                                    <div class="image-area">
-                                        <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"><img src="@Url.Content(car.ImagePath)" alt="@car.Name"></a>
-                                        <span class="tag">@car.Badge</span>
-                                        <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
-                                        <a href="@Url.Content(car.ImagePath)" class="gallery-image">
-                                            <img src="~/assets/images/icon/image.svg" alt="">
-                                            @car.ImageCount
-                                        </a>
-                                    </div>
-                                    <span class="price">@($"{car.Price:N0}$")</span>
-                                    <div class="content-area">
-                                        <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
-                                        <ul class="feature-area">
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
-                                                @car.MileageText
-                                            </li>
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
-                                                @car.Fuel
-                                            </li>
-                                            <li>
-                                                <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
-                                                @car.Transmission
-                                            </li>
-                                        </ul>
-                                        <div class="button-area">
-                                            <p class="">@($"${car.Price:N0}")</p>
-                                            <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            index++;
-                        }
+                        <partial name="_CarsTwoCards" model="gridCars" />
                     </div>
                     <h6 id="carEmpty" class="d-none text-center mt--40">No cars match this filter.</h6>
                     <button type="button" class="rts-btn load-more-btn btn-border" id="carLoadMore">Load More</button>
@@ -246,12 +210,33 @@
             var search = document.getElementById("carSearch");
             var empty = document.getElementById("carEmpty");
             var loadMore = document.getElementById("carLoadMore");
-            var cards = Array.prototype.slice.call(document.querySelectorAll(".car-card"));
+            var grid = document.getElementById("carGrid");
+            var cards = Array.prototype.slice.call(grid.querySelectorAll(".car-card"));
             var modelList = document.getElementById("carModelList");
             var colorList = document.getElementById("carColorList");
             var seatList = document.getElementById("carSeatList");
             var modelsUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Action("BrandModels", "Cars")));
+            var resultsUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Action("CarsTwoResults", "Cars")));
+            var facetCatalog = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.Select(car => new
+                {
+                    make = car.Make,
+                    model = car.Model,
+                    color = car.Color,
+                    fuel = car.Fuel,
+                    price = car.Price,
+                    search = $"{car.Name} {car.Make} {car.Model}",
+                    seats = CarsTwoSeatCount.Resolve(car.Seats, car.Description)
+                })));
             var modelRequest = 0;
+            var seatRequest = 0;
+
+            grid.addEventListener("click", function (event) {
+                var link = event.target.closest("a");
+                if (link && link.getAttribute("href") === "#") {
+                    event.preventDefault();
+                }
+            });
 
             function selected(selector) {
                 return Array.prototype.slice.call(document.querySelectorAll(selector + ":checked")).map(function (input) {
@@ -337,6 +322,7 @@
                     minRange.value = parseInt(maxRange.value, 10) - 5;
                 }
                 updateRange();
+                refreshSeatFilters();
                 resetPagingAndApply();
             });
             maxRange.addEventListener("input", function () {
@@ -344,13 +330,18 @@
                     maxRange.value = parseInt(minRange.value, 10) + 5;
                 }
                 updateRange();
+                refreshSeatFilters();
                 resetPagingAndApply();
             });
             document.getElementById("carSearchForm").addEventListener("submit", function (event) {
                 event.preventDefault();
+                refreshSeatFilters();
                 resetPagingAndApply();
             });
-            search.addEventListener("input", resetPagingAndApply);
+            search.addEventListener("input", function () {
+                refreshSeatFilters();
+                resetPagingAndApply();
+            });
             function selectedMakes() {
                 return Array.prototype.slice.call(document.querySelectorAll(".make-filter:checked"));
             }
@@ -365,6 +356,26 @@
                     })) return false;
                     if (models.length && models.indexOf(card.getAttribute("data-model")) === -1) return false;
                     return true;
+                });
+            }
+
+            function catalogForSeatFacets() {
+                var makes = selected(".make-filter");
+                var models = selected(".model-filter");
+                var colorValues = selected(".color-filter");
+                var fuelValues = Array.prototype.slice.call(document.querySelectorAll(".fuel-filter.is-active")).map(function (item) {
+                    return item.getAttribute("data-fuel");
+                });
+                var query = search.value.trim().toLowerCase();
+                var bounds = priceBounds();
+                return facetCatalog.filter(function (car) {
+                    if (makes.length && makes.indexOf(car.make) === -1) return false;
+                    if (models.length && models.indexOf(car.model) === -1) return false;
+                    if (colorValues.length && colorValues.indexOf(car.color) === -1) return false;
+                    if (fuelValues.length && fuelValues.indexOf(car.fuel) === -1) return false;
+                    if (query && String(car.search || "").toLowerCase().indexOf(query) === -1) return false;
+                    if (car.price < bounds.min || car.price > bounds.max) return false;
+                    return car.seats != null;
                 });
             }
 
@@ -419,27 +430,66 @@
                 });
             }
 
+            function sameValues(left, right) {
+                if (left.length !== right.length) return false;
+                var copy = left.slice().sort();
+                var other = right.slice().sort();
+                for (var index = 0; index < copy.length; index++) {
+                    if (copy[index] !== other[index]) return false;
+                }
+                return true;
+            }
+
+            function refreshSeatFilters() {
+                var previous = selected(".seat-filter");
+                var scoped = catalogForSeatFacets();
+                var seatCounts = {};
+                scoped.forEach(function (car) {
+                    var seats = String(car.seats);
+                    seatCounts[seats] = (seatCounts[seats] || 0) + 1;
+                });
+                var seatNames = Object.keys(seatCounts).sort(function (left, right) {
+                    return parseInt(left, 10) - parseInt(right, 10);
+                });
+                seatList.innerHTML = "";
+                if (!seatNames.length) {
+                    renderListPlaceholder(
+                        seatList,
+                        selectedMakes().length ? "No seats for this brand" : "No seat counts available");
+                } else {
+                    seatNames.forEach(function (name) {
+                        appendCheckboxItem(
+                            seatList,
+                            "seat-filter",
+                            name,
+                            name + " seats",
+                            seatCounts[name],
+                            previous.indexOf(name) !== -1);
+                    });
+                }
+
+                var next = selected(".seat-filter");
+                if (!sameValues(previous, next)) {
+                    syncSeatQuery();
+                    reloadSeatResults();
+                }
+            }
+
             function refreshColorAndSeatFilters() {
                 var makes = selectedMakes();
                 var keepColors = selected(".color-filter");
-                var keepSeats = selected(".seat-filter");
                 if (!makes.length) {
                     renderListPlaceholder(colorList, "Select a brand first");
-                    renderListPlaceholder(seatList, "Select a brand first");
+                    refreshSeatFilters();
                     return;
                 }
 
                 var scoped = cardsForFacetScope();
                 var colorCounts = {};
-                var seatCounts = {};
                 scoped.forEach(function (card) {
                     var color = (card.getAttribute("data-color") || "").trim();
                     if (color) {
                         colorCounts[color] = (colorCounts[color] || 0) + 1;
-                    }
-                    var seats = (card.getAttribute("data-seats") || "").trim();
-                    if (seats) {
-                        seatCounts[seats] = (seatCounts[seats] || 0) + 1;
                     }
                 });
 
@@ -464,24 +514,7 @@
                             keepColors.indexOf(name) !== -1);
                     });
                 }
-
-                var seatNames = Object.keys(seatCounts).sort(function (left, right) {
-                    return parseInt(left, 10) - parseInt(right, 10);
-                });
-                seatList.innerHTML = "";
-                if (!seatNames.length) {
-                    renderListPlaceholder(seatList, emptyHint);
-                } else {
-                    seatNames.forEach(function (name) {
-                        appendCheckboxItem(
-                            seatList,
-                            "seat-filter",
-                            name,
-                            name + " seats",
-                            seatCounts[name],
-                            keepSeats.indexOf(name) !== -1);
-                    });
-                }
+                refreshSeatFilters();
             }
 
             function loadModels() {
@@ -548,17 +581,60 @@
             });
             colorList.addEventListener("change", function (event) {
                 if (event.target && event.target.classList.contains("color-filter")) {
+                    refreshSeatFilters();
                     resetPagingAndApply();
                 }
             });
-            seatList.addEventListener("change", function (event) {
-                if (event.target && event.target.classList.contains("seat-filter")) {
+            function syncSeatQuery() {
+                var params = new URLSearchParams(window.location.search);
+                params.delete("seats");
+                selected(".seat-filter").forEach(function (value) {
+                    params.append("seats", value);
+                });
+                var query = params.toString();
+                history.replaceState(null, "", window.location.pathname + (query ? "?" + query : "") + window.location.hash);
+            }
+
+            function reloadSeatResults() {
+                var requestId = ++seatRequest;
+                var params = new URLSearchParams();
+                selected(".seat-filter").forEach(function (value) {
+                    params.append("seats", value);
+                });
+                syncSeatQuery();
+                fetch(resultsUrl + (params.toString() ? "?" + params.toString() : ""), {
+                    headers: { Accept: "text/html" },
+                    credentials: "same-origin"
+                }).then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("Seat filter failed.");
+                    }
+                    return response.text();
+                }).then(function (html) {
+                    if (requestId !== seatRequest) {
+                        return;
+                    }
+                    grid.innerHTML = html;
+                    cards = Array.prototype.slice.call(grid.querySelectorAll(".car-card"));
                     resetPagingAndApply();
+                }).catch(function () {
+                    if (requestId !== seatRequest) {
+                        return;
+                    }
+                    resetPagingAndApply();
+                });
+            }
+
+            seatList.addEventListener("change", function (event) {
+                if (!(event.target && event.target.classList.contains("seat-filter"))) {
+                    return;
                 }
+                reloadSeatResults();
             });
             document.querySelectorAll(".fuel-filter").forEach(function (item) {
                 item.addEventListener("click", function () {
                     item.classList.toggle("is-active");
+                    refreshSeatFilters();
                     resetPagingAndApply();
                 });
             });

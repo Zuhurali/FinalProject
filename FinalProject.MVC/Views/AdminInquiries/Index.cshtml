@@ -54,7 +54,6 @@
                     <td>
                         <p style="white-space:pre-wrap;margin:0">@inquiry.Message</p>
 
-                        @* Saved reply section — always present, hidden when no reply *@
                         <div id="inq-reply-display-@inquiry.Id"
                              class="mt-2 p-2 border-start border-3 border-success bg-light"
                              @(inquiry.HasReply ? "" : "hidden")>
@@ -68,7 +67,6 @@
                             <p id="inq-reply-text-@inquiry.Id" style="white-space:pre-wrap;margin:0">@inquiry.AdminReply</p>
                         </div>
 
-                        @* Inline editor — hidden by default, opened by JS *@
                         <div id="inq-editor-@inquiry.Id" hidden class="mt-2">
                             <input type="hidden" id="inq-reply-original-@inquiry.Id" value="@inquiry.AdminReply" />
                             <textarea id="inq-textarea-@inquiry.Id"
@@ -95,14 +93,12 @@
                         <p id="inq-flash-@inquiry.Id" class="small mt-2 mb-0" hidden></p>
                     </td>
                     <td class="d-flex flex-column gap-1">
-                        @* Reply button — label changes after a reply exists *@
                         <button type="button"
                                 class="btn btn-sm btn-outline-primary inq-reply-btn"
                                 data-id="@inquiry.Id">
                             @(inquiry.HasReply ? "Edit Reply" : "Reply")
                         </button>
 
-                        @* Handled toggle — separate from reply *@
                         <form asp-action="Handled" method="post" class="m-0">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@inquiry.Id" />
@@ -135,13 +131,11 @@
 @section Scripts {
 <script>
 (function () {
-    // Extract antiforgery token from the hidden field rendered by Razor
     function getAFToken() {
         const field = document.querySelector('input[name="__RequestVerificationToken"]');
         return field ? field.value : '';
     }
 
-    // Open inline editor
     document.querySelectorAll('.inq-reply-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             const id = btn.dataset.id;
@@ -152,12 +146,10 @@
         });
     });
 
-    // Cancel — close editor, restore text to last saved value
     document.querySelectorAll('.inq-cancel-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             const id = btn.dataset.id;
             document.getElementById('inq-editor-' + id).hidden = true;
-            // Restore textarea to what is currently displayed (so unsaved changes are discarded)
             const original = document.getElementById('inq-reply-original-' + id);
             document.getElementById('inq-textarea-' + id).value = original ? original.value : '';
             const errEl = document.getElementById('inq-editor-error-' + id);
@@ -166,7 +158,6 @@
         });
     });
 
-    // Send reply via fetch
     document.querySelectorAll('.inq-send-btn').forEach(function (btn) {
         btn.addEventListener('click', async function () {
             const id = btn.dataset.id;
@@ -174,7 +165,6 @@
             const errEl = document.getElementById('inq-editor-error-' + id);
             const reply = ta.value.trim();
 
-            // Client-side validation
             if (reply.length === 0) {
                 errEl.textContent = 'Reply cannot be empty.';
                 errEl.hidden = false;
@@ -187,7 +177,6 @@
                 return;
             }
 
-            // Prevent double-submit
             btn.disabled = true;
             btn.textContent = 'Saving…';
             errEl.hidden = true;
@@ -211,7 +200,6 @@
                     return;
                 }
 
-                // Update DOM with saved reply — no page reload
                 const displayEl = document.getElementById('inq-reply-display-' + id);
                 const textEl = document.getElementById('inq-reply-text-' + id);
                 textEl.textContent = data.reply ?? reply;
@@ -219,12 +207,10 @@
                 if (original) original.value = data.reply ?? reply;
                 displayEl.hidden = false;
 
-                // Update status badge
                 const statusEl = document.getElementById('inq-status-' + id);
                 statusEl.textContent = data.statusLabel ?? 'Answered';
                 statusEl.className = 'badge bg-success';
 
-                // Update reply button label
                 const replyBtn = document.querySelector('.inq-reply-btn[data-id="' + id + '"]');
                 if (replyBtn) replyBtn.textContent = 'Edit Reply';
                 const handledBtn = document.querySelector('.inq-handled-btn[data-id="' + id + '"]');
@@ -232,10 +218,8 @@
                 if (handledBtn) handledBtn.textContent = 'Mark Closed';
                 if (handledValue) handledValue.value = 'true';
 
-                // Close editor
                 document.getElementById('inq-editor-' + id).hidden = true;
 
-                // Update textarea to match saved text (for next open)
                 ta.value = data.reply ?? reply;
 
                 const flash = document.getElementById('inq-flash-' + id);

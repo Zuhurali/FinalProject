@@ -13,16 +13,10 @@ public static class PopularityRanking
     public const double SalesWeight = 0.4;
 
     public const string Explanation =
-        "Popularity uses only genuine customer ratings, visible (non-hidden) customer reviews, " +
-        "and recorded in-store sales (IsDemo = 0). Simulated/demo sales are never counted. " +
-        "ratingScore = (n × average + 5 × 3.5) / (n + 5). " +
-        "n is the visible review count, or the rating count when a part has ratings but no written review. " +
-        "average is the mean of stored star ratings (1–5). The 3.5 prior mean and weight 5 stop a single " +
-        "5-star rating from outranking many strong ratings. Parts with no ratings use the prior mean 3.5. " +
-        "salesScore = 5 × units / (units + 30), where units is the sum of quantities from recorded sales only. " +
-        "Parts with no recorded sales get salesScore = 0. " +
-        "popularity = 0.6 × ratingScore + 0.4 × salesScore. " +
-        "Ties go to the higher recorded-sales quantity, then the lower product id.";
+        "Popular Items ranks by genuine recorded in-store sales first: the sum of quantities " +
+        "from InPersonSales where IsDemo = 0 and VoidedAt is null. Voided sales and purchase requests are not counted. " +
+        "When recorded sales are equal, the spare part with more ProductFavorites comes first. " +
+        "If both counts match, the lower product id comes first. Latest Items stays newest CreatedAt, then higher product id.";
 
     public static int SampleSize(int ratingCount, int reviewCount)
     {
@@ -69,13 +63,13 @@ public static class PopularityRanking
 
     public static IEnumerable<T> ByPopularity<T>(
         IEnumerable<T> products,
-        Func<T, double> score,
         Func<T, int> recordedSales,
+        Func<T, int> favoriteCount,
         Func<T, int> productId)
     {
         return products
-            .OrderByDescending(score)
-            .ThenByDescending(recordedSales)
+            .OrderByDescending(recordedSales)
+            .ThenByDescending(favoriteCount)
             .ThenBy(productId);
     }
 }

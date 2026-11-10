@@ -1,38 +1,59 @@
-using System.Text.RegularExpressions;
-
 namespace FinalProject.MVC.Commerce;
 
 /// <summary>
-/// Seat count used only by the CarsTwo sidebar. A stored 1–9 wins.
-/// Otherwise a description is used only when it contains exactly one
-/// unambiguous "N seats" phrase, with N from 1 to 9.
+/// Seat count used by the Cars Two sidebar and cards.
+/// Uses only the structured <c>Seats</c> value (1–12).
+/// Description text, door counts, and photo counts are never treated as seats.
 /// </summary>
 public static class CarsTwoSeatCount
 {
-    private static readonly Regex ExplicitSeats = new(
-        @"\b([1-9]|1[0-2])\s+seats\b",
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-    public static int? Resolve(int storedSeats, string? description)
+    public static int? Resolve(int storedSeats, string? description = null)
     {
-        if (storedSeats is >= 1 and <= 9)
+        _ = description;
+        return storedSeats is >= 1 and <= 12 ? storedSeats : null;
+    }
+
+    public static bool Matches(int storedSeats, string? description, IReadOnlyCollection<int> selectedSeats)
+    {
+        if (selectedSeats == null || selectedSeats.Count == 0)
         {
-            return storedSeats;
+            return true;
         }
 
-        if (string.IsNullOrWhiteSpace(description))
+        var seatCount = Resolve(storedSeats, description);
+        return seatCount.HasValue && selectedSeats.Contains(seatCount.Value);
+    }
+
+    /// <summary>
+    /// Builds seat-count facet options for the Cars Two sidebar.
+    /// When <paramref name="selectedMakes"/> is empty, the full catalog is used.
+    /// When one or more makes are provided, only those makes are counted.
+    /// Unknown/null seat values are omitted. The seat filter itself is not applied here.
+    /// </summary>
+    public static IReadOnlyList<(int Seats, int Count)> FacetOptions(
+        IEnumerable<(string Make, int StoredSeats)> cars,
+        IReadOnlyCollection<string>? selectedMakes = null)
+    {
+        ArgumentNullException.ThrowIfNull(cars);
+
+        var scoped = cars;
+        if (selectedMakes is { Count: > 0 })
         {
-            return null;
+            var makes = new HashSet<string>(
+                selectedMakes.Where(make => !string.IsNullOrWhiteSpace(make)),
+                StringComparer.OrdinalIgnoreCase);
+            if (makes.Count > 0)
+            {
+                scoped = cars.Where(car => makes.Contains(car.Make));
+            }
         }
 
-        var matches = ExplicitSeats.Matches(description);
-        if (matches.Count != 1
-            || !int.TryParse(matches[0].Groups[1].Value, out var seats)
-            || seats is < 1 or > 9)
-        {
-            return null;
-        }
-
-        return seats;
+        return scoped
+            .Select(car => Resolve(car.StoredSeats))
+            .Where(seat => seat.HasValue)
+            .GroupBy(seat => seat!.Value)
+            .OrderBy(group => group.Key)
+            .Select(group => (group.Key, group.Count()))
+            .ToList();
     }
 }

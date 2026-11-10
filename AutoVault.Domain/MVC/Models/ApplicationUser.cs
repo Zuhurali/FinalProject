@@ -4,7 +4,6 @@ namespace FinalProject.MVC.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        // Additional user properties can be added here if needed
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -27,7 +26,6 @@ namespace FinalProject.MVC.Models
         /// <summary>UTC time when the Member soft-deleted their own account.</summary>
         public DateTime? DeletedAt { get; set; }
 
-        // Navigation properties
         public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }

@@ -251,7 +251,6 @@
         let searchText = '';
         let priceRange = { min: 0, max: 3000 };
         
-        // Initialize price range slider
         const minRange = document.getElementById('minRange-shop3');
         const maxRange = document.getElementById('maxRange-shop3');
         const minPrice = document.getElementById('minPrice-shop3');
@@ -276,7 +275,6 @@
             minPrice.textContent = '$' + priceRange.min;
             maxPrice.textContent = '$' + priceRange.max;
             
-            // Update range bar visual
             const percent1 = (priceRange.min / 3000) * 100;
             const percent2 = (priceRange.max / 3000) * 100;
             range.style.left = percent1 + '%';
@@ -291,7 +289,6 @@
             updateSlider();
         }
         
-        // Function to apply REAL combined filters
         function applyFilters() {
             const filterData = {
                 searchText: searchText,
@@ -319,7 +316,6 @@
             });
         }
 
-        // Function to update products container
         function updateProductsContainer(response, append = false) {
             let html = '';
             
@@ -340,7 +336,6 @@
                 $('#products-container-shop3').html(html);
             }
             
-            // Update Load More button
             if (response.hasMorePages) {
                 $('.load-more-container').show();
             } else {
@@ -348,7 +343,6 @@
             }
         }
 
-        // Function to generate product HTML
         function generateProductHtml(product) {
             let starsHtml = '';
             for (let i = 1; i <= 5; i++) {
@@ -364,7 +358,6 @@
                 ? 'No ratings'
                 : Number(product.rating).toFixed(1) + ' (' + product.ratingCount + ')';
 
-            // Convert ~ path to relative path
             let imagePath = product.imagePath;
             if (imagePath.startsWith('~/')) {
                 imagePath = imagePath.substring(1);
@@ -398,7 +391,6 @@
             `;
         }
 
-        // Search input handler
         $('#search-input-shop3').on('input', function() {
             searchText = $(this).val().trim();
         });
@@ -408,14 +400,12 @@
             applyFilters();
         });
         
-        // Clear search
         $('.search-area .cross').on('click', function() {
             searchText = '';
             $('#search-input-shop3').val('');
             applyFilters();
         });
 
-        // Car Make checkboxes - MULTI-SELECT
         $('input[data-filter="make"]').on('change', function() {
             const value = $(this).data('value');
             if (this.checked) {
@@ -428,7 +418,6 @@
             applyFilters();
         });
 
-        // Car Model checkboxes - MULTI-SELECT
         $('input[data-filter="model"]').on('change', function() {
             const value = $(this).data('value');
             if (this.checked) {
@@ -441,7 +430,6 @@
             applyFilters();
         });
 
-        // Car Color checkboxes - MULTI-SELECT
         $('input[data-filter="color"]').on('change', function() {
             const value = $(this).data('value');
             if (this.checked) {
@@ -454,12 +442,10 @@
             applyFilters();
         });
 
-        // Fuel filter
         $('.tag-area a').on('click', function(e) {
             e.preventDefault();
             const fuel = $(this).data('fuel');
             
-            // Toggle fuel
             if (selectedFuel === fuel) {
                 selectedFuel = '';
                 $(this).removeClass('active');
@@ -472,7 +458,6 @@
             applyFilters();
         });
 
-        // Load More with current filters
         $(document).on('click', '#load-more-btn-shop3', function(e) {
             e.preventDefault();
             

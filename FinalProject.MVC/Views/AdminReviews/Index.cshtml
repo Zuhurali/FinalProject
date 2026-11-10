@@ -41,7 +41,6 @@
                     </span>
                 </td>
                 <td class="d-flex flex-wrap gap-2 align-items-center">
-                    @* Hide/Unhide — progressive-enhancement AJAX with form fallback *@
                     <form asp-action="Hide" asp-route-id="@review.Id" method="post" class="d-inline review-hide-form"
                           data-review-id="@review.Id" data-target-hidden="@(!review.IsHidden ? "true" : "false")">
                         @Html.AntiForgeryToken()
@@ -91,7 +90,7 @@
             const btn = document.getElementById('review-hide-btn-' + reviewId);
             const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
             const hiddenInput = form.querySelector('input[name="hidden"]');
-            const targetHidden = hiddenInput.value === 'true'; // what we're setting it TO
+            const targetHidden = hiddenInput.value === 'true';
 
             btn.disabled = true;
             btn.textContent = 'Saving…';
@@ -112,13 +111,13 @@
                         visBadge.textContent = 'Hidden';
                         visBadge.className = 'badge bg-secondary';
                         btn.textContent = 'Unhide';
-                        hiddenInput.value = 'false';          // next click will unhide
+                        hiddenInput.value = 'false';
                         form.dataset.targetHidden = 'false';
                     } else {
                         visBadge.textContent = 'Visible';
                         visBadge.className = 'badge bg-success';
                         btn.textContent = 'Hide';
-                        hiddenInput.value = 'true';           // next click will hide
+                        hiddenInput.value = 'true';
                         form.dataset.targetHidden = 'true';
                     }
                     showBanner(nowHidden ? 'The review is hidden.' : 'The review is visible again.', false);

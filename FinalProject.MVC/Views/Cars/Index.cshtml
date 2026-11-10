@@ -1,6 +1,8 @@
 @model CarListingResult
 @{
-    ViewData["Title"] = "Cars - AutoVault";
+    var listingTitle = ViewData["ListingTitle"] as string ?? "Used Cars";
+    var listingAction = ViewData["ListingAction"] as string ?? "Index";
+    ViewData["Title"] = $"{listingTitle} - AutoVault";
     var query = Model.Query;
 
     string EmptyCatalogMessage(CarListingResult listing)
@@ -13,7 +15,9 @@
                 : $"No {listing.Query.Make} vehicles are currently in the catalog.";
         }
 
-        return listing.CategoryRequested ? "No cars found for this category." : "No cars found.";
+        return listing.CategoryRequested
+            ? $"No {listingTitle.ToLowerInvariant()} found for this category."
+            : $"No {listingTitle.ToLowerInvariant()} found.";
     }
 }
 
@@ -68,10 +72,10 @@
 <div class="rts-breadcrumb-area portfolio jarallax">
     <div class="container">
         <div class="breadcrumb-area-wrapper">
-            <h1 class="title">@(Model.CategoryRequested ? Model.CategoryDisplay : "Cars")</h1>
+            <h1 class="title">@(Model.CategoryRequested ? Model.CategoryDisplay : listingTitle)</h1>
             <div class="nav-bread-crumb">
                 <a asp-controller="Home" asp-action="Index">Home</a>
-                <a asp-action="Index" class="@(Model.CategoryRequested ? null : "current")">Cars</a>
+                <a asp-action="@listingAction" class="@(Model.CategoryRequested ? null : "current")">@listingTitle</a>
                 @if (Model.CategoryRequested)
                 {
                     <a href="#" class="current">@Model.CategoryDisplay</a>
@@ -84,7 +88,7 @@
 <div class="rts-select-area inner car-listing-filters">
     <div class="container">
         <div class="select-inner">
-            <form method="get" asp-action="Index" class="select-area-down wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
+            <form method="get" asp-action="@listingAction" class="select-area-down wow fadeInUp" data-wow-delay=".8s" data-wow-duration="1s">
                 <div class="filter-field">
                     <select name="category" class="mySelect">
                         <option value="">Car Type</option>
@@ -135,7 +139,7 @@
                 </button>
                 @if (Model.HasActiveFilters)
                 {
-                    <a asp-action="Index" class="rts-btn radius-small btn-border">Clear Filters</a>
+                    <a asp-action="@listingAction" class="rts-btn radius-small btn-border">Clear Filters</a>
                 }
             </form>
         </div>
@@ -239,18 +243,18 @@
                         <nav aria-label="Page navigation">
                             <ul class="pagination">
                                 <li class="page-item @(Model.Page <= 1 ? "disabled" : null)">
-                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-condition="@query.Condition" asp-route-page="@(Model.Page - 1)" aria-label="Previous">
+                                    <a class="page-link" asp-action="@listingAction" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@(Model.Page - 1)" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
                                 @for (var i = 1; i <= Model.TotalPages; i++)
                                 {
                                     <li class="page-item @(i == Model.Page ? "active" : null)">
-                                        <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-condition="@query.Condition" asp-route-page="@i">@i</a>
+                                        <a class="page-link" asp-action="@listingAction" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@i">@i</a>
                                     </li>
                                 }
                                 <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : null)">
-                                    <a class="page-link" asp-action="Index" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-condition="@query.Condition" asp-route-page="@(Model.Page + 1)" aria-label="Next">
+                                    <a class="page-link" asp-action="@listingAction" asp-route-category="@Model.CategorySlug" asp-route-make="@query.Make" asp-route-model="@query.Model" asp-route-priceRange="@query.PriceRange" asp-route-fuel="@query.Fuel" asp-route-transmission="@query.Transmission" asp-route-search="@query.Search" asp-route-page="@(Model.Page + 1)" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>

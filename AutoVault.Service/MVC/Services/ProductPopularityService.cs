@@ -23,17 +23,21 @@ public sealed class ProductPopularityService : IProductPopularityService
 
         var feedback = await _db.GetProductPopularityFeedbackAsync(cancellationToken);
         var sales = await _db.GetProductPopularitySalesAsync(cancellationToken);
+        var favorites = await _db.GetProductFavoriteCountsAsync(cancellationToken);
 
         var feedbackByProduct = feedback.ToDictionary(row => row.ProductId);
         var salesByProduct = sales.ToDictionary(row => row.ProductId);
+        var favoritesByProduct = favorites.ToDictionary(row => row.ProductId);
         foreach (var product in products)
         {
             feedbackByProduct.TryGetValue(product.Id, out var opinion);
             salesByProduct.TryGetValue(product.Id, out var sold);
+            favoritesByProduct.TryGetValue(product.Id, out var saved);
             product.Rating = opinion?.AverageRating ?? 0;
             product.RatingCount = opinion?.RatingCount ?? 0;
             product.ReviewCount = opinion?.ReviewCount ?? 0;
             product.RealSalesCount = sold?.RecordedSales ?? 0;
+            product.FavoriteCount = saved?.FavoriteCount ?? 0;
             product.DemoSalesCount = 0;
             product.PopularityScore = PopularityRanking.Score(
                 product.Rating,

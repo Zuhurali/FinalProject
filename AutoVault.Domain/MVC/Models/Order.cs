@@ -63,7 +63,6 @@ namespace FinalProject.MVC.Models
         [MaxLength(50)]
         public string OrderStatus { get; set; } = "Pending";
 
-        // Navigation properties
         [ForeignKey(nameof(UserId))]
         public virtual ApplicationUser? User { get; set; }
 

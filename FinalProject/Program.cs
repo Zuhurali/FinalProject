@@ -88,7 +88,6 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -110,7 +109,6 @@ var app = builder.Build();
 // Anonymous readiness probe used by the MVC development host. It does not touch the database.
 app.MapGet("/health/ready", () => Results.Ok(new { status = "ok" }));
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.Use(async (context, next) =>

@@ -43,7 +43,7 @@ public static class ShopMarketingContentDefaults
     public const string VisitHeadingBefore = "Plan your";
     public const string VisitHeadingHighlight = "visit";
     public const string VisitTip1Title = "See which oils, filters, tires, and spare parts are on the floor";
-    public const string VisitTip2Title = "Used cars are listed separately and are also sold in person";
+    public const string VisitTip2Title = "Browse our pre-owned vehicle listings online. All purchases are completed in person at our Baku store.";
 
     public const string FaqSectionEyebrow = "FAQ";
     public const string FaqSectionHeadingBefore = "Frequently Asked";

@@ -27,7 +27,6 @@ namespace FinalProject.MVC.Models
         [MaxLength(500)]
         public string? ImagePath { get; set; }
 
-        // Navigation property
         [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; } = null!;
     }

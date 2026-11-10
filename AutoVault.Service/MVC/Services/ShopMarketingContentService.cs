@@ -8,7 +8,7 @@ namespace FinalProject.MVC.Services;
 
 public sealed class ShopMarketingContentService : IShopMarketingContentService
 {
-    public const string CacheKey = "shop-marketing-content-public-v4";
+    public const string CacheKey = "shop-marketing-content-public-v6";
 
     private readonly IApplicationRepository _db;
     private readonly IMemoryCache _cache;
@@ -289,7 +289,7 @@ public sealed class ShopMarketingContentService : IShopMarketingContentService
             VisitHeadingBefore = Text(entity.VisitHeadingBefore, ShopMarketingContentDefaults.VisitHeadingBefore),
             VisitHeadingHighlight = Text(entity.VisitHeadingHighlight, ShopMarketingContentDefaults.VisitHeadingHighlight),
             VisitTip1Title = Text(entity.VisitTip1Title, ShopMarketingContentDefaults.VisitTip1Title),
-            VisitTip2Title = Text(entity.VisitTip2Title, ShopMarketingContentDefaults.VisitTip2Title),
+            VisitTip2Title = ResolveVisitTip2Title(Text(entity.VisitTip2Title, ShopMarketingContentDefaults.VisitTip2Title)),
             FaqSectionEyebrow = Text(entity.FaqSectionEyebrow, ShopMarketingContentDefaults.FaqSectionEyebrow),
             FaqSectionHeadingBefore = Text(entity.FaqSectionHeadingBefore, ShopMarketingContentDefaults.FaqSectionHeadingBefore),
             FaqSectionHeadingHighlight = Text(entity.FaqSectionHeadingHighlight, ShopMarketingContentDefaults.FaqSectionHeadingHighlight),
@@ -308,6 +308,17 @@ public sealed class ShopMarketingContentService : IShopMarketingContentService
             HeroCtaBrowseCars = Text(entity.HeroCtaBrowseCars, ShopMarketingContentDefaults.HeroCtaBrowseCars),
             HeroCtaVisit = Text(entity.HeroCtaVisit, ShopMarketingContentDefaults.HeroCtaVisit)
         };
+    }
+
+    private static string ResolveVisitTip2Title(string value)
+    {
+        if (string.Equals(value, "Used cars are listed separately and are also sold in person", StringComparison.Ordinal)
+            || string.Equals(value, "New and used cars are listed separately and are also available for in-person purchase.", StringComparison.Ordinal))
+        {
+            return ShopMarketingContentDefaults.VisitTip2Title;
+        }
+
+        return value;
     }
 
     private void InvalidateCache() => _cache.Remove(CacheKey);

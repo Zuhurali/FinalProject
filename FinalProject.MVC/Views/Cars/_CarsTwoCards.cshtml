@@ -1,0 +1,62 @@
+@model IReadOnlyList<FinalProject.MVC.Models.Car>
+@{
+    const int pageSize = 9;
+    var index = 0;
+}
+@if (ViewData["CarApiError"] is string carApiError)
+{
+    <div class="col-12">
+        <h3 class="title text-center">@carApiError</h3>
+    </div>
+}
+@foreach (var car in Model)
+{
+    var seatCount = CarsTwoSeatCount.Resolve(car.Seats, car.Description);
+    <div class="col-lg-6 car-card @(index >= pageSize ? "d-none" : null)"
+         data-id="@car.Id"
+         data-created="@car.CreatedAt.Ticks"
+         data-search="@($"{car.Name} {car.Make} {car.Model}")"
+         data-make="@car.Make"
+         data-model="@car.Model"
+         data-price="@car.Price"
+         data-seats="@(seatCount?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+         data-color="@car.Color"
+         data-fuel="@car.Fuel">
+        <div class="project-wrapper2">
+            <div class="image-area">
+                <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"><img src="@Url.Content(car.ImagePath)" alt="@car.Name"></a>
+                <span class="tag">@car.Badge</span>
+                <a href="#" class="wishlist"><i class="fa-regular fa-heart"></i></a>
+                @if (seatCount.HasValue)
+                {
+                    <span class="gallery-image cars-two-seat-badge" title="@seatCount.Value seats" aria-label="@seatCount.Value seats">
+                        @seatCount.Value seats
+                    </span>
+                }
+            </div>
+            <span class="price">@($"{car.Price:N0}$")</span>
+            <div class="content-area">
+                <h6 class="title "><a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id">@car.Name</a></h6>
+                <ul class="feature-area">
+                    <li>
+                        <img src="~/assets/images/portfolio/feature-icon/01.svg" alt="">
+                        @car.MileageText
+                    </li>
+                    <li>
+                        <img src="~/assets/images/portfolio/feature-icon/02.svg" alt="">
+                        @car.Fuel
+                    </li>
+                    <li>
+                        <img src="~/assets/images/portfolio/feature-icon/03.svg" alt="">
+                        @car.Transmission
+                    </li>
+                </ul>
+                <div class="button-area">
+                    <p class="">@($"${car.Price:N0}")</p>
+                    <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id" class="rts-btn btn-primary radius-small">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    index++;
+}

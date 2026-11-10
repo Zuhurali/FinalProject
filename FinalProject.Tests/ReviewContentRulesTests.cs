@@ -5,8 +5,6 @@ namespace FinalProject.Tests;
 
 public class ReviewContentRulesTests
 {
-    // ── Acceptance cases ──────────────────────────────────────────────────────
-
     [Theory]
     [InlineData("a")]                                                        // single char
     [InlineData("Good part.")]                                               // normal short sentence
@@ -20,8 +18,6 @@ public class ReviewContentRulesTests
         Assert.Null(error);
         Assert.Equal(content.Trim(), normalized);
     }
-
-    // ── Spam rejection ────────────────────────────────────────────────────────
 
     [Theory]
     [InlineData("ser ser ser ser ser ser ser ser ser ser")]   // req spec example — 10 repeats
@@ -37,8 +33,6 @@ public class ReviewContentRulesTests
         Assert.Contains("spam", error, StringComparison.OrdinalIgnoreCase);
     }
 
-    // ── Min-length / empty ────────────────────────────────────────────────────
-
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -48,8 +42,6 @@ public class ReviewContentRulesTests
         var error = ReviewContentRules.Normalize(content, out _);
         Assert.NotNull(error);
     }
-
-    // ── Max-length ────────────────────────────────────────────────────────────
 
     [Fact]
     public void Normalize_rejects_content_over_max_length()
@@ -66,8 +58,6 @@ public class ReviewContentRulesTests
         var error = ReviewContentRules.Normalize(content, out _);
         Assert.Null(error);
     }
-
-    // ── Internal helper unit-tests ────────────────────────────────────────────
 
     [Fact]
     public void CheckForRepeatedTokenSpam_returns_null_for_single_word()

@@ -10,6 +10,10 @@ public sealed record ProductPopularitySalesRow(
     int ProductId,
     int RecordedSales);
 
+public sealed record ProductFavoriteCountRow(
+    int ProductId,
+    int FavoriteCount);
+
 public sealed record AdminDashboardCountsRow(
     int TotalSpareParts,
     int ActiveSpareParts,

@@ -50,7 +50,6 @@ public sealed class CarImageUploadService : ICarImageUploadService
             .Where(file => file is { Length: > 0 })
             .ToList();
 
-        // First selected file is primary; remaining files are gallery additions.
         var maxTotal = 1 + CarImageRules.MaxGalleryFilesPerSave;
         if (files.Count > maxTotal)
         {

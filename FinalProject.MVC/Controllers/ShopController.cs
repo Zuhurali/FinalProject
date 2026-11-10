@@ -238,8 +238,8 @@ namespace FinalProject.MVC.Controllers
             {
                 "Popular" => PopularityRanking.ByPopularity(
                     products,
-                    product => product.PopularityScore,
                     product => product.RealSalesCount,
+                    product => product.FavoriteCount,
                     product => product.Id).ToList(),
                 "Price Low to High" => products.OrderBy(product => product.EffectivePrice).ThenBy(product => product.Id).ToList(),
                 "Price High to Low" => products.OrderByDescending(product => product.EffectivePrice).ThenBy(product => product.Id).ToList(),
@@ -316,7 +316,6 @@ namespace FinalProject.MVC.Controllers
             await ApplyRatingsAsync(_allProducts, cancellationToken);
             var filteredProducts = _allProducts.AsQueryable();
 
-            // Apply search text filter (name, description, keywords)
             if (!string.IsNullOrEmpty(request.SearchText))
             {
                 var searchLower = request.SearchText.ToLower();
@@ -331,7 +330,6 @@ namespace FinalProject.MVC.Controllers
                 );
             }
 
-            // Apply category filter
             if (!string.IsNullOrEmpty(request.Category))
             {
                 var category = request.Category.Trim();
@@ -354,31 +352,26 @@ namespace FinalProject.MVC.Controllers
                 filteredProducts = filteredProducts.Where(p => p.HasOffer && p.DiscountPercent == percent);
             }
 
-            // Apply car make filter (single select - backwards compatibility)
             if (!string.IsNullOrEmpty(request.CarMake) && request.CarMake != "Car Make")
             {
                 filteredProducts = filteredProducts.Where(p => p.CarMake == request.CarMake);
             }
 
-            // Apply selected makes filter (multi-select from ShopTwo)
             if (request.SelectedMakes != null && request.SelectedMakes.Any())
             {
                 filteredProducts = filteredProducts.Where(p => request.SelectedMakes.Contains(p.CarMake));
             }
 
-            // Apply car model filter (single select - backwards compatibility)
             if (!string.IsNullOrEmpty(request.CarModel) && request.CarModel != "Car Model")
             {
                 filteredProducts = filteredProducts.Where(p => p.CarModel == request.CarModel);
             }
 
-            // Apply selected models filter (multi-select from ShopTwo)
             if (request.SelectedModels != null && request.SelectedModels.Any())
             {
                 filteredProducts = filteredProducts.Where(p => request.SelectedModels.Contains(p.CarModel));
             }
 
-            // Apply selected colors filter (multi-select from ShopThree)
             if (request.SelectedColors != null && request.SelectedColors.Count > 0)
             {
                 var colors = request.SelectedColors
@@ -394,7 +387,6 @@ namespace FinalProject.MVC.Controllers
                 }
             }
 
-            // Apply price range filter (dropdown - backwards compatibility)
             if (!string.IsNullOrEmpty(request.PriceRange) && request.PriceRange != "Price")
             {
                 switch (request.PriceRange)
@@ -412,12 +404,10 @@ namespace FinalProject.MVC.Controllers
                         filteredProducts = filteredProducts.Where(p => p.EffectivePrice < 800);
                         break;
                     case "All Prices":
-                        // No filter applied
                         break;
                 }
             }
 
-            // Apply min/max price filter (slider from ShopTwo)
             if (request.MinPrice.HasValue)
             {
                 filteredProducts = filteredProducts.Where(p => p.EffectivePrice >= request.MinPrice.Value);
@@ -428,7 +418,6 @@ namespace FinalProject.MVC.Controllers
                 filteredProducts = filteredProducts.Where(p => p.EffectivePrice <= request.MaxPrice.Value);
             }
 
-            // Apply sorting
             if (!string.IsNullOrEmpty(request.SortBy) && request.SortBy != "Sort By")
             {
                 switch (request.SortBy)
@@ -450,8 +439,8 @@ namespace FinalProject.MVC.Controllers
                         break;
                     case "Popular":
                         filteredProducts = filteredProducts
-                            .OrderByDescending(p => p.PopularityScore)
-                            .ThenByDescending(p => p.RealSalesCount)
+                            .OrderByDescending(p => p.RealSalesCount)
+                            .ThenByDescending(p => p.FavoriteCount)
                             .ThenBy(p => p.Id);
                         break;
                     case "Latest":

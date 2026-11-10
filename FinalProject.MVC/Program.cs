@@ -21,11 +21,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
     options.MultipartBodyLengthLimit = 64 * 1024 * 1024;
 });
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-// Add DbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -36,24 +34,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
             sql.MigrationsAssembly(typeof(Program).Assembly.GetName().Name);
         }));
 
-// Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Password settings (you can adjust these)
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
 
-    // User settings
     options.User.RequireUniqueEmail = true;
 
-    // Sign-in settings
     options.SignIn.RequireConfirmedEmail = true;
     options.SignIn.RequireConfirmedAccount = true;
 
-    // Lock out after repeated failed password attempts.
     options.Lockout.AllowedForNewUsers = true;
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
@@ -67,7 +60,6 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromDays(1);
 });
 
-// Configure application cookie
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/SignIn";

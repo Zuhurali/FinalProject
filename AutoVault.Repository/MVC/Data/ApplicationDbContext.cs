@@ -327,24 +327,20 @@ namespace FinalProject.MVC.Data
                 });
             });
 
-            // Configure CouponUsage entity
             builder.Entity<CouponUsage>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                // Create unique index to prevent duplicate coupon usage by the same user
                 entity.HasIndex(e => new { e.UserId, e.CouponCode })
                       .IsUnique()
                       .HasDatabaseName("IX_CouponUsage_UserId_CouponCode");
 
-                // Configure relationship
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.CouponUsages)
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configure Order entity
             builder.Entity<Order>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -360,7 +356,6 @@ namespace FinalProject.MVC.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configure OrderItem entity
             builder.Entity<OrderItem>(entity =>
             {
                 entity.HasKey(e => e.Id);
